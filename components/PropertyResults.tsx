@@ -201,27 +201,27 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
     <div className="max-w-4xl mx-auto space-y-12 pb-32 animate-in fade-in slide-in-from-bottom-6 duration-700">
       
       {/* Header Property Summary */}
-      <div className="bg-white p-8 md:p-12 rounded-[3rem] border border-[#D6A270]/10 shadow-sm relative overflow-hidden">
+      <div className="bg-white p-5 sm:p-8 md:p-12 rounded-[2rem] sm:rounded-[3rem] border border-[#D6A270]/10 shadow-sm relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#D6A270]/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-        <div className="space-y-6 relative z-10">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#D6A270]/10 text-[#D6A270] rounded-full text-[10px] font-bold uppercase tracking-[0.2em]">
-                Property Strategy Guide
+        <div className="space-y-4 sm:space-y-6 relative z-10">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 bg-[#D6A270]/10 text-[#D6A270] rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider sm:tracking-[0.2em]">
+                <span className="hidden sm:inline">Property</span> Strategy Guide
               </div>
-              <button onClick={handleShare} className="text-[10px] font-black uppercase tracking-widest text-[#4A4137]/30 hover:text-[#D6A270] transition-colors flex items-center gap-1">
+              <button onClick={handleShare} className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#4A4137]/30 hover:text-[#D6A270] transition-colors flex items-center gap-1">
                 <i className={`fa-solid ${copied ? 'fa-check' : 'fa-share-nodes'}`}></i>
                 {copied ? 'Copied' : 'Share'}
               </button>
             </div>
-            <div className="flex gap-4">
-               <div className="flex items-center gap-2 text-[#4A4137]/60 font-bold text-sm">
+            <div className="flex gap-3 sm:gap-4">
+               <div className="flex items-center gap-1.5 sm:gap-2 text-[#4A4137]/60 font-bold text-xs sm:text-sm">
                   <i className="fa-solid fa-bed text-[#D6A270]"></i> {data?.attributes?.beds || 0}
                </div>
-               <div className="flex items-center gap-2 text-[#4A4137]/60 font-bold text-sm">
+               <div className="flex items-center gap-1.5 sm:gap-2 text-[#4A4137]/60 font-bold text-xs sm:text-sm">
                   <i className="fa-solid fa-bath text-[#D6A270]"></i> {data?.attributes?.baths || 0}
                </div>
-               <div className="flex items-center gap-2 text-[#4A4137]/60 font-bold text-sm">
+               <div className="flex items-center gap-1.5 sm:gap-2 text-[#4A4137]/60 font-bold text-xs sm:text-sm">
                   <i className="fa-solid fa-car text-[#D6A270]"></i> {data?.attributes?.cars || 0}
                </div>
             </div>
