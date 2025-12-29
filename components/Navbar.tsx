@@ -40,10 +40,14 @@ const Navbar: React.FC<NavbarProps> = ({
       // Get name part before @ and capitalize first letter
       const namePart = userEmail.split('@')[0];
       // Clean up: remove dots, underscores, numbers at end
-      const cleanName = namePart.replace(/[._]/g, ' ').replace(/\d+$/, '').split(' ')[0];
-      return cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
+      const parts = namePart.replace(/[._]/g, ' ').replace(/\d+$/, '').split(' ').filter(p => p.length > 1);
+      // Use the longest part (e.g., "sullivan" from "b.sullivan")
+      const bestPart = parts.sort((a, b) => b.length - a.length)[0] || '';
+      if (bestPart.length > 1) {
+        return bestPart.charAt(0).toUpperCase() + bestPart.slice(1).toLowerCase();
+      }
     }
-    return '';
+    return ''; // Return empty if no good name found - just show avatar
   };
 
   // Get initials for avatar

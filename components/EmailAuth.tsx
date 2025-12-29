@@ -76,15 +76,28 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, initialMode 
     setIsLoading(true);
 
     try {
-      const { user, error } = await supabaseService.signInWithEmail(email, password);
+      const { user, session, error } = await supabaseService.signInWithEmail(email, password);
       
       if (error) throw error;
 
-      if (user) {
+      if (user && session) {
         onSuccess(email, false);
+      } else if (user && !session) {
+        // User exists but email not confirmed
+        setError('Please confirm your email before logging in. Check your inbox for the confirmation link.');
+      } else {
+        setError('Login failed. Please check your credentials.');
       }
     } catch (err: any) {
-      setError(err.message || 'Invalid email or password');
+      // Handle specific Supabase error messages
+      const message = err.message || 'Invalid email or password';
+      if (message.includes('Invalid login credentials')) {
+        setError('Invalid email or password. Please try again.');
+      } else if (message.includes('Email not confirmed')) {
+        setError('Please confirm your email before logging in. Check your inbox.');
+      } else {
+        setError(message);
+      }
     } finally {
       setIsLoading(false);
     }
