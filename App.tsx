@@ -117,7 +117,26 @@ const App: React.FC = () => {
           setUserPhone(session.user?.phone || '');
           setIsSignedUp(true);
           localStorage.setItem('prop_signed_up', 'true');
+          
+          // Close auth modal if open (for Google OAuth redirect)
+          setShowEmailAuth(false);
+          
+          // Check if this is a new user (created within last 60 seconds)
+          const createdAt = new Date(session.user?.created_at || 0);
+          const now = new Date();
+          const isNewUser = (now.getTime() - createdAt.getTime()) < 60000; // 60 seconds
+          
+          if (isNewUser) {
+            // New user - they just signed up! Show welcome
+            localStorage.setItem('prop_user_email', session.user?.email || '');
+          }
+          
           await loadUserData(session.user?.id);
+          
+          // Return to idle state so they can search
+          if (appState === AppState.LIMIT_REACHED) {
+            setAppState(AppState.IDLE);
+          }
         } else if (event === 'SIGNED_OUT') {
           setIsLoggedIn(false);
           setUserEmail('');
