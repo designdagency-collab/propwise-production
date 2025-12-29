@@ -184,7 +184,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
   const afterLow = baseline !== undefined ? baseline + totalUpliftLow : undefined;
   const afterHigh = baseline !== undefined ? baseline + totalUpliftHigh : undefined;
 
-  const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(data.address)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+  // Use Google Maps embed (basic embed doesn't require API key)
+  const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(data.address)}&t=k&z=17&ie=UTF8&iwloc=&output=embed`;
 
   // Filter out transport as requested
   const filteredProximity = data.proximity?.filter(a => a.type !== 'transport') || [];
