@@ -14,7 +14,11 @@ const App: React.FC = () => {
   const [results, setResults] = useState<PropertyData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
-  const [plan, setPlan] = useState<PlanType>('FREE');
+  // Load plan from localStorage - check if user has already paid
+  const [plan, setPlan] = useState<PlanType>(() => {
+    const savedPlan = localStorage.getItem('prop_plan');
+    return (savedPlan === 'BUYER_PACK' || savedPlan === 'MONITOR') ? savedPlan as PlanType : 'FREE';
+  });
   const [isQuotaError, setIsQuotaError] = useState(false);
   const [hasKey, setHasKey] = useState(false);
   const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
@@ -105,6 +109,29 @@ const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Handle Stripe payment success redirect
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    const sessionId = urlParams.get('session_id');
+
+    if (paymentStatus === 'success' && sessionId) {
+      // Payment was successful - upgrade to BUYER_PACK
+      setPlan('BUYER_PACK');
+      localStorage.setItem('prop_plan', 'BUYER_PACK');
+      setShowUpgradeSuccess(true);
+      
+      // Clear URL params without reload
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Hide success message after 5 seconds
+      setTimeout(() => setShowUpgradeSuccess(false), 5000);
+    } else if (paymentStatus === 'cancel') {
+      // Payment was cancelled - clear URL params
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   // Load user data from Supabase (optional enhancement)
   const loadUserData = async () => {
     try {
@@ -122,18 +149,22 @@ const App: React.FC = () => {
   };
 
   const checkSearchLimit = () => {
+    // Paid users get unlimited
     if (hasKey || plan !== 'FREE') return true;
+    
+    // Free tier limits: 3 initial, +2 more after phone signup (5 total)
+    const FREE_LIMIT = 3;
+    const SIGNED_UP_LIMIT = 5; // 3 + 2 bonus
+    const limit = isSignedUp ? SIGNED_UP_LIMIT : FREE_LIMIT;
     
     // Try Supabase first if user is authenticated
     if (userProfile) {
       const supabaseCount = userProfile.search_count || 0;
-      const limit = isSignedUp ? 3 : 1;
       if (supabaseCount < limit) return true;
     }
     
     // Fallback to localStorage (existing logic - KEEP THIS)
     const count = parseInt(localStorage.getItem('prop_search_count_total') || '0', 10);
-    const limit = isSignedUp ? 3 : 1;
     
     return count < limit;
   };
