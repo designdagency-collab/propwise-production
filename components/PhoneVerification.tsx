@@ -127,7 +127,7 @@ const PhoneVerification: React.FC<PhoneVerificationProps> = ({ onSuccess, onCanc
             </h2>
             <p className="text-xs sm:text-sm text-[#3A342D]/60 font-medium">
               {step === 'phone' 
-                ? 'We'll send you a code to verify your phone number and unlock 2 more free audits.'
+                ? "We'll send you a code to verify your phone number and unlock 2 more free audits."
                 : `We sent a 6-digit code to ${phone}. Enter it below.`}
             </p>
           </div>
