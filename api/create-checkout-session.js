@@ -29,10 +29,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Get the base URL from request headers or environment
-  const protocol = req.headers['x-forwarded-proto'] || 'https';
-  const host = req.headers['x-forwarded-host'] || req.headers.host;
-  const baseUrl = process.env.FRONTEND_URL || `${protocol}://${host}`;
+  // Get the base URL - use production URL or environment variable
+  const baseUrl = process.env.FRONTEND_URL || 'https://propwise-production.vercel.app';
 
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', baseUrl);
