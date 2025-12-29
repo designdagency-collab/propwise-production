@@ -81,15 +81,18 @@ const App: React.FC = () => {
 
   // Check auth state on mount and listen to changes
   useEffect(() => {
+    // Skip if Supabase not configured
+    if (!supabaseService.isConfigured()) return;
+
     // Check for existing session on mount
-    supabaseService.supabase.auth.getSession().then(({ data: { session } }) => {
+    supabaseService.supabase!.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         loadUserData();
       }
     });
 
     // Listen to auth changes
-    const { data: { subscription } } = supabaseService.supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = supabaseService.supabase!.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
           await loadUserData();
