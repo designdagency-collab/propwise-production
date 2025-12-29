@@ -209,6 +209,22 @@ export class SupabaseService {
     return { user: data?.user, session: data?.session, error };
   }
 
+  // Sign in with Google
+  async signInWithGoogle(): Promise<{ error?: any }> {
+    if (!this.supabase) {
+      return { error: { message: 'Supabase not configured' } };
+    }
+    const { error } = await this.supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.hostname === 'localhost' 
+          ? window.location.origin
+          : 'https://propwise-production.vercel.app'
+      }
+    });
+    return { error };
+  }
+
   // Send password reset email
   async sendPasswordResetEmail(email: string): Promise<{ error?: any }> {
     if (!this.supabase) {
