@@ -214,8 +214,13 @@ export class SupabaseService {
     if (!this.supabase) {
       return { error: { message: 'Supabase not configured' } };
     }
+    // Use production URL explicitly to avoid localhost issues
+    const redirectUrl = window.location.hostname === 'localhost' 
+      ? 'https://propwise-production.vercel.app?reset=true'
+      : `${window.location.origin}?reset=true`;
+    
     const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}?reset=true`
+      redirectTo: redirectUrl
     });
     return { error };
   }
