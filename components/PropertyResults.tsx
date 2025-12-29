@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
-import { PropertyData, PlanType, DevEligibility } from '../types';
+import { PropertyData, PlanType, DevEligibility, Amenity } from '../types';
 
 interface PropertyResultsProps {
   data: PropertyData;
   address: string;
   plan: PlanType;
   onUpgrade: () => void;
+  onHome: () => void;
 }
 
-const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
+const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
   const [copied, setCopied] = useState(false);
   const [selectedStrategies, setSelectedStrategies] = useState<Set<number>>(new Set());
-  const [selectedDevScenarioIndex, setSelectedDevScenarioIndex] = useState<number | null>(null);
 
-  // Determine if the property is likely under a strata scheme
   const isStrata = (data.propertyType || '').toLowerCase().match(/apartment|unit|townhouse|villa|strata|flat|duplex/);
 
   const formatValue = (val: any, prefix: string = '$'): string => {
@@ -85,7 +84,6 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
 
   const PathwayBadgeWithTooltip = ({ pathway }: { pathway: string }) => {
     const displayText = (isStrata && pathway === 'Exempt') ? 'Strata Permission' : pathway;
-    
     return (
       <div className="group relative inline-block">
         <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest cursor-help transition-opacity hover:opacity-90 ${getPathwayBadgeColor(pathway)}`}>
@@ -112,7 +110,6 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
       text: data?.sharePrompt?.message || `Check out the property DNA for ${data.address}`,
       url: window.location.href
     };
-    
     if (navigator.share) {
       try {
         await navigator.share(shareParams);
@@ -131,19 +128,35 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const getAmenityIcon = (type: Amenity['type']) => {
+    switch (type) {
+      case 'transport': return <i className="fa-solid fa-train-subway"></i>;
+      case 'shopping': return <i className="fa-solid fa-cart-shopping"></i>;
+      case 'education': return <i className="fa-solid fa-graduation-cap"></i>;
+      case 'leisure': return <i className="fa-solid fa-tree"></i>;
+      default: return <i className="fa-solid fa-location-dot"></i>;
+    }
+  };
+
+  const getAmenityColor = (type: Amenity['type']) => {
+    switch (type) {
+      case 'transport': return 'text-blue-500 bg-blue-50';
+      case 'shopping': return 'text-amber-500 bg-amber-50';
+      case 'education': return 'text-emerald-500 bg-emerald-50';
+      case 'leisure': return 'text-rose-500 bg-rose-50';
+      default: return 'text-slate-500 bg-slate-50';
+    }
+  };
+
   if (!data) return null;
 
   const findBestStrategyIndex = () => {
     if (!data.valueAddStrategies || data.valueAddStrategies.length === 0) return -1;
-    
     const bestTitle = data.portfolioSelloutSummary?.bestStrategyByProfit;
     if (bestTitle) {
-      const index = data.valueAddStrategies.findIndex(s => 
-        s.title.trim().toLowerCase() === bestTitle.trim().toLowerCase()
-      );
+      const index = data.valueAddStrategies.findIndex(s => s.title.trim().toLowerCase() === bestTitle.trim().toLowerCase());
       if (index !== -1) return index;
     }
-    
     let maxIdx = 0;
     data.valueAddStrategies.forEach((s, idx) => {
       if (safeNum(s.estimatedUplift?.high) > safeNum(data.valueAddStrategies[maxIdx]?.estimatedUplift?.high)) {
@@ -155,15 +168,11 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
 
   const effectiveSelection = selectedStrategies.size > 0 
     ? selectedStrategies 
-    : (data.valueAddStrategies && data.valueAddStrategies.length > 0 
-        ? new Set([findBestStrategyIndex()]) 
-        : new Set<number>());
+    : (data.valueAddStrategies && data.valueAddStrategies.length > 0 ? new Set([findBestStrategyIndex()]) : new Set<number>());
 
-  // Calculation Logic
   const baseline = data?.valueSnapshot?.indicativeMidpoint;
   let totalUpliftLow = 0;
   let totalUpliftHigh = 0;
-  
   effectiveSelection.forEach(idx => {
     const s = data.valueAddStrategies[idx];
     if (s) {
@@ -175,7 +184,17 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
   const afterLow = baseline !== undefined ? baseline + totalUpliftLow : undefined;
   const afterHigh = baseline !== undefined ? baseline + totalUpliftHigh : undefined;
 
-  const selectedDevScenario = selectedDevScenarioIndex !== null ? data.developmentScenarios?.[selectedDevScenarioIndex] : null;
+  const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(data.address)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+
+  // Filter out transport as requested
+  const filteredProximity = data.proximity?.filter(a => a.type !== 'transport') || [];
+
+  // Cash flow color logic
+  const cashPos = data.rentalPosition?.estimatedCashPositionWeekly;
+  const isPositive = cashPos !== undefined && cashPos >= 0;
+  const isNegative = cashPos !== undefined && cashPos < 0;
+  // Strictly use red/green for the font
+  const cashColorClass = isPositive ? 'text-[#10B981]' : isNegative ? 'text-[#E11D48]' : 'text-[#3A342D]';
 
   return (
     <div className="max-w-4xl mx-auto space-y-12 pb-32 animate-in fade-in slide-in-from-bottom-6 duration-700">
@@ -189,10 +208,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#D6A270]/10 text-[#D6A270] rounded-full text-[10px] font-bold uppercase tracking-[0.2em]">
                 Property Strategy Guide
               </div>
-              <button 
-                onClick={handleShare}
-                className="text-[10px] font-black uppercase tracking-widest text-[#4A4137]/30 hover:text-[#D6A270] transition-colors flex items-center gap-1"
-              >
+              <button onClick={handleShare} className="text-[10px] font-black uppercase tracking-widest text-[#4A4137]/30 hover:text-[#D6A270] transition-colors flex items-center gap-1">
                 <i className={`fa-solid ${copied ? 'fa-check' : 'fa-share-nodes'}`}></i>
                 {copied ? 'Copied' : 'Share'}
               </button>
@@ -210,36 +226,23 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
             </div>
           </div>
           <div>
-            <h1 className="text-4xl md:text-6xl font-bold text-[#4A4137] tracking-tighter font-address leading-tight">
-              {data.address}
-            </h1>
+            <h1 className="text-4xl md:text-6xl font-bold text-[#4A4137] tracking-tighter font-address leading-tight">{data.address}</h1>
             <p className="text-[#4A4137]/40 font-medium mt-2">{data.propertyType} • {data.landSize || 'Unknown Land Size'}</p>
           </div>
-
           <div className="flex flex-wrap gap-8 pt-8 border-t border-slate-100">
              <div className="space-y-1">
                 <p className="text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Estimated Market Value</p>
                 <p className="text-2xl font-black text-[#D6A270]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
              </div>
              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Potential Market Value After Improvements</p>
+                <p className="text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Potential Value After Improvements</p>
                 <p className={`text-2xl font-black transition-colors ${effectiveSelection.size > 0 ? 'text-[#D3D9B5]' : 'text-[#4A4137]'}`}>
-                   {baseline === undefined ? 'TBA' : 
-                    effectiveSelection.size === 0 ? formatValue(baseline) : 
-                    `${formatValue(afterLow)} – ${formatValue(afterHigh)}`}
+                   {baseline === undefined ? 'TBA' : effectiveSelection.size === 0 ? formatValue(baseline) : `${formatValue(afterLow)} – ${formatValue(afterHigh)}`}
                 </p>
              </div>
              <div className="space-y-1">
                 <p className="text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Growth Trend</p>
                 <p className="text-2xl font-black text-[#4A4137]">{data?.valueSnapshot?.growth || 'TBA'}</p>
-             </div>
-             <div className="space-y-1">
-                <p className="text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Best Development End Value</p>
-                <p className="text-2xl font-black text-[#4A4137]">
-                   {selectedDevScenario?.estimatedEndValue ? 
-                    `${formatValue(selectedDevScenario.estimatedEndValue.low)} – ${formatValue(selectedDevScenario.estimatedEndValue.high)}` : 
-                    'TBA'}
-                </p>
              </div>
              <div className="space-y-1">
                 <p className="text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Data Confidence</p>
@@ -251,6 +254,156 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
           </div>
         </div>
       </div>
+
+      {/* GOOGLE MAP INTEGRATION */}
+      <div className="w-full h-[400px] rounded-[3rem] overflow-hidden shadow-lg border border-slate-100 bg-slate-50 relative group">
+         <div className="absolute inset-0 bg-slate-200/50 animate-pulse group-hover:hidden"></div>
+         <iframe
+          title="Property Location Map"
+          width="100%"
+          height="100%"
+          frameBorder="0"
+          scrolling="no"
+          marginHeight={0}
+          marginWidth={0}
+          src={mapUrl}
+          className="relative z-10 filter contrast-[1.1] grayscale-[0.2]"
+        ></iframe>
+      </div>
+
+      {/* COMMUNITY & LIFESTYLE */}
+      {(filteredProximity.length > 0) || data.localAreaIntel || data.localMarketVibe ? (
+        <section className="space-y-6">
+           <div className="flex items-center gap-4 px-4">
+              <div className="w-10 h-10 bg-[#B8C5A0] text-white rounded-xl flex items-center justify-center shadow-md">
+                <i className="fa-solid fa-map-pin"></i>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Proximity & Infrastructure</h2>
+                <p className="text-[10px] font-bold text-[#B8C5A0] uppercase tracking-widest mt-0.5">Local Amenities & Community DNA</p>
+              </div>
+           </div>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {filteredProximity.map((amenity, i) => (
+                <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group">
+                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 ${getAmenityColor(amenity.type)}`}>
+                      {getAmenityIcon(amenity.type)}
+                   </div>
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#4A4137]/30">{amenity.type}</p>
+                      <h4 className="text-sm font-bold text-[#4A4137] leading-tight line-clamp-2">{amenity.name}</h4>
+                      <p className="text-xs font-black text-[#B8C5A0]">{amenity.distance}</p>
+                   </div>
+                </div>
+              ))}
+           </div>
+
+           {(data.localAreaIntel || data.localMarketVibe) && (
+             <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm space-y-8">
+                {data.localAreaIntel?.schools && (
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                      <i className="fa-solid fa-graduation-cap text-[#B8C5A0]"></i>
+                      <h3 className="text-lg font-bold text-[#4A4137]">School Catchments</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                       <div className="space-y-4">
+                          <p className="text-[10px] font-black text-[#4A4137]/30 uppercase tracking-[0.2em]">Primary Schools</p>
+                          <div className="space-y-4">
+                             {data.localAreaIntel.schools.primary?.map((school, idx) => (
+                               <div key={idx} className="flex items-start gap-3">
+                                  <div className="mt-1 w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                                  <div>
+                                     <p className="text-sm font-bold text-[#4A4137]">{school.name}</p>
+                                     <p className="text-[10px] text-[#4A4137]/50">{school.distanceKm}km away</p>
+                                  </div>
+                               </div>
+                             ))}
+                          </div>
+                       </div>
+                       <div className="space-y-4">
+                          <p className="text-[10px] font-black text-[#4A4137]/30 uppercase tracking-[0.2em]">Secondary Schools</p>
+                          <div className="space-y-4">
+                             {data.localAreaIntel.schools.secondary?.map((school, idx) => (
+                               <div key={idx} className="flex items-start gap-3">
+                                  <div className="mt-1 w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                                  <div>
+                                     <p className="text-sm font-bold text-[#4A4137]">{school.name}</p>
+                                     <p className="text-[10px] text-[#4A4137]/50">{school.distanceKm}km away</p>
+                                  </div>
+                               </div>
+                             ))}
+                          </div>
+                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TRANSPORT SECTION */}
+                {data.localAreaIntel?.transport && (
+                  <div className="space-y-6 pt-8 border-t border-slate-50">
+                    <div className="flex items-center gap-3">
+                      <i className="fa-solid fa-bus text-[#B8C5A0]"></i>
+                      <h3 className="text-lg font-bold text-[#4A4137]">Public Transport</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                       {data.localAreaIntel.transport.trainStations && data.localAreaIntel.transport.trainStations.length > 0 && (
+                         <div className="space-y-4">
+                            <p className="text-[10px] font-black text-[#4A4137]/30 uppercase tracking-[0.2em]">Train Stations</p>
+                            <div className="space-y-4">
+                               {data.localAreaIntel.transport.trainStations.map((station, idx) => (
+                                 <div key={idx} className="flex items-start gap-3">
+                                    <div className="mt-1 w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                                    <div>
+                                       <p className="text-sm font-bold text-[#4A4137]">{station.name}</p>
+                                       <p className="text-[10px] text-[#4A4137]/50">
+                                         {station.distanceKm}km away {station.typicalTravelTimeToCBD && ` • ${station.typicalTravelTimeToCBD} to CBD`}
+                                       </p>
+                                    </div>
+                                 </div>
+                               ))}
+                            </div>
+                         </div>
+                       )}
+                       {data.localAreaIntel.transport.busStops && data.localAreaIntel.transport.busStops.length > 0 && (
+                         <div className="space-y-4">
+                            <p className="text-[10px] font-black text-[#4A4137]/30 uppercase tracking-[0.2em]">Key Bus Stops</p>
+                            <div className="space-y-4">
+                               {data.localAreaIntel.transport.busStops.map((stop, idx) => (
+                                 <div key={idx} className="flex items-start gap-3">
+                                    <div className="mt-1 w-1.5 h-1.5 rounded-full bg-amber-400"></div>
+                                    <div>
+                                       <p className="text-sm font-bold text-[#4A4137]">{stop.name}</p>
+                                       <p className="text-[10px] text-[#4A4137]/50">
+                                         {stop.distanceKm}km away
+                                       </p>
+                                    </div>
+                                 </div>
+                               ))}
+                            </div>
+                         </div>
+                       )}
+                    </div>
+                  </div>
+                )}
+
+                {(data.localAreaIntel?.lifestyleSummary || data.localMarketVibe) && (
+                  <div className="pt-8 border-t border-slate-50 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <i className="fa-solid fa-star text-[#B8C5A0]"></i>
+                      <h3 className="text-lg font-bold text-[#4A4137]">Local Area Vibe</h3>
+                    </div>
+                    <p className="text-[10px] font-black text-[#4A4137]/30 uppercase tracking-[0.2em]">Community Insight</p>
+                    <p className="text-sm text-[#4A4137]/60 italic leading-relaxed max-w-2xl">
+                      "{data.localAreaIntel?.lifestyleSummary || data.localMarketVibe}"
+                    </p>
+                  </div>
+                )}
+             </div>
+           )}
+        </section>
+      ) : null}
 
       {/* PORTFOLIO SELL-OUT SUMMARY */}
       {data.portfolioSelloutSummary && (
@@ -273,9 +426,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
                        </p>
                     </div>
                  </div>
-                 <p className="text-sm text-white/60 leading-relaxed max-w-xl italic">
-                    "{data.portfolioSelloutSummary.selloutExplanation}"
-                 </p>
+                 <p className="text-sm text-white/60 leading-relaxed max-w-xl italic">"{data.portfolioSelloutSummary.selloutExplanation}"</p>
               </div>
            </div>
         </div>
@@ -295,12 +446,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
                 </div>
              </div>
              {selectedStrategies.size > 0 && (
-                <button 
-                   onClick={() => setSelectedStrategies(new Set())}
-                   className="text-[10px] font-black uppercase tracking-widest text-[#4A4137]/40 hover:text-[#D6A270] transition-colors"
-                >
-                   Reset Selections
-                </button>
+                <button onClick={() => setSelectedStrategies(new Set())} className="text-[10px] font-black uppercase tracking-widest text-[#4A4137]/40 hover:text-[#D6A270] transition-colors">Reset Selections</button>
              )}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -312,20 +458,11 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
                         <PathwayBadgeWithTooltip pathway={strategy.planningPathway} />
                      </div>
                      <div className="flex flex-col items-end gap-2">
-                        <button 
-                           onClick={() => toggleStrategy(i)}
-                           className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${selectedStrategies.has(i) ? 'bg-[#D3D9B5] text-white border-[#D3D9B5]' : 'bg-white text-[#4A4137]/40 border-slate-200 hover:border-[#D3D9B5] hover:text-[#D3D9B5]'}`}
-                        >
-                           {selectedStrategies.has(i) ? <><i className="fa-solid fa-check mr-1"></i> Included</> : 'Include'}
-                        </button>
-                        <div className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${getEffortColor(strategy.effort)}`}>
-                           {strategy.effort} Effort
-                        </div>
+                        <button onClick={() => toggleStrategy(i)} className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${selectedStrategies.has(i) ? 'bg-[#D3D9B5] text-white border-[#D3D9B5]' : 'bg-white text-[#4A4137]/40 border-slate-200 hover:border-[#D3D9B5] hover:text-[#D3D9B5]'}`}>{selectedStrategies.has(i) ? <><i className="fa-solid fa-check mr-1"></i> Included</> : 'Include'}</button>
+                        <div className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${getEffortColor(strategy.effort)}`}>{strategy.effort} Effort</div>
                      </div>
                   </div>
                   <p className="text-sm text-[#4A4137]/60 leading-relaxed mb-6">{strategy.description}</p>
-                  
-                  {/* COMPACT UI FOR RENOVATION STRATEGIES */}
                   <div className="grid grid-cols-2 gap-3 mb-2 mt-auto">
                      <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-center">
                         <p className="text-[8px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Estimated Cost</p>
@@ -334,11 +471,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
                      {(strategy.indicativeEquityUplift || strategy.saleProfitEstimate) && (
                        <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col justify-center">
                           <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1">Equity Gain $</p>
-                          <p className="text-sm font-black text-emerald-700">
-                             {strategy.indicativeEquityUplift ? 
-                               `${formatValue(strategy.indicativeEquityUplift.low)} – ${formatValue(strategy.indicativeEquityUplift.high)}` :
-                               `${formatValue(strategy.saleProfitEstimate?.low)} – ${formatValue(strategy.saleProfitEstimate?.high)}`}
-                          </p>
+                          <p className="text-sm font-black text-emerald-700">{strategy.indicativeEquityUplift ? `${formatValue(strategy.indicativeEquityUplift.low)} – ${formatValue(strategy.indicativeEquityUplift.high)}` : `${formatValue(strategy.saleProfitEstimate?.low)} – ${formatValue(strategy.saleProfitEstimate?.high)}`}</p>
                        </div>
                      )}
                   </div>
@@ -348,82 +481,98 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
         </section>
       )}
 
+      {/* INDICATIVE POST-RENOVATION RENTAL POSITION */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-4 px-4">
+          <div className="w-10 h-10 bg-[#C9A961] text-white rounded-xl flex items-center justify-center shadow-md">
+            <i className="fa-solid fa-key"></i>
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-[#3A342D] tracking-tight">Indicative Post-Renovation Rental Position</h2>
+            <p className="text-[10px] font-bold text-[#C9A961] uppercase tracking-widest mt-0.5">Yield & Cash Flow (After Improvements)</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-center">
+            <p className="text-[10px] font-bold text-[#3A342D]/40 uppercase tracking-widest mb-2">Indicative Weekly Rent</p>
+            <p className="text-2xl font-black text-[#3A342D]">
+              {data.rentalPosition?.estimatedWeeklyRent ? `$${data.rentalPosition.estimatedWeeklyRent} / wk` : 'Indicative only'}
+            </p>
+          </div>
+          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-center">
+            <p className="text-[10px] font-bold text-[#3A342D]/40 uppercase tracking-widest mb-2">Indicative Annual Rent</p>
+            <p className="text-2xl font-black text-[#3A342D]">
+              {data.rentalPosition?.estimatedWeeklyRent ? formatValue(data.rentalPosition.estimatedWeeklyRent * 52) : 'Indicative only'}
+            </p>
+          </div>
+          <div className="bg-[#FCF9F3] p-10 rounded-[3rem] border border-slate-100 shadow-sm relative group">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-[11px] font-black text-[#3A342D] uppercase tracking-[0.1em] max-w-[180px]">INDICATIVE WEEKLY CASH POSITION</p>
+              <div className="w-6 h-6 rounded-full bg-slate-200/50 flex items-center justify-center cursor-help">
+                <i className="fa-solid fa-info text-[9px] text-[#3A342D]"></i>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <p className={`text-3xl md:text-4xl font-black ${cashColorClass} tracking-tight leading-none`}>
+                {cashPos !== undefined 
+                  ? `${isNegative ? '' : isPositive ? '+' : ''}${formatValue(cashPos)} / wk`
+                  : 'TBA'}
+              </p>
+            </div>
+            {/* Tooltip Content */}
+            <div className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-72 p-4 bg-[#3A342D] text-white text-[11px] font-medium rounded-2xl shadow-2xl z-50 transition-all opacity-0 group-hover:opacity-100 pointer-events-none leading-relaxed text-center">
+              Estimated weekly surplus or gap after principal and interest repayments.
+              <br/><br/>
+              <span className="opacity-60 italic text-[10px]">Assumes 80% LVR investment loan at current rates (~6.3%) over 30 years. {data.rentalPosition?.repaymentAssumptionNotes}</span>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-[#3A342D]"></div>
+            </div>
+          </div>
+        </div>
+        <p className="text-[10px] text-[#3A342D]/30 italic px-4 leading-relaxed">
+          Indicative weekly figures based on predicted property condition after improvements. Includes simulated debt servicing. Does not account for taxes, vacancy, or strata.
+        </p>
+      </section>
+
       {/* DEVELOPMENT SCENARIOS */}
       {data.developmentScenarios && data.developmentScenarios.length > 0 && (
         <section className="space-y-6">
            <div className="flex items-center justify-between px-4">
               <div className="flex items-center gap-4">
-                 <div className="w-10 h-10 bg-[#4A4137] text-white rounded-xl flex items-center justify-center shadow-sm">
-                    <i className="fa-solid fa-city"></i>
-                 </div>
+                 <div className="w-10 h-10 bg-[#4A4137] text-white rounded-xl flex items-center justify-center shadow-sm"><i className="fa-solid fa-city"></i></div>
                  <div>
                     <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Development Scenarios</h2>
                     <p className="text-[10px] font-bold text-[#4A4137]/40 uppercase tracking-widest mt-0.5">Knockdown / Duplex / Townhouse Potential</p>
                  </div>
               </div>
-              {selectedDevScenarioIndex !== null && (
-                <button 
-                   onClick={() => setSelectedDevScenarioIndex(null)}
-                   className="text-[10px] font-black uppercase tracking-widest text-[#4A4137]/40 hover:text-[#D6A270] transition-colors"
-                >
-                   Reset Selection
-                </button>
-              )}
            </div>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {data.developmentScenarios.map((scenario, i) => (
-                <div key={i} className={`bg-white p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col ${selectedDevScenarioIndex === i ? 'border-[#4A4137] shadow-md ring-1 ring-[#4A4137]/10' : 'border-slate-100 border-b-slate-200 hover:shadow-md'}`}>
+                <div key={i} className="bg-white p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col border-slate-100 border-b-slate-200 hover:shadow-md">
                    <div className="flex justify-between items-start mb-4">
                       <div className="space-y-1">
                          <h3 className="text-lg font-bold text-[#4A4137]">{scenario.title}</h3>
                          <div className="flex flex-wrap gap-2">
-                            <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${getEligibilityBadgeColor(scenario.eligibility)}`}>
-                               {scenario.eligibility}
-                            </span>
+                            <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${getEligibilityBadgeColor(scenario.eligibility)}`}>{scenario.eligibility}</span>
                             <PathwayBadgeWithTooltip pathway={scenario.planningPathway} />
                          </div>
                       </div>
-                      <button 
-                         onClick={() => scenario.eligibility !== 'Not Allowed' && setSelectedDevScenarioIndex(i)}
-                         disabled={scenario.eligibility === 'Not Allowed'}
-                         className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${selectedDevScenarioIndex === i ? 'bg-[#4A4137] text-white border-[#4A4137]' : scenario.eligibility === 'Not Allowed' ? 'bg-slate-100 text-slate-400 border-slate-100 cursor-not-allowed' : 'bg-white text-[#4A4137]/40 border-slate-200 hover:border-[#4A4137] hover:text-[#4A4137]'}`}
-                      >
-                         {selectedDevScenarioIndex === i ? <><i className="fa-solid fa-check mr-1"></i> Selected</> : scenario.eligibility === 'Not Allowed' ? 'Not Permitted' : 'Select Scenario'}
-                      </button>
                    </div>
-                   
                    <p className="text-sm text-[#4A4137]/60 leading-relaxed mb-4">{scenario.description}</p>
                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-6">
                       <p className="text-[10px] font-bold text-[#4A4137]/50 uppercase tracking-widest mb-1">Rationale</p>
                       <p className="text-xs text-[#4A4137]/70 italic leading-relaxed">{scenario.whyAllowedOrNot}</p>
                    </div>
-
-                   {/* RESTORED PROMINENT LAYOUT FOR DEVELOPMENT SCENARIOS */}
                    <div className="grid grid-cols-1 gap-4 mb-4">
                       <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                          <p className="text-[10px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Est. Build Cost</p>
                          <p className="text-lg font-bold text-[#4A4137]">{formatValue(scenario.estimatedCost?.low)} – {formatValue(scenario.estimatedCost?.high)}</p>
                       </div>
                    </div>
-
                    {scenario.estimatedNetProfit && (
                      <div className="p-5 bg-emerald-50 rounded-[2rem] border border-emerald-100 mb-2 mt-auto">
                         <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2 text-center text-emerald-700">INDICATIVE DEVELOPMENT MARGIN</p>
-                        <p className="text-2xl font-black text-emerald-700 text-center">
-                           {formatValue(scenario.estimatedNetProfit.low)} – {formatValue(scenario.estimatedNetProfit.high)}
-                        </p>
+                        <p className="text-2xl font-black text-emerald-700 text-center">{formatValue(scenario.estimatedNetProfit.low)} – {formatValue(scenario.estimatedNetProfit.high)}</p>
                      </div>
-                   )}
-
-                   {(scenario.keyConstraints?.length || 0) > 0 && (
-                      <div className="mt-4 space-y-2">
-                         <p className="text-[8px] font-black text-[#4A4137]/50 uppercase tracking-widest">Controls & Constraints</p>
-                         <div className="flex flex-wrap gap-1">
-                            {scenario.keyConstraints?.map((c, idx) => (
-                               <span key={idx} className="px-2 py-0.5 bg-slate-100 text-[#4A4137]/50 rounded text-[9px] font-medium">{c}</span>
-                            ))}
-                         </div>
-                      </div>
                    )}
                 </div>
               ))}
@@ -436,57 +585,27 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
         {data.approvalPathway && (
           <div className="bg-white p-10 rounded-[3rem] border border-[#D6A270]/10 shadow-sm space-y-8">
              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-blue-500 text-white rounded-xl flex items-center justify-center shadow-md">
-                   <i className="fa-solid fa-file-shield"></i>
-                </div>
+                <div className="w-10 h-10 bg-blue-500 text-white rounded-xl flex items-center justify-center shadow-md"><i className="fa-solid fa-file-shield"></i></div>
                 <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Approval Pathway</h2>
              </div>
-             <div className="space-y-6">
-                <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                   <div className="mb-4">
-                     <PathwayBadgeWithTooltip pathway={data.approvalPathway.likelyPathway} />
-                   </div>
-                   <p className="text-sm text-[#4A4137]/60 leading-relaxed">{data.approvalPathway.explanation}</p>
-                   {data.approvalPathway.estimatedApprovalTimeWeeks && (
-                     <p className="mt-4 text-[10px] font-bold text-[#4A4137]/60 uppercase tracking-widest">
-                       Approx: {(data.approvalPathway.estimatedApprovalTimeWeeks.low && data.approvalPathway.estimatedApprovalTimeWeeks.high && typeof data.approvalPathway.estimatedApprovalTimeWeeks.low === 'number') 
-                         ? `${data.approvalPathway.estimatedApprovalTimeWeeks.low} – ${data.approvalPathway.estimatedApprovalTimeWeeks.high}` 
-                         : (data.approvalPathway.estimatedApprovalTimeWeeks.low || 'TBA')} weeks
-                     </p>
-                   )}
-                </div>
+             <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                <div className="mb-4"><PathwayBadgeWithTooltip pathway={data.approvalPathway.likelyPathway} /></div>
+                <p className="text-sm text-[#4A4137]/60 leading-relaxed">{data.approvalPathway.explanation}</p>
              </div>
           </div>
         )}
-
         {data.zoningIntel && (
           <div className="bg-[#D3D9B5]/10 p-10 rounded-[3rem] border border-[#D3D9B5]/20 space-y-8">
              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-[#D3D9B5] text-white rounded-xl flex items-center justify-center shadow-md">
-                   <i className="fa-solid fa-map-location-dot"></i>
-                </div>
+                <div className="w-10 h-10 bg-[#D3D9B5] text-white rounded-xl flex items-center justify-center shadow-md"><i className="fa-solid fa-map-location-dot"></i></div>
                 <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Zoning Intel</h2>
              </div>
-             <div className="space-y-6">
-                <div className="px-6 py-4 bg-white rounded-3xl border border-[#D3D9B5]/20 text-center space-y-2 shadow-sm">
-                   <p className="text-[10px] font-black text-[#4A4137]/40 uppercase tracking-widest">Zone Code</p>
-                   <p className="text-2xl font-black text-[#4A4137] tracking-widest">{data.zoningIntel.currentZoneCode}</p>
-                   <p className="text-xs font-bold text-[#D3D9B5] uppercase">{data.zoningIntel.currentZoneTitle}</p>
-                </div>
-                <p className="text-sm text-[#4A4137]/70 font-medium leading-relaxed">{data.zoningIntel.whatItMeans}</p>
-                {data.zoningIntel.recentChanges && data.zoningIntel.recentChanges.length > 0 && (
-                  <div className="pt-4 space-y-4">
-                    <p className="text-[10px] font-black text-[#D3D9B5] uppercase tracking-widest">Recent Rezoning History (24 Months)</p>
-                    {data.zoningIntel.recentChanges.map((change, idx) => (
-                      <div key={idx} className="bg-white/50 p-4 rounded-2xl border border-[#D3D9B5]/10">
-                         <p className="text-xs font-black text-[#4A4137]">{change.changeTitle}</p>
-                         <p className="text-[10px] text-[#4A4137]/40 mb-2">{change.date}</p>
-                         <p className="text-[11px] text-[#4A4137]/60 italic">{change.impactOnOwner}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
+             <div className="px-6 py-4 bg-white rounded-3xl border border-[#D3D9B5]/20 text-center space-y-2 shadow-sm">
+                <p className="text-[10px] font-black text-[#4A4137]/40 uppercase tracking-widest">Zone Code</p>
+                <p className="text-2xl font-black text-[#4A4137] tracking-widest">{data.zoningIntel.currentZoneCode}</p>
+                <p className="text-xs font-bold text-[#D3D9B5] uppercase">{data.zoningIntel.currentZoneTitle}</p>
              </div>
+             <p className="text-sm text-[#4A4137]/70 font-medium leading-relaxed">{data.zoningIntel.whatItMeans}</p>
           </div>
         )}
       </section>
@@ -495,176 +614,30 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
       {data.comparableSales && (
         <section className="space-y-8">
            <div className="flex items-center gap-4 px-4">
-              <div className="w-10 h-10 bg-slate-800 text-white rounded-xl flex items-center justify-center shadow-sm">
-                 <i className="fa-solid fa-tags"></i>
-              </div>
-              <div>
-                 <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Comparable Market Sales</h2>
-                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Recent Transaction Context</p>
-              </div>
+              <div className="w-10 h-10 bg-slate-800 text-white rounded-xl flex items-center justify-center shadow-sm"><i className="fa-solid fa-tags"></i></div>
+              <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Comparable Market Sales</h2>
            </div>
            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
                  {data.comparableSales.nearbySales && data.comparableSales.nearbySales.length > 0 && (
                    <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm space-y-4">
-                      <h3 className="text-xs font-black text-[#4A4137]/40 uppercase tracking-widest">Nearby Relevant Sales</h3>
-                      <div className="space-y-4">
-                         {data.comparableSales.nearbySales.map((sale, i) => (
-                            <div key={i} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-slate-100 group transition-all hover:border-[#D6A270]/20">
-                               <div className="flex gap-4 items-center">
-                                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[10px] font-bold text-[#4A4137]/40 shadow-sm">
-                                     {sale.distanceKm ? `${sale.distanceKm}km` : '–'}
-                                  </div>
-                                  <div className="space-y-0.5">
-                                     <p className="text-sm font-bold text-[#4A4137]">{sale.addressShort}</p>
-                                     <p className="text-[10px] text-[#4A4137]/40">{sale.date}</p>
-                                  </div>
-                               </div>
-                               <div className="text-right">
-                                  <p className="text-sm font-black text-[#D6A270]">{formatValue(sale.price)}</p>
-                                  <a href={sale.sourceUrl} target="_blank" rel="noopener" className="text-[8px] uppercase tracking-widest font-bold text-[#4A4137]/40 hover:text-[#D6A270]">Source View</a>
+                      {data.comparableSales.nearbySales.map((sale, i) => (
+                         <div key={i} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-slate-100 group transition-all hover:border-[#D6A270]/20">
+                            <div className="flex gap-4 items-center">
+                               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[10px] font-bold text-[#4A4137]/40 shadow-sm">{sale.distanceKm ? `${sale.distanceKm}km` : '–'}</div>
+                               <div className="space-y-0.5">
+                                  <p className="text-sm font-bold text-[#4A4137]">{sale.addressShort}</p>
+                                  <p className="text-[10px] text-[#4A4137]/40">{sale.date}</p>
                                </div>
                             </div>
-                         ))}
-                      </div>
+                            <p className="text-sm font-black text-[#D6A270]">{formatValue(sale.price)}</p>
+                         </div>
+                      ))}
                    </div>
                  )}
               </div>
               <div className="bg-[#4A4137] p-8 rounded-[3rem] text-white space-y-6 relative overflow-hidden h-fit">
-                 <h3 className="text-xs font-black text-white/30 uppercase tracking-widest relative z-10">Pricing Context</h3>
-                 <p className="text-sm font-medium leading-relaxed text-white/80 relative z-10">
-                    {data.comparableSales.pricingContextSummary}
-                 </p>
-              </div>
-           </div>
-        </section>
-      )}
-
-      {/* LOCAL AREA INTEL */}
-      {data.localAreaIntel && (
-        <section className="space-y-8">
-           <div className="flex items-center gap-4 px-4">
-              <div className="w-10 h-10 bg-indigo-500 text-white rounded-xl flex items-center justify-center shadow-sm">
-                 <i className="fa-solid fa-map-pin"></i>
-              </div>
-              <div>
-                 <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Local Area</h2>
-                 <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mt-0.5">Schools & Transport Access</p>
-              </div>
-           </div>
-
-           {data.localAreaIntel.lifestyleSummary && (
-             <p className="px-4 text-sm text-[#4A4137]/60 font-medium leading-relaxed italic text-center max-w-3xl mx-auto">
-               "{data.localAreaIntel.lifestyleSummary}"
-             </p>
-           )}
-
-           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Schools Sub-Section */}
-              <div className="bg-white p-8 rounded-[3rem] border border-indigo-100 shadow-sm space-y-6">
-                 <div className="flex items-center gap-2 mb-2">
-                    <i className="fa-solid fa-school text-indigo-500 text-sm"></i>
-                    <h3 className="text-xs font-black text-[#4A4137]/40 uppercase tracking-widest">School Catchments</h3>
-                 </div>
-                 <div className="space-y-6">
-                    {/* Primary Schools */}
-                    {data.localAreaIntel.schools?.primary && data.localAreaIntel.schools.primary.length > 0 && (
-                      <div className="space-y-3">
-                         <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Primary Education</p>
-                         <div className="space-y-2">
-                            {data.localAreaIntel.schools.primary.map((school, i) => (
-                               <div key={i} className="flex items-center justify-between p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
-                                  <div className="space-y-0.5">
-                                     <p className="text-xs font-bold text-[#4A4137]">{school.name}</p>
-                                     <div className="flex gap-2 items-center">
-                                        <span className="text-[8px] font-black uppercase text-indigo-400">{school.type}</span>
-                                        {school.ratingHint && <span className="text-[8px] text-[#4A4137]/40 font-medium">• {school.ratingHint}</span>}
-                                     </div>
-                                  </div>
-                                  <div className="text-right">
-                                     <p className="text-[10px] font-black text-[#4A4137]/40">{school.distanceKm !== undefined ? `${school.distanceKm}km` : '–'}</p>
-                                     {school.sourceUrl && <a href={school.sourceUrl} target="_blank" rel="noopener" className="text-[8px] font-bold uppercase text-indigo-300 hover:text-indigo-500">View</a>}
-                                  </div>
-                               </div>
-                            ))}
-                         </div>
-                      </div>
-                    )}
-                    {/* Secondary Schools */}
-                    {data.localAreaIntel.schools?.secondary && data.localAreaIntel.schools.secondary.length > 0 && (
-                      <div className="space-y-3">
-                         <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Secondary Education</p>
-                         <div className="space-y-2">
-                            {data.localAreaIntel.schools.secondary.map((school, i) => (
-                               <div key={i} className="flex items-center justify-between p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
-                                  <div className="space-y-0.5">
-                                     <p className="text-xs font-bold text-[#4A4137]">{school.name}</p>
-                                     <div className="flex gap-2 items-center">
-                                        <span className="text-[8px] font-black uppercase text-indigo-400">{school.type}</span>
-                                        {school.ratingHint && <span className="text-[8px] text-[#4A4137]/40 font-medium">• {school.ratingHint}</span>}
-                                     </div>
-                                  </div>
-                                  <div className="text-right">
-                                     <p className="text-[10px] font-black text-[#4A4137]/40">{school.distanceKm !== undefined ? `${school.distanceKm}km` : '–'}</p>
-                                     {school.sourceUrl && <a href={school.sourceUrl} target="_blank" rel="noopener" className="text-[8px] font-bold uppercase text-indigo-300 hover:text-indigo-500">View</a>}
-                                  </div>
-                               </div>
-                            ))}
-                         </div>
-                      </div>
-                    )}
-                 </div>
-              </div>
-
-              {/* Transport Sub-Section */}
-              <div className="bg-slate-50 p-8 rounded-[3rem] border border-indigo-50 shadow-sm space-y-6">
-                 <div className="flex items-center gap-2 mb-2">
-                    <i className="fa-solid fa-train-subway text-indigo-500 text-sm"></i>
-                    <h3 className="text-xs font-black text-[#4A4137]/40 uppercase tracking-widest">Transport Connectivity</h3>
-                 </div>
-                 <div className="space-y-6">
-                    {/* Train Stations */}
-                    {data.localAreaIntel.transport?.trainStations && data.localAreaIntel.transport.trainStations.length > 0 && (
-                      <div className="space-y-3">
-                         <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Rail Access</p>
-                         <div className="space-y-2">
-                            {data.localAreaIntel.transport.trainStations.map((station, i) => (
-                               <div key={i} className="flex items-center justify-between p-3 bg-white rounded-2xl border border-indigo-50 shadow-sm">
-                                  <div className="space-y-0.5">
-                                     <p className="text-xs font-bold text-[#4A4137]">{station.name}</p>
-                                     <p className="text-[8px] font-black uppercase text-indigo-400">{station.lineOrNetwork}</p>
-                                  </div>
-                                  <div className="text-right">
-                                     <p className="text-[10px] font-black text-[#4A4137]/40">{station.distanceKm !== undefined ? `${station.distanceKm}km` : '–'}</p>
-                                     {station.typicalTravelTimeToCBD && <p className="text-[8px] font-bold text-indigo-400/60 uppercase">{station.typicalTravelTimeToCBD} to CBD</p>}
-                                  </div>
-                               </div>
-                            ))}
-                         </div>
-                      </div>
-                    )}
-                    {/* Bus Stops */}
-                    {data.localAreaIntel.transport?.busStops && data.localAreaIntel.transport.busStops.length > 0 && (
-                      <div className="space-y-3">
-                         <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Bus Links</p>
-                         <div className="space-y-2">
-                            {data.localAreaIntel.transport.busStops.map((stop, i) => (
-                               <div key={i} className="p-3 bg-white rounded-2xl border border-indigo-50 shadow-sm space-y-2">
-                                  <div className="flex justify-between items-start">
-                                     <p className="text-xs font-bold text-[#4A4137]">{stop.name}</p>
-                                     <p className="text-[10px] font-black text-[#4A4137]/40">{stop.distanceKm !== undefined ? `${stop.distanceKm}km` : '–'}</p>
-                                  </div>
-                                  <div className="flex flex-wrap gap-1">
-                                     {stop.routes?.map((route, idx) => (
-                                        <span key={idx} className="px-2 py-0.5 bg-indigo-50 text-indigo-500 rounded text-[8px] font-black tracking-widest">{route}</span>
-                                     ))}
-                                  </div>
-                               </div>
-                            ))}
-                         </div>
-                      </div>
-                    )}
-                 </div>
+                 <p className="text-sm font-medium leading-relaxed text-white/80">{data.comparableSales.pricingContextSummary}</p>
               </div>
            </div>
         </section>
@@ -674,29 +647,16 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
       {data.watchOuts && data.watchOuts.length > 0 && (
         <section className="bg-rose-50/50 p-10 md:p-14 rounded-[4rem] border border-rose-100 space-y-8">
           <div className="flex items-center gap-4">
-             <div className="w-10 h-10 bg-rose-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-rose-200">
-                <i className="fa-solid fa-eye"></i>
-             </div>
-             <div>
-                <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Things to Watch Out For</h2>
-                <p className="text-[10px] font-bold text-rose-500/60 uppercase tracking-widest mt-0.5">Potential Dealbreakers & Risks</p>
-             </div>
+             <div className="w-10 h-10 bg-rose-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-rose-200"><i className="fa-solid fa-eye"></i></div>
+             <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Things to Watch Out For</h2>
           </div>
           <div className="grid grid-cols-1 gap-6">
              {data.watchOuts.map((wo, i) => (
-               <div key={i} className="bg-white p-8 rounded-[2.5rem] flex flex-col md:flex-row gap-6 border border-rose-100 shadow-sm relative overflow-hidden group">
+               <div key={i} className="bg-white p-8 rounded-[2.5rem] flex flex-col md:flex-row gap-6 border border-rose-100 shadow-sm group">
                   <div className="flex-shrink-0 mt-1 text-2xl">{getSeverityIcon(wo.severity)}</div>
                   <div className="space-y-3 flex-grow">
-                     <div>
-                        <h3 className="text-lg font-bold text-[#4A4137]">{wo.title}</h3>
-                        <p className="text-sm text-[#4A4137]/60 leading-relaxed">{wo.description}</p>
-                     </div>
-                     <div className="p-4 bg-rose-50/50 rounded-2xl border border-rose-100/30">
-                        <h4 className="text-[9px] font-black text-rose-500/60 uppercase tracking-widest mb-1">Consequence</h4>
-                        <p className="text-xs font-medium text-[#4A4137]/70 italic leading-relaxed">
-                          "{wo.consequence}"
-                        </p>
-                     </div>
+                     <h3 className="text-lg font-bold text-[#4A4137]">{wo.title}</h3>
+                     <p className="text-sm text-[#4A4137]/60 leading-relaxed">{wo.description}</p>
                   </div>
                </div>
              ))}
@@ -704,44 +664,19 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data }) => {
         </section>
       )}
 
-      {/* INVESTMENT VERDICT */}
-      <section className="bg-[#4A4137] p-10 md:p-16 rounded-[4rem] text-white shadow-2xl relative overflow-hidden">
-        <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-[#D6A270]/20 rounded-full blur-3xl"></div>
-        <div className="relative z-10 space-y-6">
-          <div className="flex items-center justify-between">
-             <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-[#D6A270] text-white rounded-2xl flex items-center justify-center shadow-lg">
-                   <i className="fa-solid fa-gavel text-xl"></i>
-                </div>
-                <h2 className="text-2xl font-bold tracking-tight">Strategy Verdict</h2>
-             </div>
-          </div>
-          <p className="text-lg md:text-xl font-medium leading-relaxed text-white/90">
-            {data.investmentVerdict}
-          </p>
-        </div>
-      </section>
+      {/* SEARCH ANOTHER PROPERTY BUTTON */}
+      <div className="flex justify-center pt-8">
+         <button 
+           onClick={onHome}
+           className="px-12 py-5 bg-[#3A342D] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl hover:bg-[#C9A961] transition-all transform active:scale-95 flex items-center gap-3"
+         >
+           <i className="fa-solid fa-magnifying-glass"></i>
+           Search Another Property
+         </button>
+      </div>
 
-      {/* SHARE WITH PARTNER CARD */}
-      <section className="max-w-2xl mx-auto">
-         <div className="bg-white p-10 rounded-[3rem] border border-[#D6A270]/10 shadow-xl text-center space-y-6 relative overflow-hidden">
-            <div className="space-y-2 relative z-10">
-               <h3 className="text-xl font-bold text-[#4A4137]">{data?.sharePrompt?.headline || 'Share Analysis'}</h3>
-               <p className="text-sm text-[#4A4137]/50 max-w-sm mx-auto font-medium">{data?.sharePrompt?.message || 'Send this property audit to a partner or advisor.'}</p>
-            </div>
-            <button 
-               onClick={handleShare}
-               className="relative z-10 px-8 py-4 bg-[#D6A270] text-white rounded-2xl font-bold uppercase tracking-widest text-[11px] hover:bg-[#4A4137] transition-all flex items-center gap-3 mx-auto shadow-lg shadow-[#D6A270]/20 active:scale-95"
-            >
-               <i className={`fa-solid ${copied ? 'fa-check' : 'fa-share-nodes'}`}></i>
-               {copied ? 'Copied' : (data?.sharePrompt?.ctaLabel || 'Share Report')}
-            </button>
-         </div>
-      </section>
-
-      {/* SOURCES & FOOTER */}
-      <footer className="space-y-10 pt-10">
-        <div className="text-center px-10">
+      <footer className="pt-10">
+        <div className="text-center">
           <p className="text-[10px] text-[#4A4137]/30 leading-relaxed max-w-sm mx-auto italic">
             This guide is an automated strategy simulation based on public data and AI interpretation. Always consult with a licensed professional before making financial or legal decisions.
           </p>

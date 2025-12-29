@@ -1,52 +1,42 @@
+
 import { PlanType } from "../types";
 
 export class StripeService {
-  private static API_BASE = '/api';
+  private static IS_DEV = true; // Toggle this when your backend is live
+  private static API_BASE = '/api'; 
 
-  async createCheckoutSession(plan: PlanType, email?: string): Promise<{ url?: string; success: boolean; error?: string }> {
+  /**
+   * Initiates the checkout process.
+   * In a real environment, this calls your Node.js backend to get a Stripe Session URL.
+   */
+  async createCheckoutSession(plan: PlanType): Promise<{ url?: string; success: boolean }> {
+    if (StripeService.IS_DEV) {
+      // Simulate network latency for a premium feel
+      await new Promise(resolve => setTimeout(resolve, 2200));
+      return { success: true };
+    }
+
     try {
       const response = await fetch(`${StripeService.API_BASE}/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, email })
+        body: JSON.stringify({ plan })
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Payment gateway error');
-      }
+      if (!response.ok) throw new Error('Payment gateway error');
       
       const data = await response.json();
       return { url: data.url, success: true };
-    } catch (error: any) {
+    } catch (error) {
       console.error("Stripe Integration Error:", error);
-      return { success: false, error: error.message };
+      return { success: false };
     }
   }
 
-  async verifySession(sessionId: string): Promise<{ success: boolean; plan?: PlanType; error?: string }> {
+  // Add method to check subscription status
+  async getSubscriptionStatus(): Promise<{ plan: PlanType; active: boolean } | null> {
     try {
-      const response = await fetch(`${StripeService.API_BASE}/verify-session?session_id=${sessionId}`);
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Session verification failed');
-      }
-      
-      const data = await response.json();
-      return { 
-        success: data.success, 
-        plan: data.plan as PlanType 
-      };
-    } catch (error: any) {
-      console.error("Session verification error:", error);
-      return { success: false, error: error.message };
-    }
-  }
-
-  async getSubscriptionStatus(customerId: string): Promise<{ plan: PlanType; active: boolean } | null> {
-    try {
-      const response = await fetch(`${StripeService.API_BASE}/subscription-status?customer_id=${customerId}`);
+      const response = await fetch(`${StripeService.API_BASE}/subscription-status`);
       if (!response.ok) return null;
       return await response.json();
     } catch (error) {

@@ -1,3 +1,4 @@
+
 import express from 'express';
 import Stripe from 'stripe';
 import cors from 'cors';
@@ -15,15 +16,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Plan pricing configuration
+// Single plan configuration
 const PLAN_PRICES = {
   BUYER_PACK: {
-    amount: 2900, // $29.00 in cents
-    currency: 'usd'
-  },
-  MONITOR: {
-    amount: 9900, // $99.00 in cents
-    currency: 'usd'
+    amount: 4900, // $49.00 AUD in cents
+    currency: 'aud'
   }
 };
 
@@ -40,16 +37,14 @@ app.post('/api/create-checkout-session', async (req, res) => {
     const customerEmail = req.body.email || undefined;
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'apple_pay'], // Added Apple Pay for AU convenience
       line_items: [
         {
           price_data: {
             currency: planConfig.currency,
             product_data: {
-              name: plan === 'BUYER_PACK' ? 'Propwise Buyer Pack' : 'Propwise Monitor',
-              description: plan === 'BUYER_PACK' 
-                ? 'Unlimited property audits and deep intelligence reports'
-                : 'Professional property analysis with API access',
+              name: 'Propwise Unlimited Access',
+              description: 'Unlimited property intelligence audits and deep dive reports for one month.',
             },
             unit_amount: planConfig.amount,
             recurring: {
@@ -60,8 +55,8 @@ app.post('/api/create-checkout-session', async (req, res) => {
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.FRONTEND_URL || 'http://localhost:3001'}?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3001'}/pricing?canceled=true`,
+      success_url: `${process.env.FRONTEND_URL || 'http://localhost:3001'}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3001'}?payment=cancel`,
       customer_email: customerEmail,
       metadata: {
         plan: plan,
@@ -108,44 +103,7 @@ app.get('/api/verify-session', async (req, res) => {
   }
 });
 
-// Webhook endpoint
-app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-  let event;
-
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  switch (event.type) {
-    case 'checkout.session.completed':
-      console.log('Checkout session completed:', event.data.object.id);
-      break;
-    case 'customer.subscription.created':
-    case 'customer.subscription.updated':
-      console.log('Subscription updated:', event.data.object.id);
-      break;
-    case 'customer.subscription.deleted':
-      console.log('Subscription canceled:', event.data.object.id);
-      break;
-    default:
-      console.log(`Unhandled event type ${event.type}`);
-  }
-
-  res.json({ received: true });
-});
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
 const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Propwise server running on port ${PORT}`);
 });
