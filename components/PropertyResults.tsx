@@ -233,11 +233,11 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
           <div className="flex flex-wrap gap-8 pt-8 border-t border-slate-100">
              <div className="space-y-1">
                 <p className="text-[11px] sm:text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Estimated Market Value</p>
-                <p className="text-xl sm:text-2xl font-black text-[#D6A270]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
+                <p className="text-xl sm:text-2xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
              </div>
              <div className="space-y-1">
                 <p className="text-[11px] sm:text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Potential Value After Improvements</p>
-                <p className={`text-xl sm:text-2xl font-black transition-colors ${effectiveSelection.size > 0 ? 'text-[#D3D9B5]' : 'text-[#4A4137]'}`}>
+                <p className={`text-xl sm:text-2xl font-black transition-colors ${effectiveSelection.size > 0 ? 'text-[#8A9A6D]' : 'text-[#4A4137]'}`}>
                    {baseline === undefined ? 'TBA' : effectiveSelection.size === 0 ? formatValue(baseline) : `${formatValue(afterLow)} – ${formatValue(afterHigh)}`}
                 </p>
              </div>
