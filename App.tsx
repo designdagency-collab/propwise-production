@@ -250,27 +250,34 @@ const App: React.FC = () => {
 
   const handleUpgrade = async (planType: PlanType = 'BUYER_PACK') => {
     setIsProcessingUpgrade(true);
+    setError(null);
     
-    const response = await stripeService.createCheckoutSession(planType);
+    // Get email from user profile or localStorage
+    const email = userProfile?.email || localStorage.getItem('prop_user_email') || undefined;
     
-    if (response.success) {
-      if (response.url) {
+    try {
+      const response = await stripeService.createCheckoutSession(planType, email);
+      
+      if (response.success && response.url) {
+        // Redirect to Stripe checkout
         window.location.href = response.url;
+        // Don't set isProcessingUpgrade to false here - let the redirect happen
+        return;
       } else {
-        // Simulation path
-        setPlan(planType);
+        // No URL returned or API call failed
+        console.error('Stripe checkout failed:', response);
         setIsProcessingUpgrade(false);
-        setShowUpgradeSuccess(true);
+        const errorMessage = response.error || "Unable to initiate payment. Please check your connection and try again.";
+        setError(errorMessage);
+        setAppState(AppState.ERROR);
         setShowPricing(false);
-        if (appState === AppState.LIMIT_REACHED) {
-          setAppState(AppState.IDLE);
-        }
-        setTimeout(() => setShowUpgradeSuccess(false), 5000);
       }
-    } else {
+    } catch (error: any) {
+      console.error('Upgrade error:', error);
       setIsProcessingUpgrade(false);
-      setError("Payment gateway unavailable. Please try again later.");
+      setError(error?.message || "Payment gateway unavailable. Please try again later.");
       setAppState(AppState.ERROR);
+      setShowPricing(false);
     }
   };
 

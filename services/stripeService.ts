@@ -3,13 +3,14 @@ import { PlanType } from "../types";
 
 export class StripeService {
   private static IS_DEV = false; // Enable real Stripe integration
+  // Use relative path for API - works in both local dev and Vercel
   private static API_BASE = '/api'; 
 
   /**
    * Initiates the checkout process.
    * In a real environment, this calls your Node.js backend to get a Stripe Session URL.
    */
-  async createCheckoutSession(plan: PlanType, email?: string): Promise<{ url?: string; success: boolean }> {
+  async createCheckoutSession(plan: PlanType, email?: string): Promise<{ url?: string; success: boolean; error?: string }> {
     if (StripeService.IS_DEV) {
       // Simulate network latency for a premium feel
       await new Promise(resolve => setTimeout(resolve, 2200));
@@ -23,13 +24,26 @@ export class StripeService {
         body: JSON.stringify({ plan, email })
       });
 
-      if (!response.ok) throw new Error('Payment gateway error');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Stripe API error:', response.status, errorData);
+        throw new Error(errorData.error || `Payment gateway error: ${response.status}`);
+      }
       
       const data = await response.json();
+      
+      if (!data.url) {
+        console.error('Stripe API returned success but no URL:', data);
+        return { success: false, error: 'No checkout URL returned from server' };
+      }
+      
       return { url: data.url, success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Stripe Integration Error:", error);
-      return { success: false };
+      return { 
+        success: false, 
+        error: error.message || 'Failed to connect to payment gateway. Please check your connection.' 
+      };
     }
   }
 

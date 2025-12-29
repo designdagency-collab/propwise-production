@@ -193,7 +193,14 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
   res.json({ received: true });
 });
 
-const PORT = process.env.PORT || 3002;
-app.listen(PORT, () => {
-  console.log(`Propwise server running on port ${PORT}`);
-});
+// Export for Vercel - @vercel/node expects the Express app
+export default app;
+
+// For local development, start a server
+// In Vercel, this won't run because VERCEL env var is set
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 3002;
+  app.listen(PORT, () => {
+    console.log(`Propwise server running on port ${PORT}`);
+  });
+}
