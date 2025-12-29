@@ -8,6 +8,7 @@ interface NavbarProps {
   onLogin?: () => void;
   onLogout?: () => void;
   isLoggedIn?: boolean;
+  userName?: string;
   userEmail?: string;
   userPhone?: string;
 }
@@ -19,6 +20,7 @@ const Navbar: React.FC<NavbarProps> = ({
   onLogin, 
   onLogout, 
   isLoggedIn = false,
+  userName,
   userEmail,
   userPhone 
 }) => {
@@ -28,14 +30,27 @@ const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
-  // Format email for display (truncate if too long)
-  const formatEmail = (email: string) => {
-    if (!email) return '';
-    if (email.length > 20) {
-      const [name, domain] = email.split('@');
-      return `${name.slice(0, 8)}...@${domain}`;
+  // Get display name (first name from full name, or from email)
+  const getDisplayName = () => {
+    if (userName) {
+      // Get first name only
+      return userName.split(' ')[0];
     }
-    return email;
+    if (userEmail) {
+      // Get name part before @ and capitalize first letter
+      const namePart = userEmail.split('@')[0];
+      // Clean up: remove dots, underscores, numbers at end
+      const cleanName = namePart.replace(/[._]/g, ' ').replace(/\d+$/, '').split(' ')[0];
+      return cleanName.charAt(0).toUpperCase() + cleanName.slice(1).toLowerCase();
+    }
+    return '';
+  };
+
+  // Get initials for avatar
+  const getInitials = () => {
+    const name = userName || userEmail?.split('@')[0] || '';
+    if (!name) return '?';
+    return name.charAt(0).toUpperCase();
   };
 
   // Format phone for display (show last 4 digits)
@@ -80,19 +95,14 @@ const Navbar: React.FC<NavbarProps> = ({
             
             {/* Login/Logout Button */}
             {isLoggedIn ? (
-              <div className="flex items-center gap-2">
-                <span className="hidden sm:inline text-[10px] font-medium text-[#3A342D]/60">
-                  {userEmail ? (
-                    <>
-                      <i className="fa-solid fa-user mr-1"></i>
-                      {formatEmail(userEmail)}
-                    </>
-                  ) : userPhone ? (
-                    <>
-                      <i className="fa-solid fa-phone mr-1"></i>
-                      {formatPhone(userPhone)}
-                    </>
-                  ) : null}
+              <div className="flex items-center gap-3">
+                {/* Avatar circle with initial */}
+                <div className="w-9 h-9 bg-[#C9A961]/15 rounded-full flex items-center justify-center border border-[#C9A961]/20">
+                  <span className="text-sm font-bold text-[#C9A961]">{getInitials()}</span>
+                </div>
+                {/* Display name */}
+                <span className="hidden sm:inline text-sm font-semibold text-[#3A342D]">
+                  {getDisplayName()}
                 </span>
                 <button
                   onClick={onLogout}

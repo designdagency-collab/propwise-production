@@ -392,6 +392,7 @@ const App: React.FC = () => {
         onLogin={handleLogin}
         onLogout={handleLogout}
         isLoggedIn={isLoggedIn}
+        userName={userProfile?.full_name}
         userEmail={userEmail}
         userPhone={userPhone}
       />
