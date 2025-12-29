@@ -1,59 +1,52 @@
-import { PlanType } from "../types";
 
-export class StripeService {
-  private static API_BASE = 'http://localhost:3002/api';
+/**
+ * PROPWISE BACKEND REFERENCE (Node.js/Express)
+ * This file contains the actual backend logic needed to run Stripe securely.
+ * To use: 
+ * 1. Initialize a Node project: `npm init -y`
+ * 2. Install dependencies: `npm install express stripe dotenv cors`
+ * 3. Add your Stripe Secret Key to a .env file: `STRIPE_SECRET_KEY=sk_test_...`
+ */
 
-  async createCheckoutSession(plan: PlanType, email?: string): Promise<{ url?: string; success: boolean; error?: string }> {
-    try {
-      const response = await fetch(`${StripeService.API_BASE}/create-checkout-session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, email })
-      });
+const express = require('express');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const cors = require('cors');
+const app = express();
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Payment gateway error');
-      }
-      
-      const data = await response.json();
-      return { url: data.url, success: true };
-    } catch (error: any) {
-      console.error("Stripe Integration Error:", error);
-      return { success: false, error: error.message };
-    }
+app.use(cors());
+app.use(express.json());
+
+// Main endpoint to create the Stripe Checkout Session
+app.post('/api/create-checkout-session', async (req, res) => {
+  const { plan } = req.body;
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card', 'au_becs_debit'], // becs is popular in AU for subscriptions
+      line_items: [
+        {
+          price_data: {
+            currency: 'aud',
+            product_data: {
+              name: 'Propwise Buyer Pack',
+              description: 'Unlimited property intelligence audits for 30 days.',
+            },
+            unit_amount: 4500, // $45.00 AUD
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      // Redirect back to your app after success/cancel
+      success_url: `${process.env.FRONTEND_URL}?payment=success`,
+      cancel_url: `${process.env.FRONTEND_URL}?payment=cancel`,
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
+});
 
-  async verifySession(sessionId: string): Promise<{ success: boolean; plan?: PlanType; error?: string }> {
-    try {
-      const response = await fetch(`${StripeService.API_BASE}/verify-session?session_id=${sessionId}`);
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Session verification failed');
-      }
-      
-      const data = await response.json();
-      return { 
-        success: data.success, 
-        plan: data.plan as PlanType 
-      };
-    } catch (error: any) {
-      console.error("Session verification error:", error);
-      return { success: false, error: error.message };
-    }
-  }
-
-  async getSubscriptionStatus(customerId: string): Promise<{ plan: PlanType; active: boolean } | null> {
-    try {
-      const response = await fetch(`${StripeService.API_BASE}/subscription-status?customer_id=${customerId}`);
-      if (!response.ok) return null;
-      return await response.json();
-    } catch (error) {
-      console.error("Subscription Status Error:", error);
-      return null;
-    }
-  }
-}
-
-export const stripeService = new StripeService();
+const PORT = process.env.PORT || 4242;
+app.listen(PORT, () => console.log(`Secure Stripe backend running on port ${PORT}`));

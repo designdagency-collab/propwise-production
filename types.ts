@@ -101,13 +101,17 @@ export interface ValueSnapshot {
   confidenceLevel: 'High' | 'Medium' | 'Low';
 }
 
-export interface RentalPosition {
-  estimatedWeeklyRent?: number;
-  estimatedAnnualRent?: number;
-  grossYieldPercent?: number;
-  estimatedCashPositionWeekly?: number;
-  gearingStatus?: 'Positively Geared' | 'Negatively Geared' | 'Neutral';
-  repaymentAssumptionNotes?: string;
+export interface SitePlanData {
+  width: string;
+  depth: string;
+  frontage: string;
+  siteCoverage: string;
+  setbacks: {
+    front: string;
+    side: string;
+    rear: string;
+  };
+  neighborProximity: string;
 }
 
 export interface ZoningInfo {
@@ -258,19 +262,6 @@ export interface LocalAreaIntel {
   lifestyleSummary?: string;
 }
 
-export interface SitePlanData {
-  width: string;
-  depth: string;
-  frontage: string;
-  siteCoverage: string;
-  setbacks: {
-    front: string;
-    side: string;
-    rear: string;
-  };
-  neighborProximity: string;
-}
-
 export interface PropertyData {
   address: string;
   propertyType: string;
@@ -284,7 +275,6 @@ export interface PropertyData {
   zoning: ZoningInfo;
   proximity: Amenity[];
   valueSnapshot: ValueSnapshot;
-  rentalPosition?: RentalPosition;
   confidenceReasons: string[];
   approvalPathway: ApprovalPathway;
   zoningIntel: ZoningIntel;

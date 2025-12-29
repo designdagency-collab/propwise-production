@@ -18,7 +18,6 @@ const App: React.FC = () => {
   const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
   const [showUpgradeSuccess, setShowUpgradeSuccess] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
-  const [isSignedUp, setIsSignedUp] = useState(() => localStorage.getItem('prop_signed_up') === 'true');
   
   // Progress tracking states
   const [progress, setProgress] = useState(0);
@@ -75,24 +74,50 @@ const App: React.FC = () => {
     };
   }, [appState]);
 
+  // Handle Stripe redirect after successful payment
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    const canceled = urlParams.get('canceled');
+
+    if (sessionId) {
+      stripeService.verifySession(sessionId).then((result) => {
+        if (result.success && result.plan) {
+          setPlan(result.plan);
+          setShowUpgradeSuccess(true);
+          setShowPricing(false);
+          setIsProcessingUpgrade(false);
+          window.history.replaceState({}, '', window.location.pathname);
+          setTimeout(() => setShowUpgradeSuccess(false), 5000);
+        }
+      });
+    }
+    if (canceled) {
+      setIsProcessingUpgrade(false);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   const checkSearchLimit = () => {
     if (hasKey || plan !== 'FREE') return true;
     
-    const count = parseInt(localStorage.getItem('prop_search_count_total') || '0', 10);
-    const limit = isSignedUp ? 3 : 1;
-    
-    return count < limit;
+    const today = new Date().toLocaleDateString();
+    const stored = localStorage.getItem('prop_search_count');
+    const lastDate = localStorage.getItem('prop_search_date');
+
+    if (lastDate !== today) {
+      localStorage.setItem('prop_search_date', today);
+      localStorage.setItem('prop_search_count', '0');
+      return true;
+    }
+    const count = parseInt(stored || '0', 10);
+    return count < 2;
   };
 
   const incrementSearchCount = () => {
-    const count = parseInt(localStorage.getItem('prop_search_count_total') || '0', 10);
-    localStorage.setItem('prop_search_count_total', (count + 1).toString());
-  };
-
-  const handleSignUp = () => {
-    setIsSignedUp(true);
-    localStorage.setItem('prop_signed_up', 'true');
-    setAppState(AppState.IDLE); // Go back so they can use their 2 new searches
+    const stored = localStorage.getItem('prop_search_count');
+    const count = parseInt(stored || '0', 10);
+    localStorage.setItem('prop_search_count', (count + 1).toString());
   };
 
   const detectLocation = useCallback(() => {
@@ -174,7 +199,7 @@ const App: React.FC = () => {
         setAppState(AppState.ERROR);
       }
     }
-  }, [address, plan, hasKey, isSignedUp]);
+  }, [address, plan, hasKey]);
 
   const handleUpgrade = async (planType: PlanType = 'BUYER_PACK') => {
     setIsProcessingUpgrade(true);
@@ -211,7 +236,7 @@ const App: React.FC = () => {
         <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-[100] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
           <div className="w-16 h-16 border-4 border-[#C9A961]/20 border-t-[#C9A961] rounded-full animate-spin mb-6"></div>
           <h3 className="text-2xl font-bold text-[#3A342D] tracking-tighter">Connecting to Secure Gateway</h3>
-          <p className="text-[#3A342D]/40 font-medium text-sm mt-2">Finalising your Unlimited Access...</p>
+          <p className="text-[#3A342D]/40 font-medium text-sm mt-2">Finalising your Buyer Pack access...</p>
         </div>
       )}
 
@@ -223,8 +248,8 @@ const App: React.FC = () => {
               <i className="fa-solid fa-check"></i>
             </div>
             <div>
-              <p className="text-sm font-bold">Unlimited Access Activated</p>
-              <p className="text-[10px] text-white/60">Search as much as you need.</p>
+              <p className="text-sm font-bold">Buyer Pack Activated</p>
+              <p className="text-[10px] text-white/60">Unlimited audits now enabled.</p>
             </div>
             <button onClick={() => setShowUpgradeSuccess(false)} className="ml-4 text-white/20 hover:text-white">
               <i className="fa-solid fa-xmark"></i>
@@ -336,31 +361,24 @@ const App: React.FC = () => {
               address={address} 
               plan={plan} 
               onUpgrade={() => setShowPricing(true)}
-              onHome={handleHome}
             />
           )}
 
           {appState === AppState.LIMIT_REACHED && (
             <div className="max-w-3xl mx-auto py-24 text-center space-y-8">
               <div className="w-20 h-20 bg-[#FBEFD2]/10 text-[#C9A961] rounded-3xl flex items-center justify-center text-3xl mx-auto border border-[#C9A961]/10">
-                <i className="fa-solid fa-lock text-[#C9A961]"></i>
+                <i className="fa-solid fa-hourglass-half"></i>
               </div>
-              <h2 className="text-4xl font-bold text-[#3A342D] tracking-tighter leading-none">
-                {isSignedUp ? 'Audit Limit Reached' : 'Initial Audit Complete'}
-              </h2>
-              <p className="text-[#3A342D]/40 text-base max-w-md mx-auto font-medium leading-relaxed">
-                {isSignedUp 
-                  ? "You've used all 3 free property audits. Continue searching unlimited properties with Propwise Unlimited."
-                  : "Sign up to unlock 2 more free audits, or upgrade for unlimited access to property intelligence."}
+              <h2 className="text-4xl font-bold text-[#3A342D] tracking-tighter leading-none">Standard Limit Reached.</h2>
+              <p className="text-[#3A342D]/40 text-base max-w-sm mx-auto font-medium leading-relaxed">
+                To maintain high-depth data synthesis across planning portals, additional audits require a Buyer Pack or your own API key.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                {!isSignedUp && (
-                  <button onClick={handleSignUp} className="bg-white border-2 border-[#3A342D] text-[#3A342D] px-10 py-4 rounded-xl font-bold hover:bg-slate-50 transition-all text-[11px] uppercase tracking-widest">
-                    Sign Up Free (+2 Audits)
-                  </button>
-                )}
                 <button onClick={() => setShowPricing(true)} className="bg-[#3A342D] text-white px-10 py-4 rounded-xl font-bold shadow-lg hover:bg-[#C9A961] transition-all text-[11px] uppercase tracking-widest">
-                  Get Unlimited Access
+                  Get Buyer Pack
+                </button>
+                <button onClick={handleSelectKey} className="bg-white border border-[#C9A961]/20 text-[#3A342D] px-10 py-4 rounded-xl font-bold hover:bg-slate-50 transition-all text-[11px] uppercase tracking-widest">
+                  Use My Own Key
                 </button>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { PlanType } from '../types';
+import { stripeService } from '../services/stripeService';
 
 interface PricingProps {
   currentPlan?: PlanType;
@@ -8,17 +9,70 @@ interface PricingProps {
 }
 
 const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE', onUpgrade, onBack }) => {
-  const [isProcessing, setIsProcessing] = React.useState<boolean>(false);
+  const [isProcessing, setIsProcessing] = React.useState<PlanType | null>(null);
 
-  const handleSelectPlan = async () => {
-    if (currentPlan === 'BUYER_PACK') return;
-    setIsProcessing(true);
+  const handleSelectPlan = async (plan: PlanType) => {
+    if (plan === currentPlan) return;
+    setIsProcessing(plan);
     try {
-      await onUpgrade('BUYER_PACK');
+      await onUpgrade(plan);
     } finally {
-      setIsProcessing(false);
+      setIsProcessing(null);
     }
   };
+
+  const plans = [
+    {
+      id: 'FREE' as PlanType,
+      name: 'Standard Access',
+      price: '$0',
+      period: 'Forever',
+      description: 'Perfect for occasional property research',
+      features: [
+        '2 property audits per day',
+        'Basic property intelligence',
+        'Zoning & planning insights',
+        'Comparable sales data',
+        'Value-add strategies',
+      ],
+      cta: 'Current Plan',
+      popular: false,
+    },
+    {
+      id: 'BUYER_PACK' as PlanType,
+      name: 'Buyer Pack',
+      price: '$29',
+      period: 'per month',
+      description: 'For serious property buyers and investors',
+      features: [
+        'Unlimited property audits',
+        'Deep intelligence reports',
+        'Development scenario analysis',
+        'Portfolio sellout summaries',
+        'Local area intelligence',
+        'Priority support',
+      ],
+      cta: 'Get Buyer Pack',
+      popular: true,
+    },
+    {
+      id: 'MONITOR' as PlanType,
+      name: 'Propwise Monitor',
+      price: '$99',
+      period: 'per month',
+      description: 'For property professionals and developers',
+      features: [
+        'Everything in Buyer Pack',
+        'Bulk property analysis',
+        'API access',
+        'Custom reporting',
+        'Dedicated account manager',
+        'White-label options',
+      ],
+      cta: 'Contact Sales',
+      popular: false,
+    },
+  ];
 
   return (
     <div className="min-h-screen pb-20 bg-gradient-to-b from-white to-slate-50">
@@ -31,118 +85,109 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE', onUpgrade, onBa
             <i className="fa-solid fa-arrow-left"></i>
             Back to Home
           </button>
-          <div className="space-y-4">
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-[#3A342D]">
-              Continued Access
+          <div>
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-[#3A342D] mb-4">
+              Choose Your Plan
             </h1>
-            <p className="text-lg text-[#3A342D]/40 max-w-2xl mx-auto leading-relaxed">
-              Australian real estate moves fast. Avoid a $50,000 mistake with deeper insights and unlimited property audits.
+            <p className="text-lg text-[#3A342D]/40 max-w-2xl mx-auto">
+              Unlock deeper property intelligence with our flexible pricing options
             </p>
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 items-stretch">
-          {/* Free Tier Info */}
-          <div className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 flex flex-col">
-            <div className="mb-8">
-              <h3 className="text-xl font-bold text-[#3A342D]/40 uppercase tracking-widest mb-2">Standard</h3>
-              <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-black text-[#3A342D]/40">$0</span>
-                <span className="text-sm text-[#3A342D]/30">/ month</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-16">
+          {plans.map((plan) => {
+            const isCurrent = plan.id === currentPlan;
+            const isProcessingPlan = isProcessing === plan.id;
+
+            return (
+              <div
+                key={plan.id}
+                className={`relative bg-white rounded-[3rem] border-2 shadow-lg transition-all duration-300 ${
+                  plan.popular
+                    ? 'border-[#C9A961] scale-105 md:-mt-4'
+                    : 'border-slate-200 hover:border-[#C9A961]/50'
+                } ${isCurrent ? 'ring-2 ring-[#C9A961] ring-offset-2' : ''}`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                    <span className="bg-[#C9A961] text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                      Most Popular
+                    </span>
+                  </div>
+                )}
+
+                <div className="p-8 space-y-6">
+                  <div>
+                    <h3 className="text-2xl font-bold text-[#3A342D] mb-2">{plan.name}</h3>
+                    <p className="text-sm text-[#3A342D]/60 mb-4">{plan.description}</p>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-black text-[#3A342D]">{plan.price}</span>
+                      <span className="text-sm text-[#3A342D]/40">{plan.period}</span>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-3">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start gap-3">
+                        <i className="fa-solid fa-check text-[#C9A961] mt-1 flex-shrink-0"></i>
+                        <span className="text-sm text-[#3A342D]/70">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button
+                    onClick={() => handleSelectPlan(plan.id)}
+                    disabled={isCurrent || isProcessingPlan}
+                    className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-[11px] transition-all ${
+                      isCurrent
+                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                        : plan.popular
+                        ? 'bg-[#C9A961] text-white hover:bg-[#3A342D] shadow-lg shadow-[#C9A961]/20'
+                        : 'bg-[#3A342D] text-white hover:bg-[#C9A961]'
+                    } ${isProcessingPlan ? 'opacity-50 cursor-wait' : ''}`}
+                  >
+                    {isProcessingPlan ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <i className="fa-solid fa-spinner fa-spin"></i>
+                        Processing...
+                      </span>
+                    ) : isCurrent ? (
+                      plan.cta
+                    ) : (
+                      plan.cta
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
-            <ul className="space-y-4 mb-10 flex-grow">
-              <li className="flex items-start gap-3 text-slate-400 line-through text-sm">
-                <i className="fa-solid fa-check mt-1"></i>
-                Unlimited audits
-              </li>
-              <li className="flex items-start gap-3 text-slate-500 text-sm">
-                <i className="fa-solid fa-check mt-1"></i>
-                Basic zoning insights
-              </li>
-              <li className="flex items-start gap-3 text-slate-500 text-sm">
-                <i className="fa-solid fa-check mt-1"></i>
-                Value-add pathways
-              </li>
-              <li className="flex items-start gap-3 text-slate-400 text-sm font-medium">
-                <i className="fa-solid fa-xmark mt-1 text-slate-300"></i>
-                Limited to 3 free audits
-              </li>
-            </ul>
-            <button disabled className="w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-[11px] bg-slate-50 text-slate-400 cursor-not-allowed">
-              Current Plan
-            </button>
-          </div>
-
-          {/* Paid Tier (Propwise Unlimited) */}
-          <div className="bg-white p-10 rounded-[3rem] border-2 border-[#C9A961] shadow-2xl relative flex flex-col transform hover:scale-[1.02] transition-all">
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <span className="bg-[#C9A961] text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
-                Recommended
-              </span>
-            </div>
-            
-            <div className="mb-8">
-              <h3 className="text-2xl font-black text-[#3A342D] uppercase tracking-widest mb-2">Unlimited</h3>
-              <div className="flex items-baseline gap-1">
-                <span className="text-5xl font-black text-[#3A342D]">$49</span>
-                <span className="text-sm text-[#3A342D]/40 font-bold">AUD / month</span>
-              </div>
-              <p className="text-xs font-bold text-[#C9A961] mt-2 italic">Cancel anytime. No lock-in.</p>
-            </div>
-
-            <ul className="space-y-4 mb-10 flex-grow">
-              <li className="flex items-start gap-3 text-[#3A342D] font-bold text-sm">
-                <i className="fa-solid fa-circle-check mt-1 text-[#C9A961]"></i>
-                Unlimited Property Audits
-              </li>
-              <li className="flex items-start gap-3 text-[#3A342D]/70 text-sm">
-                <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
-                Deep Intelligence Analysis
-              </li>
-              <li className="flex items-start gap-3 text-[#3A342D]/70 text-sm">
-                <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
-                Development Scenario Feasibility
-              </li>
-              <li className="flex items-start gap-3 text-[#3A342D]/70 text-sm">
-                <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
-                Recent Comparable Sales Records
-              </li>
-              <li className="flex items-start gap-3 text-[#3A342D]/70 text-sm">
-                <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
-                Risk & "Watch Out" Identification
-              </li>
-            </ul>
-
-            <button
-              onClick={handleSelectPlan}
-              disabled={isProcessing || currentPlan === 'BUYER_PACK'}
-              className="w-full py-5 rounded-2xl font-bold uppercase tracking-widest text-[12px] bg-[#C9A961] text-white hover:bg-[#3A342D] shadow-xl shadow-[#C9A961]/30 transition-all flex items-center justify-center gap-3"
-            >
-              {isProcessing ? (
-                <>
-                  <i className="fa-solid fa-spinner fa-spin"></i>
-                  Processing Secure Payment...
-                </>
-              ) : currentPlan === 'BUYER_PACK' ? (
-                'Active Plan'
-              ) : (
-                'Unlock Unlimited Access'
-              )}
-            </button>
-            <div className="mt-4 flex items-center justify-center gap-4 text-[#3A342D]/20 text-lg">
-              <i className="fa-brands fa-apple-pay"></i>
-              <i className="fa-brands fa-cc-visa"></i>
-              <i className="fa-brands fa-cc-mastercard"></i>
-              <i className="fa-solid fa-lock text-[10px]"></i>
-            </div>
-          </div>
+            );
+          })}
         </div>
 
-        <div className="max-w-2xl mx-auto text-center">
-          <p className="text-[10px] text-[#3A342D]/30 italic leading-relaxed">
-            All reports are indicative. Propwise does not provide financial or legal advice. Pricing is in Australian Dollars (AUD) and includes GST where applicable.
-          </p>
+        <div className="max-w-3xl mx-auto text-center space-y-8">
+          <div className="bg-white p-8 rounded-[2.5rem] border border-[#C9A961]/10">
+            <h3 className="text-xl font-bold text-[#3A342D] mb-4">Frequently Asked Questions</h3>
+            <div className="space-y-4 text-left">
+              <div>
+                <p className="font-bold text-[#3A342D] mb-1">Can I change plans later?</p>
+                <p className="text-sm text-[#3A342D]/60">
+                  Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately.
+                </p>
+              </div>
+              <div>
+                <p className="font-bold text-[#3A342D] mb-1">What payment methods do you accept?</p>
+                <p className="text-sm text-[#3A342D]/60">
+                  We accept all major credit cards and debit cards through our secure Stripe payment gateway.
+                </p>
+              </div>
+              <div>
+                <p className="font-bold text-[#3A342D] mb-1">Is there a free trial?</p>
+                <p className="text-sm text-[#3A342D]/60">
+                  Yes! The Standard Access plan is free forever with 2 audits per day.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
