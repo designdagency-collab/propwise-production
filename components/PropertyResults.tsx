@@ -206,7 +206,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
         <div className="space-y-4 sm:space-y-6 relative z-10">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 bg-[#D6A270]/10 text-[#D6A270] rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider sm:tracking-[0.2em]">
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-[#D6A270]/10 text-[#D6A270] rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-[0.2em]">
                 <span className="hidden sm:inline">Property</span> Strategy Guide
               </div>
               <button onClick={handleShare} className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#4A4137]/30 hover:text-[#D6A270] transition-colors flex items-center gap-1">
@@ -227,7 +227,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
             </div>
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold text-[#4A4137] tracking-tighter font-address leading-tight">{data.address}</h1>
+            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#4A4137] tracking-tighter font-address leading-tight">{data.address}</h1>
             <p className="text-[#4A4137]/40 font-medium text-sm sm:text-base mt-2">{data.propertyType} • {data.landSize || 'Unknown Land Size'}</p>
           </div>
           <div className="flex flex-wrap gap-8 pt-8 border-t border-slate-100">
