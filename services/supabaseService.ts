@@ -113,6 +113,34 @@ export class SupabaseService {
     }
   }
 
+  // Get user's active subscription
+  async getActiveSubscription(userId: string): Promise<{ plan_type: string; status: string } | null> {
+    if (!this.supabase) return null;
+    try {
+      const { data } = await this.supabase
+        .from('subscriptions')
+        .select('plan_type, status')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .single();
+
+      return data;
+    } catch {
+      return null;
+    }
+  }
+
+  // Get current authenticated user
+  async getCurrentUser(): Promise<any | null> {
+    if (!this.supabase) return null;
+    try {
+      const { data: { user } } = await this.supabase.auth.getUser();
+      return user;
+    } catch {
+      return null;
+    }
+  }
+
   // Update subscription (for Stripe webhook)
   async updateSubscription(
     userId: string,

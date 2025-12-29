@@ -28,6 +28,11 @@ const App: React.FC = () => {
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   
+  // Login state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userPhone, setUserPhone] = useState<string>('');
+  const [isLoginMode, setIsLoginMode] = useState(false); // true = login, false = signup
+  
   // Progress tracking states
   const [progress, setProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState('Initiating site audit...');
@@ -91,7 +96,9 @@ const App: React.FC = () => {
     // Check for existing session on mount
     supabaseService.supabase!.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        loadUserData();
+        setIsLoggedIn(true);
+        setUserPhone(session.user.phone || '');
+        loadUserData(session.user.id);
       }
     });
 
@@ -99,8 +106,12 @@ const App: React.FC = () => {
     const { data: { subscription } } = supabaseService.supabase!.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          await loadUserData();
+          setIsLoggedIn(true);
+          setUserPhone(session.user?.phone || '');
+          await loadUserData(session.user?.id);
         } else if (event === 'SIGNED_OUT') {
+          setIsLoggedIn(false);
+          setUserPhone('');
           setUserProfile(null);
         }
       }
@@ -133,7 +144,7 @@ const App: React.FC = () => {
   }, []);
 
   // Load user data from Supabase (optional enhancement)
-  const loadUserData = async () => {
+  const loadUserData = async (userId?: string) => {
     try {
       const profile = await supabaseService.getCurrentProfile();
       if (profile) {
@@ -141,6 +152,15 @@ const App: React.FC = () => {
         // Sync Supabase count with localStorage if available
         if (profile.search_count) {
           localStorage.setItem('prop_search_count_total', profile.search_count.toString());
+        }
+      }
+      
+      // Check subscription status
+      if (userId) {
+        const subscription = await supabaseService.getActiveSubscription(userId);
+        if (subscription && subscription.plan_type !== 'FREE') {
+          setPlan(subscription.plan_type as PlanType);
+          localStorage.setItem('prop_plan', subscription.plan_type);
         }
       }
     } catch (error) {
@@ -183,22 +203,41 @@ const App: React.FC = () => {
   };
 
   const handleSignUp = () => {
-    // Show phone verification modal instead of directly signing up
+    // Show phone verification modal for signup (bonus searches)
+    setIsLoginMode(false);
     setShowPhoneVerification(true);
   };
 
-  // Handle phone verification success
+  const handleLogin = () => {
+    // Show phone verification modal for login
+    setIsLoginMode(true);
+    setShowPhoneVerification(true);
+  };
+
+  const handleLogout = async () => {
+    await supabaseService.signOut();
+    setIsLoggedIn(false);
+    setUserPhone('');
+    setUserProfile(null);
+    // Keep localStorage plan so they don't lose paid status if they paid without account
+  };
+
+  // Handle phone verification success (both signup and login)
   const handlePhoneVerified = async (phone: string) => {
-    // Existing localStorage logic - KEEP THIS
-    setIsSignedUp(true);
+    setIsLoggedIn(true);
+    setUserPhone(phone);
+    setIsSignedUp(true); // Phone verified users always count as signed up
     localStorage.setItem('prop_signed_up', 'true');
     localStorage.setItem('prop_user_phone', phone);
     
-    // Load user data from Supabase
-    await loadUserData();
+    // Get current user and load their data + subscription
+    const user = await supabaseService.getCurrentUser();
+    if (user?.id) {
+      await loadUserData(user.id);
+    }
     
     setShowPhoneVerification(false);
-    setAppState(AppState.IDLE); // Go back so they can use their 2 new searches
+    setAppState(AppState.IDLE); // Go back so they can continue
   };
 
   const detectLocation = useCallback(() => {
@@ -317,7 +356,15 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-20 selection:bg-[#C9A961] selection:text-white bg-white">
-      <Navbar plan={plan} onUpgrade={() => setShowPricing(true)} onHome={handleHome} />
+      <Navbar 
+        plan={plan} 
+        onUpgrade={() => setShowPricing(true)} 
+        onHome={handleHome}
+        onLogin={handleLogin}
+        onLogout={handleLogout}
+        isLoggedIn={isLoggedIn}
+        userPhone={userPhone}
+      />
 
       {/* Upgrade Processing Overlay */}
       {isProcessingUpgrade && (

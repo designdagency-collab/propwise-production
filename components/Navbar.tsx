@@ -5,13 +5,31 @@ interface NavbarProps {
   plan?: PlanType;
   onUpgrade?: () => void;
   onHome?: () => void;
+  onLogin?: () => void;
+  onLogout?: () => void;
+  isLoggedIn?: boolean;
+  userPhone?: string;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ plan = 'FREE', onUpgrade, onHome }) => {
+const Navbar: React.FC<NavbarProps> = ({ 
+  plan = 'FREE', 
+  onUpgrade, 
+  onHome, 
+  onLogin, 
+  onLogout, 
+  isLoggedIn = false,
+  userPhone 
+}) => {
   const handleSelectKey = async () => {
     if (window.aistudio && window.aistudio.openSelectKey) {
       await window.aistudio.openSelectKey();
     }
+  };
+
+  // Format phone for display (show last 4 digits)
+  const formatPhone = (phone: string) => {
+    if (!phone) return '';
+    return `••••${phone.slice(-4)}`;
   };
 
   return (
@@ -47,6 +65,31 @@ const Navbar: React.FC<NavbarProps> = ({ plan = 'FREE', onUpgrade, onHome }) => 
                  </span>
                </span>
             </div>
+            
+            {/* Login/Logout Button */}
+            {isLoggedIn ? (
+              <div className="flex items-center gap-2">
+                <span className="hidden sm:inline text-[10px] font-medium text-[#3A342D]/60">
+                  <i className="fa-solid fa-phone mr-1"></i>
+                  {formatPhone(userPhone || '')}
+                </span>
+                <button
+                  onClick={onLogout}
+                  className="p-2.5 text-[#3A342D]/40 hover:text-red-500 transition-colors rounded-xl hover:bg-red-50"
+                  title="Logout"
+                >
+                  <i className="fa-solid fa-right-from-bracket"></i>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onLogin}
+                className="px-4 py-2 text-[#3A342D]/60 hover:text-[#C9A961] text-[11px] font-bold uppercase tracking-widest transition-colors"
+              >
+                Login
+              </button>
+            )}
+
             {plan === 'FREE' ? (
               <button 
                 onClick={onUpgrade}
