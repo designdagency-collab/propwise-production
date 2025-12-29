@@ -2,8 +2,10 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Navbar from './components/Navbar';
 import PropertyResults from './components/PropertyResults';
 import Pricing from './components/Pricing';
+import PhoneVerification from './components/PhoneVerification';
 import { geminiService } from './services/geminiService';
 import { stripeService } from './services/stripeService';
+import { supabaseService } from './services/supabaseService';
 import { AppState, PropertyData, PlanType } from './types';
 
 const App: React.FC = () => {
@@ -19,6 +21,8 @@ const App: React.FC = () => {
   const [showUpgradeSuccess, setShowUpgradeSuccess] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
   const [isSignedUp, setIsSignedUp] = useState(() => localStorage.getItem('prop_signed_up') === 'true');
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
   
   // Progress tracking states
   const [progress, setProgress] = useState(0);
@@ -75,9 +79,56 @@ const App: React.FC = () => {
     };
   }, [appState]);
 
+  // Check auth state on mount and listen to changes
+  useEffect(() => {
+    // Check for existing session on mount
+    supabaseService.supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        loadUserData();
+      }
+    });
+
+    // Listen to auth changes
+    const { data: { subscription } } = supabaseService.supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          await loadUserData();
+        } else if (event === 'SIGNED_OUT') {
+          setUserProfile(null);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load user data from Supabase (optional enhancement)
+  const loadUserData = async () => {
+    try {
+      const profile = await supabaseService.getCurrentProfile();
+      if (profile) {
+        setUserProfile(profile);
+        // Sync Supabase count with localStorage if available
+        if (profile.search_count) {
+          localStorage.setItem('prop_search_count_total', profile.search_count.toString());
+        }
+      }
+    } catch (error) {
+      // Fail silently - localStorage is the fallback
+    }
+  };
+
   const checkSearchLimit = () => {
     if (hasKey || plan !== 'FREE') return true;
     
+    // Try Supabase first if user is authenticated
+    if (userProfile) {
+      const supabaseCount = userProfile.search_count || 0;
+      const limit = isSignedUp ? 3 : 1;
+      if (supabaseCount < limit) return true;
+    }
+    
+    // Fallback to localStorage (existing logic - KEEP THIS)
     const count = parseInt(localStorage.getItem('prop_search_count_total') || '0', 10);
     const limit = isSignedUp ? 3 : 1;
     
@@ -85,13 +136,34 @@ const App: React.FC = () => {
   };
 
   const incrementSearchCount = () => {
+    // Existing localStorage logic - KEEP THIS
     const count = parseInt(localStorage.getItem('prop_search_count_total') || '0', 10);
     localStorage.setItem('prop_search_count_total', (count + 1).toString());
+    
+    // ADD: Also sync to Supabase if user is authenticated (optional enhancement)
+    if (userProfile?.id) {
+      supabaseService.incrementSearchCountInDB(userProfile.id, address).catch(() => {
+        // Fail silently - localStorage is the source of truth
+      });
+    }
   };
 
   const handleSignUp = () => {
+    // Show phone verification modal instead of directly signing up
+    setShowPhoneVerification(true);
+  };
+
+  // Handle phone verification success
+  const handlePhoneVerified = async (phone: string) => {
+    // Existing localStorage logic - KEEP THIS
     setIsSignedUp(true);
     localStorage.setItem('prop_signed_up', 'true');
+    localStorage.setItem('prop_user_phone', phone);
+    
+    // Load user data from Supabase
+    await loadUserData();
+    
+    setShowPhoneVerification(false);
     setAppState(AppState.IDLE); // Go back so they can use their 2 new searches
   };
 
@@ -356,7 +428,7 @@ const App: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 {!isSignedUp && (
                   <button onClick={handleSignUp} className="bg-white border-2 border-[#3A342D] text-[#3A342D] px-10 py-4 rounded-xl font-bold hover:bg-slate-50 transition-all text-[11px] uppercase tracking-widest">
-                    Sign Up Free (+2 Audits)
+                    Verify Phone (+2 Free Audits)
                   </button>
                 )}
                 <button onClick={() => setShowPricing(true)} className="bg-[#3A342D] text-white px-10 py-4 rounded-xl font-bold shadow-lg hover:bg-[#C9A961] transition-all text-[11px] uppercase tracking-widest">
@@ -397,6 +469,14 @@ const App: React.FC = () => {
             </div>
           )}
         </main>
+      )}
+
+      {/* Phone Verification Modal */}
+      {showPhoneVerification && (
+        <PhoneVerification
+          onSuccess={handlePhoneVerified}
+          onCancel={() => setShowPhoneVerification(false)}
+        />
       )}
     </div>
   );

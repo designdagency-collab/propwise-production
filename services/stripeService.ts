@@ -2,14 +2,14 @@
 import { PlanType } from "../types";
 
 export class StripeService {
-  private static IS_DEV = true; // Toggle this when your backend is live
+  private static IS_DEV = false; // Enable real Stripe integration
   private static API_BASE = '/api'; 
 
   /**
    * Initiates the checkout process.
    * In a real environment, this calls your Node.js backend to get a Stripe Session URL.
    */
-  async createCheckoutSession(plan: PlanType): Promise<{ url?: string; success: boolean }> {
+  async createCheckoutSession(plan: PlanType, email?: string): Promise<{ url?: string; success: boolean }> {
     if (StripeService.IS_DEV) {
       // Simulate network latency for a premium feel
       await new Promise(resolve => setTimeout(resolve, 2200));
@@ -20,7 +20,7 @@ export class StripeService {
       const response = await fetch(`${StripeService.API_BASE}/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan })
+        body: JSON.stringify({ plan, email })
       });
 
       if (!response.ok) throw new Error('Payment gateway error');

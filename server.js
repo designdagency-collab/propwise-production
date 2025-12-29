@@ -3,8 +3,22 @@ import express from 'express';
 import Stripe from 'stripe';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
+
+// Initialize Supabase client (optional - fails gracefully if not configured)
+let supabase = null;
+try {
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+  }
+} catch (error) {
+  console.log('Supabase not configured, continuing without it');
+}
 
 const app = express();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -101,6 +115,82 @@ app.get('/api/verify-session', async (req, res) => {
     console.error('Session verification error:', error);
     res.status(500).json({ error: error.message });
   }
+});
+
+// Capture email endpoint (optional - for future use)
+app.post('/api/capture-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Valid email required' });
+    }
+    // Store in Supabase if configured
+    if (supabase) {
+      // Could store email in a separate table or use Supabase Auth
+      console.log('Email captured (Supabase configured):', email);
+    } else {
+      console.log('Email captured:', email);
+    }
+    res.json({ success: true, email });
+  } catch (error) {
+    console.error('Email capture error:', error);
+    res.status(500).json({ error: 'Failed to capture email' });
+  }
+});
+
+// Enhanced webhook handler for Stripe events
+app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle checkout.session.completed event
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const customerEmail = session.customer_email;
+    
+    // Update subscription in Supabase if configured
+    if (supabase && customerEmail) {
+      try {
+        // Try to find user by email in profiles table
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('email', customerEmail)
+          .single();
+
+        if (profile) {
+          // Deactivate old subscriptions
+          await supabase
+            .from('subscriptions')
+            .update({ status: 'inactive' })
+            .eq('user_id', profile.id)
+            .eq('status', 'active');
+
+          // Create new subscription
+          await supabase
+            .from('subscriptions')
+            .insert({
+              user_id: profile.id,
+              plan_type: session.metadata?.plan || 'BUYER_PACK',
+              status: 'active',
+              stripe_customer_id: session.customer,
+              stripe_subscription_id: session.subscription
+            });
+        }
+      } catch (error) {
+        console.error('Supabase subscription update error:', error);
+        // Continue - don't fail the webhook
+      }
+    }
+  }
+
+  res.json({ received: true });
 });
 
 const PORT = process.env.PORT || 3002;
