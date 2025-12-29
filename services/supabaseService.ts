@@ -170,6 +170,67 @@ export class SupabaseService {
     }
   }
 
+  // ============ EMAIL AUTH METHODS ============
+
+  // Sign up with email and password
+  async signUpWithEmail(email: string, password: string, fullName?: string): Promise<{
+    user: any;
+    session: any;
+    error?: any;
+  }> {
+    if (!this.supabase) {
+      return { user: null, session: null, error: { message: 'Supabase not configured' } };
+    }
+    const { data, error } = await this.supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName || ''
+        }
+      }
+    });
+    return { user: data?.user, session: data?.session, error };
+  }
+
+  // Sign in with email and password
+  async signInWithEmail(email: string, password: string): Promise<{
+    user: any;
+    session: any;
+    error?: any;
+  }> {
+    if (!this.supabase) {
+      return { user: null, session: null, error: { message: 'Supabase not configured' } };
+    }
+    const { data, error } = await this.supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    return { user: data?.user, session: data?.session, error };
+  }
+
+  // Send password reset email
+  async sendPasswordResetEmail(email: string): Promise<{ error?: any }> {
+    if (!this.supabase) {
+      return { error: { message: 'Supabase not configured' } };
+    }
+    const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}?reset=true`
+    });
+    return { error };
+  }
+
+  // Update password (after reset)
+  async updatePassword(newPassword: string): Promise<{ error?: any }> {
+    if (!this.supabase) {
+      return { error: { message: 'Supabase not configured' } };
+    }
+    const { error } = await this.supabase.auth.updateUser({
+      password: newPassword
+    });
+    return { error };
+  }
+
   // Sign out
   async signOut(): Promise<void> {
     if (!this.supabase) return;

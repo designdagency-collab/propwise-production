@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import PropertyResults from './components/PropertyResults';
 import Pricing from './components/Pricing';
 import PhoneVerification from './components/PhoneVerification';
+import EmailAuth from './components/EmailAuth';
 import { geminiService } from './services/geminiService';
 import { stripeService } from './services/stripeService';
 import { supabaseService } from './services/supabaseService';
@@ -26,10 +27,13 @@ const App: React.FC = () => {
   const [showPricing, setShowPricing] = useState(false);
   const [isSignedUp, setIsSignedUp] = useState(() => localStorage.getItem('prop_signed_up') === 'true');
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+  const [showEmailAuth, setShowEmailAuth] = useState(false);
+  const [emailAuthMode, setEmailAuthMode] = useState<'signup' | 'login' | 'reset'>('signup');
   const [userProfile, setUserProfile] = useState<any>(null);
   
   // Login state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>('');
   const [userPhone, setUserPhone] = useState<string>('');
   const [isLoginMode, setIsLoginMode] = useState(false); // true = login, false = signup
   
@@ -97,7 +101,9 @@ const App: React.FC = () => {
     supabaseService.supabase!.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setIsLoggedIn(true);
+        setUserEmail(session.user.email || '');
         setUserPhone(session.user.phone || '');
+        setIsSignedUp(true);
         loadUserData(session.user.id);
       }
     });
@@ -107,12 +113,20 @@ const App: React.FC = () => {
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
           setIsLoggedIn(true);
+          setUserEmail(session.user?.email || '');
           setUserPhone(session.user?.phone || '');
+          setIsSignedUp(true);
+          localStorage.setItem('prop_signed_up', 'true');
           await loadUserData(session.user?.id);
         } else if (event === 'SIGNED_OUT') {
           setIsLoggedIn(false);
+          setUserEmail('');
           setUserPhone('');
           setUserProfile(null);
+        } else if (event === 'PASSWORD_RECOVERY') {
+          // User clicked password reset link - show reset form
+          setEmailAuthMode('reset');
+          setShowEmailAuth(true);
         }
       }
     );
@@ -172,9 +186,9 @@ const App: React.FC = () => {
     // Paid users get unlimited
     if (hasKey || plan !== 'FREE') return true;
     
-    // Free tier limits: 3 initial, +2 more after phone signup (5 total)
-    const FREE_LIMIT = 3;
-    const SIGNED_UP_LIMIT = 5; // 3 + 2 bonus
+    // Free tier limits: 2 initial, +3 more after email signup (5 total)
+    const FREE_LIMIT = 2;
+    const SIGNED_UP_LIMIT = 5; // 2 + 3 bonus
     const limit = isSignedUp ? SIGNED_UP_LIMIT : FREE_LIMIT;
     
     // Try Supabase first if user is authenticated
@@ -203,31 +217,47 @@ const App: React.FC = () => {
   };
 
   const handleSignUp = () => {
-    // Show phone verification modal for signup (bonus searches)
-    setIsLoginMode(false);
-    setShowPhoneVerification(true);
+    // Show email signup modal (for +3 bonus searches)
+    setEmailAuthMode('signup');
+    setShowEmailAuth(true);
   };
 
   const handleLogin = () => {
-    // Show phone verification modal for login
-    setIsLoginMode(true);
-    setShowPhoneVerification(true);
+    // Show email login modal
+    setEmailAuthMode('login');
+    setShowEmailAuth(true);
   };
 
   const handleLogout = async () => {
     await supabaseService.signOut();
     setIsLoggedIn(false);
+    setUserEmail('');
     setUserPhone('');
     setUserProfile(null);
     // Keep localStorage plan so they don't lose paid status if they paid without account
   };
 
-  // Handle phone verification success (both signup and login)
-  const handlePhoneVerified = async (phone: string) => {
+  // Handle email auth success (both signup and login)
+  const handleEmailAuthSuccess = async (email: string, isNewUser: boolean) => {
     setIsLoggedIn(true);
-    setUserPhone(phone);
-    setIsSignedUp(true); // Phone verified users always count as signed up
+    setUserEmail(email);
+    setIsSignedUp(true);
     localStorage.setItem('prop_signed_up', 'true');
+    localStorage.setItem('prop_user_email', email);
+    
+    // Get current user and load their data + subscription
+    const user = await supabaseService.getCurrentUser();
+    if (user?.id) {
+      await loadUserData(user.id);
+    }
+    
+    setShowEmailAuth(false);
+    setAppState(AppState.IDLE); // Go back so they can continue
+  };
+
+  // Handle phone verification success (for optional account security)
+  const handlePhoneVerified = async (phone: string) => {
+    setUserPhone(phone);
     localStorage.setItem('prop_user_phone', phone);
     
     // Get current user and load their data + subscription
@@ -237,7 +267,6 @@ const App: React.FC = () => {
     }
     
     setShowPhoneVerification(false);
-    setAppState(AppState.IDLE); // Go back so they can continue
   };
 
   const detectLocation = useCallback(() => {
@@ -363,6 +392,7 @@ const App: React.FC = () => {
         onLogin={handleLogin}
         onLogout={handleLogout}
         isLoggedIn={isLoggedIn}
+        userEmail={userEmail}
         userPhone={userPhone}
       />
 
@@ -506,17 +536,18 @@ const App: React.FC = () => {
                 <i className="fa-solid fa-lock text-[#C9A961]"></i>
               </div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#3A342D] tracking-tighter leading-none">
-                {isSignedUp ? 'Audit Limit Reached' : 'Initial Audit Complete'}
+                {isSignedUp ? 'Audit Limit Reached' : 'You\'ve Used Your 2 Free Audits'}
               </h2>
               <p className="text-[#3A342D]/40 text-sm sm:text-base max-w-md mx-auto font-medium leading-relaxed">
                 {isSignedUp 
-                  ? "You've used all 3 free property audits. Continue searching unlimited properties with Propwise Unlimited."
-                  : "Sign up to unlock 2 more free audits, or upgrade for unlimited access to property intelligence."}
+                  ? "You've used all 5 free property audits. Continue searching unlimited properties with Propwise Unlimited."
+                  : "Create a free account to unlock 3 more audits, or upgrade for unlimited access to property intelligence."}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 {!isSignedUp && (
                   <button onClick={handleSignUp} className="bg-white border-2 border-[#3A342D] text-[#3A342D] px-6 sm:px-10 py-3 sm:py-4 rounded-xl font-bold hover:bg-slate-50 transition-all text-[12px] sm:text-[11px] uppercase tracking-widest">
-                    Verify Phone (+2 Free Audits)
+                    <i className="fa-solid fa-envelope mr-2"></i>
+                    Sign Up (+3 Free Audits)
                   </button>
                 )}
                 <button onClick={() => setShowPricing(true)} className="bg-[#3A342D] text-white px-6 sm:px-10 py-3 sm:py-4 rounded-xl font-bold shadow-lg hover:bg-[#C9A961] transition-all text-[12px] sm:text-[11px] uppercase tracking-widest">
@@ -559,7 +590,16 @@ const App: React.FC = () => {
         </main>
       )}
 
-      {/* Phone Verification Modal */}
+      {/* Email Auth Modal */}
+      {showEmailAuth && (
+        <EmailAuth
+          initialMode={emailAuthMode}
+          onSuccess={handleEmailAuthSuccess}
+          onCancel={() => setShowEmailAuth(false)}
+        />
+      )}
+
+      {/* Phone Verification Modal (optional security) */}
       {showPhoneVerification && (
         <PhoneVerification
           onSuccess={handlePhoneVerified}

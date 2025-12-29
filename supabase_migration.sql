@@ -5,6 +5,7 @@
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   email TEXT,
+  full_name TEXT,
   phone TEXT UNIQUE,
   phone_verified BOOLEAN DEFAULT false,
   search_count INTEGER DEFAULT 0,
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS search_history (
 );
 
 -- Create indexes for performance
+CREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
 CREATE INDEX IF NOT EXISTS idx_profiles_phone ON profiles(phone);
 CREATE INDEX IF NOT EXISTS idx_profiles_phone_verified ON profiles(phone_verified);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
@@ -48,6 +50,10 @@ ALTER TABLE search_history ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
 CREATE POLICY "Users can view own profile" ON profiles
   FOR SELECT USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+CREATE POLICY "Users can insert own profile" ON profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
 
 DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile" ON profiles
@@ -77,9 +83,18 @@ CREATE POLICY "Service role full access search_history" ON search_history FOR AL
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, phone, phone_verified)
-  VALUES (NEW.id, NEW.phone, true)
-  ON CONFLICT (id) DO NOTHING;
+  INSERT INTO public.profiles (id, email, full_name, phone, phone_verified)
+  VALUES (
+    NEW.id, 
+    NEW.email, 
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.phone, 
+    CASE WHEN NEW.phone IS NOT NULL THEN true ELSE false END
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    email = COALESCE(EXCLUDED.email, profiles.email),
+    full_name = COALESCE(EXCLUDED.full_name, profiles.full_name),
+    phone = COALESCE(EXCLUDED.phone, profiles.phone);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

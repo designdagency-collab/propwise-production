@@ -8,6 +8,7 @@ interface NavbarProps {
   onLogin?: () => void;
   onLogout?: () => void;
   isLoggedIn?: boolean;
+  userEmail?: string;
   userPhone?: string;
 }
 
@@ -18,12 +19,23 @@ const Navbar: React.FC<NavbarProps> = ({
   onLogin, 
   onLogout, 
   isLoggedIn = false,
+  userEmail,
   userPhone 
 }) => {
   const handleSelectKey = async () => {
     if (window.aistudio && window.aistudio.openSelectKey) {
       await window.aistudio.openSelectKey();
     }
+  };
+
+  // Format email for display (truncate if too long)
+  const formatEmail = (email: string) => {
+    if (!email) return '';
+    if (email.length > 20) {
+      const [name, domain] = email.split('@');
+      return `${name.slice(0, 8)}...@${domain}`;
+    }
+    return email;
   };
 
   // Format phone for display (show last 4 digits)
@@ -70,8 +82,17 @@ const Navbar: React.FC<NavbarProps> = ({
             {isLoggedIn ? (
               <div className="flex items-center gap-2">
                 <span className="hidden sm:inline text-[10px] font-medium text-[#3A342D]/60">
-                  <i className="fa-solid fa-phone mr-1"></i>
-                  {formatPhone(userPhone || '')}
+                  {userEmail ? (
+                    <>
+                      <i className="fa-solid fa-user mr-1"></i>
+                      {formatEmail(userEmail)}
+                    </>
+                  ) : userPhone ? (
+                    <>
+                      <i className="fa-solid fa-phone mr-1"></i>
+                      {formatPhone(userPhone)}
+                    </>
+                  ) : null}
                 </span>
                 <button
                   onClick={onLogout}
