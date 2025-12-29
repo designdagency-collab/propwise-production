@@ -226,27 +226,27 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
             </div>
           </div>
           <div>
-            <h1 className="text-4xl md:text-6xl font-bold text-[#4A4137] tracking-tighter font-address leading-tight">{data.address}</h1>
-            <p className="text-[#4A4137]/40 font-medium mt-2">{data.propertyType} • {data.landSize || 'Unknown Land Size'}</p>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold text-[#4A4137] tracking-tighter font-address leading-tight">{data.address}</h1>
+            <p className="text-[#4A4137]/40 font-medium text-sm sm:text-base mt-2">{data.propertyType} • {data.landSize || 'Unknown Land Size'}</p>
           </div>
           <div className="flex flex-wrap gap-8 pt-8 border-t border-slate-100">
              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Estimated Market Value</p>
-                <p className="text-2xl font-black text-[#D6A270]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
+                <p className="text-[11px] sm:text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Estimated Market Value</p>
+                <p className="text-xl sm:text-2xl font-black text-[#D6A270]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
              </div>
              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Potential Value After Improvements</p>
-                <p className={`text-2xl font-black transition-colors ${effectiveSelection.size > 0 ? 'text-[#D3D9B5]' : 'text-[#4A4137]'}`}>
+                <p className="text-[11px] sm:text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Potential Value After Improvements</p>
+                <p className={`text-xl sm:text-2xl font-black transition-colors ${effectiveSelection.size > 0 ? 'text-[#D3D9B5]' : 'text-[#4A4137]'}`}>
                    {baseline === undefined ? 'TBA' : effectiveSelection.size === 0 ? formatValue(baseline) : `${formatValue(afterLow)} – ${formatValue(afterHigh)}`}
                 </p>
              </div>
              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Growth Trend</p>
-                <p className="text-2xl font-black text-[#4A4137]">{data?.valueSnapshot?.growth || 'TBA'}</p>
+                <p className="text-[11px] sm:text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Growth Trend</p>
+                <p className="text-xl sm:text-2xl font-black text-[#4A4137]">{data?.valueSnapshot?.growth || 'TBA'}</p>
              </div>
              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Data Confidence</p>
-                <p className="text-2xl font-black text-[#4A4137] flex items-center gap-2">
+                <p className="text-[11px] sm:text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Data Confidence</p>
+                <p className="text-xl sm:text-2xl font-black text-[#4A4137] flex items-center gap-2">
                    {data?.valueSnapshot?.confidenceLevel || 'Low'}
                    <i className={`fa-solid fa-circle-check text-xs ${data?.valueSnapshot?.confidenceLevel === 'High' ? 'text-emerald-500' : 'text-amber-500'}`}></i>
                 </p>
@@ -279,8 +279,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
                 <i className="fa-solid fa-map-pin"></i>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Proximity & Infrastructure</h2>
-                <p className="text-[10px] font-bold text-[#B8C5A0] uppercase tracking-widest mt-0.5">Local Amenities & Community DNA</p>
+                <h2 className="text-xl sm:text-2xl font-bold text-[#4A4137] tracking-tight">Proximity & Infrastructure</h2>
+                <p className="text-[11px] sm:text-[10px] font-bold text-[#B8C5A0] uppercase tracking-widest mt-0.5">Local Amenities & Community DNA</p>
               </div>
            </div>
            
@@ -305,7 +305,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
                   <div className="space-y-6">
                     <div className="flex items-center gap-3">
                       <i className="fa-solid fa-graduation-cap text-[#B8C5A0]"></i>
-                      <h3 className="text-lg font-bold text-[#4A4137]">School Catchments</h3>
+                      <h3 className="text-base sm:text-lg font-bold text-[#4A4137]">School Catchments</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                        <div className="space-y-4">
@@ -345,7 +345,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
                   <div className="space-y-6 pt-8 border-t border-slate-50">
                     <div className="flex items-center gap-3">
                       <i className="fa-solid fa-bus text-[#B8C5A0]"></i>
-                      <h3 className="text-lg font-bold text-[#4A4137]">Public Transport</h3>
+                      <h3 className="text-base sm:text-lg font-bold text-[#4A4137]">Public Transport</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                        {data.localAreaIntel.transport.trainStations && data.localAreaIntel.transport.trainStations.length > 0 && (
@@ -392,7 +392,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
                   <div className="pt-8 border-t border-slate-50 space-y-4">
                     <div className="flex items-center gap-3">
                       <i className="fa-solid fa-star text-[#B8C5A0]"></i>
-                      <h3 className="text-lg font-bold text-[#4A4137]">Local Area Vibe</h3>
+                      <h3 className="text-base sm:text-lg font-bold text-[#4A4137]">Local Area Vibe</h3>
                     </div>
                     <p className="text-[10px] font-black text-[#4A4137]/30 uppercase tracking-[0.2em]">Community Insight</p>
                     <p className="text-sm text-[#4A4137]/60 italic leading-relaxed max-w-2xl">
@@ -415,13 +415,13 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
               </div>
               <div className="flex-grow space-y-4 text-center md:text-left">
                  <div>
-                    <span className="text-[10px] font-black text-[#D6A270] uppercase tracking-[0.3em] mb-1 block">Best Strategy Uplift</span>
-                    <h3 className="text-2xl font-bold tracking-tight">{data.portfolioSelloutSummary.bestStrategyByProfit}</h3>
+                    <span className="text-[11px] sm:text-[10px] font-black text-[#D6A270] uppercase tracking-[0.3em] mb-1 block">Best Strategy Uplift</span>
+                    <h3 className="text-xl sm:text-2xl font-bold tracking-tight">{data.portfolioSelloutSummary.bestStrategyByProfit}</h3>
                  </div>
                  <div className="flex flex-col md:flex-row items-center gap-6">
                     <div className="space-y-1">
                        <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Indicative Predicted Profit From Sale</p>
-                       <p className="text-3xl font-black text-[#D6A270]">
+                       <p className="text-2xl sm:text-3xl font-black text-[#D6A270]">
                           {formatValue(data.portfolioSelloutSummary.estimatedNetProfitRange?.low)} – {formatValue(data.portfolioSelloutSummary.estimatedNetProfitRange?.high)}
                        </p>
                     </div>
@@ -441,8 +441,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
                    <i className="fa-solid fa-hammer"></i>
                 </div>
                 <div>
-                   <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Uplift & Value-Add Strategies</h2>
-                   <p className="text-[10px] font-bold text-[#D3D9B5] uppercase tracking-widest mt-0.5">Renovation & Potential Development</p>
+                   <h2 className="text-xl sm:text-2xl font-bold text-[#4A4137] tracking-tight">Uplift & Value-Add Strategies</h2>
+                   <p className="text-[11px] sm:text-[10px] font-bold text-[#D3D9B5] uppercase tracking-widest mt-0.5">Renovation & Potential Development</p>
                 </div>
              </div>
              {selectedStrategies.size > 0 && (
@@ -454,7 +454,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
                <div key={i} className={`bg-white p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col ${selectedStrategies.has(i) ? 'border-[#D3D9B5] shadow-md ring-1 ring-[#D3D9B5]/20' : 'border-slate-100 border-b-[#D6A270]/20 hover:shadow-md'}`}>
                   <div className="flex justify-between items-start mb-4">
                      <div className="space-y-1">
-                        <h3 className="text-lg font-bold text-[#4A4137] group-hover:text-[#D6A270] transition-colors">{strategy.title}</h3>
+                        <h3 className="text-base sm:text-lg font-bold text-[#4A4137] group-hover:text-[#D6A270] transition-colors">{strategy.title}</h3>
                         <PathwayBadgeWithTooltip pathway={strategy.planningPathway} />
                      </div>
                      <div className="flex flex-col items-end gap-2">
@@ -488,20 +488,20 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
             <i className="fa-solid fa-key"></i>
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-[#3A342D] tracking-tight">Indicative Post-Renovation Rental Position</h2>
-            <p className="text-[10px] font-bold text-[#C9A961] uppercase tracking-widest mt-0.5">Yield & Cash Flow (After Improvements)</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-[#3A342D] tracking-tight">Indicative Post-Renovation Rental Position</h2>
+            <p className="text-[11px] sm:text-[10px] font-bold text-[#C9A961] uppercase tracking-widest mt-0.5">Yield & Cash Flow (After Improvements)</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-center">
-            <p className="text-[10px] font-bold text-[#3A342D]/40 uppercase tracking-widest mb-2">Indicative Weekly Rent</p>
-            <p className="text-2xl font-black text-[#3A342D]">
+            <p className="text-[11px] sm:text-[10px] font-bold text-[#3A342D]/40 uppercase tracking-widest mb-2">Indicative Weekly Rent</p>
+            <p className="text-xl sm:text-2xl font-black text-[#3A342D]">
               {data.rentalPosition?.estimatedWeeklyRent ? `$${data.rentalPosition.estimatedWeeklyRent} / wk` : 'Indicative only'}
             </p>
           </div>
           <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-center">
-            <p className="text-[10px] font-bold text-[#3A342D]/40 uppercase tracking-widest mb-2">Indicative Annual Rent</p>
-            <p className="text-2xl font-black text-[#3A342D]">
+            <p className="text-[11px] sm:text-[10px] font-bold text-[#3A342D]/40 uppercase tracking-widest mb-2">Indicative Annual Rent</p>
+            <p className="text-xl sm:text-2xl font-black text-[#3A342D]">
               {data.rentalPosition?.estimatedWeeklyRent ? formatValue(data.rentalPosition.estimatedWeeklyRent * 52) : 'Indicative only'}
             </p>
           </div>
@@ -513,7 +513,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
               </div>
             </div>
             <div className="space-y-1">
-              <p className={`text-3xl md:text-4xl font-black ${cashColorClass} tracking-tight leading-none`}>
+              <p className={`text-2xl sm:text-3xl md:text-4xl font-black ${cashColorClass} tracking-tight leading-none`}>
                 {cashPos !== undefined 
                   ? `${isNegative ? '' : isPositive ? '+' : ''}${formatValue(cashPos)} / wk`
                   : 'TBA'}
@@ -540,8 +540,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
               <div className="flex items-center gap-4">
                  <div className="w-10 h-10 bg-[#4A4137] text-white rounded-xl flex items-center justify-center shadow-sm"><i className="fa-solid fa-city"></i></div>
                  <div>
-                    <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Development Scenarios</h2>
-                    <p className="text-[10px] font-bold text-[#4A4137]/40 uppercase tracking-widest mt-0.5">Knockdown / Duplex / Townhouse Potential</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-[#4A4137] tracking-tight">Development Scenarios</h2>
+                    <p className="text-[11px] sm:text-[10px] font-bold text-[#4A4137]/40 uppercase tracking-widest mt-0.5">Knockdown / Duplex / Townhouse Potential</p>
                  </div>
               </div>
            </div>

@@ -122,10 +122,10 @@ const PhoneVerification: React.FC<PhoneVerificationProps> = ({ onSuccess, onCanc
           </div>
           
           <div>
-            <h2 className="text-3xl font-bold text-[#3A342D] tracking-tighter mb-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#3A342D] tracking-tighter mb-2">
               {step === 'phone' ? 'Verify Your Phone' : 'Enter Verification Code'}
             </h2>
-            <p className="text-sm text-[#3A342D]/60 font-medium">
+            <p className="text-xs sm:text-sm text-[#3A342D]/60 font-medium">
               {step === 'phone' 
                 ? 'We'll send you a code to verify your phone number and unlock 2 more free audits.'
                 : `We sent a 6-digit code to ${phone}. Enter it below.`}
@@ -144,7 +144,7 @@ const PhoneVerification: React.FC<PhoneVerificationProps> = ({ onSuccess, onCanc
                     value={phone}
                     onChange={(e) => setPhone(formatPhone(e.target.value))}
                     placeholder="4XX XXX XXX"
-                    className="w-full pl-16 pr-6 py-4 rounded-xl border-2 border-[#C9A961]/20 focus:border-[#C9A961] focus:outline-none text-[#3A342D] font-medium transition-all"
+                    className="w-full pl-16 pr-6 py-3 sm:py-4 rounded-xl border-2 border-[#C9A961]/20 focus:border-[#C9A961] focus:outline-none text-[#3A342D] font-medium text-sm sm:text-base transition-all"
                     disabled={isLoading}
                     autoFocus
                   />
@@ -187,7 +187,7 @@ const PhoneVerification: React.FC<PhoneVerificationProps> = ({ onSuccess, onCanc
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000"
-                  className="w-full px-6 py-4 rounded-xl border-2 border-[#C9A961]/20 focus:border-[#C9A961] focus:outline-none text-[#3A342D] font-bold text-2xl text-center tracking-widest transition-all"
+                  className="w-full px-6 py-3 sm:py-4 rounded-xl border-2 border-[#C9A961]/20 focus:border-[#C9A961] focus:outline-none text-[#3A342D] font-bold text-xl sm:text-2xl text-center tracking-widest transition-all"
                   disabled={isLoading}
                   autoFocus
                   maxLength={6}
@@ -201,7 +201,7 @@ const PhoneVerification: React.FC<PhoneVerificationProps> = ({ onSuccess, onCanc
                 <button
                   type="submit"
                   disabled={isLoading || otp.length !== 6}
-                  className="w-full py-4 bg-[#C9A961] text-white rounded-xl font-bold hover:bg-[#3A342D] transition-all uppercase tracking-widest text-[11px] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full py-3 sm:py-4 bg-[#C9A961] text-white rounded-xl font-bold hover:bg-[#3A342D] transition-all uppercase tracking-widest text-[12px] sm:text-[11px] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <>
@@ -238,7 +238,7 @@ const PhoneVerification: React.FC<PhoneVerificationProps> = ({ onSuccess, onCanc
             </form>
           )}
 
-          <p className="text-[10px] text-[#3A342D]/30 leading-relaxed">
+          <p className="text-[11px] sm:text-[10px] text-[#3A342D]/30 leading-relaxed">
             Your phone number is used for verification only. We'll never spam you.
           </p>
         </div>

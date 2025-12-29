@@ -289,8 +289,8 @@ const App: React.FC = () => {
       {isProcessingUpgrade && (
         <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-[100] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
           <div className="w-16 h-16 border-4 border-[#C9A961]/20 border-t-[#C9A961] rounded-full animate-spin mb-6"></div>
-          <h3 className="text-2xl font-bold text-[#3A342D] tracking-tighter">Connecting to Secure Gateway</h3>
-          <p className="text-[#3A342D]/40 font-medium text-sm mt-2">Finalising your Unlimited Access...</p>
+          <h3 className="text-xl sm:text-2xl font-bold text-[#3A342D] tracking-tighter">Connecting to Secure Gateway</h3>
+          <p className="text-[#3A342D]/40 font-medium text-xs sm:text-sm mt-2">Finalising your Unlimited Access...</p>
         </div>
       )}
 
@@ -326,10 +326,10 @@ const App: React.FC = () => {
                 <i className="fa-solid fa-file-contract"></i>
                 <span>Professional Site Audit & Intelligence</span>
               </div>
-              <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-[#3A342D] leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-tighter text-[#3A342D] leading-tight">
                 See the property <br/> <span className="text-[#C9A961] opacity-90">behind the listing.</span>
               </h1>
-              <p className="text-lg text-[#3A342D]/40 max-w-2xl mx-auto leading-relaxed font-medium">
+              <p className="text-base sm:text-lg text-[#3A342D]/40 max-w-2xl mx-auto leading-relaxed font-medium">
                 A detailed intelligence report decoding zoning potential, infrastructure, and property records in plain language.
               </p>
               
@@ -343,7 +343,7 @@ const App: React.FC = () => {
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
                         placeholder="Enter street address..."
-                        className="w-full py-4 bg-transparent text-lg font-medium focus:outline-none text-[#3A342D] placeholder-[#3A342D]/20"
+                        className="w-full py-3 sm:py-4 bg-transparent text-base sm:text-lg font-medium focus:outline-none text-[#3A342D] placeholder-[#3A342D]/20"
                       />
                     </div>
                     <div className="flex items-center gap-2 pr-2">
@@ -357,7 +357,7 @@ const App: React.FC = () => {
                       <button
                         type="submit"
                         disabled={!address.trim()}
-                        className="bg-[#C9A961] text-white px-8 h-12 rounded-xl font-bold hover:bg-[#3A342D] transition-all flex items-center gap-2 shadow-sm disabled:opacity-30 uppercase tracking-widest text-[10px]"
+                        className="bg-[#C9A961] text-white px-6 sm:px-8 h-11 sm:h-12 rounded-xl font-bold hover:bg-[#3A342D] transition-all flex items-center gap-2 shadow-sm disabled:opacity-30 uppercase tracking-widest text-[11px] sm:text-[10px]"
                       >
                         Audit Site
                       </button>
@@ -376,7 +376,7 @@ const App: React.FC = () => {
                  </div>
                  
                  <div className="space-y-4">
-                   <h2 className="text-4xl font-bold text-[#3A342D] tracking-tighter">Decoding Property DNA</h2>
+                   <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#3A342D] tracking-tighter">Decoding Property DNA</h2>
                    <p className="text-sm font-medium text-[#3A342D]/40 italic">"{loadingMessage}"</p>
                  </div>
 
@@ -424,21 +424,21 @@ const App: React.FC = () => {
               <div className="w-20 h-20 bg-[#FBEFD2]/10 text-[#C9A961] rounded-3xl flex items-center justify-center text-3xl mx-auto border border-[#C9A961]/10">
                 <i className="fa-solid fa-lock text-[#C9A961]"></i>
               </div>
-              <h2 className="text-4xl font-bold text-[#3A342D] tracking-tighter leading-none">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#3A342D] tracking-tighter leading-none">
                 {isSignedUp ? 'Audit Limit Reached' : 'Initial Audit Complete'}
               </h2>
-              <p className="text-[#3A342D]/40 text-base max-w-md mx-auto font-medium leading-relaxed">
+              <p className="text-[#3A342D]/40 text-sm sm:text-base max-w-md mx-auto font-medium leading-relaxed">
                 {isSignedUp 
                   ? "You've used all 3 free property audits. Continue searching unlimited properties with Propwise Unlimited."
                   : "Sign up to unlock 2 more free audits, or upgrade for unlimited access to property intelligence."}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 {!isSignedUp && (
-                  <button onClick={handleSignUp} className="bg-white border-2 border-[#3A342D] text-[#3A342D] px-10 py-4 rounded-xl font-bold hover:bg-slate-50 transition-all text-[11px] uppercase tracking-widest">
+                  <button onClick={handleSignUp} className="bg-white border-2 border-[#3A342D] text-[#3A342D] px-6 sm:px-10 py-3 sm:py-4 rounded-xl font-bold hover:bg-slate-50 transition-all text-[12px] sm:text-[11px] uppercase tracking-widest">
                     Verify Phone (+2 Free Audits)
                   </button>
                 )}
-                <button onClick={() => setShowPricing(true)} className="bg-[#3A342D] text-white px-10 py-4 rounded-xl font-bold shadow-lg hover:bg-[#C9A961] transition-all text-[11px] uppercase tracking-widest">
+                <button onClick={() => setShowPricing(true)} className="bg-[#3A342D] text-white px-6 sm:px-10 py-3 sm:py-4 rounded-xl font-bold shadow-lg hover:bg-[#C9A961] transition-all text-[12px] sm:text-[11px] uppercase tracking-widest">
                   Get Unlimited Access
                 </button>
               </div>

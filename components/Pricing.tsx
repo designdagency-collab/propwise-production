@@ -32,10 +32,10 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE', onUpgrade, onBa
             Back to Home
           </button>
           <div className="space-y-4">
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-[#3A342D]">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-tighter text-[#3A342D]">
               Continued Access
             </h1>
-            <p className="text-lg text-[#3A342D]/40 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg text-[#3A342D]/40 max-w-2xl mx-auto leading-relaxed">
               Australian real estate moves fast. Avoid a $50,000 mistake with deeper insights and unlimited property audits.
             </p>
           </div>
@@ -45,31 +45,31 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE', onUpgrade, onBa
           {/* Free Tier Info */}
           <div className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 flex flex-col">
             <div className="mb-8">
-              <h3 className="text-xl font-bold text-[#3A342D]/40 uppercase tracking-widest mb-2">Standard</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-[#3A342D]/40 uppercase tracking-widest mb-2">Standard</h3>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-black text-[#3A342D]/40">$0</span>
-                <span className="text-sm text-[#3A342D]/30">/ month</span>
+                <span className="text-3xl sm:text-4xl font-black text-[#3A342D]/40">$0</span>
+                <span className="text-xs sm:text-sm text-[#3A342D]/30">/ month</span>
               </div>
             </div>
             <ul className="space-y-4 mb-10 flex-grow">
-              <li className="flex items-start gap-3 text-slate-400 line-through text-sm">
+              <li className="flex items-start gap-3 text-slate-400 line-through text-xs sm:text-sm">
                 <i className="fa-solid fa-check mt-1"></i>
                 Unlimited audits
               </li>
-              <li className="flex items-start gap-3 text-slate-500 text-sm">
+              <li className="flex items-start gap-3 text-slate-500 text-xs sm:text-sm">
                 <i className="fa-solid fa-check mt-1"></i>
                 Basic zoning insights
               </li>
-              <li className="flex items-start gap-3 text-slate-500 text-sm">
+              <li className="flex items-start gap-3 text-slate-500 text-xs sm:text-sm">
                 <i className="fa-solid fa-check mt-1"></i>
                 Value-add pathways
               </li>
-              <li className="flex items-start gap-3 text-slate-400 text-sm font-medium">
+              <li className="flex items-start gap-3 text-slate-400 text-xs sm:text-sm font-medium">
                 <i className="fa-solid fa-xmark mt-1 text-slate-300"></i>
                 Limited to 3 free audits
               </li>
             </ul>
-            <button disabled className="w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-[11px] bg-slate-50 text-slate-400 cursor-not-allowed">
+            <button disabled className="w-full py-3 sm:py-4 rounded-2xl font-bold uppercase tracking-widest text-[12px] sm:text-[11px] bg-slate-50 text-slate-400 cursor-not-allowed">
               Current Plan
             </button>
           </div>
@@ -77,38 +77,38 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE', onUpgrade, onBa
           {/* Paid Tier (Propwise Unlimited) */}
           <div className="bg-white p-10 rounded-[3rem] border-2 border-[#C9A961] shadow-2xl relative flex flex-col transform hover:scale-[1.02] transition-all">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <span className="bg-[#C9A961] text-white px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+              <span className="bg-[#C9A961] text-white px-3 sm:px-4 py-1 rounded-full text-[11px] sm:text-[10px] font-black uppercase tracking-widest">
                 Recommended
               </span>
             </div>
             
             <div className="mb-8">
-              <h3 className="text-2xl font-black text-[#3A342D] uppercase tracking-widest mb-2">Unlimited</h3>
+              <h3 className="text-xl sm:text-2xl font-black text-[#3A342D] uppercase tracking-widest mb-2">Unlimited</h3>
               <div className="flex items-baseline gap-1">
-                <span className="text-5xl font-black text-[#3A342D]">$49</span>
-                <span className="text-sm text-[#3A342D]/40 font-bold">AUD / month</span>
+                <span className="text-4xl sm:text-5xl font-black text-[#3A342D]">$49</span>
+                <span className="text-xs sm:text-sm text-[#3A342D]/40 font-bold">AUD / month</span>
               </div>
-              <p className="text-xs font-bold text-[#C9A961] mt-2 italic">Cancel anytime. No lock-in.</p>
+              <p className="text-[11px] sm:text-xs font-bold text-[#C9A961] mt-2 italic">Cancel anytime. No lock-in.</p>
             </div>
 
             <ul className="space-y-4 mb-10 flex-grow">
-              <li className="flex items-start gap-3 text-[#3A342D] font-bold text-sm">
+              <li className="flex items-start gap-3 text-[#3A342D] font-bold text-xs sm:text-sm">
                 <i className="fa-solid fa-circle-check mt-1 text-[#C9A961]"></i>
                 Unlimited Property Audits
               </li>
-              <li className="flex items-start gap-3 text-[#3A342D]/70 text-sm">
+              <li className="flex items-start gap-3 text-[#3A342D]/70 text-xs sm:text-sm">
                 <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
                 Deep Intelligence Analysis
               </li>
-              <li className="flex items-start gap-3 text-[#3A342D]/70 text-sm">
+              <li className="flex items-start gap-3 text-[#3A342D]/70 text-xs sm:text-sm">
                 <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
                 Development Scenario Feasibility
               </li>
-              <li className="flex items-start gap-3 text-[#3A342D]/70 text-sm">
+              <li className="flex items-start gap-3 text-[#3A342D]/70 text-xs sm:text-sm">
                 <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
                 Recent Comparable Sales Records
               </li>
-              <li className="flex items-start gap-3 text-[#3A342D]/70 text-sm">
+              <li className="flex items-start gap-3 text-[#3A342D]/70 text-xs sm:text-sm">
                 <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
                 Risk & "Watch Out" Identification
               </li>
@@ -117,7 +117,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE', onUpgrade, onBa
             <button
               onClick={handleSelectPlan}
               disabled={isProcessing || currentPlan === 'BUYER_PACK'}
-              className="w-full py-5 rounded-2xl font-bold uppercase tracking-widest text-[12px] bg-[#C9A961] text-white hover:bg-[#3A342D] shadow-xl shadow-[#C9A961]/30 transition-all flex items-center justify-center gap-3"
+              className="w-full py-4 sm:py-5 rounded-2xl font-bold uppercase tracking-widest text-[13px] sm:text-[12px] bg-[#C9A961] text-white hover:bg-[#3A342D] shadow-xl shadow-[#C9A961]/30 transition-all flex items-center justify-center gap-3"
             >
               {isProcessing ? (
                 <>
@@ -140,7 +140,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE', onUpgrade, onBa
         </div>
 
         <div className="max-w-2xl mx-auto text-center">
-          <p className="text-[10px] text-[#3A342D]/30 italic leading-relaxed">
+          <p className="text-[11px] sm:text-[10px] text-[#3A342D]/30 italic leading-relaxed">
             All reports are indicative. Propwise does not provide financial or legal advice. Pricing is in Australian Dollars (AUD) and includes GST where applicable.
           </p>
         </div>
