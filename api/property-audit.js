@@ -1,5 +1,10 @@
 import { GoogleGenAI } from "@google/genai";
 
+// Extend timeout for Gemini API calls (requires Vercel Pro for >10s)
+export const config = {
+  maxDuration: 60,
+};
+
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
