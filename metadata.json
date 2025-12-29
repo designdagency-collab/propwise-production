@@ -1,0 +1,7 @@
+{
+  "name": "Propwise",
+  "description": "Professional property intelligence. Deep dive into zoning, financial costs, and structural risks for Australian real estate.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

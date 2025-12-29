@@ -1,0 +1,405 @@
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import Navbar from './components/Navbar';
+import PropertyResults from './components/PropertyResults';
+import Pricing from './components/Pricing';
+import { geminiService } from './services/geminiService';
+import { stripeService } from './services/stripeService';
+import { AppState, PropertyData, PlanType } from './types';
+
+const App: React.FC = () => {
+  const [address, setAddress] = useState('');
+  const [appState, setAppState] = useState<AppState>(AppState.IDLE);
+  const [results, setResults] = useState<PropertyData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [plan, setPlan] = useState<PlanType>('FREE');
+  const [isQuotaError, setIsQuotaError] = useState(false);
+  const [hasKey, setHasKey] = useState(false);
+  const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
+  const [showUpgradeSuccess, setShowUpgradeSuccess] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
+  const [isSignedUp, setIsSignedUp] = useState(() => localStorage.getItem('prop_signed_up') === 'true');
+  
+  // Progress tracking states
+  const [progress, setProgress] = useState(0);
+  const [loadingMessage, setLoadingMessage] = useState('Initiating site audit...');
+  const progressIntervalRef = useRef<number | null>(null);
+
+  const checkKeySelection = useCallback(async () => {
+    if (window.aistudio?.hasSelectedApiKey) {
+      const selected = await window.aistudio.hasSelectedApiKey();
+      setHasKey(selected);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkKeySelection();
+    const interval = setInterval(checkKeySelection, 3000);
+    return () => clearInterval(interval);
+  }, [checkKeySelection]);
+
+  useEffect(() => {
+    if (appState === AppState.LOADING) {
+      setProgress(0);
+      setLoadingMessage('Canonicalising address...');
+      
+      progressIntervalRef.current = window.setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 98) {
+            if (prev > 99.8) return prev;
+            setLoadingMessage('Performing deep intelligence synthesis...');
+            return prev + 0.05;
+          }
+          
+          const increment = prev < 30 ? 5 : prev < 60 ? 3 : prev < 85 ? 1 : 0.5;
+          const next = prev + increment;
+
+          if (next > 85) setLoadingMessage('Synthesizing value-add pathways...');
+          else if (next > 70) setLoadingMessage('Analyzing market risk & watch-outs...');
+          else if (next > 55) setLoadingMessage('Feasibility & uplift modelling...');
+          else if (next > 40) setLoadingMessage('Cross-referencing comparable sales...');
+          else if (next > 20) setLoadingMessage('Aggregating site & planning records...');
+          
+          return next;
+        });
+      }, 100);
+    } else {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+    };
+  }, [appState]);
+
+  const checkSearchLimit = () => {
+    if (hasKey || plan !== 'FREE') return true;
+    
+    const count = parseInt(localStorage.getItem('prop_search_count_total') || '0', 10);
+    const limit = isSignedUp ? 3 : 1;
+    
+    return count < limit;
+  };
+
+  const incrementSearchCount = () => {
+    const count = parseInt(localStorage.getItem('prop_search_count_total') || '0', 10);
+    localStorage.setItem('prop_search_count_total', (count + 1).toString());
+  };
+
+  const handleSignUp = () => {
+    setIsSignedUp(true);
+    localStorage.setItem('prop_signed_up', 'true');
+    setAppState(AppState.IDLE); // Go back so they can use their 2 new searches
+  };
+
+  const detectLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        setIsLocating(false);
+      },
+      () => {
+        setError("Location access denied");
+        setIsLocating(false);
+      }
+    );
+  }, []);
+
+  const handleSelectKey = async () => {
+    if (window.aistudio?.openSelectKey) {
+      await window.aistudio.openSelectKey();
+      setHasKey(true);
+      setIsQuotaError(false);
+      setError(null);
+      setAppState(AppState.IDLE);
+    }
+  };
+
+  const handleHome = useCallback(() => {
+    setAppState(AppState.IDLE);
+    setResults(null);
+    setAddress('');
+    setError(null);
+    setIsQuotaError(false);
+    setShowUpgradeSuccess(false);
+    setShowPricing(false);
+  }, []);
+
+  const handleSearch = useCallback(async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!address.trim()) return;
+
+    if (!checkSearchLimit()) {
+      setAppState(AppState.LIMIT_REACHED);
+      return;
+    }
+
+    setAppState(AppState.LOADING);
+    setError(null);
+    setIsQuotaError(false);
+
+    try {
+      const data = await geminiService.fetchPropertyInsights(address);
+      setProgress(100);
+      setLoadingMessage('Audit complete!');
+      setTimeout(() => {
+        setResults(data);
+        setAppState(AppState.RESULTS);
+      }, 200);
+      if (plan === 'FREE' && !hasKey) incrementSearchCount();
+    } catch (err: any) {
+      console.error("Audit Error:", err);
+      const errorMsg = err.message || '';
+      
+      if (errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('quota')) {
+        setIsQuotaError(true);
+        setError("The shared community quota has been reached. Please select your own API key to continue.");
+        setAppState(AppState.ERROR);
+      } else if (errorMsg.includes('Requested entity was not found')) {
+        setHasKey(false);
+        setIsQuotaError(true);
+        setError("The selected key was invalid. Please re-select a valid API key.");
+        setAppState(AppState.ERROR);
+      } else {
+        setError("Unable to complete audit. The search might have been too broad or the site data is restricted. Please try a different address.");
+        setAppState(AppState.ERROR);
+      }
+    }
+  }, [address, plan, hasKey, isSignedUp]);
+
+  const handleUpgrade = async (planType: PlanType = 'BUYER_PACK') => {
+    setIsProcessingUpgrade(true);
+    
+    const response = await stripeService.createCheckoutSession(planType);
+    
+    if (response.success) {
+      if (response.url) {
+        window.location.href = response.url;
+      } else {
+        // Simulation path
+        setPlan(planType);
+        setIsProcessingUpgrade(false);
+        setShowUpgradeSuccess(true);
+        setShowPricing(false);
+        if (appState === AppState.LIMIT_REACHED) {
+          setAppState(AppState.IDLE);
+        }
+        setTimeout(() => setShowUpgradeSuccess(false), 5000);
+      }
+    } else {
+      setIsProcessingUpgrade(false);
+      setError("Payment gateway unavailable. Please try again later.");
+      setAppState(AppState.ERROR);
+    }
+  };
+
+  return (
+    <div className="min-h-screen pb-20 selection:bg-[#C9A961] selection:text-white bg-white">
+      <Navbar plan={plan} onUpgrade={() => setShowPricing(true)} onHome={handleHome} />
+
+      {/* Upgrade Processing Overlay */}
+      {isProcessingUpgrade && (
+        <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-[100] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
+          <div className="w-16 h-16 border-4 border-[#C9A961]/20 border-t-[#C9A961] rounded-full animate-spin mb-6"></div>
+          <h3 className="text-2xl font-bold text-[#3A342D] tracking-tighter">Connecting to Secure Gateway</h3>
+          <p className="text-[#3A342D]/40 font-medium text-sm mt-2">Finalising your Unlimited Access...</p>
+        </div>
+      )}
+
+      {/* Upgrade Success Notification */}
+      {showUpgradeSuccess && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10 fade-in duration-500">
+          <div className="bg-[#3A342D] text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-[#C9A961]/20">
+            <div className="w-8 h-8 bg-[#C9A961] rounded-full flex items-center justify-center text-xs">
+              <i className="fa-solid fa-check"></i>
+            </div>
+            <div>
+              <p className="text-sm font-bold">Unlimited Access Activated</p>
+              <p className="text-[10px] text-white/60">Search as much as you need.</p>
+            </div>
+            <button onClick={() => setShowUpgradeSuccess(false)} className="ml-4 text-white/20 hover:text-white">
+              <i className="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showPricing ? (
+        <Pricing 
+          currentPlan={plan}
+          onUpgrade={handleUpgrade}
+          onBack={() => setShowPricing(false)}
+        />
+      ) : (
+        <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          {appState === AppState.IDLE && (
+            <div className="max-w-4xl mx-auto text-center py-12 md:py-24 space-y-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest border border-[#C9A961]/20">
+                <i className="fa-solid fa-file-contract"></i>
+                <span>Professional Site Audit & Intelligence</span>
+              </div>
+              <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-[#3A342D] leading-tight">
+                See the property <br/> <span className="text-[#C9A961] opacity-90">behind the listing.</span>
+              </h1>
+              <p className="text-lg text-[#3A342D]/40 max-w-2xl mx-auto leading-relaxed font-medium">
+                A detailed intelligence report decoding zoning potential, infrastructure, and property records in plain language.
+              </p>
+              
+              <div className="max-w-2xl mx-auto">
+                 <form onSubmit={handleSearch} className="relative group">
+                  <div className="absolute -inset-1 bg-[#C9A961] rounded-[2rem] blur opacity-5 group-hover:opacity-10 transition duration-1000"></div>
+                  <div className="relative flex items-center bg-white p-2 rounded-[2rem] shadow-xl border border-[#C9A961]/10">
+                    <div className="flex-grow flex items-center px-6">
+                      <input
+                        type="text"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Enter street address..."
+                        className="w-full py-4 bg-transparent text-lg font-medium focus:outline-none text-[#3A342D] placeholder-[#3A342D]/20"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 pr-2">
+                      <button
+                        type="button"
+                        onClick={detectLocation}
+                        className="w-12 h-12 text-[#B8C5A0] hover:text-[#C9A961] transition-all"
+                      >
+                        <i className={`fa-solid ${isLocating ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'}`}></i>
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={!address.trim()}
+                        className="bg-[#C9A961] text-white px-8 h-12 rounded-xl font-bold hover:bg-[#3A342D] transition-all flex items-center gap-2 shadow-sm disabled:opacity-30 uppercase tracking-widest text-[10px]"
+                      >
+                        Audit Site
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {appState === AppState.LOADING && (
+            <div className="max-w-xl mx-auto py-40 text-center space-y-12 animate-in fade-in duration-500">
+               <div className="space-y-8">
+                 <div className="inline-flex items-center justify-center w-20 h-20 bg-[#C9A961]/10 rounded-3xl mb-4">
+                    <i className="fa-solid fa-dna text-3xl text-[#C9A961] animate-pulse"></i>
+                 </div>
+                 
+                 <div className="space-y-4">
+                   <h2 className="text-4xl font-bold text-[#3A342D] tracking-tighter">Decoding Property DNA</h2>
+                   <p className="text-sm font-medium text-[#3A342D]/40 italic">"{loadingMessage}"</p>
+                 </div>
+
+                 <div className="max-w-md mx-auto space-y-4">
+                   <div className="relative pt-1">
+                     <div className="flex mb-2 items-center justify-between">
+                       <div>
+                         <span className="text-[10px] font-black uppercase tracking-widest py-1 px-2 rounded-full text-[#C9A961] bg-[#C9A961]/10 border border-[#C9A961]/10">
+                           Audit Progress
+                         </span>
+                       </div>
+                       <div className="text-right">
+                         <span className="text-2xl font-black text-[#3A342D] tracking-tighter">
+                           {progress < 100 ? Math.floor(progress) : 100}%
+                         </span>
+                       </div>
+                     </div>
+                     <div className="overflow-hidden h-3 mb-4 text-xs flex rounded-full bg-[#FBEFD2]/30 border border-[#C9A961]/5">
+                       <div 
+                         style={{ width: `${progress}%` }} 
+                         className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-[#C9A961] transition-all duration-300 ease-out"
+                       ></div>
+                     </div>
+                   </div>
+                   <p className="text-[9px] font-bold text-[#3A342D]/20 uppercase tracking-[0.3em]">
+                     Searching Planning Portals & Market Records
+                   </p>
+                 </div>
+               </div>
+            </div>
+          )}
+
+          {appState === AppState.RESULTS && results && (
+            <PropertyResults 
+              data={results} 
+              address={address} 
+              plan={plan} 
+              onUpgrade={() => setShowPricing(true)}
+              onHome={handleHome}
+            />
+          )}
+
+          {appState === AppState.LIMIT_REACHED && (
+            <div className="max-w-3xl mx-auto py-24 text-center space-y-8">
+              <div className="w-20 h-20 bg-[#FBEFD2]/10 text-[#C9A961] rounded-3xl flex items-center justify-center text-3xl mx-auto border border-[#C9A961]/10">
+                <i className="fa-solid fa-lock text-[#C9A961]"></i>
+              </div>
+              <h2 className="text-4xl font-bold text-[#3A342D] tracking-tighter leading-none">
+                {isSignedUp ? 'Audit Limit Reached' : 'Initial Audit Complete'}
+              </h2>
+              <p className="text-[#3A342D]/40 text-base max-w-md mx-auto font-medium leading-relaxed">
+                {isSignedUp 
+                  ? "You've used all 3 free property audits. Continue searching unlimited properties with Propwise Unlimited."
+                  : "Sign up to unlock 2 more free audits, or upgrade for unlimited access to property intelligence."}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                {!isSignedUp && (
+                  <button onClick={handleSignUp} className="bg-white border-2 border-[#3A342D] text-[#3A342D] px-10 py-4 rounded-xl font-bold hover:bg-slate-50 transition-all text-[11px] uppercase tracking-widest">
+                    Sign Up Free (+2 Audits)
+                  </button>
+                )}
+                <button onClick={() => setShowPricing(true)} className="bg-[#3A342D] text-white px-10 py-4 rounded-xl font-bold shadow-lg hover:bg-[#C9A961] transition-all text-[11px] uppercase tracking-widest">
+                  Get Unlimited Access
+                </button>
+              </div>
+            </div>
+          )}
+
+          {appState === AppState.ERROR && (
+            <div className="max-w-xl mx-auto bg-white border border-[#C9A961]/10 p-12 rounded-[2.5rem] text-center shadow-lg">
+              <div className="w-16 h-16 bg-red-50 text-red-500/50 rounded-full flex items-center justify-center text-2xl mx-auto mb-6">
+                <i className={`fa-solid ${isQuotaError ? 'fa-key' : 'fa-triangle-exclamation'}`}></i>
+              </div>
+              <h3 className="text-2xl font-bold text-[#3A342D] mb-3 tracking-tighter">
+                {isQuotaError ? 'Action Required' : 'Audit Interrupted'}
+              </h3>
+              <div className="text-[#3A342D]/40 mb-8 font-medium text-sm leading-relaxed space-y-4">
+                <p>{error}</p>
+              </div>
+              <div className="flex flex-col gap-3">
+                {isQuotaError ? (
+                  <button 
+                    onClick={handleSelectKey} 
+                    className="w-full py-4 bg-[#C9A961] text-white font-bold rounded-xl hover:bg-[#3A342D] transition-all uppercase tracking-widest text-[10px] shadow-lg"
+                  >
+                    Select API Key
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => setAppState(AppState.IDLE)} 
+                    className="w-full py-4 bg-[#3A342D] text-white font-bold rounded-xl hover:bg-[#C9A961] transition-all uppercase tracking-widest text-[10px]"
+                  >
+                    Try Again
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </main>
+      )}
+    </div>
+  );
+};
+
+export default App;
