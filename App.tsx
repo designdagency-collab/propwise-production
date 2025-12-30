@@ -858,8 +858,8 @@ const App: React.FC = () => {
               </h2>
               <p className="text-sm sm:text-base max-w-md mx-auto font-medium leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 {creditState.hasAccount 
-                  ? "You've used your 2 free property audits. Get more credits or upgrade to Pro for 10 audits per month."
-                  : "You've used your 1 free property audit. Create an account for 1 bonus audit, or upgrade for more."}
+                  ? "Get more credits, or upgrade to Pro for 10 audits per month."
+                  : "You've used your free audit. Create an account for 1 bonus audit, or upgrade for more."}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
                 {/* CTA 1: Create Account (if no account yet) */}
