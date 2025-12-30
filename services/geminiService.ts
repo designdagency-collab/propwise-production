@@ -5,8 +5,20 @@ export class GeminiService {
   async fetchPropertyInsights(address: string): Promise<PropertyData> {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
-    const prompt = `You are a professional Australian property planning analyst and prop-tech engineer for Propwise.
+    const prompt = `You are a professional Australian property planning analyst and prop-tech engineer for blockcheck.ai.
 Your task is to generate a structured Property DNA report for: "${address}".
+
+CRITICAL DATA ACCURACY RULES:
+- Use Google Search to verify the ACTUAL property type from real estate listings (Domain, realestate.com.au, CoreLogic, onthehouse.com.au).
+- Property Type Detection:
+  • If address contains unit notation (e.g., "1/30", "Unit 5", "Apt 3", "Level 2"), it is an Apartment/Unit or Townhouse, NOT a House.
+  • Verify from listings - check bed/bath counts match typical house vs apartment profiles.
+  • Cross-reference land size - apartments/units typically have NO land or small strata lot sizes.
+  • Townhouses usually have 2-3 beds, small courtyard, and are part of a complex.
+  • Houses have larger land (300sqm+) and standalone structure.
+- If you cannot verify property type from search results, use "Unknown" rather than guessing "House".
+- Always verify bed/bath/car counts from actual listings where possible.
+- Land size should say "Strata Title" or "N/A" for apartments/units, not fabricate a lot size.
 
 FOCUS: Value Uplift, Renovation Feasibility, Development Potential, Comparable Sales, Rental Yield, and Local Amenities.
 MANDATORY MODULES:
@@ -43,7 +55,7 @@ RULES:
             type: Type.OBJECT,
             properties: {
               address: { type: Type.STRING },
-              propertyType: { type: Type.STRING },
+              propertyType: { type: Type.STRING, enum: ['House', 'Apartment / Unit', 'Townhouse', 'Villa', 'Duplex', 'Land', 'Rural', 'Commercial', 'Unknown'] },
               landSize: { type: Type.STRING },
               attributes: {
                 type: Type.OBJECT,
