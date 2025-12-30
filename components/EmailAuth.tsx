@@ -185,7 +185,7 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
 
   const getSubtitle = () => {
     switch (mode) {
-      case 'signup': return 'Sign up to unlock 3 more free property audits.';
+      case 'signup': return 'Sign up to unlock 1 bonus property audit.';
       case 'login': return 'Log in to access your account and saved audits.';
       case 'forgot': return "Enter your email and we'll send you a reset link.";
       case 'reset': return 'Choose a new password for your account.';
