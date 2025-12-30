@@ -79,20 +79,13 @@ const Navbar: React.FC<NavbarProps> = ({
         <div className="flex justify-between items-center h-20">
           <button 
             onClick={onHome}
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity focus:outline-none group"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity focus:outline-none group"
           >
-            <div className="relative flex items-center justify-center w-10 h-10 transition-transform group-active:scale-95">
-              {/* Hexagon with magnifying glass and houses */}
-              <div className="w-10 h-10 bg-[#E8B84A] flex items-center justify-center" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
-                <div className="relative">
-                  <i className="fa-solid fa-magnifying-glass text-[#3A342D] text-lg"></i>
-                  <i className="fa-solid fa-house text-[8px] text-[#4A7AB8] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>
-                </div>
-              </div>
-            </div>
-            <span className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-              blockcheck<span className="text-[#E8B84A]">.ai</span>
-            </span>
+            <img 
+              src="/logo.png" 
+              alt="blockcheck.ai" 
+              className="h-10 w-auto transition-transform group-active:scale-95"
+            />
           </button>
           <div className="flex items-center space-x-4">
             {/* Theme Toggle */}
