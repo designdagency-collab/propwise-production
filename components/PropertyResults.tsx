@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { PropertyData, PlanType, DevEligibility, Amenity } from '../types';
 
 // Dynamic import for html2pdf to avoid SSR issues
@@ -13,27 +13,11 @@ interface PropertyResultsProps {
 }
 
 const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade, onHome }) => {
-  const [copied, setCopied] = useState(false);
   const [selectedStrategies, setSelectedStrategies] = useState<Set<number>>(new Set());
-  const [showShareMenu, setShowShareMenu] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
-  const shareMenuRef = useRef<HTMLDivElement>(null);
 
   const isPaidUser = plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK';
-
-  // Close share menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (shareMenuRef.current && !shareMenuRef.current.contains(event.target as Node)) {
-        setShowShareMenu(false);
-      }
-    };
-    if (showShareMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showShareMenu]);
 
   const isStrata = (data.propertyType || '').toLowerCase().match(/apartment|unit|townhouse|villa|strata|flat|duplex/);
 
@@ -124,30 +108,6 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     if (next.has(index)) next.delete(index);
     else next.add(index);
     setSelectedStrategies(next);
-  };
-
-  const handleShare = async () => {
-    const shareParams = {
-      title: `blockcheck.ai Report: ${data.address}`,
-      text: data?.sharePrompt?.message || `Check out the property DNA for ${data.address}`,
-      url: window.location.href
-    };
-    if (navigator.share) {
-      try {
-        await navigator.share(shareParams);
-      } catch (e) {
-        if ((e as Error).name !== 'AbortError') copyToClipboard();
-      }
-    } else {
-      copyToClipboard();
-    }
-  };
-
-  const copyToClipboard = () => {
-    const text = `${data?.sharePrompt?.message || 'Check out this property audit'}\n\n${window.location.href}`;
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const exportToPDF = async () => {
@@ -273,55 +233,27 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                 <span className="hidden sm:inline">Property</span> Strategy Guide
               </div>
               
-              {/* Share/Export Button with Dropdown */}
-              <div className="relative" ref={shareMenuRef}>
+              {/* Export PDF Button */}
+              {isPaidUser ? (
                 <button 
-                  onClick={() => setShowShareMenu(!showShareMenu)} 
-                  className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:text-[#D6A270] transition-colors flex items-center gap-1" 
+                  onClick={exportToPDF}
+                  disabled={isExporting}
+                  className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:text-[#D6A270] transition-colors flex items-center gap-1 disabled:opacity-50" 
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  <i className={`fa-solid ${isExporting ? 'fa-spinner fa-spin' : copied ? 'fa-check' : 'fa-share-nodes'}`}></i>
-                  {isExporting ? 'Exporting...' : copied ? 'Copied' : 'Share'}
+                  <i className={`fa-solid ${isExporting ? 'fa-spinner fa-spin' : 'fa-file-pdf'}`}></i>
+                  {isExporting ? 'Exporting...' : 'Export PDF'}
                 </button>
-                
-                {/* Dropdown Menu */}
-                {showShareMenu && (
-                  <div 
-                    className="absolute top-full left-0 mt-2 py-2 rounded-xl shadow-xl border z-50 min-w-[160px]"
-                    style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
-                  >
-                    <button
-                      onClick={() => { handleShare(); setShowShareMenu(false); }}
-                      className="w-full px-4 py-2 text-left text-xs font-medium hover:bg-[#C9A961]/10 flex items-center gap-2"
-                      style={{ color: 'var(--text-primary)' }}
-                    >
-                      <i className="fa-solid fa-share-nodes text-[#C9A961]"></i>
-                      Share Link
-                    </button>
-                    
-                    {isPaidUser ? (
-                      <button
-                        onClick={exportToPDF}
-                        disabled={isExporting}
-                        className="w-full px-4 py-2 text-left text-xs font-medium hover:bg-[#C9A961]/10 flex items-center gap-2 disabled:opacity-50"
-                        style={{ color: 'var(--text-primary)' }}
-                      >
-                        <i className="fa-solid fa-file-pdf text-[#C9A961]"></i>
-                        Export PDF
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => { setShowShareMenu(false); onUpgrade(); }}
-                        className="w-full px-4 py-2 text-left text-xs font-medium hover:bg-[#C9A961]/10 flex items-center gap-2"
-                        style={{ color: 'var(--text-muted)' }}
-                      >
-                        <i className="fa-solid fa-lock text-[#C9A961]"></i>
-                        <span>Export PDF <span className="text-[9px] text-[#C9A961]">(Pro)</span></span>
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
+              ) : (
+                <button 
+                  onClick={onUpgrade}
+                  className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:text-[#D6A270] transition-colors flex items-center gap-1.5" 
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <i className="fa-solid fa-lock text-[#C9A961] text-[8px]"></i>
+                  Export PDF <span className="text-[#C9A961]">(Pro)</span>
+                </button>
+              )}
             </div>
             <div className="flex gap-3 sm:gap-4">
                <div className="flex items-center gap-1.5 sm:gap-2 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
