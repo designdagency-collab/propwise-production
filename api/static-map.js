@@ -2,6 +2,9 @@
  * Static Map API Endpoint
  * Returns a static map image for PDF export
  * 
+ * IMPORTANT: This endpoint FETCHES and RETURNS the image data (not redirect)
+ * to support the pre-fetch approach in PDF export.
+ * 
  * Supports multiple providers with fallback:
  * 1. Google Maps Static API (requires GOOGLE_MAPS_API_KEY)
  * 2. OpenStreetMap Static (no API key required)
@@ -13,14 +16,13 @@
  * - zoom: Zoom level (default: 17)
  * - width: Image width in pixels (default: 640)
  * - height: Image height in pixels (default: 400)
- * 
- * Returns: Redirects to static map image URL or returns placeholder
  */
 
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate');
   
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -43,16 +45,41 @@ export default async function handler(req, res) {
   }
 
   const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
-  const mapboxToken = process.env.MAPBOX_ACCESS_TOKEN;
 
   try {
     let mapUrl;
+    let coordinates = { lat, lng };
+
+    // If only address provided, try to geocode it first
+    if (address && (!lat || !lng)) {
+      try {
+        const geocodeUrl = `https://nominatim.openstreetmap.org/search?` +
+          `q=${encodeURIComponent(address)}` +
+          `&format=json&limit=1`;
+        
+        const geocodeRes = await fetch(geocodeUrl, {
+          headers: {
+            'User-Agent': 'upblock.ai/1.0 (Property Intelligence Platform)'
+          }
+        });
+        
+        if (geocodeRes.ok) {
+          const geocodeData = await geocodeRes.json();
+          if (geocodeData && geocodeData.length > 0) {
+            coordinates.lat = geocodeData[0].lat;
+            coordinates.lng = geocodeData[0].lon;
+          }
+        }
+      } catch (geoError) {
+        console.error('Geocoding failed:', geoError);
+      }
+    }
 
     // Option 1: Google Maps Static API (best quality, requires API key)
     if (googleApiKey) {
       const location = address 
         ? encodeURIComponent(address)
-        : `${lat},${lng}`;
+        : `${coordinates.lat},${coordinates.lng}`;
       
       mapUrl = `https://maps.googleapis.com/maps/api/staticmap?` +
         `center=${location}` +
@@ -61,85 +88,70 @@ export default async function handler(req, res) {
         `&maptype=satellite` +
         `&markers=color:red%7C${location}` +
         `&key=${googleApiKey}`;
-      
-      return res.redirect(302, mapUrl);
     }
-
-    // Option 2: Mapbox Static API (good quality, requires token)
-    if (mapboxToken) {
-      // TODO: Implement geocoding if only address is provided
-      if (lat && lng) {
-        mapUrl = `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/` +
-          `pin-l+ff0000(${lng},${lat})/` +
-          `${lng},${lat},${zoom},0/` +
-          `${width}x${height}@2x` +
-          `?access_token=${mapboxToken}`;
-        
-        return res.redirect(302, mapUrl);
-      }
-    }
-
-    // Option 3: OpenStreetMap Static (free, no API key)
-    // Using staticmapmaker.com or osm-static-maps service
-    if (lat && lng) {
-      // Use OpenStreetMap tile server with a static map service
-      // This is a basic implementation - consider hosting your own for production
-      const osmUrl = `https://staticmap.openstreetmap.de/staticmap.php?` +
-        `center=${lat},${lng}` +
-        `&zoom=${zoom}` +
+    // Option 2: OpenStreetMap Static (free, no API key)
+    else if (coordinates.lat && coordinates.lng) {
+      // Use OSM static map service
+      mapUrl = `https://staticmap.openstreetmap.de/staticmap.php?` +
+        `center=${coordinates.lat},${coordinates.lng}` +
+        `&zoom=${Math.min(parseInt(zoom), 18)}` + // OSM max zoom is 18
         `&size=${width}x${height}` +
-        `&markers=${lat},${lng},red-pushpin`;
-      
-      return res.redirect(302, osmUrl);
+        `&markers=${coordinates.lat},${coordinates.lng},red-pushpin`;
     }
 
-    // Option 4: Generate a placeholder map image URL
-    // When no coordinates and no API keys, return a styled placeholder
-    if (address) {
-      // Try to use a free geocoding + map service
-      // OpenStreetMap Nominatim for geocoding (rate limited)
+    // If we have a map URL, fetch and return the image
+    if (mapUrl) {
       try {
-        const geocodeUrl = `https://nominatim.openstreetmap.org/search?` +
-          `q=${encodeURIComponent(address)}` +
-          `&format=json&limit=1`;
-        
-        const geocodeRes = await fetch(geocodeUrl, {
+        const imageResponse = await fetch(mapUrl, {
           headers: {
-            'User-Agent': 'upblock.ai/1.0 (Property Intelligence)'
+            'User-Agent': 'upblock.ai/1.0 (Property Intelligence Platform)'
           }
         });
-        
-        if (geocodeRes.ok) {
-          const geocodeData = await geocodeRes.json();
-          if (geocodeData && geocodeData.length > 0) {
-            const { lat: geoLat, lon: geoLng } = geocodeData[0];
-            
-            const osmUrl = `https://staticmap.openstreetmap.de/staticmap.php?` +
-              `center=${geoLat},${geoLng}` +
-              `&zoom=${zoom}` +
-              `&size=${width}x${height}` +
-              `&markers=${geoLat},${geoLng},red-pushpin`;
-            
-            return res.redirect(302, osmUrl);
-          }
+
+        if (imageResponse.ok) {
+          const contentType = imageResponse.headers.get('content-type');
+          const imageBuffer = await imageResponse.arrayBuffer();
+          
+          res.setHeader('Content-Type', contentType || 'image/png');
+          return res.send(Buffer.from(imageBuffer));
         }
-      } catch (geoError) {
-        console.error('Geocoding failed:', geoError);
+      } catch (fetchError) {
+        console.error('Failed to fetch map image:', fetchError);
       }
     }
 
-    // Fallback: Return a placeholder image
-    // Using a placeholder service that generates a styled "Map unavailable" image
-    const placeholderUrl = `https://via.placeholder.com/${width}x${height}/f3f4f6/9ca3af?text=Map+Unavailable`;
-    
-    return res.redirect(302, placeholderUrl);
+    // Fallback: Generate a simple placeholder SVG
+    const placeholderSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+        <defs>
+          <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#f3f4f6"/>
+            <stop offset="100%" style="stop-color:#e5e7eb"/>
+          </linearGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#bg)"/>
+        <text x="50%" y="45%" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6b7280">📍</text>
+        <text x="50%" y="55%" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6b7280">Map Preview</text>
+        <text x="50%" y="65%" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#9ca3af">${address ? address.substring(0, 40) : 'Location'}</text>
+      </svg>
+    `;
+
+    res.setHeader('Content-Type', 'image/svg+xml');
+    return res.send(placeholderSvg);
 
   } catch (error) {
     console.error('Static map error:', error);
     
-    // Return placeholder on any error
-    const placeholderUrl = `https://via.placeholder.com/${width}x${height}/f3f4f6/9ca3af?text=Map+Error`;
-    return res.redirect(302, placeholderUrl);
+    // Return a simple error placeholder
+    const errorSvg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+        <rect width="100%" height="100%" fill="#f3f4f6"/>
+        <text x="50%" y="50%" text-anchor="middle" font-family="Arial" font-size="14" fill="#9ca3af">Map unavailable</text>
+      </svg>
+    `;
+    
+    res.setHeader('Content-Type', 'image/svg+xml');
+    return res.send(errorSvg);
   }
 }
 
@@ -153,9 +165,4 @@ export default async function handler(req, res) {
  * 
  * 2. Consider caching static map images to reduce API calls
  *    - Use Vercel Edge caching or a CDN
- * 
- * 3. Add rate limiting to prevent abuse
- * 
- * 4. For high volume, consider self-hosting OSM tiles
  */
-

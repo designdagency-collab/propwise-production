@@ -108,13 +108,160 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
   };
 
   /**
+   * PDF Export Styles - Injected directly into cloned document for reliable rendering
+   */
+  const getPdfStyles = () => `
+    /* Base PDF Reset */
+    .pdf-mode {
+      background-color: #ffffff !important;
+      color: #3A342D !important;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .pdf-mode * {
+      transition: none !important;
+      animation: none !important;
+    }
+    
+    /* Hide non-PDF elements */
+    .pdf-mode [data-no-pdf="true"],
+    .pdf-mode button:not([data-pdf-keep]),
+    .pdf-mode .invisible,
+    .pdf-mode [class*="group-hover"] { 
+      display: none !important; 
+    }
+    
+    /* Container */
+    .pdf-mode [data-pdf-root="true"] {
+      max-width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    
+    /* Cards - consistent styling */
+    .pdf-mode [class*="rounded-[2"],
+    .pdf-mode [class*="rounded-[3"],
+    .pdf-mode [class*="rounded-[4"] {
+      border-radius: 16px !important;
+      border: 1px solid rgba(201, 169, 97, 0.2) !important;
+      background-color: #ffffff !important;
+      overflow: visible !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+    
+    /* KPI Row - Grid Layout */
+    .pdf-mode [data-pdf-kpi-row] {
+      display: grid !important;
+      grid-template-columns: repeat(4, 1fr) !important;
+      gap: 24px !important;
+      padding-top: 24px !important;
+    }
+    .pdf-mode [data-pdf-kpi] {
+      min-width: 0 !important;
+    }
+    .pdf-mode [data-pdf-kpi] p:first-child {
+      font-size: 10px !important;
+      color: #888 !important;
+      margin-bottom: 4px !important;
+    }
+    .pdf-mode [data-pdf-kpi] p:last-child {
+      font-size: 18px !important;
+      font-weight: 800 !important;
+      font-variant-numeric: tabular-nums !important;
+    }
+    
+    /* Typography */
+    .pdf-mode h1 { font-size: 28px !important; line-height: 1.2 !important; color: #3A342D !important; }
+    .pdf-mode h2 { font-size: 18px !important; line-height: 1.3 !important; color: #3A342D !important; }
+    .pdf-mode h3 { font-size: 14px !important; line-height: 1.4 !important; color: #3A342D !important; }
+    .pdf-mode p { font-size: 12px !important; line-height: 1.5 !important; }
+    
+    /* Section Headers */
+    .pdf-mode section { margin-bottom: 24px !important; break-inside: avoid !important; }
+    
+    /* Strategy Grid */
+    .pdf-mode [data-pdf-strategy-grid] {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 16px !important;
+    }
+    .pdf-mode [data-pdf-strategy-card] {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      padding: 20px !important;
+    }
+    
+    /* Callout Banner */
+    .pdf-mode [data-pdf-callout] {
+      background-color: #4A4137 !important;
+      color: #ffffff !important;
+      border-radius: 20px !important;
+      padding: 32px !important;
+      break-inside: avoid !important;
+    }
+    .pdf-mode [data-pdf-callout] * { color: inherit !important; }
+    .pdf-mode [data-pdf-callout] .text-\\[\\#D6A270\\] { color: #D6A270 !important; }
+    
+    /* Map Container */
+    .pdf-mode [data-map="true"] {
+      height: 280px !important;
+      border-radius: 16px !important;
+      overflow: hidden !important;
+      break-inside: avoid !important;
+    }
+    .pdf-mode .pdf-map-image {
+      width: 100% !important;
+      height: 280px !important;
+      object-fit: cover !important;
+      display: block !important;
+      border-radius: 16px !important;
+    }
+    .pdf-mode .pdf-map-placeholder {
+      width: 100% !important;
+      height: 280px !important;
+      background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 16px !important;
+      color: #6b7280 !important;
+      font-size: 14px !important;
+    }
+    
+    /* Watch Outs */
+    .pdf-mode [data-pdf-watchouts] {
+      background-color: #fff1f2 !important;
+      border: 1px solid #fecdd3 !important;
+    }
+    
+    /* Badges */
+    .pdf-mode .bg-emerald-500 { background-color: #10b981 !important; color: white !important; }
+    .pdf-mode .bg-blue-500 { background-color: #3b82f6 !important; color: white !important; }
+    .pdf-mode .bg-amber-500 { background-color: #f59e0b !important; color: white !important; }
+    .pdf-mode .bg-rose-500 { background-color: #f43f5e !important; color: white !important; }
+    .pdf-mode .text-emerald-600, .pdf-mode .text-emerald-700 { color: #059669 !important; }
+    .pdf-mode .text-\\[\\#B8864A\\] { color: #B8864A !important; }
+    .pdf-mode .text-\\[\\#8A9A6D\\] { color: #8A9A6D !important; }
+    .pdf-mode .text-\\[\\#D6A270\\] { color: #D6A270 !important; }
+    
+    /* Decorative - Hide */
+    .pdf-mode [class*="blur-"], .pdf-mode [class*="-mr-32"], .pdf-mode [class*="-mt-32"] { display: none !important; }
+    
+    /* Footer */
+    .pdf-mode footer { margin-top: 32px !important; padding-top: 16px !important; border-top: 1px solid #eee !important; }
+    .pdf-mode footer p { font-size: 9px !important; color: #999 !important; }
+  `;
+
+  /**
    * Export report to PDF using html2pdf.js
    * 
    * Key features:
+   * - PRE-FETCHES static map image as data URL before PDF generation
+   * - Injects CSS styles directly into cloned document for reliable styling
    * - Uses onclone to apply PDF-specific modifications without affecting live UI
-   * - Replaces map iframes with static images for reliable rendering
    * - Removes interactive elements (buttons, tooltips) 
-   * - Applies .pdf-mode class for print-optimized CSS
    */
   const exportToPDF = async () => {
     if (!reportRef.current || !isPaidUser) return;
@@ -122,28 +269,54 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     setIsExporting(true);
     
     try {
-      // Dynamic import of html2pdf
+      // 1. PRE-FETCH the static map image as a data URL BEFORE PDF generation
+      // This ensures the map is ready when html2canvas captures the page
+      let mapDataUrl: string | null = null;
+      try {
+        const staticMapUrl = `/api/static-map?address=${encodeURIComponent(data.address)}&width=800&height=400&zoom=17`;
+        const mapResponse = await fetch(staticMapUrl);
+        
+        if (mapResponse.ok && mapResponse.headers.get('content-type')?.includes('image')) {
+          const blob = await mapResponse.blob();
+          mapDataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        }
+      } catch (mapError) {
+        console.warn('Could not pre-fetch static map:', mapError);
+      }
+
+      // 2. Dynamic import of html2pdf
       const html2pdfModule = await import('html2pdf.js');
       const html2pdf = html2pdfModule.default as any;
       
       const element = reportRef.current;
       const filename = `upblock-${data.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+      const addressForPlaceholder = data.address;
       
       const opt = {
-        margin: [12, 12, 12, 12], // Tighter margins for cleaner look
+        margin: [10, 10, 10, 10],
         filename: filename,
         image: { type: 'jpeg', quality: 0.95 },
         html2canvas: { 
           scale: 2,
           useCORS: true,
-          allowTaint: false,
+          allowTaint: true,
           letterRendering: true,
           scrollY: 0,
           logging: false,
           backgroundColor: '#ffffff',
-          windowWidth: 900, // Fixed width for consistent rendering
+          windowWidth: 1100, // Wider for better layout
           onclone: (clonedDoc: Document) => {
-            // Apply PDF mode class to document root for CSS targeting
+            // 3. INJECT PDF styles directly into cloned document
+            const styleEl = clonedDoc.createElement('style');
+            styleEl.textContent = getPdfStyles();
+            clonedDoc.head.appendChild(styleEl);
+            
+            // Apply PDF mode class
             clonedDoc.documentElement.classList.add('pdf-mode');
             clonedDoc.body.classList.add('pdf-mode');
             
@@ -151,72 +324,45 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
             const noPdfElements = clonedDoc.querySelectorAll('[data-no-pdf="true"]');
             noPdfElements.forEach(el => el.remove());
             
-            // Remove all interactive buttons (except those marked to keep)
+            // Remove all interactive buttons
             const buttons = clonedDoc.querySelectorAll('button:not([data-pdf-keep])');
             buttons.forEach(btn => btn.remove());
             
             // Remove tooltips and hover states
-            const tooltips = clonedDoc.querySelectorAll('[class*="group-hover"], [class*="tooltip"], .invisible');
+            const tooltips = clonedDoc.querySelectorAll('.invisible, [class*="group-hover"]:not([data-pdf-keep])');
             tooltips.forEach(el => el.remove());
             
-            // Replace map iframes with static map images
+            // 4. REPLACE map iframe with pre-fetched static image
             const mapContainers = clonedDoc.querySelectorAll('[data-map="true"]');
             mapContainers.forEach(container => {
               const mapEl = container as HTMLElement;
-              const iframe = mapEl.querySelector('iframe');
+              mapEl.innerHTML = ''; // Clear iframe and loading indicator
               
-              if (iframe) {
-                // Create static map image
-                const staticMapUrl = `/api/static-map?address=${encodeURIComponent(data.address)}&width=800&height=400&zoom=17`;
-                
+              if (mapDataUrl) {
+                // Use pre-fetched map image (already loaded as data URL)
                 const img = clonedDoc.createElement('img');
-                img.src = staticMapUrl;
-                img.alt = `Map of ${data.address}`;
-                img.style.width = '100%';
-                img.style.height = '300px';
-                img.style.objectFit = 'cover';
-                img.style.borderRadius = '16px';
-                img.style.display = 'block';
-                img.crossOrigin = 'anonymous';
-                
-                // Create fallback placeholder in case image fails
-                img.onerror = () => {
-                  const placeholder = clonedDoc.createElement('div');
-                  placeholder.className = 'pdf-map-placeholder';
-                  placeholder.innerHTML = '<span>📍 ' + data.address + '</span>';
-                  placeholder.style.cssText = `
-                    width: 100%;
-                    height: 300px;
-                    border-radius: 16px;
-                    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: #6b7280;
-                    font-size: 14px;
-                    font-weight: 500;
-                    text-align: center;
-                    padding: 20px;
-                  `;
-                  img.replaceWith(placeholder);
-                };
-                
-                // Clear container and add image
-                mapEl.innerHTML = '';
+                img.src = mapDataUrl;
+                img.alt = `Map of ${addressForPlaceholder}`;
+                img.className = 'pdf-map-image';
                 mapEl.appendChild(img);
-                mapEl.style.height = '300px';
-                mapEl.style.overflow = 'hidden';
+              } else {
+                // Fallback: styled placeholder with address
+                const placeholder = clonedDoc.createElement('div');
+                placeholder.className = 'pdf-map-placeholder';
+                placeholder.innerHTML = `<span>📍 ${addressForPlaceholder}</span>`;
+                mapEl.appendChild(placeholder);
               }
             });
             
-            // Remove decorative blur elements that cause rendering issues
+            // Remove decorative blur elements
             const blurElements = clonedDoc.querySelectorAll('[class*="blur-3xl"], [class*="blur-2xl"]');
             blurElements.forEach(el => el.remove());
             
             // Remove animations
             const animatedElements = clonedDoc.querySelectorAll('[class*="animate-"]');
             animatedElements.forEach(el => {
-              el.classList.forEach(cls => {
+              const classList = Array.from(el.classList);
+              classList.forEach(cls => {
                 if (cls.includes('animate-')) {
                   el.classList.remove(cls);
                 }
@@ -230,10 +376,10 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
           orientation: 'portrait'
         },
         pagebreak: { 
-          mode: ['css', 'legacy'], // Removed 'avoid-all' which causes whitespace issues
+          mode: ['css', 'legacy'],
           before: '.pdf-page-break-before',
           after: '.pdf-page-break-after',
-          avoid: '.pdf-no-break, [data-pdf-no-break]'
+          avoid: '.pdf-no-break, [data-pdf-no-break], section'
         }
       };
       
