@@ -120,27 +120,38 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       const element = reportRef.current;
       const filename = `upblock-${data.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
       
+      // Add print class for PDF-specific styling
+      element.classList.add('printing-pdf');
+      
       const opt = {
-        margin: 10,
+        margin: [15, 15, 15, 15],
         filename: filename,
-        image: { type: 'jpeg', quality: 0.95 },
+        image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
           scale: 2,
           useCORS: true,
           letterRendering: true,
           scrollY: 0,
-          logging: false
+          logging: false,
+          backgroundColor: '#ffffff'
         },
         jsPDF: { 
           unit: 'mm', 
           format: 'a4', 
           orientation: 'portrait'
         },
-        pagebreak: { mode: 'avoid-all' }
+        pagebreak: { 
+          mode: ['avoid-all', 'css', 'legacy'],
+          before: '.pdf-page-break-before',
+          after: '.pdf-page-break-after',
+          avoid: '.pdf-no-break'
+        }
       };
       
-      // Use the simpler API that takes element and options directly
       await html2pdf(element, opt).save();
+      
+      // Remove print class
+      element.classList.remove('printing-pdf');
     } catch (error) {
       console.error('PDF export error:', error);
       alert('Failed to export PDF. Please try again.');
@@ -222,7 +233,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     <div ref={reportRef} id="property-report" className="max-w-4xl mx-auto space-y-12 pb-32 animate-in fade-in slide-in-from-bottom-6 duration-700">
       
       {/* Header Property Summary */}
-      <div className="p-5 sm:p-8 md:p-12 rounded-[2rem] sm:rounded-[3rem] border shadow-sm relative overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+      <div className="p-5 sm:p-8 md:p-12 rounded-[2rem] sm:rounded-[3rem] border shadow-sm relative overflow-hidden pdf-no-break" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#D6A270]/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
         <div className="space-y-4 sm:space-y-6 relative z-10">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
@@ -295,8 +306,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         </div>
       </div>
 
-      {/* GOOGLE MAP INTEGRATION */}
-      <div className="w-full h-[400px] rounded-[3rem] overflow-hidden shadow-lg border relative group" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
+      {/* GOOGLE MAP INTEGRATION - Hidden in PDF export */}
+      <div className="w-full h-[400px] rounded-[3rem] overflow-hidden shadow-lg border relative group no-print" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
          <div className="absolute inset-0 bg-slate-200/50 animate-pulse group-hover:hidden"></div>
          <iframe
           title="Property Location Map"
@@ -313,7 +324,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
 
       {/* COMMUNITY & LIFESTYLE */}
       {(filteredProximity.length > 0) || data.localAreaIntel || data.localMarketVibe ? (
-        <section className="space-y-6">
+        <section className="space-y-6 pdf-no-break">
            <div className="flex items-center gap-4 px-4">
               <div className="w-10 h-10 bg-[#B8C5A0] text-white rounded-xl flex items-center justify-center shadow-md">
                 <i className="fa-solid fa-map-pin"></i>
@@ -474,7 +485,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
 
       {/* VALUE-ADD STRATEGIES */}
       {data.valueAddStrategies && data.valueAddStrategies.length > 0 && (
-        <section className="space-y-6">
+        <section className="space-y-6 pdf-no-break">
           <div className="flex items-center justify-between px-4">
              <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-[#D3D9B5] text-white rounded-xl flex items-center justify-center shadow-sm">
@@ -522,7 +533,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       )}
 
       {/* INDICATIVE POST-RENOVATION RENTAL POSITION */}
-      <section className="space-y-6">
+      <section className="space-y-6 pdf-no-break">
         <div className="flex items-center gap-4 px-4">
           <div className="w-10 h-10 bg-[#C9A961] text-white rounded-xl flex items-center justify-center shadow-md">
             <i className="fa-solid fa-key"></i>
@@ -575,7 +586,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
 
       {/* DEVELOPMENT SCENARIOS */}
       {data.developmentScenarios && data.developmentScenarios.length > 0 && (
-        <section className="space-y-6">
+        <section className="space-y-6 pdf-no-break">
            <div className="flex items-center justify-between px-4">
               <div className="flex items-center gap-4">
                  <div className="w-10 h-10 bg-[#4A4137] text-white rounded-xl flex items-center justify-center shadow-sm"><i className="fa-solid fa-city"></i></div>
@@ -621,7 +632,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       )}
 
       {/* APPROVAL PATHWAY & ZONING INTEL */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 pdf-no-break">
         {data.approvalPathway && (
           <div className="p-10 rounded-[3rem] border shadow-sm space-y-8" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
              <div className="flex items-center gap-4">
@@ -652,7 +663,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
 
       {/* COMPARABLE SALES */}
       {data.comparableSales && (
-        <section className="space-y-8">
+        <section className="space-y-8 pdf-no-break">
            <div className="flex items-center gap-4 px-4">
               <div className="w-10 h-10 bg-slate-800 text-white rounded-xl flex items-center justify-center shadow-sm"><i className="fa-solid fa-tags"></i></div>
               <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Comparable Market Sales</h2>
@@ -685,7 +696,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
 
       {/* WATCH OUTS */}
       {data.watchOuts && data.watchOuts.length > 0 && (
-        <section className="bg-rose-50/50 p-10 md:p-14 rounded-[4rem] border border-rose-100 space-y-8">
+        <section className="bg-rose-50/50 p-10 md:p-14 rounded-[4rem] border border-rose-100 space-y-8 pdf-no-break">
           <div className="flex items-center gap-4">
              <div className="w-10 h-10 bg-rose-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-rose-200"><i className="fa-solid fa-eye"></i></div>
              <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Things to Watch Out For</h2>
