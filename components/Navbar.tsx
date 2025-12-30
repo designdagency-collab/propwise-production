@@ -84,7 +84,7 @@ const Navbar: React.FC<NavbarProps> = ({
             <img 
               src="/blockcheck.ai-main.png" 
               alt="blockcheck.ai" 
-              className="h-10 w-auto transition-transform group-active:scale-95"
+              className="h-14 sm:h-16 w-auto transition-transform group-active:scale-95"
             />
           </button>
           <div className="flex items-center space-x-4">
