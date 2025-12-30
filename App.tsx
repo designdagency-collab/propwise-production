@@ -520,6 +520,10 @@ const App: React.FC = () => {
     setAppState(AppState.IDLE);
     setResults(null);
     setAddress('');
+    // Close any open pages
+    setShowTerms(false);
+    setShowPricing(false);
+    setShowAccountSettings(false);
     setError(null);
     setIsQuotaError(false);
     setShowUpgradeSuccess(false);
@@ -585,11 +589,11 @@ const App: React.FC = () => {
       <Navbar 
         plan={plan} 
         remainingCredits={remainingCredits}
-        onUpgrade={() => setShowPricing(true)} 
+        onUpgrade={() => { setShowTerms(false); setShowAccountSettings(false); setShowPricing(true); }} 
         onHome={handleHome}
-        onLogin={handleLogin}
+        onLogin={() => { setShowTerms(false); setShowPricing(false); setShowAccountSettings(false); handleLogin(); }}
         onLogout={handleLogout}
-        onAccountSettings={() => setShowAccountSettings(true)}
+        onAccountSettings={() => { setShowTerms(false); setShowPricing(false); setShowAccountSettings(true); }}
         isLoggedIn={isLoggedIn}
         userName={userProfile?.full_name}
         userEmail={userEmail}
