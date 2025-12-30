@@ -821,6 +821,7 @@ const App: React.FC = () => {
           initialMode={emailAuthMode}
           onSuccess={handleEmailAuthSuccess}
           onCancel={() => setShowEmailAuth(false)}
+          onShowTerms={() => { setShowEmailAuth(false); setShowTerms(true); }}
         />
       )}
 
