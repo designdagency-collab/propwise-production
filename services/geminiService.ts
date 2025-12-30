@@ -67,7 +67,7 @@ RULES:
         contents: [{ parts: [{ text: prompt }] }],
         config: {
           tools: [{ googleSearch: {} }],
-          thinkingConfig: { thinkingBudget: 0 },
+          thinkingConfig: { thinkingBudget: 2048 },
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
