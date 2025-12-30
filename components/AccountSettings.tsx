@@ -9,7 +9,7 @@ interface AccountSettingsProps {
   isLoggedIn: boolean;
   onBack: () => void;
   onCancelSubscription: () => Promise<void>;
-  onLogout: () => void;
+  onLogout: () => void | Promise<void>;
 }
 
 const AccountSettings: React.FC<AccountSettingsProps> = ({

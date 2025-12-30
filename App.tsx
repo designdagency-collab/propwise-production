@@ -469,14 +469,17 @@ const App: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await supabaseService.signOut();
+    console.log('Logout clicked');
+    
+    // Clear state FIRST (don't wait for Supabase)
     setIsLoggedIn(false);
     setUserEmail('');
     setUserPhone('');
     setUserProfile(null);
     setShowAccountSettings(false);
+    setPlan('FREE_TRIAL');
     
-    // Clear ALL user-specific localStorage to prevent profile mixing
+    // Clear ALL user-specific localStorage
     localStorage.removeItem('prop_is_logged_in');
     localStorage.removeItem('prop_user_email');
     localStorage.removeItem('prop_user_phone');
@@ -491,6 +494,13 @@ const App: React.FC = () => {
     
     // Refresh credit state to show free trial
     refreshCreditState();
+    
+    // Then sign out from Supabase (don't block on this)
+    try {
+      await supabaseService.signOut();
+    } catch (error) {
+      console.log('Supabase signout error (ignored):', error);
+    }
   };
 
   // Handle subscription cancellation
