@@ -715,10 +715,10 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
          </button>
       </div>
 
-      <footer className="pt-10">
+      <footer className="pt-10 pb-6">
         <div className="text-center">
-          <p className="text-[10px] text-[#4A4137]/30 leading-relaxed max-w-sm mx-auto italic">
-            This guide is an automated strategy simulation based on public data and AI interpretation. Always consult with a licensed professional before making financial or legal decisions.
+          <p className="text-[10px] sm:text-[11px] leading-relaxed max-w-2xl mx-auto" style={{ color: 'var(--text-muted)' }}>
+            blockcheck.ai provides AI-assisted, scenario-based property insights using publicly available data. It does not constitute financial advice, a property valuation, or planning approval.
           </p>
         </div>
       </footer>

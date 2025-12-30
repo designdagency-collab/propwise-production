@@ -953,9 +953,6 @@ const App: React.FC = () => {
       {/* Footer - only show on main pages, not modals */}
       {!showTerms && !showPricing && !showAccountSettings && (
         <footer className="fixed bottom-0 left-0 right-0 py-3 sm:py-4 text-center px-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
-          <p className="text-[9px] sm:text-[10px] max-w-3xl mx-auto mb-2" style={{ color: 'var(--text-muted)' }}>
-            blockcheck.ai provides AI-assisted, scenario-based property insights using publicly available data. It does not constitute financial advice, a property valuation, or planning approval.
-          </p>
           <div className="flex items-center justify-center gap-4 text-[9px] sm:text-[10px]" style={{ color: 'var(--text-muted)' }}>
             <span>© {new Date().getFullYear()} blockcheck.ai</span>
             <span>•</span>
