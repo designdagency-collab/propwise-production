@@ -187,9 +187,17 @@ export class SupabaseService {
       options: {
         data: {
           full_name: fullName || ''
-        }
+        },
+        // Skip email confirmation redirect - we handle this in Supabase settings
+        emailRedirectTo: 'https://propwise-production.vercel.app'
       }
     });
+    
+    // If user was created, store email locally for session recovery
+    if (data?.user?.email) {
+      localStorage.setItem('prop_user_email', data.user.email);
+    }
+    
     return { user: data?.user, session: data?.session, error };
   }
 
@@ -206,6 +214,13 @@ export class SupabaseService {
       email,
       password
     });
+    
+    // Store email locally for session recovery
+    if (data?.user?.email) {
+      localStorage.setItem('prop_user_email', data.user.email);
+      localStorage.setItem('prop_has_account', 'true');
+    }
+    
     return { user: data?.user, session: data?.session, error };
   }
 
