@@ -118,7 +118,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       const html2pdf = html2pdfModule.default as any;
       
       const element = reportRef.current;
-      const filename = `blockcheck-${data.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+      const filename = `upblock-${data.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
       
       const opt = {
         margin: 10,
@@ -718,7 +718,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       <footer className="pt-10 pb-6">
         <div className="text-center">
           <p className="text-[10px] sm:text-[11px] leading-relaxed max-w-2xl mx-auto" style={{ color: 'var(--text-muted)' }}>
-            blockcheck.ai provides AI-assisted, scenario-based property insights using publicly available data. It does not constitute financial advice, a property valuation, or planning approval.
+            upblock.ai provides AI-assisted, scenario-based property insights using publicly available data. It does not constitute financial advice, a property valuation, or planning approval.
           </p>
         </div>
       </footer>

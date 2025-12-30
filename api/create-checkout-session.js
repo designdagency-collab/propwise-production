@@ -20,14 +20,14 @@ const PLAN_CONFIGS = {
   STARTER_PACK: {
     amount: 1900, // $19.00 AUD in cents
     currency: 'aud',
-    name: 'blockcheck.ai Starter Pack',
+    name: 'upblock.ai Starter Pack',
     description: '3 property audit credits - one-time purchase',
     mode: 'payment', // One-time payment
   },
   PRO: {
     amount: 4900, // $49.00 AUD in cents
     currency: 'aud',
-    name: 'blockcheck.ai Pro',
+    name: 'upblock.ai Pro',
     description: '10 property audits per month',
     mode: 'subscription', // Monthly subscription
     interval: 'month',
@@ -36,7 +36,7 @@ const PLAN_CONFIGS = {
   BUYER_PACK: {
     amount: 4900,
     currency: 'aud',
-    name: 'blockcheck.ai Pro',
+    name: 'upblock.ai Pro',
     description: '10 property audits per month',
     mode: 'subscription',
     interval: 'month',

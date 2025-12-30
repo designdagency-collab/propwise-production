@@ -954,7 +954,7 @@ const App: React.FC = () => {
       {!showTerms && !showPricing && !showAccountSettings && (
         <footer className="fixed bottom-0 left-0 right-0 py-3 sm:py-4 text-center px-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
           <div className="flex items-center justify-center gap-4 text-[9px] sm:text-[10px]" style={{ color: 'var(--text-muted)' }}>
-            <span>© {new Date().getFullYear()} blockcheck.ai</span>
+            <span>© {new Date().getFullYear()} upblock.ai</span>
             <span>•</span>
             <button 
               onClick={() => setShowTerms(true)}

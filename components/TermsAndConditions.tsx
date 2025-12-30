@@ -38,7 +38,7 @@ const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({ onBack }) => {
           <section className="space-y-4">
             <h2 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>1. About the Service</h2>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              BlockCheck.ai (referred to as "we", "us", or "our") provides automated property intelligence, analysis, and indicative insights based on publicly available data sources, third-party information, and algorithmic interpretation.
+              Upblock.ai (referred to as "we", "us", or "our") provides automated property intelligence, analysis, and indicative insights based on publicly available data sources, third-party information, and algorithmic interpretation.
             </p>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               The service is designed to assist users in understanding property characteristics, zoning context, development feasibility, and potential value considerations. <strong>It does not replace professional advice.</strong>
@@ -49,7 +49,7 @@ const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({ onBack }) => {
           <section className="space-y-4">
             <h2 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>2. No Professional Advice</h2>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              The information provided through BlockCheck.ai:
+              The information provided through Upblock.ai:
             </p>
             <ul className="list-disc list-inside text-sm space-y-1 ml-4" style={{ color: 'var(--text-secondary)' }}>
               <li>Is general information only</li>
@@ -122,7 +122,7 @@ const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({ onBack }) => {
               <li>Licensed planning professionals</li>
             </ul>
             <p className="text-sm leading-relaxed font-medium" style={{ color: 'var(--text-primary)' }}>
-              BlockCheck.ai does not lodge applications, provide approvals, or guarantee outcomes.
+              Upblock.ai does not lodge applications, provide approvals, or guarantee outcomes.
             </p>
           </section>
 
@@ -169,7 +169,7 @@ const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({ onBack }) => {
               <li>You are responsible for how you use the information</li>
               <li>You make decisions at your own risk</li>
               <li>You will independently verify critical information</li>
-              <li>You will not rely solely on BlockCheck.ai to make financial or legal decisions</li>
+              <li>You will not rely solely on Upblock.ai to make financial or legal decisions</li>
             </ul>
           </section>
 
@@ -177,7 +177,7 @@ const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({ onBack }) => {
           <section className="space-y-4">
             <h2 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>8. Limitation of Liability</h2>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              To the maximum extent permitted by Australian law, BlockCheck.ai, its operators, directors, employees, and affiliates will not be liable for any loss, damage, cost, or expense arising from:
+              To the maximum extent permitted by Australian law, Upblock.ai, its operators, directors, employees, and affiliates will not be liable for any loss, damage, cost, or expense arising from:
             </p>
             <ul className="list-disc list-inside text-sm space-y-1 ml-4" style={{ color: 'var(--text-secondary)' }}>
               <li>Reliance on information provided</li>
@@ -221,7 +221,7 @@ const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({ onBack }) => {
           <section className="space-y-4">
             <h2 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>11. Intellectual Property</h2>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              All content, branding, data structure, analysis logic, and presentation are the intellectual property of BlockCheck.ai.
+              All content, branding, data structure, analysis logic, and presentation are the intellectual property of Upblock.ai.
             </p>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               You may not copy, resell, scrape, repackage, or redistribute the Service or its outputs without written permission.
@@ -249,7 +249,7 @@ const TermsAndConditions: React.FC<TermsAndConditionsProps> = ({ onBack }) => {
         {/* Footer */}
         <div className="mt-16 pt-8 border-t" style={{ borderColor: 'var(--border-color)' }}>
           <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
-            © {new Date().getFullYear()} BlockCheck.ai. All rights reserved.
+            © {new Date().getFullYear()} Upblock.ai. All rights reserved.
           </p>
         </div>
       </div>

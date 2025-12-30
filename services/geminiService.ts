@@ -5,7 +5,7 @@ export class GeminiService {
   async fetchPropertyInsights(address: string): Promise<PropertyData> {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
-    const prompt = `You are a professional Australian property planning analyst and prop-tech engineer for blockcheck.ai.
+    const prompt = `You are a professional Australian property planning analyst and prop-tech engineer for upblock.ai.
 Your task is to generate a structured Property DNA report for: "${address}".
 
 ⚠️ MANDATORY FIRST STEP - ZONING & PROPERTY TYPE VERIFICATION:
