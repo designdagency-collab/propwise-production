@@ -41,6 +41,26 @@ const App: React.FC = () => {
   const [progress, setProgress] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState('Initiating site audit...');
   const progressIntervalRef = useRef<number | null>(null);
+  
+  // Theme state (dark/light mode)
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('prop_theme');
+    if (saved) return saved === 'dark';
+    // Default to system preference
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+  
+  // Apply theme to document
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('prop_theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
+  
+  const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   const checkKeySelection = useCallback(async () => {
     if (window.aistudio?.hasSelectedApiKey) {
@@ -403,7 +423,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20 selection:bg-[#C9A961] selection:text-white bg-white">
+    <div className="min-h-screen pb-20 selection:bg-[#C9A961] selection:text-white" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <Navbar 
         plan={plan} 
         onUpgrade={() => setShowPricing(true)} 
@@ -414,6 +434,8 @@ const App: React.FC = () => {
         userName={userProfile?.full_name}
         userEmail={userEmail}
         userPhone={userPhone}
+        isDarkMode={isDarkMode}
+        onToggleTheme={toggleTheme}
       />
 
       {/* Upgrade Processing Overlay */}
@@ -453,28 +475,29 @@ const App: React.FC = () => {
         <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           {appState === AppState.IDLE && (
             <div className="max-w-4xl mx-auto text-center py-12 md:py-24 space-y-12">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest border border-[#C9A961]/20">
+              <div className="inline-flex items-center gap-2 px-4 py-2 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
                 <i className="fa-solid fa-file-contract"></i>
                 <span>Professional Site Audit & Intelligence</span>
               </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-tighter text-[#3A342D] leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-tighter leading-tight" style={{ color: 'var(--text-primary)' }}>
                 See the property <br/> <span className="text-[#C9A961] opacity-90">behind the listing.</span>
               </h1>
-              <p className="text-base sm:text-lg text-[#3A342D]/40 max-w-2xl mx-auto leading-relaxed font-medium">
+              <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium" style={{ color: 'var(--text-muted)' }}>
                 A detailed intelligence report decoding zoning potential, infrastructure, and property records in plain language.
               </p>
               
               <div className="max-w-2xl mx-auto">
                  <form onSubmit={handleSearch} className="relative group">
                   <div className="absolute -inset-1 bg-[#C9A961] rounded-[2rem] blur opacity-5 group-hover:opacity-10 transition duration-1000"></div>
-                  <div className="relative flex items-center bg-white p-2 rounded-[2rem] shadow-xl border border-[#C9A961]/10">
+                  <div className="relative flex items-center p-2 rounded-[2rem] shadow-xl border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
                     <div className="flex-grow flex items-center px-6">
                       <input
                         type="text"
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
                         placeholder="Enter street address..."
-                        className="w-full py-3 sm:py-4 bg-transparent text-base sm:text-lg font-medium focus:outline-none text-[#3A342D] placeholder-[#3A342D]/20"
+                        className="w-full py-3 sm:py-4 bg-transparent text-base sm:text-lg font-medium focus:outline-none"
+                        style={{ color: 'var(--text-primary)' }}
                       />
                     </div>
                     <div className="flex items-center gap-2 pr-2">
@@ -502,37 +525,37 @@ const App: React.FC = () => {
           {appState === AppState.LOADING && (
             <div className="max-w-xl mx-auto py-40 text-center space-y-12 animate-in fade-in duration-500">
                <div className="space-y-8">
-                 <div className="inline-flex items-center justify-center w-20 h-20 bg-[#C9A961]/10 rounded-3xl mb-4">
+                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl mb-4" style={{ backgroundColor: 'var(--accent-gold-light)' }}>
                     <i className="fa-solid fa-dna text-3xl text-[#C9A961] animate-pulse"></i>
                  </div>
                  
                  <div className="space-y-4">
-                   <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#3A342D] tracking-tighter">Decoding Property DNA</h2>
-                   <p className="text-sm font-medium text-[#3A342D]/40 italic">"{loadingMessage}"</p>
+                   <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter" style={{ color: 'var(--text-primary)' }}>Decoding Property DNA</h2>
+                   <p className="text-sm font-medium italic" style={{ color: 'var(--text-muted)' }}>"{loadingMessage}"</p>
                  </div>
 
                  <div className="max-w-md mx-auto space-y-4">
                    <div className="relative pt-1">
                      <div className="flex mb-2 items-center justify-between">
                        <div>
-                         <span className="text-[10px] font-black uppercase tracking-widest py-1 px-2 rounded-full text-[#C9A961] bg-[#C9A961]/10 border border-[#C9A961]/10">
+                         <span className="text-[10px] font-black uppercase tracking-widest py-1 px-2 rounded-full text-[#C9A961] border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
                            Audit Progress
                          </span>
                        </div>
                        <div className="text-right">
-                         <span className="text-2xl font-black text-[#3A342D] tracking-tighter">
+                         <span className="text-2xl font-black tracking-tighter" style={{ color: 'var(--text-primary)' }}>
                            {progress < 100 ? Math.floor(progress) : 100}%
                          </span>
                        </div>
                      </div>
-                     <div className="overflow-hidden h-3 mb-4 text-xs flex rounded-full bg-[#FBEFD2]/30 border border-[#C9A961]/5">
+                     <div className="overflow-hidden h-3 mb-4 text-xs flex rounded-full border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
                        <div 
                          style={{ width: `${progress}%` }} 
                          className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-[#C9A961] transition-all duration-300 ease-out"
                        ></div>
                      </div>
                    </div>
-                   <p className="text-[9px] font-bold text-[#3A342D]/20 uppercase tracking-[0.3em]">
+                   <p className="text-[9px] font-bold uppercase tracking-[0.3em]" style={{ color: 'var(--text-muted)' }}>
                      Searching Planning Portals & Market Records
                    </p>
                  </div>
@@ -552,20 +575,20 @@ const App: React.FC = () => {
 
           {appState === AppState.LIMIT_REACHED && (
             <div className="max-w-3xl mx-auto py-24 text-center space-y-8">
-              <div className="w-20 h-20 bg-[#FBEFD2]/10 text-[#C9A961] rounded-3xl flex items-center justify-center text-3xl mx-auto border border-[#C9A961]/10">
+              <div className="w-20 h-20 rounded-3xl flex items-center justify-center text-3xl mx-auto border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
                 <i className="fa-solid fa-lock text-[#C9A961]"></i>
               </div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#3A342D] tracking-tighter leading-none">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter leading-none" style={{ color: 'var(--text-primary)' }}>
                 {isSignedUp ? 'Audit Limit Reached' : 'You\'ve Used Your 2 Free Audits'}
               </h2>
-              <p className="text-[#3A342D]/40 text-sm sm:text-base max-w-md mx-auto font-medium leading-relaxed">
+              <p className="text-sm sm:text-base max-w-md mx-auto font-medium leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 {isSignedUp 
                   ? "You've used all 5 free property audits. Continue searching unlimited properties with Propwise Unlimited."
                   : "Create a free account to unlock 3 more audits, or upgrade for unlimited access to property intelligence."}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 {!isSignedUp && (
-                  <button onClick={handleSignUp} className="bg-white border-2 border-[#3A342D] text-[#3A342D] px-6 sm:px-10 py-3 sm:py-4 rounded-xl font-bold hover:bg-slate-50 transition-all text-[12px] sm:text-[11px] uppercase tracking-widest">
+                  <button onClick={handleSignUp} className="border-2 px-6 sm:px-10 py-3 sm:py-4 rounded-xl font-bold transition-all text-[12px] sm:text-[11px] uppercase tracking-widest" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--text-primary)', color: 'var(--text-primary)' }}>
                     <i className="fa-solid fa-envelope mr-2"></i>
                     Sign Up (+3 Free Audits)
                   </button>
@@ -578,14 +601,14 @@ const App: React.FC = () => {
           )}
 
           {appState === AppState.ERROR && (
-            <div className="max-w-xl mx-auto bg-white border border-[#C9A961]/10 p-12 rounded-[2.5rem] text-center shadow-lg">
-              <div className="w-16 h-16 bg-red-50 text-red-500/50 rounded-full flex items-center justify-center text-2xl mx-auto mb-6">
+            <div className="max-w-xl mx-auto border p-12 rounded-[2.5rem] text-center shadow-lg" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+              <div className="w-16 h-16 bg-red-500/10 text-red-500/70 rounded-full flex items-center justify-center text-2xl mx-auto mb-6">
                 <i className={`fa-solid ${isQuotaError ? 'fa-key' : 'fa-triangle-exclamation'}`}></i>
               </div>
-              <h3 className="text-2xl font-bold text-[#3A342D] mb-3 tracking-tighter">
+              <h3 className="text-2xl font-bold mb-3 tracking-tighter" style={{ color: 'var(--text-primary)' }}>
                 {isQuotaError ? 'Action Required' : 'Audit Interrupted'}
               </h3>
-              <div className="text-[#3A342D]/40 mb-8 font-medium text-sm leading-relaxed space-y-4">
+              <div className="mb-8 font-medium text-sm leading-relaxed space-y-4" style={{ color: 'var(--text-muted)' }}>
                 <p>{error}</p>
               </div>
               <div className="flex flex-col gap-3">
