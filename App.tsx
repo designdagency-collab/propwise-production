@@ -7,7 +7,8 @@ import EmailAuth from './components/EmailAuth';
 import { geminiService } from './services/geminiService';
 import { stripeService } from './services/stripeService';
 import { supabaseService } from './services/supabaseService';
-import { AppState, PropertyData, PlanType } from './types';
+import { billingService, getCreditState, getRemainingCredits, canAudit, consumeCredit, grantAccountBonus, addStarterPackCredits, activateProSubscription } from './services/billingService';
+import { AppState, PropertyData, PlanType, CreditState } from './types';
 
 const App: React.FC = () => {
   const [address, setAddress] = useState('');
@@ -18,8 +19,18 @@ const App: React.FC = () => {
   // Load plan from localStorage - check if user has already paid
   const [plan, setPlan] = useState<PlanType>(() => {
     const savedPlan = localStorage.getItem('prop_plan');
-    return (savedPlan === 'BUYER_PACK' || savedPlan === 'MONITOR') ? savedPlan as PlanType : 'FREE';
+    if (savedPlan === 'PRO' || savedPlan === 'UNLIMITED_PRO') return savedPlan as PlanType;
+    // Migrate old plans
+    if (savedPlan === 'BUYER_PACK' || savedPlan === 'MONITOR') {
+      localStorage.setItem('prop_plan', 'PRO');
+      return 'PRO';
+    }
+    return 'FREE_TRIAL';
   });
+  
+  // Credit state for new pricing model
+  const [creditState, setCreditState] = useState<CreditState>(getCreditState);
+  const [remainingCredits, setRemainingCredits] = useState(() => getRemainingCredits(getCreditState()));
   const [isQuotaError, setIsQuotaError] = useState(false);
   const [hasKey, setHasKey] = useState(false);
   const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
@@ -142,10 +153,18 @@ const App: React.FC = () => {
           localStorage.setItem('prop_signed_up', 'true');
           localStorage.setItem('prop_user_email', session.user?.email || '');
           
+          // Grant account bonus on sign in (idempotent - only adds if not already set)
+          grantAccountBonus();
+          
           // Close auth modal if open (for Google OAuth redirect)
           setShowEmailAuth(false);
           
           await loadUserData(session.user?.id);
+          
+          // Refresh credit state after loading user data
+          const state = getCreditState();
+          setCreditState(state);
+          setRemainingCredits(getRemainingCredits(state));
           
           // Return to idle state so they can search
           if (appState === AppState.LIMIT_REACHED) {
@@ -160,14 +179,11 @@ const App: React.FC = () => {
               localStorage.removeItem('prop_pending_upgrade');
               // Small delay to let the UI update, then redirect to payment
               setTimeout(() => {
-                setIsProcessingUpgrade(true);
-                stripeService.createCheckoutSession(pendingUpgrade as PlanType, session.user?.email || '').then(response => {
-                  if (response.success && response.url) {
-                    window.location.href = response.url;
-                  } else {
-                    setIsProcessingUpgrade(false);
-                  }
-                });
+                if (pendingUpgrade === 'STARTER_PACK') {
+                  handleBuyStarterPack();
+                } else {
+                  handleUpgradeToPro();
+                }
               }, 500);
             }
           }
@@ -192,18 +208,27 @@ const App: React.FC = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
     const sessionId = urlParams.get('session_id');
+    const purchasedPlan = urlParams.get('plan') || 'PRO'; // Default to PRO
 
     if (paymentStatus === 'success' && sessionId) {
-      // Payment was successful - upgrade to BUYER_PACK
-      setPlan('BUYER_PACK');
-      localStorage.setItem('prop_plan', 'BUYER_PACK');
+      // Payment was successful - activate the purchased plan
+      if (purchasedPlan === 'STARTER_PACK') {
+        // Add starter pack credits
+        addStarterPackCredits();
+      } else {
+        // Activate PRO subscription
+        activateProSubscription();
+        setPlan('PRO');
+      }
+      
+      refreshCreditState();
       setShowUpgradeSuccess(true);
       
       // Update Supabase subscription if user is logged in
       const updateSubscription = async () => {
         const user = await supabaseService.getCurrentUser();
         if (user?.id && supabaseService.isConfigured()) {
-          await supabaseService.updateSubscription(user.id, 'BUYER_PACK', sessionId);
+          await supabaseService.updateSubscription(user.id, purchasedPlan as PlanType, sessionId);
         }
       };
       updateSubscription();
@@ -234,9 +259,14 @@ const App: React.FC = () => {
       // Check subscription status
       if (userId) {
         const subscription = await supabaseService.getActiveSubscription(userId);
-        if (subscription && subscription.plan_type !== 'FREE') {
-          setPlan(subscription.plan_type as PlanType);
-          localStorage.setItem('prop_plan', subscription.plan_type);
+        if (subscription && subscription.plan_type && subscription.plan_type !== 'FREE' && subscription.plan_type !== 'FREE_TRIAL') {
+          // Map old plan types to new ones
+          let planToSet = subscription.plan_type;
+          if (planToSet === 'BUYER_PACK' || planToSet === 'MONITOR') {
+            planToSet = 'PRO';
+          }
+          setPlan(planToSet as PlanType);
+          localStorage.setItem('prop_plan', planToSet);
         }
       }
     } catch (error) {
@@ -244,33 +274,31 @@ const App: React.FC = () => {
     }
   };
 
-  const checkSearchLimit = () => {
-    // Paid users get unlimited
-    if (hasKey || plan !== 'FREE') return true;
-    
-    // Free tier limits: 2 initial, +3 more after email signup (5 total)
-    const FREE_LIMIT = 2;
-    const SIGNED_UP_LIMIT = 5; // 2 + 3 bonus
-    const limit = isSignedUp ? SIGNED_UP_LIMIT : FREE_LIMIT;
-    
-    // Try Supabase first if user is authenticated
-    if (userProfile) {
-      const supabaseCount = userProfile.search_count || 0;
-      if (supabaseCount < limit) return true;
+  // Refresh credit state from localStorage
+  const refreshCreditState = useCallback(() => {
+    const state = getCreditState();
+    setCreditState(state);
+    setRemainingCredits(getRemainingCredits(state));
+    // Also update plan if it changed
+    if (state.plan !== plan) {
+      setPlan(state.plan);
     }
+  }, [plan]);
+
+  const checkSearchLimit = () => {
+    // API key users bypass limits
+    if (hasKey) return true;
     
-    // Fallback to localStorage (existing logic - KEEP THIS)
-    const count = parseInt(localStorage.getItem('prop_search_count_total') || '0', 10);
-    
-    return count < limit;
+    // Use new credit system
+    return canAudit();
   };
 
   const incrementSearchCount = () => {
-    // Existing localStorage logic - KEEP THIS
-    const count = parseInt(localStorage.getItem('prop_search_count_total') || '0', 10);
-    localStorage.setItem('prop_search_count_total', (count + 1).toString());
+    // Use new credit system - consume one credit
+    consumeCredit();
+    refreshCreditState();
     
-    // ADD: Also sync to Supabase if user is authenticated (optional enhancement)
+    // Also sync to Supabase if user is authenticated (optional enhancement)
     if (userProfile?.id) {
       supabaseService.incrementSearchCountInDB(userProfile.id, address).catch(() => {
         // Fail silently - localStorage is the source of truth
@@ -279,9 +307,98 @@ const App: React.FC = () => {
   };
 
   const handleSignUp = () => {
-    // Show email signup modal (for +3 bonus searches)
+    // Show email signup modal (for +1 bonus audit via account creation)
     setEmailAuthMode('signup');
     setShowEmailAuth(true);
+  };
+
+  // Handle "Create Account" CTA - grants +1 bonus audit
+  const handleCreateAccount = () => {
+    // If already logged in, just grant the bonus
+    if (isLoggedIn) {
+      grantAccountBonus();
+      refreshCreditState();
+      setAppState(AppState.IDLE);
+      return;
+    }
+    // Otherwise show signup modal
+    setEmailAuthMode('signup');
+    setShowEmailAuth(true);
+  };
+
+  // Handle "Buy Starter Pack" CTA - placeholder for Stripe
+  const handleBuyStarterPack = async () => {
+    // REQUIRE LOGIN before payment
+    if (!isLoggedIn) {
+      setShowPricing(false);
+      setEmailAuthMode('signup');
+      setShowEmailAuth(true);
+      localStorage.setItem('prop_pending_upgrade', 'STARTER_PACK');
+      return;
+    }
+    
+    setIsProcessingUpgrade(true);
+    
+    // TODO: Wire to Stripe - for now simulate purchase
+    // const result = await billingService.startCheckoutStarter();
+    // if (result.success && result.url) {
+    //   window.location.href = result.url;
+    //   return;
+    // }
+    
+    // SIMULATION: Add credits directly (remove when Stripe is connected)
+    setTimeout(() => {
+      addStarterPackCredits();
+      refreshCreditState();
+      setIsProcessingUpgrade(false);
+      setShowUpgradeSuccess(true);
+      setShowPricing(false);
+      setTimeout(() => setShowUpgradeSuccess(false), 5000);
+    }, 1000);
+  };
+
+  // Handle "Upgrade to Pro" CTA
+  const handleUpgradeToPro = async () => {
+    // REQUIRE LOGIN before payment
+    if (!isLoggedIn) {
+      setShowPricing(false);
+      setEmailAuthMode('signup');
+      setShowEmailAuth(true);
+      localStorage.setItem('prop_pending_upgrade', 'PRO');
+      return;
+    }
+    
+    setIsProcessingUpgrade(true);
+    setError(null);
+    
+    const email = userProfile?.email || userEmail || localStorage.getItem('prop_user_email');
+    
+    if (!email) {
+      setIsProcessingUpgrade(false);
+      setError("Unable to process payment. Please ensure you're logged in with a valid email.");
+      return;
+    }
+    
+    try {
+      const response = await stripeService.createCheckoutSession('PRO', email);
+      
+      if (response.success && response.url) {
+        window.location.href = response.url;
+        return;
+      } else {
+        console.error('Stripe checkout failed:', response);
+        setIsProcessingUpgrade(false);
+        setError(response.error || "Unable to initiate payment. Please check your connection and try again.");
+        setAppState(AppState.ERROR);
+        setShowPricing(false);
+      }
+    } catch (error: any) {
+      console.error('Upgrade error:', error);
+      setIsProcessingUpgrade(false);
+      setError(error?.message || "Payment gateway unavailable. Please try again later.");
+      setAppState(AppState.ERROR);
+      setShowPricing(false);
+    }
   };
 
   const handleLogin = () => {
@@ -306,6 +423,10 @@ const App: React.FC = () => {
     setIsSignedUp(true);
     localStorage.setItem('prop_signed_up', 'true');
     localStorage.setItem('prop_user_email', email);
+    
+    // Grant account bonus (+1 free audit) for creating account
+    grantAccountBonus();
+    refreshCreditState();
     
     // Get current user and load their data + subscription
     const user = await supabaseService.getCurrentUser();
@@ -400,12 +521,14 @@ const App: React.FC = () => {
       setTimeout(() => {
         setResults(data);
         setAppState(AppState.RESULTS);
+        // Only consume credit on successful results
+        if (!hasKey) incrementSearchCount();
       }, 200);
-      if (plan === 'FREE' && !hasKey) incrementSearchCount();
     } catch (err: any) {
       console.error("Audit Error:", err);
       const errorMsg = err.message || '';
       
+      // DO NOT consume credits on errors
       if (errorMsg.includes('RESOURCE_EXHAUSTED') || errorMsg.includes('quota')) {
         setIsQuotaError(true);
         setError("The shared community quota has been reached. Please select your own API key to continue.");
@@ -420,56 +543,16 @@ const App: React.FC = () => {
         setAppState(AppState.ERROR);
       }
     }
-  }, [address, plan, hasKey, isSignedUp]);
+  }, [address, hasKey]);
 
-  const handleUpgrade = async (planType: PlanType = 'BUYER_PACK') => {
-    // REQUIRE LOGIN before payment - so we can tie the subscription to their account
-    if (!isLoggedIn) {
-      // Close pricing modal and show signup
-      setShowPricing(false);
-      setEmailAuthMode('signup');
-      setShowEmailAuth(true);
-      // Store intent to upgrade after login
-      localStorage.setItem('prop_pending_upgrade', planType);
+  const handleUpgrade = async (planType: PlanType = 'PRO') => {
+    // Route to appropriate handler based on plan type
+    if (planType === 'STARTER_PACK') {
+      await handleBuyStarterPack();
       return;
     }
-    
-    setIsProcessingUpgrade(true);
-    setError(null);
-    
-    // Get email from user profile (required since they must be logged in)
-    const email = userProfile?.email || userEmail || localStorage.getItem('prop_user_email');
-    
-    if (!email) {
-      setIsProcessingUpgrade(false);
-      setError("Unable to process payment. Please ensure you're logged in with a valid email.");
-      return;
-    }
-    
-    try {
-      const response = await stripeService.createCheckoutSession(planType, email);
-      
-      if (response.success && response.url) {
-        // Redirect to Stripe checkout
-        window.location.href = response.url;
-        // Don't set isProcessingUpgrade to false here - let the redirect happen
-        return;
-      } else {
-        // No URL returned or API call failed
-        console.error('Stripe checkout failed:', response);
-        setIsProcessingUpgrade(false);
-        const errorMessage = response.error || "Unable to initiate payment. Please check your connection and try again.";
-        setError(errorMessage);
-        setAppState(AppState.ERROR);
-        setShowPricing(false);
-      }
-    } catch (error: any) {
-      console.error('Upgrade error:', error);
-      setIsProcessingUpgrade(false);
-      setError(error?.message || "Payment gateway unavailable. Please try again later.");
-      setAppState(AppState.ERROR);
-      setShowPricing(false);
-    }
+    // Default to PRO subscription
+    await handleUpgradeToPro();
   };
 
   return (
@@ -629,22 +712,30 @@ const App: React.FC = () => {
                 <i className="fa-solid fa-lock text-[#C9A961]"></i>
               </div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter leading-none" style={{ color: 'var(--text-primary)' }}>
-                {isSignedUp ? 'Audit Limit Reached' : 'You\'ve Used Your 2 Free Audits'}
+                You've Used Your Free Credits
               </h2>
               <p className="text-sm sm:text-base max-w-md mx-auto font-medium leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                {isSignedUp 
-                  ? "You've used all 5 free property audits. Continue searching unlimited properties with blockcheck.ai Unlimited."
-                  : "Create a free account to unlock 3 more audits, or upgrade for unlimited access to property intelligence."}
+                {creditState.hasAccount 
+                  ? "You've used your 2 free property audits. Get more credits or upgrade to Pro for 10 audits per month."
+                  : "You've used your 1 free property audit. Create an account for 1 bonus audit, or upgrade for more."}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                {!isSignedUp && (
-                  <button onClick={handleSignUp} className="border-2 px-6 sm:px-10 py-3 sm:py-4 rounded-xl font-bold transition-all text-[12px] sm:text-[11px] uppercase tracking-widest" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--text-primary)', color: 'var(--text-primary)' }}>
-                    <i className="fa-solid fa-envelope mr-2"></i>
-                    Sign Up (+3 Free Audits)
+              <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
+                {/* CTA 1: Create Account (if no account yet) */}
+                {!creditState.hasAccount && (
+                  <button onClick={handleCreateAccount} className="border-2 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold transition-all text-[11px] sm:text-[10px] uppercase tracking-widest hover:border-[#C9A961] hover:text-[#C9A961]" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--text-primary)', color: 'var(--text-primary)' }}>
+                    <i className="fa-solid fa-user-plus mr-2"></i>
+                    Create Account (+1 Audit)
                   </button>
                 )}
-                <button onClick={() => setShowPricing(true)} className="bg-[#3A342D] text-white px-6 sm:px-10 py-3 sm:py-4 rounded-xl font-bold shadow-lg hover:bg-[#C9A961] transition-all text-[12px] sm:text-[11px] uppercase tracking-widest">
-                  Get Unlimited Access
+                {/* CTA 2: Buy Starter Pack */}
+                <button onClick={handleBuyStarterPack} className="border-2 border-[#C9A961] px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold transition-all text-[11px] sm:text-[10px] uppercase tracking-widest text-[#C9A961] hover:bg-[#C9A961] hover:text-white" style={{ backgroundColor: 'var(--bg-card)' }}>
+                  <i className="fa-solid fa-bolt mr-2"></i>
+                  Buy 3 Audits
+                </button>
+                {/* CTA 3: Upgrade to Pro */}
+                <button onClick={handleUpgradeToPro} className="bg-[#3A342D] text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold shadow-lg hover:bg-[#C9A961] transition-all text-[11px] sm:text-[10px] uppercase tracking-widest">
+                  <i className="fa-solid fa-crown mr-2"></i>
+                  Pro (10/month) – $49
                 </button>
               </div>
             </div>

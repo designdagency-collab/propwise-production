@@ -144,7 +144,7 @@ export class SupabaseService {
   // Update subscription (for Stripe webhook)
   async updateSubscription(
     userId: string,
-    planType: 'FREE' | 'BUYER_PACK' | 'MONITOR',
+    planType: string, // Accepts any plan type string
     stripeCustomerId?: string,
     stripeSubscriptionId?: string
   ): Promise<void> {

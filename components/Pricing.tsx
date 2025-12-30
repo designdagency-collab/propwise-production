@@ -7,18 +7,29 @@ interface PricingProps {
   onBack: () => void;
 }
 
-const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE', onUpgrade, onBack }) => {
-  const [isProcessing, setIsProcessing] = React.useState<boolean>(false);
+const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade, onBack }) => {
+  const [isProcessing, setIsProcessing] = React.useState<PlanType | null>(null);
 
-  const handleSelectPlan = async () => {
-    if (currentPlan === 'BUYER_PACK') return;
-    setIsProcessing(true);
+  const handleSelectStarter = async () => {
+    setIsProcessing('STARTER_PACK');
     try {
-      await onUpgrade('BUYER_PACK');
+      await onUpgrade('STARTER_PACK');
     } finally {
-      setIsProcessing(false);
+      setIsProcessing(null);
     }
   };
+
+  const handleSelectPro = async () => {
+    if (currentPlan === 'PRO') return;
+    setIsProcessing('PRO');
+    try {
+      await onUpgrade('PRO');
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
+  const isPro = currentPlan === 'PRO' || currentPlan === 'UNLIMITED_PRO';
 
   return (
     <div className="min-h-screen pb-20 bg-gradient-to-b from-white to-slate-50">
@@ -33,57 +44,72 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE', onUpgrade, onBa
           </button>
           <div className="space-y-4">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-tighter text-[#3A342D]">
-              Continued Access
+              Get More Audits
             </h1>
             <p className="text-base sm:text-lg text-[#3A342D]/40 max-w-2xl mx-auto leading-relaxed">
-              Australian real estate moves fast. Avoid a $50,000 mistake with deeper insights and unlimited property audits.
+              Australian real estate moves fast. Avoid a $50,000 mistake with deeper insights and more property audits.
             </p>
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 items-stretch">
-          {/* Free Tier Info */}
-          <div className="bg-white p-10 rounded-[3rem] border-2 border-slate-100 flex flex-col">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 items-stretch">
+          {/* Starter Pack - One-time purchase */}
+          <div className="bg-white p-10 rounded-[3rem] border-2 border-slate-200 flex flex-col hover:border-[#C9A961]/50 transition-all">
             <div className="mb-8">
-              <h3 className="text-lg sm:text-xl font-bold text-[#3A342D]/40 uppercase tracking-widest mb-2">Standard</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-[#3A342D]/70 uppercase tracking-widest mb-2">Starter Pack</h3>
               <div className="flex items-baseline gap-1">
-                <span className="text-3xl sm:text-4xl font-black text-[#3A342D]/40">$0</span>
-                <span className="text-xs sm:text-sm text-[#3A342D]/30">/ month</span>
+                <span className="text-3xl sm:text-4xl font-black text-[#3A342D]">$19</span>
+                <span className="text-xs sm:text-sm text-[#3A342D]/40 font-bold">AUD one-time</span>
               </div>
+              <p className="text-[11px] sm:text-xs font-medium text-[#3A342D]/50 mt-2">No subscription. Buy when you need.</p>
             </div>
             <ul className="space-y-4 mb-10 flex-grow">
-              <li className="flex items-start gap-3 text-slate-400 line-through text-xs sm:text-sm">
-                <i className="fa-solid fa-check mt-1"></i>
-                Unlimited audits
+              <li className="flex items-start gap-3 text-[#3A342D] font-bold text-xs sm:text-sm">
+                <i className="fa-solid fa-bolt mt-1 text-[#C9A961]"></i>
+                3 Property Audits
               </li>
-              <li className="flex items-start gap-3 text-slate-500 text-xs sm:text-sm">
-                <i className="fa-solid fa-check mt-1"></i>
-                Basic zoning insights
+              <li className="flex items-start gap-3 text-[#3A342D]/70 text-xs sm:text-sm">
+                <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
+                Full Intelligence Reports
               </li>
-              <li className="flex items-start gap-3 text-slate-500 text-xs sm:text-sm">
-                <i className="fa-solid fa-check mt-1"></i>
-                Value-add pathways
+              <li className="flex items-start gap-3 text-[#3A342D]/70 text-xs sm:text-sm">
+                <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
+                Value-add Strategies
               </li>
-              <li className="flex items-start gap-3 text-slate-400 text-xs sm:text-sm font-medium">
-                <i className="fa-solid fa-xmark mt-1 text-slate-300"></i>
-                Limited to 3 free audits
+              <li className="flex items-start gap-3 text-[#3A342D]/70 text-xs sm:text-sm">
+                <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
+                Credits never expire
               </li>
             </ul>
-            <button disabled className="w-full py-3 sm:py-4 rounded-2xl font-bold uppercase tracking-widest text-[12px] sm:text-[11px] bg-slate-50 text-slate-400 cursor-not-allowed">
-              Current Plan
+            <button
+              onClick={handleSelectStarter}
+              disabled={isProcessing !== null}
+              className="w-full py-3 sm:py-4 rounded-2xl font-bold uppercase tracking-widest text-[12px] sm:text-[11px] border-2 border-[#C9A961] text-[#C9A961] hover:bg-[#C9A961] hover:text-white transition-all flex items-center justify-center gap-2"
+            >
+              {isProcessing === 'STARTER_PACK' ? (
+                <>
+                  <i className="fa-solid fa-spinner fa-spin"></i>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <i className="fa-solid fa-bolt"></i>
+                  Buy 3 Audits
+                </>
+              )}
             </button>
           </div>
 
-          {/* Paid Tier (blockcheck.ai Unlimited) */}
+          {/* Pro Subscription */}
           <div className="bg-white p-10 rounded-[3rem] border-2 border-[#C9A961] shadow-2xl relative flex flex-col transform hover:scale-[1.02] transition-all">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
               <span className="bg-[#C9A961] text-white px-3 sm:px-4 py-1 rounded-full text-[11px] sm:text-[10px] font-black uppercase tracking-widest">
-                Recommended
+                Best Value
               </span>
             </div>
             
             <div className="mb-8">
-              <h3 className="text-xl sm:text-2xl font-black text-[#3A342D] uppercase tracking-widest mb-2">Unlimited</h3>
+              <h3 className="text-xl sm:text-2xl font-black text-[#3A342D] uppercase tracking-widest mb-2">Pro</h3>
               <div className="flex items-baseline gap-1">
                 <span className="text-4xl sm:text-5xl font-black text-[#3A342D]">$49</span>
                 <span className="text-xs sm:text-sm text-[#3A342D]/40 font-bold">AUD / month</span>
@@ -94,7 +120,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE', onUpgrade, onBa
             <ul className="space-y-4 mb-10 flex-grow">
               <li className="flex items-start gap-3 text-[#3A342D] font-bold text-xs sm:text-sm">
                 <i className="fa-solid fa-circle-check mt-1 text-[#C9A961]"></i>
-                Unlimited Property Audits
+                10 Audits Per Month
               </li>
               <li className="flex items-start gap-3 text-[#3A342D]/70 text-xs sm:text-sm">
                 <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
@@ -115,19 +141,25 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE', onUpgrade, onBa
             </ul>
 
             <button
-              onClick={handleSelectPlan}
-              disabled={isProcessing || currentPlan === 'BUYER_PACK'}
-              className="w-full py-4 sm:py-5 rounded-2xl font-bold uppercase tracking-widest text-[13px] sm:text-[12px] bg-[#C9A961] text-white hover:bg-[#3A342D] shadow-xl shadow-[#C9A961]/30 transition-all flex items-center justify-center gap-3"
+              onClick={handleSelectPro}
+              disabled={isProcessing !== null || isPro}
+              className="w-full py-4 sm:py-5 rounded-2xl font-bold uppercase tracking-widest text-[13px] sm:text-[12px] bg-[#C9A961] text-white hover:bg-[#3A342D] shadow-xl shadow-[#C9A961]/30 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
             >
-              {isProcessing ? (
+              {isProcessing === 'PRO' ? (
                 <>
                   <i className="fa-solid fa-spinner fa-spin"></i>
                   Processing Secure Payment...
                 </>
-              ) : currentPlan === 'BUYER_PACK' ? (
-                'Active Plan'
+              ) : isPro ? (
+                <>
+                  <i className="fa-solid fa-crown"></i>
+                  Active Plan
+                </>
               ) : (
-                'Unlock Unlimited Access'
+                <>
+                  <i className="fa-solid fa-crown"></i>
+                  Subscribe to Pro
+                </>
               )}
             </button>
             <div className="mt-4 flex items-center justify-center gap-4 text-[#3A342D]/20 text-lg">

@@ -16,7 +16,7 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ 
-  plan = 'FREE', 
+  plan = 'FREE_TRIAL', 
   onUpgrade, 
   onHome, 
   onLogin, 
@@ -113,8 +113,8 @@ const Navbar: React.FC<NavbarProps> = ({
             {/* Tier badge - hidden on mobile */}
             <div className="hidden lg:flex items-center space-x-6 border-r pr-6" style={{ borderColor: 'var(--border-color)' }}>
                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                 Tier: <span className={plan === 'FREE' ? 'opacity-60' : 'text-[#C9A961]'}>
-                   {plan === 'FREE' ? 'Standard Access' : plan === 'BUYER_PACK' ? 'Buyer Pack' : 'Propwise Monitor'}
+                 Tier: <span className={plan === 'FREE_TRIAL' ? 'opacity-60' : 'text-[#C9A961]'}>
+                   {plan === 'FREE_TRIAL' ? 'Free Trial' : plan === 'PRO' ? 'Pro' : plan === 'UNLIMITED_PRO' ? 'Unlimited' : 'Free Trial'}
                  </span>
                </span>
             </div>
@@ -149,7 +149,7 @@ const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {plan === 'FREE' ? (
+            {plan === 'FREE_TRIAL' ? (
               <button 
                 onClick={onUpgrade}
                 className="px-3 sm:px-6 py-2 sm:py-2.5 bg-[#C9A961] text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-widest rounded-lg sm:rounded-xl hover:bg-[#3A342D] transition-all shadow-md active:scale-95"

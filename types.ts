@@ -304,7 +304,18 @@ export interface PropertyData {
   sources: { title: string; url: string }[];
 }
 
-export type PlanType = 'FREE' | 'BUYER_PACK' | 'MONITOR';
+// New pricing model plan types
+export type PlanType = 'FREE_TRIAL' | 'PRO' | 'STARTER_PACK' | 'UNLIMITED_PRO';
+
+// Credit system types
+export interface CreditState {
+  freeUsed: number;           // prop_free_used - lifetime free audits used
+  hasAccount: boolean;        // prop_has_account - gives +1 bonus (total 2 free)
+  creditTopups: number;       // prop_credit_topups - purchased credits remaining
+  plan: PlanType;             // prop_plan
+  proMonth: string;           // prop_pro_month - YYYY-MM for PRO subscription
+  proUsed: number;            // prop_pro_used - audits used this month (PRO only)
+}
 
 export enum AppState {
   IDLE = 'IDLE',
