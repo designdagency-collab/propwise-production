@@ -5,9 +5,10 @@ interface PricingProps {
   currentPlan?: PlanType;
   onUpgrade: (plan: PlanType) => void;
   onBack: () => void;
+  onShowTerms?: () => void;
 }
 
-const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade, onBack }) => {
+const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade, onBack, onShowTerms }) => {
   const [isProcessing, setIsProcessing] = React.useState<PlanType | null>(null);
 
   const handleSelectStarter = async () => {
@@ -173,7 +174,18 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
 
         <div className="max-w-2xl mx-auto text-center">
           <p className="text-[11px] sm:text-[10px] text-[#3A342D]/30 italic leading-relaxed">
-            All reports are indicative. blockcheck.ai does not provide financial or legal advice. Pricing is in Australian Dollars (AUD) and includes GST where applicable.
+            All reports are indicative. BlockCheck.ai does not provide financial or legal advice. Pricing is in Australian Dollars (AUD) and includes GST where applicable. 
+            {onShowTerms && (
+              <>
+                {' '}See our{' '}
+                <button 
+                  onClick={onShowTerms}
+                  className="underline hover:text-[#C9A961] transition-colors"
+                >
+                  Terms & Conditions
+                </button>.
+              </>
+            )}
           </p>
         </div>
       </div>

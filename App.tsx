@@ -4,6 +4,7 @@ import PropertyResults from './components/PropertyResults';
 import Pricing from './components/Pricing';
 import PhoneVerification from './components/PhoneVerification';
 import EmailAuth from './components/EmailAuth';
+import TermsAndConditions from './components/TermsAndConditions';
 import { geminiService } from './services/geminiService';
 import { stripeService } from './services/stripeService';
 import { supabaseService } from './services/supabaseService';
@@ -40,6 +41,7 @@ const App: React.FC = () => {
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [showEmailAuth, setShowEmailAuth] = useState(false);
   const [emailAuthMode, setEmailAuthMode] = useState<'signup' | 'login' | 'reset'>('signup');
+  const [showTerms, setShowTerms] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   
   // Login state
@@ -599,11 +601,14 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {showPricing ? (
+      {showTerms ? (
+        <TermsAndConditions onBack={() => setShowTerms(false)} />
+      ) : showPricing ? (
         <Pricing 
           currentPlan={plan}
           onUpgrade={handleUpgrade}
           onBack={() => setShowPricing(false)}
+          onShowTerms={() => { setShowPricing(false); setShowTerms(true); }}
         />
       ) : (
         <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -790,6 +795,22 @@ const App: React.FC = () => {
           onSuccess={handlePhoneVerified}
           onCancel={() => setShowPhoneVerification(false)}
         />
+      )}
+
+      {/* Footer - only show on main pages, not modals */}
+      {!showTerms && !showPricing && (
+        <footer className="fixed bottom-0 left-0 right-0 py-4 text-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
+          <div className="flex items-center justify-center gap-4 text-[10px]" style={{ color: 'var(--text-muted)' }}>
+            <span>© {new Date().getFullYear()} BlockCheck.ai</span>
+            <span>•</span>
+            <button 
+              onClick={() => setShowTerms(true)}
+              className="hover:text-[#C9A961] transition-colors underline"
+            >
+              Terms & Conditions
+            </button>
+          </div>
+        </footer>
       )}
     </div>
   );
