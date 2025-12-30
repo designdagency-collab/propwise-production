@@ -131,7 +131,10 @@ const App: React.FC = () => {
     // Listen to auth changes
     const { data: { subscription } } = supabaseService.supabase!.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
+        console.log('Auth event:', event, 'Session:', !!session);
+        
+        // Handle session restore on page load (INITIAL_SESSION) or sign in
+        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session) {
           setIsLoggedIn(true);
           setUserEmail(session.user?.email || '');
           setUserPhone(session.user?.phone || '');
@@ -142,11 +145,6 @@ const App: React.FC = () => {
           // Close auth modal if open (for Google OAuth redirect)
           setShowEmailAuth(false);
           
-          // Check if this is a new user (created within last 60 seconds)
-          const createdAt = new Date(session.user?.created_at || 0);
-          const now = new Date();
-          const isNewUser = (now.getTime() - createdAt.getTime()) < 60000; // 60 seconds
-          
           await loadUserData(session.user?.id);
           
           // Return to idle state so they can search
@@ -155,20 +153,23 @@ const App: React.FC = () => {
           }
           
           // Check if there was a pending upgrade (user tried to pay before logging in)
-          const pendingUpgrade = localStorage.getItem('prop_pending_upgrade');
-          if (pendingUpgrade) {
-            localStorage.removeItem('prop_pending_upgrade');
-            // Small delay to let the UI update, then redirect to payment
-            setTimeout(() => {
-              setIsProcessingUpgrade(true);
-              stripeService.createCheckoutSession(pendingUpgrade as PlanType, session.user?.email || '').then(response => {
-                if (response.success && response.url) {
-                  window.location.href = response.url;
-                } else {
-                  setIsProcessingUpgrade(false);
-                }
-              });
-            }, 500);
+          // Only do this on actual SIGNED_IN, not session restore
+          if (event === 'SIGNED_IN') {
+            const pendingUpgrade = localStorage.getItem('prop_pending_upgrade');
+            if (pendingUpgrade) {
+              localStorage.removeItem('prop_pending_upgrade');
+              // Small delay to let the UI update, then redirect to payment
+              setTimeout(() => {
+                setIsProcessingUpgrade(true);
+                stripeService.createCheckoutSession(pendingUpgrade as PlanType, session.user?.email || '').then(response => {
+                  if (response.success && response.url) {
+                    window.location.href = response.url;
+                  } else {
+                    setIsProcessingUpgrade(false);
+                  }
+                });
+              }, 500);
+            }
           }
         } else if (event === 'SIGNED_OUT') {
           setIsLoggedIn(false);
