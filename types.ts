@@ -324,3 +324,13 @@ export enum AppState {
   ERROR = 'ERROR',
   LIMIT_REACHED = 'LIMIT_REACHED'
 }
+
+// Extend Window interface for AI Studio integration
+declare global {
+  interface Window {
+    aistudio?: {
+      hasSelectedApiKey?: () => Promise<boolean>;
+      openSelectKey?: () => Promise<void>;
+    };
+  }
+}

@@ -114,7 +114,6 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     if (!reportRef.current || !isPaidUser) return;
     
     setIsExporting(true);
-    setShowShareMenu(false);
     
     try {
       // Dynamic import of html2pdf
@@ -125,9 +124,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       const filename = `blockcheck-${data.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
       
       const opt = {
-        margin: [10, 10, 10, 10],
+        margin: [10, 10, 10, 10] as [number, number, number, number],
         filename: filename,
-        image: { type: 'jpeg', quality: 0.95 },
+        image: { type: 'jpeg' as const, quality: 0.95 },
         html2canvas: { 
           scale: 2,
           useCORS: true,
@@ -137,7 +136,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         jsPDF: { 
           unit: 'mm', 
           format: 'a4', 
-          orientation: 'portrait' 
+          orientation: 'portrait' as const
         },
         pagebreak: { mode: 'avoid-all' }
       };
