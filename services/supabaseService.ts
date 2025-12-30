@@ -76,6 +76,19 @@ export class SupabaseService {
     }
   }
 
+  // Update user profile (phone, name, etc.)
+  async updateProfile(userId: string, updates: { phone?: string; full_name?: string }): Promise<void> {
+    if (!this.supabase) return;
+    try {
+      await this.supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', userId);
+    } catch (error) {
+      console.log('Failed to update profile:', error);
+    }
+  }
+
   // Get user search count from Supabase (optional enhancement)
   async getUserSearchCount(userId: string): Promise<number | null> {
     if (!this.supabase) return null;

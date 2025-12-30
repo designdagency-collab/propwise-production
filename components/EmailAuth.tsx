@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabaseService } from '../services/supabaseService';
 
-type AuthMode = 'signup' | 'confirm' | 'login' | 'forgot' | 'reset';
+type AuthMode = 'signup' | 'login' | 'forgot' | 'reset';
 
 interface EmailAuthProps {
   onSuccess: (email: string, isNewUser: boolean) => void;
@@ -16,10 +16,19 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Format phone number as user types
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
+    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 9)}`;
+  };
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -39,13 +48,22 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
     }
   };
 
-  // Validate and go to confirmation step
-  const handleSignUpValidate = (e: React.FormEvent) => {
+  const validatePhone = (phone: string) => {
+    const digits = phone.replace(/\D/g, '');
+    return digits.length >= 9; // Australian mobile: 4XX XXX XXX (9 digits without country code)
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!validateEmail(email)) {
       setError('Please enter a valid email address');
+      return;
+    }
+
+    if (!validatePhone(phone)) {
+      setError('Please enter a valid phone number for account recovery');
       return;
     }
 
@@ -59,14 +77,7 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
       return;
     }
 
-    // Go to confirmation step
-    setMode('confirm');
-  };
-
-  // Actually create the account after confirmation
-  const handleSignUpConfirm = async () => {
     setIsLoading(true);
-    setError(null);
 
     try {
       const { user, error } = await supabaseService.signUpWithEmail(email, password, fullName);
@@ -74,11 +85,23 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
       if (error) throw error;
 
       if (user) {
+        // Store phone locally for recovery (will sync to Supabase profile)
+        const fullPhone = '+61' + phone.replace(/\D/g, '');
+        localStorage.setItem('prop_user_phone', fullPhone);
+        
+        // Update profile with phone number
+        if (supabaseService.isConfigured()) {
+          try {
+            await supabaseService.updateProfile(user.id, { phone: fullPhone });
+          } catch (e) {
+            console.log('Could not save phone to profile');
+          }
+        }
+        
         onSuccess(email, true);
       }
     } catch (err: any) {
       setError(err.message || 'Failed to create account. Please try again.');
-      setMode('signup'); // Go back to form on error
     } finally {
       setIsLoading(false);
     }
@@ -186,7 +209,6 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
   const getTitle = () => {
     switch (mode) {
       case 'signup': return 'Create Account';
-      case 'confirm': return 'Confirm Your Email';
       case 'login': return 'Welcome Back';
       case 'forgot': return 'Reset Password';
       case 'reset': return 'Set New Password';
@@ -196,7 +218,6 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
   const getSubtitle = () => {
     switch (mode) {
       case 'signup': return 'Sign up to unlock 1 bonus property audit.';
-      case 'confirm': return 'Please check this is correct. We\'ll use this for account recovery.';
       case 'login': return 'Log in to access your account and saved audits.';
       case 'forgot': return "Enter your email and we'll send you a reset link.";
       case 'reset': return 'Choose a new password for your account.';
@@ -206,7 +227,6 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
   const getIcon = () => {
     switch (mode) {
       case 'signup': return 'fa-user-plus';
-      case 'confirm': return 'fa-envelope-circle-check';
       case 'login': return 'fa-right-to-bracket';
       case 'forgot': return 'fa-envelope';
       case 'reset': return 'fa-key';
@@ -239,7 +259,7 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
 
           {/* Sign Up Form */}
           {mode === 'signup' && (
-            <form onSubmit={handleSignUpValidate} className="space-y-3 sm:space-y-4">
+            <form onSubmit={handleSignUp} className="space-y-3 sm:space-y-4">
               <div>
                 <input
                   type="text"
@@ -260,6 +280,23 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
                   disabled={isLoading}
                   required
                 />
+              </div>
+              <div>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3A342D]/40 font-medium text-sm">
+                    +61
+                  </div>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(formatPhone(e.target.value))}
+                    placeholder="4XX XXX XXX"
+                    className="w-full pl-14 pr-4 py-2.5 sm:py-3.5 rounded-xl border-2 border-[#C9A961]/20 focus:border-[#C9A961] focus:outline-none text-[#3A342D] font-medium text-sm transition-all"
+                    disabled={isLoading}
+                    required
+                  />
+                </div>
+                <p className="text-[10px] text-[#3A342D]/40 mt-1 ml-1">For account recovery if you forget your password</p>
               </div>
               <div>
                 <input
@@ -354,72 +391,6 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
                 </button>
               </div>
             </form>
-          )}
-
-          {/* Email Confirmation Step */}
-          {mode === 'confirm' && (
-            <div className="space-y-4 sm:space-y-5">
-              {/* Email display box */}
-              <div className="bg-[#C9A961]/10 border-2 border-[#C9A961]/30 rounded-xl p-4 sm:p-5">
-                <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#C9A961] mb-2">
-                  Your Email
-                </p>
-                <p className="text-lg sm:text-xl font-bold text-[#3A342D] break-all">
-                  {email}
-                </p>
-              </div>
-
-              {fullName && (
-                <div className="bg-[#3A342D]/5 rounded-xl p-3 sm:p-4">
-                  <p className="text-[10px] sm:text-xs font-medium text-[#3A342D]/50 mb-1">Name</p>
-                  <p className="text-sm sm:text-base font-semibold text-[#3A342D]">{fullName}</p>
-                </div>
-              )}
-
-              {error && (
-                <p className="text-red-500 text-xs text-left">{error}</p>
-              )}
-
-              <div className="flex flex-col gap-2 sm:gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={handleSignUpConfirm}
-                  disabled={isLoading}
-                  className="w-full py-3 sm:py-4 bg-[#C9A961] text-white rounded-xl font-bold hover:bg-[#3A342D] transition-all uppercase tracking-widest text-[10px] sm:text-[12px] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {isLoading ? (
-                    <>
-                      <i className="fa-solid fa-spinner fa-spin"></i>
-                      Creating Account...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fa-solid fa-check"></i>
-                      Yes, Create My Account
-                    </>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { setMode('signup'); setError(null); }}
-                  disabled={isLoading}
-                  className="w-full py-2.5 sm:py-3 bg-[#3A342D]/10 text-[#3A342D] rounded-xl font-semibold hover:bg-[#3A342D]/20 transition-all text-xs sm:text-sm disabled:opacity-50"
-                >
-                  <i className="fa-solid fa-arrow-left mr-2"></i>
-                  Go Back & Edit
-                </button>
-
-                <button
-                  type="button"
-                  onClick={onCancel}
-                  disabled={isLoading}
-                  className="text-[#3A342D]/40 hover:text-[#3A342D] font-medium text-[11px] sm:text-sm transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
           )}
 
           {/* Login Form */}
