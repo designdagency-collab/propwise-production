@@ -137,6 +137,7 @@ const App: React.FC = () => {
           setUserPhone(session.user?.phone || '');
           setIsSignedUp(true);
           localStorage.setItem('prop_signed_up', 'true');
+          localStorage.setItem('prop_user_email', session.user?.email || '');
           
           // Close auth modal if open (for Google OAuth redirect)
           setShowEmailAuth(false);
@@ -146,16 +147,28 @@ const App: React.FC = () => {
           const now = new Date();
           const isNewUser = (now.getTime() - createdAt.getTime()) < 60000; // 60 seconds
           
-          if (isNewUser) {
-            // New user - they just signed up! Show welcome
-            localStorage.setItem('prop_user_email', session.user?.email || '');
-          }
-          
           await loadUserData(session.user?.id);
           
           // Return to idle state so they can search
           if (appState === AppState.LIMIT_REACHED) {
             setAppState(AppState.IDLE);
+          }
+          
+          // Check if there was a pending upgrade (user tried to pay before logging in)
+          const pendingUpgrade = localStorage.getItem('prop_pending_upgrade');
+          if (pendingUpgrade) {
+            localStorage.removeItem('prop_pending_upgrade');
+            // Small delay to let the UI update, then redirect to payment
+            setTimeout(() => {
+              setIsProcessingUpgrade(true);
+              stripeService.createCheckoutSession(pendingUpgrade as PlanType, session.user?.email || '').then(response => {
+                if (response.success && response.url) {
+                  window.location.href = response.url;
+                } else {
+                  setIsProcessingUpgrade(false);
+                }
+              });
+            }, 500);
           }
         } else if (event === 'SIGNED_OUT') {
           setIsLoggedIn(false);
@@ -184,6 +197,15 @@ const App: React.FC = () => {
       setPlan('BUYER_PACK');
       localStorage.setItem('prop_plan', 'BUYER_PACK');
       setShowUpgradeSuccess(true);
+      
+      // Update Supabase subscription if user is logged in
+      const updateSubscription = async () => {
+        const user = await supabaseService.getCurrentUser();
+        if (user?.id && supabaseService.isConfigured()) {
+          await supabaseService.updateSubscription(user.id, 'BUYER_PACK', sessionId);
+        }
+      };
+      updateSubscription();
       
       // Clear URL params without reload
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -292,6 +314,16 @@ const App: React.FC = () => {
     
     setShowEmailAuth(false);
     setAppState(AppState.IDLE); // Go back so they can continue
+    
+    // Check if there was a pending upgrade (user tried to pay before logging in)
+    const pendingUpgrade = localStorage.getItem('prop_pending_upgrade');
+    if (pendingUpgrade) {
+      localStorage.removeItem('prop_pending_upgrade');
+      // Small delay to let the UI update, then redirect to payment
+      setTimeout(() => {
+        handleUpgrade(pendingUpgrade as PlanType);
+      }, 500);
+    }
   };
 
   // Handle phone verification success (for optional account security)
@@ -390,11 +422,28 @@ const App: React.FC = () => {
   }, [address, plan, hasKey, isSignedUp]);
 
   const handleUpgrade = async (planType: PlanType = 'BUYER_PACK') => {
+    // REQUIRE LOGIN before payment - so we can tie the subscription to their account
+    if (!isLoggedIn) {
+      // Close pricing modal and show signup
+      setShowPricing(false);
+      setEmailAuthMode('signup');
+      setShowEmailAuth(true);
+      // Store intent to upgrade after login
+      localStorage.setItem('prop_pending_upgrade', planType);
+      return;
+    }
+    
     setIsProcessingUpgrade(true);
     setError(null);
     
-    // Get email from user profile or localStorage
-    const email = userProfile?.email || localStorage.getItem('prop_user_email') || undefined;
+    // Get email from user profile (required since they must be logged in)
+    const email = userProfile?.email || userEmail || localStorage.getItem('prop_user_email');
+    
+    if (!email) {
+      setIsProcessingUpgrade(false);
+      setError("Unable to process payment. Please ensure you're logged in with a valid email.");
+      return;
+    }
     
     try {
       const response = await stripeService.createCheckoutSession(planType, email);
