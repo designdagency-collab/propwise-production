@@ -559,6 +559,7 @@ const App: React.FC = () => {
     <div className="min-h-screen pb-20 selection:bg-[#C9A961] selection:text-white" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <Navbar 
         plan={plan} 
+        remainingCredits={remainingCredits}
         onUpgrade={() => setShowPricing(true)} 
         onHome={handleHome}
         onLogin={handleLogin}
