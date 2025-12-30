@@ -156,13 +156,25 @@ const App: React.FC = () => {
         
         // Handle session restore on page load (INITIAL_SESSION) or sign in
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session) {
+          const sessionEmail = session.user?.email || '';
+          const storedEmail = localStorage.getItem('prop_user_email') || '';
+          
+          // If different user than stored, clear their data (prevents profile mixing)
+          if (storedEmail && sessionEmail && storedEmail !== sessionEmail) {
+            console.log('Session email mismatch - clearing stale data');
+            // Clear credit data for old user
+            localStorage.removeItem('prop_free_used');
+            localStorage.removeItem('prop_credit_topups');
+            localStorage.removeItem('prop_pro_used');
+          }
+          
           setIsLoggedIn(true);
-          setUserEmail(session.user?.email || '');
+          setUserEmail(sessionEmail);
           setUserPhone(session.user?.phone || '');
           setIsSignedUp(true);
           localStorage.setItem('prop_is_logged_in', 'true');
           localStorage.setItem('prop_signed_up', 'true');
-          localStorage.setItem('prop_user_email', session.user?.email || '');
+          localStorage.setItem('prop_user_email', sessionEmail);
           
           // Grant account bonus on sign in (idempotent - only adds if not already set)
           grantAccountBonus();
@@ -203,7 +215,10 @@ const App: React.FC = () => {
           setUserEmail('');
           setUserPhone('');
           setUserProfile(null);
+          // Clear user-specific localStorage
           localStorage.removeItem('prop_is_logged_in');
+          localStorage.removeItem('prop_user_email');
+          localStorage.removeItem('prop_user_phone');
         } else if (event === 'PASSWORD_RECOVERY') {
           // User clicked password reset link - show reset form
           setEmailAuthMode('reset');
@@ -239,26 +254,17 @@ const App: React.FC = () => {
         refreshCreditState();
         setShowUpgradeSuccess(true);
         
-        // Restore login state - first from localStorage, then verify with Supabase
-        const storedEmail = localStorage.getItem('prop_user_email');
-        const wasLoggedIn = localStorage.getItem('prop_is_logged_in') === 'true';
-        
-        if (wasLoggedIn && storedEmail) {
-          // Restore from localStorage immediately
-          setIsLoggedIn(true);
-          setUserEmail(storedEmail);
-        }
-        
-        // Verify and sync with Supabase
+        // ALWAYS use Supabase session as source of truth
         if (supabaseService.isConfigured()) {
           const user = await supabaseService.getCurrentUser();
           if (user) {
+            // Sync localStorage to match Supabase session
             setIsLoggedIn(true);
             setUserEmail(user.email || '');
             localStorage.setItem('prop_is_logged_in', 'true');
             localStorage.setItem('prop_user_email', user.email || '');
             
-            // Update subscription in Supabase
+            // Update subscription in Supabase for THIS user
             await supabaseService.updateSubscription(user.id, purchasedPlan as PlanType, sessionId);
             
             // Load user profile
@@ -266,6 +272,10 @@ const App: React.FC = () => {
             if (profile) {
               setUserProfile(profile);
             }
+          } else {
+            // No Supabase session - clear localStorage to prevent stale data
+            localStorage.removeItem('prop_is_logged_in');
+            setIsLoggedIn(false);
           }
         }
         
@@ -451,9 +461,21 @@ const App: React.FC = () => {
     setUserPhone('');
     setUserProfile(null);
     setShowAccountSettings(false);
-    // Clear login flag
+    
+    // Clear ALL user-specific localStorage to prevent profile mixing
     localStorage.removeItem('prop_is_logged_in');
-    // Keep localStorage plan so they don't lose paid status if they paid without account
+    localStorage.removeItem('prop_user_email');
+    localStorage.removeItem('prop_user_phone');
+    localStorage.removeItem('prop_signed_up');
+    localStorage.removeItem('prop_has_account');
+    localStorage.removeItem('prop_free_used');
+    localStorage.removeItem('prop_credit_topups');
+    localStorage.removeItem('prop_pro_used');
+    localStorage.removeItem('prop_pro_month');
+    localStorage.removeItem('prop_plan');
+    
+    // Refresh credit state to show free trial
+    refreshCreditState();
   };
 
   // Handle subscription cancellation
