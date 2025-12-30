@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PropertyData, PlanType, DevEligibility, Amenity } from '../types';
-import html2pdf from 'html2pdf.js';
+
+// Dynamic import for html2pdf to avoid SSR issues
+const loadHtml2Pdf = () => import('html2pdf.js');
 
 interface PropertyResultsProps {
   data: PropertyData;
@@ -155,6 +157,10 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     setShowShareMenu(false);
     
     try {
+      // Dynamic import of html2pdf
+      const html2pdfModule = await loadHtml2Pdf();
+      const html2pdf = html2pdfModule.default;
+      
       const element = reportRef.current;
       const filename = `blockcheck-${data.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
       
@@ -179,6 +185,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       await html2pdf().set(opt).from(element).save();
     } catch (error) {
       console.error('PDF export error:', error);
+      alert('Failed to export PDF. Please try again.');
     } finally {
       setIsExporting(false);
     }
