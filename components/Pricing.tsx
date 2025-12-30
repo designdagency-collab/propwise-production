@@ -48,7 +48,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
               Get More Audits
             </h1>
             <p className="text-base sm:text-lg text-[#3A342D]/40 max-w-2xl mx-auto leading-relaxed">
-              Australian real estate moves fast. Avoid a $50,000 mistake with deeper insights and more property audits.
+              Australian real estate moves fast. Get deeper insights and more audits to make confident offers.
             </p>
           </div>
         </div>
