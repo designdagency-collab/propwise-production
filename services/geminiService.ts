@@ -8,17 +8,35 @@ export class GeminiService {
     const prompt = `You are a professional Australian property planning analyst and prop-tech engineer for blockcheck.ai.
 Your task is to generate a structured Property DNA report for: "${address}".
 
-CRITICAL DATA ACCURACY RULES:
-- Use Google Search to verify the ACTUAL property type from real estate listings (Domain, realestate.com.au, CoreLogic, onthehouse.com.au).
-- Property Type Detection:
-  • If address contains unit notation (e.g., "1/30", "Unit 5", "Apt 3", "Level 2"), it is an Apartment/Unit or Townhouse, NOT a House.
-  • Verify from listings - check bed/bath counts match typical house vs apartment profiles.
-  • Cross-reference land size - apartments/units typically have NO land or small strata lot sizes.
-  • Townhouses usually have 2-3 beds, small courtyard, and are part of a complex.
-  • Houses have larger land (300sqm+) and standalone structure.
-- If you cannot verify property type from search results, use "Unknown" rather than guessing "House".
-- Always verify bed/bath/car counts from actual listings where possible.
-- Land size should say "Strata Title" or "N/A" for apartments/units, not fabricate a lot size.
+⚠️ MANDATORY FIRST STEP - ZONING & PROPERTY TYPE VERIFICATION:
+Before generating ANY data, you MUST search and verify:
+
+1. SEARCH FOR ZONING CODE FIRST (from council planning maps, NSW Planning Portal, or similar):
+   - R1, R2, R3, R4, R5, RU1-RU5 = RESIDENTIAL zones → Could be House, Apartment, Townhouse
+   - B1, B2, B3, B4, B5, B6, B7 = BUSINESS/COMMERCIAL zones → Property type = "Commercial"
+   - IN1, IN2, IN3, IN4 = INDUSTRIAL zones → Property type = "Commercial"
+   - SP1, SP2 = Special Purpose → Usually "Commercial" or check specific use
+   - If zoning is Business or Industrial, the property is COMMERCIAL, regardless of what it looks like.
+
+2. PROPERTY TYPE DETECTION RULES (in order of priority):
+   a) CHECK ZONING FIRST - Commercial/Industrial zone = "Commercial" property type
+   b) Search for business names at this address - if businesses operate there = "Commercial"
+   c) Check Google Maps/satellite - warehouses, factories, retail shops, offices = "Commercial"
+   d) Large flat-roof buildings, loading docks, no residential features = "Commercial"
+   e) Unit notation (1/30, Unit 5, Apt 3) = "Apartment / Unit"
+   f) Only mark as "House" if you can CONFIRM it's a standalone residential dwelling in a residential zone
+
+3. RESIDENTIAL VERIFICATION (only if zoning is R1-R5):
+   - Verify from real estate listings (Domain, realestate.com.au)
+   - Check bed/bath/car counts from actual listings
+   - Cross-reference land size
+   - Houses = standalone, typically 300sqm+ land
+   - Apartments = strata title, typically 0-100sqm land or "N/A"
+
+4. WHEN UNCERTAIN:
+   - Use "Commercial" if in business/industrial zone OR if property appears commercial
+   - Use "Unknown" if you cannot verify residential property type
+   - NEVER default to "House" without verification
 
 FOCUS: Value Uplift, Renovation Feasibility, Development Potential, Comparable Sales, Rental Yield, and Local Amenities.
 MANDATORY MODULES:
