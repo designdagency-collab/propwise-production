@@ -330,7 +330,7 @@ const App: React.FC = () => {
     setShowEmailAuth(true);
   };
 
-  // Handle "Buy Starter Pack" CTA - placeholder for Stripe
+  // Handle "Buy Starter Pack" CTA - calls Stripe checkout
   const handleBuyStarterPack = async () => {
     // REQUIRE LOGIN before payment
     if (!isLoggedIn) {
@@ -343,22 +343,20 @@ const App: React.FC = () => {
     
     setIsProcessingUpgrade(true);
     
-    // TODO: Wire to Stripe - for now simulate purchase
-    // const result = await billingService.startCheckoutStarter();
-    // if (result.success && result.url) {
-    //   window.location.href = result.url;
-    //   return;
-    // }
+    // Call Stripe checkout for Starter Pack
+    const result = await stripeService.createCheckoutSession('STARTER_PACK', userEmail);
     
-    // SIMULATION: Add credits directly (remove when Stripe is connected)
-    setTimeout(() => {
-      addStarterPackCredits();
-      refreshCreditState();
-      setIsProcessingUpgrade(false);
-      setShowUpgradeSuccess(true);
-      setShowPricing(false);
-      setTimeout(() => setShowUpgradeSuccess(false), 5000);
-    }, 1000);
+    if (result.success && result.url) {
+      // Redirect to Stripe checkout
+      window.location.href = result.url;
+      return;
+    }
+    
+    // Handle error
+    console.error('Stripe checkout error:', result.error);
+    setIsProcessingUpgrade(false);
+    setError(result.error || 'Failed to start checkout. Please try again.');
+    setAppState(AppState.ERROR);
   };
 
   // Handle "Upgrade to Pro" CTA

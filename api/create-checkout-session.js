@@ -16,10 +16,30 @@ try {
   console.log('Supabase not configured');
 }
 
-const PLAN_PRICES = {
-  BUYER_PACK: {
+const PLAN_CONFIGS = {
+  STARTER_PACK: {
+    amount: 1900, // $19.00 AUD in cents
+    currency: 'aud',
+    name: 'blockcheck.ai Starter Pack',
+    description: '3 property audit credits - one-time purchase',
+    mode: 'payment', // One-time payment
+  },
+  PRO: {
     amount: 4900, // $49.00 AUD in cents
-    currency: 'aud'
+    currency: 'aud',
+    name: 'blockcheck.ai Pro',
+    description: '10 property audits per month',
+    mode: 'subscription', // Monthly subscription
+    interval: 'month',
+  },
+  // Legacy support
+  BUYER_PACK: {
+    amount: 4900,
+    currency: 'aud',
+    name: 'blockcheck.ai Pro',
+    description: '10 property audits per month',
+    mode: 'subscription',
+    interval: 'month',
   }
 };
 
@@ -44,38 +64,49 @@ export default async function handler(req, res) {
   try {
     const { plan, email } = req.body;
 
-    if (!plan || !PLAN_PRICES[plan]) {
+    if (!plan || !PLAN_CONFIGS[plan]) {
       return res.status(400).json({ error: 'Invalid plan selected' });
     }
 
-    const planConfig = PLAN_PRICES[plan];
+    const planConfig = PLAN_CONFIGS[plan];
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: planConfig.currency,
-            product_data: {
-              name: 'Propwise Unlimited Access',
-              description: 'Unlimited property intelligence audits and deep dive reports for one month.',
-            },
-            unit_amount: planConfig.amount,
-            recurring: {
-              interval: 'month',
-            },
-          },
-          quantity: 1,
+    // Build line items based on payment mode
+    const lineItem = {
+      price_data: {
+        currency: planConfig.currency,
+        product_data: {
+          name: planConfig.name,
+          description: planConfig.description,
         },
-      ],
-      mode: 'subscription',
-      success_url: `${baseUrl}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+        unit_amount: planConfig.amount,
+      },
+      quantity: 1,
+    };
+
+    // Add recurring info for subscriptions
+    if (planConfig.mode === 'subscription') {
+      lineItem.price_data.recurring = {
+        interval: planConfig.interval,
+      };
+    }
+
+    const sessionConfig = {
+      payment_method_types: ['card'],
+      line_items: [lineItem],
+      mode: planConfig.mode,
+      success_url: `${baseUrl}?payment=success&session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
       cancel_url: `${baseUrl}?payment=cancel`,
-      customer_email: email,
       metadata: {
         plan: plan,
       },
-    });
+    };
+
+    // Add customer email if provided
+    if (email) {
+      sessionConfig.customer_email = email;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     res.json({ url: session.url, sessionId: session.id });
   } catch (error) {
@@ -83,4 +114,3 @@ export default async function handler(req, res) {
     res.status(500).json({ error: error.message || 'Failed to create checkout session' });
   }
 }
-
