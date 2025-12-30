@@ -215,33 +215,48 @@ const App: React.FC = () => {
     const purchasedPlan = urlParams.get('plan') || 'PRO'; // Default to PRO
 
     if (paymentStatus === 'success' && sessionId) {
-      // Payment was successful - activate the purchased plan
-      if (purchasedPlan === 'STARTER_PACK') {
-        // Add starter pack credits
-        addStarterPackCredits();
-      } else {
-        // Activate PRO subscription
-        activateProSubscription();
-        setPlan('PRO');
-      }
-      
-      refreshCreditState();
-      setShowUpgradeSuccess(true);
-      
-      // Update Supabase subscription if user is logged in
-      const updateSubscription = async () => {
-        const user = await supabaseService.getCurrentUser();
-        if (user?.id && supabaseService.isConfigured()) {
-          await supabaseService.updateSubscription(user.id, purchasedPlan as PlanType, sessionId);
+      // Payment was successful - process after a small delay to let Supabase auth settle
+      const processPaymentSuccess = async () => {
+        // Give Supabase auth time to restore session
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Activate the purchased plan
+        if (purchasedPlan === 'STARTER_PACK') {
+          addStarterPackCredits();
+        } else {
+          activateProSubscription();
+          setPlan('PRO');
         }
+        
+        refreshCreditState();
+        setShowUpgradeSuccess(true);
+        
+        // Restore login state from Supabase session
+        if (supabaseService.isConfigured()) {
+          const user = await supabaseService.getCurrentUser();
+          if (user) {
+            setIsLoggedIn(true);
+            setUserEmail(user.email || '');
+            
+            // Update subscription in Supabase
+            await supabaseService.updateSubscription(user.id, purchasedPlan as PlanType, sessionId);
+            
+            // Load user profile
+            const profile = await supabaseService.getCurrentProfile();
+            if (profile) {
+              setUserProfile(profile);
+            }
+          }
+        }
+        
+        // Clear URL params without reload
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Hide success message after 5 seconds
+        setTimeout(() => setShowUpgradeSuccess(false), 5000);
       };
-      updateSubscription();
       
-      // Clear URL params without reload
-      window.history.replaceState({}, document.title, window.location.pathname);
-      
-      // Hide success message after 5 seconds
-      setTimeout(() => setShowUpgradeSuccess(false), 5000);
+      processPaymentSuccess();
     } else if (paymentStatus === 'cancel') {
       // Payment was cancelled - clear URL params
       window.history.replaceState({}, document.title, window.location.pathname);
