@@ -46,10 +46,16 @@ const App: React.FC = () => {
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   
-  // Login state
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userEmail, setUserEmail] = useState<string>('');
-  const [userPhone, setUserPhone] = useState<string>('');
+  // Login state - restore from localStorage to persist across Stripe redirects
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem('prop_is_logged_in') === 'true';
+  });
+  const [userEmail, setUserEmail] = useState<string>(() => {
+    return localStorage.getItem('prop_user_email') || '';
+  });
+  const [userPhone, setUserPhone] = useState<string>(() => {
+    return localStorage.getItem('prop_user_phone') || '';
+  });
   const [isLoginMode, setIsLoginMode] = useState(false); // true = login, false = signup
   
   // Progress tracking states
@@ -154,6 +160,7 @@ const App: React.FC = () => {
           setUserEmail(session.user?.email || '');
           setUserPhone(session.user?.phone || '');
           setIsSignedUp(true);
+          localStorage.setItem('prop_is_logged_in', 'true');
           localStorage.setItem('prop_signed_up', 'true');
           localStorage.setItem('prop_user_email', session.user?.email || '');
           
@@ -196,6 +203,7 @@ const App: React.FC = () => {
           setUserEmail('');
           setUserPhone('');
           setUserProfile(null);
+          localStorage.removeItem('prop_is_logged_in');
         } else if (event === 'PASSWORD_RECOVERY') {
           // User clicked password reset link - show reset form
           setEmailAuthMode('reset');
@@ -231,12 +239,24 @@ const App: React.FC = () => {
         refreshCreditState();
         setShowUpgradeSuccess(true);
         
-        // Restore login state from Supabase session
+        // Restore login state - first from localStorage, then verify with Supabase
+        const storedEmail = localStorage.getItem('prop_user_email');
+        const wasLoggedIn = localStorage.getItem('prop_is_logged_in') === 'true';
+        
+        if (wasLoggedIn && storedEmail) {
+          // Restore from localStorage immediately
+          setIsLoggedIn(true);
+          setUserEmail(storedEmail);
+        }
+        
+        // Verify and sync with Supabase
         if (supabaseService.isConfigured()) {
           const user = await supabaseService.getCurrentUser();
           if (user) {
             setIsLoggedIn(true);
             setUserEmail(user.email || '');
+            localStorage.setItem('prop_is_logged_in', 'true');
+            localStorage.setItem('prop_user_email', user.email || '');
             
             // Update subscription in Supabase
             await supabaseService.updateSubscription(user.id, purchasedPlan as PlanType, sessionId);
@@ -431,6 +451,8 @@ const App: React.FC = () => {
     setUserPhone('');
     setUserProfile(null);
     setShowAccountSettings(false);
+    // Clear login flag
+    localStorage.removeItem('prop_is_logged_in');
     // Keep localStorage plan so they don't lose paid status if they paid without account
   };
 
@@ -459,6 +481,7 @@ const App: React.FC = () => {
     setIsLoggedIn(true);
     setUserEmail(email);
     setIsSignedUp(true);
+    localStorage.setItem('prop_is_logged_in', 'true');
     localStorage.setItem('prop_signed_up', 'true');
     localStorage.setItem('prop_user_email', email);
     
