@@ -661,7 +661,7 @@ const App: React.FC = () => {
                 See the property <br/> <span className="text-[#C9A961] opacity-90">behind the listing.</span>
               </h1>
               <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium" style={{ color: 'var(--text-muted)' }}>
-                A detailed intelligence report decoding zoning potential, infrastructure, and property records in plain language.
+                A detailed AI-assisted property report that explains zoning, planning context, comparable sales, and potential value-uplift scenarios.
               </p>
               
               <div className="max-w-2xl mx-auto">
