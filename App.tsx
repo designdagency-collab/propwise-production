@@ -473,13 +473,6 @@ const App: React.FC = () => {
     }
     
     setShowEmailAuth(false);
-    
-    // For NEW signups, prompt for phone verification
-    if (isNewUser) {
-      setShowPhoneVerification(true);
-      return; // Don't proceed further until phone is verified
-    }
-    
     setAppState(AppState.IDLE); // Go back so they can continue
     
     // Check if there was a pending upgrade (user tried to pay before logging in)
