@@ -82,7 +82,7 @@ const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-2 hover:opacity-80 transition-opacity focus:outline-none group"
           >
             <img 
-              src="/blockcheck.ai.png" 
+              src="/blockcheck.ai-main.png" 
               alt="blockcheck.ai" 
               className="h-10 w-auto transition-transform group-active:scale-95"
             />
