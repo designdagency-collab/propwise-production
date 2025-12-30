@@ -1,9 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { PropertyData, PlanType, DevEligibility, Amenity } from '../types';
 
-// Dynamic import for html2pdf to avoid SSR issues
-const loadHtml2Pdf = () => import('html2pdf.js');
-
 interface PropertyResultsProps {
   data: PropertyData;
   address: string;
@@ -117,31 +114,33 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     
     try {
       // Dynamic import of html2pdf
-      const html2pdfModule = await loadHtml2Pdf();
-      const html2pdf = html2pdfModule.default;
+      const html2pdfModule = await import('html2pdf.js');
+      const html2pdf = html2pdfModule.default as any;
       
       const element = reportRef.current;
       const filename = `blockcheck-${data.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
       
       const opt = {
-        margin: [10, 10, 10, 10] as [number, number, number, number],
+        margin: 10,
         filename: filename,
-        image: { type: 'jpeg' as const, quality: 0.95 },
+        image: { type: 'jpeg', quality: 0.95 },
         html2canvas: { 
           scale: 2,
           useCORS: true,
           letterRendering: true,
-          scrollY: 0
+          scrollY: 0,
+          logging: false
         },
         jsPDF: { 
           unit: 'mm', 
           format: 'a4', 
-          orientation: 'portrait' as const
+          orientation: 'portrait'
         },
         pagebreak: { mode: 'avoid-all' }
       };
       
-      await html2pdf().set(opt).from(element).save();
+      // Use the simpler API that takes element and options directly
+      await html2pdf(element, opt).save();
     } catch (error) {
       console.error('PDF export error:', error);
       alert('Failed to export PDF. Please try again.');

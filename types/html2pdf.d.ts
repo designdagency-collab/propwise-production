@@ -1,6 +1,6 @@
 declare module 'html2pdf.js' {
   interface Html2PdfOptions {
-    margin?: number | [number, number, number, number];
+    margin?: number | number[];
     filename?: string;
     image?: { type?: string; quality?: number };
     html2canvas?: {
@@ -8,6 +8,7 @@ declare module 'html2pdf.js' {
       useCORS?: boolean;
       letterRendering?: boolean;
       scrollY?: number;
+      logging?: boolean;
     };
     jsPDF?: {
       unit?: string;
@@ -19,11 +20,12 @@ declare module 'html2pdf.js' {
 
   interface Html2Pdf {
     set(options: Html2PdfOptions): Html2Pdf;
-    from(element: HTMLElement): Html2Pdf;
-    save(): Promise<void>;
+    from(element: HTMLElement | string): Html2Pdf;
+    save(filename?: string): Promise<void>;
+    toPdf(): Html2Pdf;
+    output(type: string, options?: any): any;
   }
 
-  function html2pdf(): Html2Pdf;
+  function html2pdf(element?: HTMLElement, options?: Html2PdfOptions): Html2Pdf;
   export default html2pdf;
 }
-
