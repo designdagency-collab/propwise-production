@@ -8,6 +8,7 @@ interface NavbarProps {
   onHome?: () => void;
   onLogin?: () => void;
   onLogout?: () => void;
+  onAccountSettings?: () => void;
   isLoggedIn?: boolean;
   userName?: string;
   userEmail?: string;
@@ -22,7 +23,8 @@ const Navbar: React.FC<NavbarProps> = ({
   onUpgrade, 
   onHome, 
   onLogin, 
-  onLogout, 
+  onLogout,
+  onAccountSettings,
   isLoggedIn = false,
   userName,
   userEmail,
@@ -135,14 +137,23 @@ const Navbar: React.FC<NavbarProps> = ({
             {/* Login/Logout Button */}
             {isLoggedIn ? (
               <div className="flex items-center gap-1 sm:gap-3">
-                {/* Avatar circle with initial */}
-                <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
+                {/* Avatar circle with initial - clickable for account settings */}
+                <button
+                  onClick={onAccountSettings}
+                  className="w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border hover:border-[#C9A961] transition-colors"
+                  style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}
+                  title="Account Settings"
+                >
                   <span className="text-xs sm:text-sm font-bold text-[#C9A961]">{getInitials()}</span>
-                </div>
-                {/* Display name - hidden on mobile */}
-                <span className="hidden md:inline text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                </button>
+                {/* Display name - hidden on mobile, clickable */}
+                <button
+                  onClick={onAccountSettings}
+                  className="hidden md:inline text-sm font-semibold hover:text-[#C9A961] transition-colors"
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   {getDisplayName()}
-                </span>
+                </button>
                 <button
                   onClick={onLogout}
                   className="p-1.5 sm:p-2.5 hover:text-red-500 transition-colors rounded-xl"

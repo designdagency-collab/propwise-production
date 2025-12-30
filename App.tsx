@@ -5,6 +5,7 @@ import Pricing from './components/Pricing';
 import PhoneVerification from './components/PhoneVerification';
 import EmailAuth from './components/EmailAuth';
 import TermsAndConditions from './components/TermsAndConditions';
+import AccountSettings from './components/AccountSettings';
 import { geminiService } from './services/geminiService';
 import { stripeService } from './services/stripeService';
 import { supabaseService } from './services/supabaseService';
@@ -42,6 +43,7 @@ const App: React.FC = () => {
   const [showEmailAuth, setShowEmailAuth] = useState(false);
   const [emailAuthMode, setEmailAuthMode] = useState<'signup' | 'login' | 'reset'>('signup');
   const [showTerms, setShowTerms] = useState(false);
+  const [showAccountSettings, setShowAccountSettings] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   
   // Login state
@@ -415,7 +417,28 @@ const App: React.FC = () => {
     setUserEmail('');
     setUserPhone('');
     setUserProfile(null);
+    setShowAccountSettings(false);
     // Keep localStorage plan so they don't lose paid status if they paid without account
+  };
+
+  // Handle subscription cancellation
+  const handleCancelSubscription = async () => {
+    // TODO: Call Stripe to cancel subscription when connected
+    // For now, just reset to FREE_TRIAL locally
+    localStorage.setItem('prop_plan', 'FREE_TRIAL');
+    localStorage.removeItem('prop_pro_month');
+    localStorage.removeItem('prop_pro_used');
+    setPlan('FREE_TRIAL');
+    refreshCreditState();
+    
+    // If Supabase is configured, update subscription status
+    if (supabaseService.isConfigured() && userProfile?.id) {
+      try {
+        await supabaseService.updateSubscription(userProfile.id, 'FREE_TRIAL');
+      } catch (error) {
+        console.error('Failed to update subscription in Supabase:', error);
+      }
+    }
   };
 
   // Handle email auth success (both signup and login)
@@ -566,6 +589,7 @@ const App: React.FC = () => {
         onHome={handleHome}
         onLogin={handleLogin}
         onLogout={handleLogout}
+        onAccountSettings={() => setShowAccountSettings(true)}
         isLoggedIn={isLoggedIn}
         userName={userProfile?.full_name}
         userEmail={userEmail}
@@ -601,7 +625,18 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {showTerms ? (
+      {showAccountSettings ? (
+        <AccountSettings
+          plan={plan}
+          creditState={creditState}
+          remainingCredits={remainingCredits}
+          userEmail={userEmail}
+          isLoggedIn={isLoggedIn}
+          onBack={() => setShowAccountSettings(false)}
+          onCancelSubscription={handleCancelSubscription}
+          onLogout={handleLogout}
+        />
+      ) : showTerms ? (
         <TermsAndConditions onBack={() => setShowTerms(false)} />
       ) : showPricing ? (
         <Pricing 
@@ -798,7 +833,7 @@ const App: React.FC = () => {
       )}
 
       {/* Footer - only show on main pages, not modals */}
-      {!showTerms && !showPricing && (
+      {!showTerms && !showPricing && !showAccountSettings && (
         <footer className="fixed bottom-0 left-0 right-0 py-4 text-center" style={{ backgroundColor: 'var(--bg-primary)' }}>
           <div className="flex items-center justify-center gap-4 text-[10px]" style={{ color: 'var(--text-muted)' }}>
             <span>© {new Date().getFullYear()} BlockCheck.ai</span>
