@@ -238,6 +238,21 @@ const App: React.FC = () => {
     const purchasedPlan = urlParams.get('plan') || 'PRO'; // Default to PRO
 
     if (paymentStatus === 'success' && sessionId) {
+      // Check if this session has already been processed (prevent duplicate credits on refresh)
+      const processedSessions = JSON.parse(localStorage.getItem('prop_processed_sessions') || '[]');
+      if (processedSessions.includes(sessionId)) {
+        // Already processed - just clear URL and return
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
+      }
+      
+      // Mark session as processed IMMEDIATELY to prevent race conditions
+      processedSessions.push(sessionId);
+      localStorage.setItem('prop_processed_sessions', JSON.stringify(processedSessions));
+      
+      // Clear URL params FIRST to prevent refresh issues
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
       // Payment was successful - process after a small delay to let Supabase auth settle
       const processPaymentSuccess = async () => {
         // Give Supabase auth time to restore session
@@ -280,9 +295,6 @@ const App: React.FC = () => {
             setIsLoggedIn(false);
           }
         }
-        
-        // Clear URL params without reload
-        window.history.replaceState({}, document.title, window.location.pathname);
         
         // Hide success message after 5 seconds
         setTimeout(() => setShowUpgradeSuccess(false), 5000);
@@ -475,6 +487,7 @@ const App: React.FC = () => {
     localStorage.removeItem('prop_pro_used');
     localStorage.removeItem('prop_pro_month');
     localStorage.removeItem('prop_plan');
+    localStorage.removeItem('prop_processed_sessions');
     
     // Refresh credit state to show free trial
     refreshCreditState();
