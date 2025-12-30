@@ -82,13 +82,16 @@ const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-3 hover:opacity-80 transition-opacity focus:outline-none group"
           >
             <div className="relative flex items-center justify-center w-10 h-10 transition-transform group-active:scale-95">
-              <i className="fa-solid fa-house text-2xl text-[#C9A961]"></i>
-              <div className="absolute inset-0 flex items-center justify-center pt-1">
-                 <i className="fa-solid fa-dna text-[10px] text-white bg-[#3A342D] rounded-full p-0.5 shadow-sm"></i>
+              {/* Hexagon with magnifying glass and houses */}
+              <div className="w-10 h-10 bg-[#E8B84A] flex items-center justify-center" style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
+                <div className="relative">
+                  <i className="fa-solid fa-magnifying-glass text-[#3A342D] text-lg"></i>
+                  <i className="fa-solid fa-house text-[8px] text-[#4A7AB8] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>
+                </div>
               </div>
             </div>
-            <span className="text-2xl font-bold tracking-tighter" style={{ color: 'var(--text-primary)' }}>
-              Propwise
+            <span className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+              blockcheck<span className="text-[#E8B84A]">.ai</span>
             </span>
           </button>
           <div className="flex items-center space-x-4">

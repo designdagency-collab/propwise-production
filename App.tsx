@@ -583,7 +583,7 @@ const App: React.FC = () => {
               </h2>
               <p className="text-sm sm:text-base max-w-md mx-auto font-medium leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 {isSignedUp 
-                  ? "You've used all 5 free property audits. Continue searching unlimited properties with Propwise Unlimited."
+                  ? "You've used all 5 free property audits. Continue searching unlimited properties with blockcheck.ai Unlimited."
                   : "Create a free account to unlock 3 more audits, or upgrade for unlimited access to property intelligence."}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

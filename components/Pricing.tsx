@@ -74,7 +74,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE', onUpgrade, onBa
             </button>
           </div>
 
-          {/* Paid Tier (Propwise Unlimited) */}
+          {/* Paid Tier (blockcheck.ai Unlimited) */}
           <div className="bg-white p-10 rounded-[3rem] border-2 border-[#C9A961] shadow-2xl relative flex flex-col transform hover:scale-[1.02] transition-all">
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
               <span className="bg-[#C9A961] text-white px-3 sm:px-4 py-1 rounded-full text-[11px] sm:text-[10px] font-black uppercase tracking-widest">
@@ -141,7 +141,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE', onUpgrade, onBa
 
         <div className="max-w-2xl mx-auto text-center">
           <p className="text-[11px] sm:text-[10px] text-[#3A342D]/30 italic leading-relaxed">
-            All reports are indicative. Propwise does not provide financial or legal advice. Pricing is in Australian Dollars (AUD) and includes GST where applicable.
+            All reports are indicative. blockcheck.ai does not provide financial or legal advice. Pricing is in Australian Dollars (AUD) and includes GST where applicable.
           </p>
         </div>
       </div>

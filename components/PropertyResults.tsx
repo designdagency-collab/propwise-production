@@ -106,7 +106,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
 
   const handleShare = async () => {
     const shareParams = {
-      title: `Propwise Report: ${data.address}`,
+      title: `blockcheck.ai Report: ${data.address}`,
       text: data?.sharePrompt?.message || `Check out the property DNA for ${data.address}`,
       url: window.location.href
     };
