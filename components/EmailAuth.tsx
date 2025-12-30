@@ -202,8 +202,8 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6">
-      <div className="rounded-[1.5rem] sm:rounded-[2.5rem] p-5 sm:p-8 md:p-10 max-w-sm sm:max-w-md w-full shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300 max-h-[85vh] overflow-y-auto mx-2" style={{ backgroundColor: 'var(--bg-card)' }}>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      <div className="rounded-[1.5rem] sm:rounded-[2.5rem] p-5 sm:p-8 md:p-10 w-[calc(100%-2rem)] max-w-sm sm:max-w-md shadow-2xl my-auto" style={{ backgroundColor: 'var(--bg-card)' }}>
         <div className="text-center space-y-4 sm:space-y-6">
           <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#C9A961]/10 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto">
             <i className={`fa-solid ${getIcon()} text-lg sm:text-2xl text-[#C9A961]`}></i>
