@@ -50,6 +50,7 @@
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/pdf-mode.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Crimson+Pro:wght@400;600;700&display=swap');
         
@@ -105,111 +106,13 @@
             transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         
-        /* PDF Export Styles */
-        .printing-pdf {
-            background-color: #FFFFFF !important;
-            color: #3A342D !important;
-            font-size: 11px !important;
-            line-height: 1.6 !important;
-        }
-        
-        .printing-pdf * {
-            color: #3A342D !important;
-        }
-        
-        .printing-pdf .no-print {
-            display: none !important;
-        }
-        
-        .printing-pdf .pdf-no-break {
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
-        }
-        
-        .printing-pdf section {
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
-            margin-bottom: 20px !important;
-        }
-        
-        .printing-pdf h1, .printing-pdf h2, .printing-pdf h3 {
-            page-break-after: avoid !important;
-            break-after: avoid !important;
-        }
-        
-        .printing-pdf .bg-card-bg,
-        .printing-pdf [style*="background"] {
-            background-color: #F9FAFB !important;
-        }
-        
-        .printing-pdf .text-text-muted,
-        .printing-pdf [style*="--text-muted"] {
-            color: #666666 !important;
-        }
-        
-        /* Better spacing and typography for PDF */
-        .printing-pdf h1 {
-            font-size: 28px !important;
-            line-height: 1.2 !important;
-            margin-bottom: 12px !important;
-        }
-        
-        .printing-pdf h2 {
-            font-size: 18px !important;
-            line-height: 1.3 !important;
-            margin-bottom: 8px !important;
-        }
-        
-        .printing-pdf h3 {
-            font-size: 14px !important;
-            line-height: 1.4 !important;
-        }
-        
-        .printing-pdf p {
-            font-size: 11px !important;
-            line-height: 1.6 !important;
-        }
-        
-        /* Card backgrounds for PDF */
-        .printing-pdf [class*="rounded-"] {
-            border-radius: 12px !important;
-            padding: 16px !important;
-        }
-        
-        .printing-pdf [class*="rounded-[3rem]"],
-        .printing-pdf [class*="rounded-[4rem]"] {
-            border-radius: 16px !important;
-        }
-        
-        /* Ensure badges are visible */
-        .printing-pdf [class*="bg-emerald"],
-        .printing-pdf [class*="bg-blue"],
-        .printing-pdf [class*="bg-amber"],
-        .printing-pdf [class*="bg-rose"],
-        .printing-pdf [class*="bg-slate"] {
-            background-color: inherit !important;
-            color: inherit !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-        }
-        
-        /* Grid layout adjustments for PDF */
-        .printing-pdf .grid {
-            display: block !important;
-        }
-        
-        .printing-pdf .grid > div {
-            margin-bottom: 12px !important;
-            display: block !important;
-        }
-        
+        /* PDF Export - main styles in /pdf-mode.css */
         @media print {
             body {
                 background-color: #FFFFFF !important;
                 color: #3A342D !important;
             }
-            
-            .no-print {
+            .no-print, [data-no-pdf="true"] {
                 display: none !important;
             }
         }

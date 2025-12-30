@@ -107,6 +107,15 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     setSelectedStrategies(next);
   };
 
+  /**
+   * Export report to PDF using html2pdf.js
+   * 
+   * Key features:
+   * - Uses onclone to apply PDF-specific modifications without affecting live UI
+   * - Replaces map iframes with static images for reliable rendering
+   * - Removes interactive elements (buttons, tooltips) 
+   * - Applies .pdf-mode class for print-optimized CSS
+   */
   const exportToPDF = async () => {
     if (!reportRef.current || !isPaidUser) return;
     
@@ -120,20 +129,100 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       const element = reportRef.current;
       const filename = `upblock-${data.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
       
-      // Add print class for PDF-specific styling
-      element.classList.add('printing-pdf');
-      
       const opt = {
-        margin: [15, 15, 15, 15],
+        margin: [12, 12, 12, 12], // Tighter margins for cleaner look
         filename: filename,
-        image: { type: 'jpeg', quality: 0.98 },
+        image: { type: 'jpeg', quality: 0.95 },
         html2canvas: { 
           scale: 2,
           useCORS: true,
+          allowTaint: false,
           letterRendering: true,
           scrollY: 0,
           logging: false,
-          backgroundColor: '#ffffff'
+          backgroundColor: '#ffffff',
+          windowWidth: 900, // Fixed width for consistent rendering
+          onclone: (clonedDoc: Document) => {
+            // Apply PDF mode class to document root for CSS targeting
+            clonedDoc.documentElement.classList.add('pdf-mode');
+            clonedDoc.body.classList.add('pdf-mode');
+            
+            // Remove elements marked as not for PDF
+            const noPdfElements = clonedDoc.querySelectorAll('[data-no-pdf="true"]');
+            noPdfElements.forEach(el => el.remove());
+            
+            // Remove all interactive buttons (except those marked to keep)
+            const buttons = clonedDoc.querySelectorAll('button:not([data-pdf-keep])');
+            buttons.forEach(btn => btn.remove());
+            
+            // Remove tooltips and hover states
+            const tooltips = clonedDoc.querySelectorAll('[class*="group-hover"], [class*="tooltip"], .invisible');
+            tooltips.forEach(el => el.remove());
+            
+            // Replace map iframes with static map images
+            const mapContainers = clonedDoc.querySelectorAll('[data-map="true"]');
+            mapContainers.forEach(container => {
+              const mapEl = container as HTMLElement;
+              const iframe = mapEl.querySelector('iframe');
+              
+              if (iframe) {
+                // Create static map image
+                const staticMapUrl = `/api/static-map?address=${encodeURIComponent(data.address)}&width=800&height=400&zoom=17`;
+                
+                const img = clonedDoc.createElement('img');
+                img.src = staticMapUrl;
+                img.alt = `Map of ${data.address}`;
+                img.style.width = '100%';
+                img.style.height = '300px';
+                img.style.objectFit = 'cover';
+                img.style.borderRadius = '16px';
+                img.style.display = 'block';
+                img.crossOrigin = 'anonymous';
+                
+                // Create fallback placeholder in case image fails
+                img.onerror = () => {
+                  const placeholder = clonedDoc.createElement('div');
+                  placeholder.className = 'pdf-map-placeholder';
+                  placeholder.innerHTML = '<span>📍 ' + data.address + '</span>';
+                  placeholder.style.cssText = `
+                    width: 100%;
+                    height: 300px;
+                    border-radius: 16px;
+                    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #6b7280;
+                    font-size: 14px;
+                    font-weight: 500;
+                    text-align: center;
+                    padding: 20px;
+                  `;
+                  img.replaceWith(placeholder);
+                };
+                
+                // Clear container and add image
+                mapEl.innerHTML = '';
+                mapEl.appendChild(img);
+                mapEl.style.height = '300px';
+                mapEl.style.overflow = 'hidden';
+              }
+            });
+            
+            // Remove decorative blur elements that cause rendering issues
+            const blurElements = clonedDoc.querySelectorAll('[class*="blur-3xl"], [class*="blur-2xl"]');
+            blurElements.forEach(el => el.remove());
+            
+            // Remove animations
+            const animatedElements = clonedDoc.querySelectorAll('[class*="animate-"]');
+            animatedElements.forEach(el => {
+              el.classList.forEach(cls => {
+                if (cls.includes('animate-')) {
+                  el.classList.remove(cls);
+                }
+              });
+            });
+          }
         },
         jsPDF: { 
           unit: 'mm', 
@@ -141,17 +230,15 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
           orientation: 'portrait'
         },
         pagebreak: { 
-          mode: ['avoid-all', 'css', 'legacy'],
+          mode: ['css', 'legacy'], // Removed 'avoid-all' which causes whitespace issues
           before: '.pdf-page-break-before',
           after: '.pdf-page-break-after',
-          avoid: '.pdf-no-break'
+          avoid: '.pdf-no-break, [data-pdf-no-break]'
         }
       };
       
       await html2pdf(element, opt).save();
       
-      // Remove print class
-      element.classList.remove('printing-pdf');
     } catch (error) {
       console.error('PDF export error:', error);
       alert('Failed to export PDF. Please try again.');
@@ -230,7 +317,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
   const cashColorClass = isPositive ? 'text-[#10B981]' : isNegative ? 'text-[#E11D48]' : 'text-[#3A342D]';
 
   return (
-    <div ref={reportRef} id="property-report" className="max-w-4xl mx-auto space-y-12 pb-32 animate-in fade-in slide-in-from-bottom-6 duration-700">
+    <div ref={reportRef} id="property-report" data-pdf-root="true" className="max-w-4xl mx-auto space-y-12 pb-32 animate-in fade-in slide-in-from-bottom-6 duration-700">
       
       {/* Header Property Summary */}
       <div className="p-5 sm:p-8 md:p-12 rounded-[2rem] sm:rounded-[3rem] border shadow-sm relative overflow-hidden pdf-no-break" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
@@ -242,11 +329,12 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                 <span className="hidden sm:inline">Property</span> Strategy Guide
               </div>
               
-              {/* Export PDF Button */}
+              {/* Export PDF Button - Hidden in PDF export */}
               {isPaidUser ? (
                 <button 
                   onClick={exportToPDF}
                   disabled={isExporting}
+                  data-no-pdf="true"
                   className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:text-[#D6A270] transition-colors flex items-center gap-1 disabled:opacity-50" 
                   style={{ color: 'var(--text-muted)' }}
                 >
@@ -256,6 +344,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
               ) : (
                 <button 
                   onClick={onUpgrade}
+                  data-no-pdf="true"
                   className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:text-[#D6A270] transition-colors flex items-center gap-1.5" 
                   style={{ color: 'var(--text-muted)' }}
                 >
@@ -264,7 +353,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                 </button>
               )}
             </div>
-            <div className="flex gap-3 sm:gap-4">
+            <div className="flex gap-3 sm:gap-4" data-pdf-attributes>
                <div className="flex items-center gap-1.5 sm:gap-2 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                   <i className="fa-solid fa-bed text-[#D6A270]"></i> {data?.attributes?.beds || 0}
                </div>
@@ -280,22 +369,22 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
             <h1 className="text-[2rem] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter font-address leading-tight" style={{ color: 'var(--text-primary)' }}>{data.address}</h1>
             <p className="font-medium text-sm sm:text-base mt-2" style={{ color: 'var(--text-muted)' }}>{data.propertyType} • {data.landSize || 'Unknown Land Size'}</p>
           </div>
-          <div className="flex flex-wrap gap-8 pt-8 border-t" style={{ borderColor: 'var(--border-color)' }}>
-             <div className="space-y-1">
+          <div className="flex flex-wrap gap-8 pt-8 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
+             <div className="space-y-1" data-pdf-kpi>
                 <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Estimated Market Value</p>
                 <p className="text-xl sm:text-2xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
              </div>
-             <div className="space-y-1">
+             <div className="space-y-1" data-pdf-kpi>
                 <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Potential Value After Improvements</p>
                 <p className={`text-xl sm:text-2xl font-black transition-colors ${effectiveSelection.size > 0 ? 'text-[#8A9A6D]' : ''}`} style={{ color: effectiveSelection.size > 0 ? '#8A9A6D' : 'var(--text-primary)' }}>
                    {baseline === undefined ? 'TBA' : effectiveSelection.size === 0 ? formatValue(baseline) : `${formatValue(afterLow)} – ${formatValue(afterHigh)}`}
                 </p>
              </div>
-             <div className="space-y-1">
+             <div className="space-y-1" data-pdf-kpi>
                 <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Growth Trend</p>
                 <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{data?.valueSnapshot?.growth || 'TBA'}</p>
              </div>
-             <div className="space-y-1">
+             <div className="space-y-1" data-pdf-kpi>
                 <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Data Confidence</p>
                 <p className="text-xl sm:text-2xl font-black flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                    {data?.valueSnapshot?.confidenceLevel || 'Low'}
@@ -306,8 +395,13 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         </div>
       </div>
 
-      {/* GOOGLE MAP INTEGRATION - Hidden in PDF export */}
-      <div className="w-full h-[400px] rounded-[3rem] overflow-hidden shadow-lg border relative group no-print" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
+      {/* GOOGLE MAP INTEGRATION - Replaced with static image in PDF export */}
+      <div 
+        data-map="true" 
+        data-pdf-no-break
+        className="w-full h-[400px] rounded-[3rem] overflow-hidden shadow-lg border relative group" 
+        style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
+      >
          <div className="absolute inset-0 bg-slate-200/50 animate-pulse group-hover:hidden"></div>
          <iframe
           title="Property Location Map"
@@ -458,7 +552,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
 
       {/* PORTFOLIO SELL-OUT SUMMARY */}
       {data.portfolioSelloutSummary && (
-        <div className="bg-[#4A4137] p-8 md:p-12 rounded-[3.5rem] text-white shadow-xl relative overflow-hidden group">
+        <div data-pdf-callout data-pdf-no-break className="bg-[#4A4137] p-8 md:p-12 rounded-[3.5rem] text-white shadow-xl relative overflow-hidden group">
            <div className="absolute top-0 right-0 w-64 h-64 bg-[#D6A270]/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-[#D6A270]/20 transition-all duration-1000"></div>
            <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12">
               <div className="flex-shrink-0 w-20 h-20 bg-[#D6A270] rounded-3xl flex items-center justify-center text-3xl shadow-lg">
@@ -497,19 +591,19 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                 </div>
              </div>
              {selectedStrategies.size > 0 && (
-                <button onClick={() => setSelectedStrategies(new Set())} className="text-[10px] font-black uppercase tracking-widest text-[#4A4137]/40 hover:text-[#D6A270] transition-colors">Reset Selections</button>
+                <button onClick={() => setSelectedStrategies(new Set())} data-no-pdf="true" className="text-[10px] font-black uppercase tracking-widest text-[#4A4137]/40 hover:text-[#D6A270] transition-colors">Reset Selections</button>
              )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-pdf-strategy-grid>
              {data.valueAddStrategies.map((strategy, i) => (
-               <div key={i} className={`p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col ${selectedStrategies.has(i) ? 'border-[#D3D9B5] shadow-md ring-1 ring-[#D3D9B5]/20' : 'border-b-[#D6A270]/20 hover:shadow-md'}`} style={{ backgroundColor: 'var(--bg-card)', borderColor: selectedStrategies.has(i) ? '#D3D9B5' : 'var(--border-color)' }}>
+               <div key={i} data-pdf-strategy-card data-pdf-no-break className={`p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col ${selectedStrategies.has(i) ? 'border-[#D3D9B5] shadow-md ring-1 ring-[#D3D9B5]/20' : 'border-b-[#D6A270]/20 hover:shadow-md'}`} style={{ backgroundColor: 'var(--bg-card)', borderColor: selectedStrategies.has(i) ? '#D3D9B5' : 'var(--border-color)' }}>
                   <div className="flex justify-between items-start mb-4">
                      <div className="space-y-1">
                         <h3 className="text-base sm:text-lg font-bold text-[#4A4137] group-hover:text-[#D6A270] transition-colors">{strategy.title}</h3>
                         <PathwayBadgeWithTooltip pathway={strategy.planningPathway} />
                      </div>
                      <div className="flex flex-col items-end gap-2">
-                        <button onClick={() => toggleStrategy(i)} className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${selectedStrategies.has(i) ? 'bg-[#D3D9B5] text-white border-[#D3D9B5]' : 'bg-white text-[#4A4137]/40 border-slate-200 hover:border-[#D3D9B5] hover:text-[#D3D9B5]'}`}>{selectedStrategies.has(i) ? <><i className="fa-solid fa-check mr-1"></i> Included</> : 'Include'}</button>
+                        <button onClick={() => toggleStrategy(i)} data-no-pdf="true" className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${selectedStrategies.has(i) ? 'bg-[#D3D9B5] text-white border-[#D3D9B5]' : 'bg-white text-[#4A4137]/40 border-slate-200 hover:border-[#D3D9B5] hover:text-[#D3D9B5]'}`}>{selectedStrategies.has(i) ? <><i className="fa-solid fa-check mr-1"></i> Included</> : 'Include'}</button>
                         <div className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${getEffortColor(strategy.effort)}`}>{strategy.effort} Effort</div>
                      </div>
                   </div>
@@ -668,10 +762,10 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
               <div className="w-10 h-10 bg-slate-800 text-white rounded-xl flex items-center justify-center shadow-sm"><i className="fa-solid fa-tags"></i></div>
               <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Comparable Market Sales</h2>
            </div>
-           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8" data-pdf-sales-grid>
               <div className="lg:col-span-2 space-y-6">
                  {data.comparableSales.nearbySales && data.comparableSales.nearbySales.length > 0 && (
-                   <div className="p-8 rounded-[3rem] border shadow-sm space-y-4" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+                   <div className="p-8 rounded-[3rem] border shadow-sm space-y-4" data-pdf-no-break style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
                       {data.comparableSales.nearbySales.map((sale, i) => (
                          <div key={i} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-slate-100 group transition-all hover:border-[#D6A270]/20">
                             <div className="flex gap-4 items-center">
@@ -687,7 +781,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                    </div>
                  )}
               </div>
-              <div className="bg-[#4A4137] p-8 rounded-[3rem] text-white space-y-6 relative overflow-hidden h-fit">
+              <div className="bg-[#4A4137] p-8 rounded-[3rem] text-white space-y-6 relative overflow-hidden h-fit" data-pdf-no-break>
                  <p className="text-sm font-medium leading-relaxed text-white/80">{data.comparableSales.pricingContextSummary}</p>
               </div>
            </div>
@@ -696,7 +790,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
 
       {/* WATCH OUTS */}
       {data.watchOuts && data.watchOuts.length > 0 && (
-        <section className="bg-rose-50/50 p-10 md:p-14 rounded-[4rem] border border-rose-100 space-y-8 pdf-no-break">
+        <section data-pdf-watchouts data-pdf-no-break className="bg-rose-50/50 p-10 md:p-14 rounded-[4rem] border border-rose-100 space-y-8 pdf-no-break">
           <div className="flex items-center gap-4">
              <div className="w-10 h-10 bg-rose-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-rose-200"><i className="fa-solid fa-eye"></i></div>
              <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Things to Watch Out For</h2>
@@ -715,8 +809,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         </section>
       )}
 
-      {/* SEARCH ANOTHER PROPERTY BUTTON */}
-      <div className="flex justify-center pt-8">
+      {/* SEARCH ANOTHER PROPERTY BUTTON - Hidden in PDF */}
+      <div className="flex justify-center pt-8" data-no-pdf="true">
          <button 
            onClick={onHome}
            className="px-12 py-5 bg-[#3A342D] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl hover:bg-[#C9A961] transition-all transform active:scale-95 flex items-center gap-3"

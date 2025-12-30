@@ -1,0 +1,417 @@
+/**
+ * PDF Export Mode Styles
+ * Applied via .pdf-mode class on documentElement during html2pdf onclone
+ * 
+ * Design Goals:
+ * - Clean, centered, card-based layout matching upblock.ai UX
+ * - No clipping (especially callout banners)
+ * - No massive blank whitespace pages
+ * - Stable typography and alignment
+ * - Predictable page breaks
+ */
+
+/* ============================================
+   BASE PDF MODE RESET
+   ============================================ */
+.pdf-mode {
+  background-color: #ffffff !important;
+  color: #3A342D !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 11px !important;
+  line-height: 1.6 !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.pdf-mode * {
+  /* Remove transitions that can cause rendering issues */
+  transition: none !important;
+  animation: none !important;
+}
+
+/* ============================================
+   HIDE NON-PDF ELEMENTS
+   ============================================ */
+.pdf-mode [data-no-pdf="true"],
+.pdf-mode .no-print,
+.pdf-mode button:not([data-pdf-keep]),
+.pdf-mode .group-hover\:visible,
+.pdf-mode [class*="tooltip"],
+.pdf-mode [class*="animate-"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* ============================================
+   LAYOUT CONTAINER
+   ============================================ */
+.pdf-mode [data-pdf-root="true"] {
+  max-width: 720px !important;
+  margin: 0 auto !important;
+  padding: 20px !important;
+  background-color: #ffffff !important;
+}
+
+/* Remove vh/min-height that breaks pagination */
+.pdf-mode [class*="min-h-"],
+.pdf-mode [class*="h-screen"],
+.pdf-mode [class*="vh-"] {
+  min-height: auto !important;
+  height: auto !important;
+}
+
+/* ============================================
+   DISABLE FIXED/STICKY/ABSOLUTE POSITIONING
+   ============================================ */
+.pdf-mode [class*="fixed"],
+.pdf-mode [class*="sticky"],
+.pdf-mode [class*="absolute"]:not(.pdf-keep-absolute) {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  transform: none !important;
+}
+
+/* ============================================
+   CARD SYSTEM
+   ============================================ */
+
+/* Base card styles - consistent radius/border/shadow/padding */
+.pdf-mode .pdf-card,
+.pdf-mode [class*="rounded-[2"],
+.pdf-mode [class*="rounded-[3"],
+.pdf-mode [class*="rounded-[4"] {
+  border-radius: 16px !important;
+  border: 1px solid rgba(201, 169, 97, 0.15) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  padding: 24px !important;
+  margin-bottom: 16px !important;
+  background-color: #ffffff !important;
+  overflow: visible !important;
+}
+
+/* Smaller nested cards */
+.pdf-mode [class*="rounded-2xl"],
+.pdf-mode [class*="rounded-xl"],
+.pdf-mode [class*="rounded-lg"] {
+  border-radius: 12px !important;
+}
+
+/* ============================================
+   SECTION SPACING
+   ============================================ */
+.pdf-mode section,
+.pdf-mode [data-pdf-section] {
+  margin-bottom: 24px !important;
+  padding-top: 8px !important;
+}
+
+.pdf-mode .space-y-12 > * + * {
+  margin-top: 24px !important;
+}
+
+.pdf-mode .space-y-8 > * + * {
+  margin-top: 16px !important;
+}
+
+.pdf-mode .space-y-6 > * + * {
+  margin-top: 12px !important;
+}
+
+/* ============================================
+   PAGE BREAK CONTROLS
+   ============================================ */
+
+/* Avoid breaking inside these elements */
+.pdf-mode .pdf-no-break,
+.pdf-mode [data-pdf-no-break],
+.pdf-mode section,
+.pdf-mode [class*="rounded-[2"],
+.pdf-mode [class*="rounded-[3"],
+.pdf-mode [class*="rounded-[4"],
+.pdf-mode [data-pdf-card],
+.pdf-mode .grid > div {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+
+/* Headers should not separate from their content */
+.pdf-mode h1, 
+.pdf-mode h2, 
+.pdf-mode h3 {
+  break-after: avoid !important;
+  page-break-after: avoid !important;
+}
+
+/* Callout banners - must never split */
+.pdf-mode [data-pdf-callout],
+.pdf-mode .bg-\[\#4A4137\] {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+  page-break-before: auto !important;
+  margin-top: 16px !important;
+  margin-bottom: 16px !important;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+
+/* Heading hierarchy */
+.pdf-mode h1 {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  margin-bottom: 12px !important;
+  color: #3A342D !important;
+}
+
+.pdf-mode h2 {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  margin-bottom: 8px !important;
+  color: #3A342D !important;
+}
+
+.pdf-mode h3 {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  color: #3A342D !important;
+}
+
+.pdf-mode p {
+  font-size: 11px !important;
+  line-height: 1.6 !important;
+  color: #3A342D !important;
+}
+
+/* Muted text */
+.pdf-mode [style*="--text-muted"],
+.pdf-mode .text-\[10px\],
+.pdf-mode .text-\[11px\],
+.pdf-mode [class*="text-muted"] {
+  color: #666666 !important;
+  opacity: 1 !important;
+}
+
+/* Tabular numbers for KPIs */
+.pdf-mode [data-pdf-kpi],
+.pdf-mode .font-black {
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* ============================================
+   KPI GRID ALIGNMENT
+   ============================================ */
+.pdf-mode [data-pdf-kpi-row],
+.pdf-mode .flex-wrap.gap-8 {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 16px !important;
+  align-items: start !important;
+}
+
+.pdf-mode [data-pdf-kpi-row] > div,
+.pdf-mode .flex-wrap.gap-8 > div {
+  min-width: 0 !important;
+}
+
+/* ============================================
+   HEADER ATTRIBUTE ICONS ALIGNMENT
+   ============================================ */
+.pdf-mode [data-pdf-attributes] {
+  display: flex !important;
+  align-items: baseline !important;
+  gap: 16px !important;
+}
+
+.pdf-mode [data-pdf-attributes] > div {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+/* ============================================
+   GRID LAYOUTS FOR PDF
+   ============================================ */
+
+/* 2-column grids */
+.pdf-mode .grid-cols-1.md\:grid-cols-2,
+.pdf-mode .grid.md\:grid-cols-2 {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 16px !important;
+}
+
+/* 3-column grids */
+.pdf-mode .grid-cols-1.md\:grid-cols-3,
+.pdf-mode .grid.md\:grid-cols-3 {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 16px !important;
+}
+
+/* 4-column grids - reduce to 2 for PDF width */
+.pdf-mode .grid-cols-1.lg\:grid-cols-4,
+.pdf-mode .grid.lg\:grid-cols-4 {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 12px !important;
+}
+
+/* ============================================
+   STRATEGY CARDS
+   ============================================ */
+.pdf-mode [data-pdf-strategy-card] {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+  padding: 20px !important;
+  margin-bottom: 12px !important;
+}
+
+/* Strategy grid */
+.pdf-mode [data-pdf-strategy-grid] {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 16px !important;
+}
+
+/* ============================================
+   CALLOUT BANNER (Best Strategy)
+   ============================================ */
+.pdf-mode [data-pdf-callout],
+.pdf-mode .bg-\[\#4A4137\] {
+  background-color: #4A4137 !important;
+  color: #ffffff !important;
+  border-radius: 20px !important;
+  padding: 28px !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.pdf-mode [data-pdf-callout] *,
+.pdf-mode .bg-\[\#4A4137\] * {
+  color: inherit !important;
+}
+
+.pdf-mode [data-pdf-callout] .text-\[\#D6A270\],
+.pdf-mode .bg-\[\#4A4137\] .text-\[\#D6A270\] {
+  color: #D6A270 !important;
+}
+
+/* ============================================
+   MAP CONTAINER
+   ============================================ */
+.pdf-mode [data-pdf-map] {
+  width: 100% !important;
+  height: 300px !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  background-color: #f3f4f6 !important;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+
+.pdf-mode [data-pdf-map] img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+/* Map placeholder when unavailable */
+.pdf-mode .pdf-map-placeholder {
+  width: 100% !important;
+  height: 300px !important;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #9ca3af !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+/* ============================================
+   BADGES AND TAGS
+   ============================================ */
+.pdf-mode [class*="bg-emerald"],
+.pdf-mode [class*="bg-blue"],
+.pdf-mode [class*="bg-amber"],
+.pdf-mode [class*="bg-rose"],
+.pdf-mode [class*="bg-slate"] {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.pdf-mode .bg-emerald-500 { background-color: #10b981 !important; }
+.pdf-mode .bg-blue-500 { background-color: #3b82f6 !important; }
+.pdf-mode .bg-amber-500 { background-color: #f59e0b !important; }
+.pdf-mode .bg-rose-500 { background-color: #f43f5e !important; }
+.pdf-mode .bg-slate-500 { background-color: #64748b !important; }
+
+.pdf-mode .text-emerald-500, .pdf-mode .text-emerald-600, .pdf-mode .text-emerald-700 { color: #059669 !important; }
+.pdf-mode .text-blue-500 { color: #3b82f6 !important; }
+.pdf-mode .text-amber-500 { color: #f59e0b !important; }
+.pdf-mode .text-rose-500 { color: #f43f5e !important; }
+
+/* ============================================
+   WATCH OUTS SECTION
+   ============================================ */
+.pdf-mode .bg-rose-50\/50,
+.pdf-mode [data-pdf-watchouts] {
+  background-color: #fff1f2 !important;
+  border-color: #fecdd3 !important;
+}
+
+/* ============================================
+   COMPARABLE SALES
+   ============================================ */
+.pdf-mode [data-pdf-sales-grid] {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr !important;
+  gap: 16px !important;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.pdf-mode footer {
+  margin-top: 32px !important;
+  padding-top: 16px !important;
+  border-top: 1px solid rgba(201, 169, 97, 0.15) !important;
+  text-align: center !important;
+}
+
+.pdf-mode footer p {
+  font-size: 9px !important;
+  color: #9ca3af !important;
+}
+
+/* ============================================
+   OVERFLOW CONTROL
+   ============================================ */
+.pdf-mode [class*="overflow-hidden"] {
+  overflow: visible !important;
+}
+
+.pdf-mode [class*="blur-"],
+.pdf-mode [class*="backdrop-blur"] {
+  filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* ============================================
+   DECORATIVE ELEMENTS
+   ============================================ */
+.pdf-mode [class*="blur-3xl"],
+.pdf-mode [class*="-mr-32"],
+.pdf-mode [class*="-mt-32"] {
+  display: none !important;
+}
+
