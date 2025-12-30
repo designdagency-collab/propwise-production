@@ -75,38 +75,43 @@ const Navbar: React.FC<NavbarProps> = ({
         borderColor: 'var(--border-color)'
       }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16 sm:h-20">
+          {/* Logo - smaller on mobile */}
           <button 
             onClick={onHome}
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity focus:outline-none group"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity focus:outline-none group flex-shrink-0"
           >
             <img 
               src="/blockcheck.ai-main.png" 
               alt="blockcheck.ai" 
-              className="h-14 sm:h-16 w-auto transition-transform group-active:scale-95"
+              className="h-8 sm:h-12 md:h-14 w-auto transition-transform group-active:scale-95"
             />
           </button>
-          <div className="flex items-center space-x-4">
+          
+          <div className="flex items-center space-x-1 sm:space-x-3">
             {/* Theme Toggle */}
             <button 
               onClick={onToggleTheme}
               title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              className="p-2.5 transition-colors rounded-xl"
+              className="p-1.5 sm:p-2.5 transition-colors rounded-xl"
               style={{ color: 'var(--text-muted)' }}
             >
-              <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'} text-lg`}></i>
+              <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'} text-sm sm:text-lg`}></i>
             </button>
             
+            {/* API Key - hidden on mobile */}
             <button 
               onClick={handleSelectKey}
               title="API Key Settings"
-              className="p-2.5 transition-colors rounded-xl"
+              className="hidden sm:flex p-2.5 transition-colors rounded-xl"
               style={{ color: 'var(--text-muted)' }}
             >
               <i className="fa-solid fa-key"></i>
             </button>
-            <div className="hidden md:flex items-center space-x-6 border-r pr-6" style={{ borderColor: 'var(--border-color)' }}>
+            
+            {/* Tier badge - hidden on mobile */}
+            <div className="hidden lg:flex items-center space-x-6 border-r pr-6" style={{ borderColor: 'var(--border-color)' }}>
                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
                  Tier: <span className={plan === 'FREE' ? 'opacity-60' : 'text-[#C9A961]'}>
                    {plan === 'FREE' ? 'Standard Access' : plan === 'BUYER_PACK' ? 'Buyer Pack' : 'Propwise Monitor'}
@@ -116,28 +121,28 @@ const Navbar: React.FC<NavbarProps> = ({
             
             {/* Login/Logout Button */}
             {isLoggedIn ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 sm:gap-3">
                 {/* Avatar circle with initial */}
-                <div className="w-9 h-9 rounded-full flex items-center justify-center border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
-                  <span className="text-sm font-bold text-[#C9A961]">{getInitials()}</span>
+                <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
+                  <span className="text-xs sm:text-sm font-bold text-[#C9A961]">{getInitials()}</span>
                 </div>
-                {/* Display name */}
-                <span className="hidden sm:inline text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                {/* Display name - hidden on mobile */}
+                <span className="hidden md:inline text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
                   {getDisplayName()}
                 </span>
                 <button
                   onClick={onLogout}
-                  className="p-2.5 hover:text-red-500 transition-colors rounded-xl"
+                  className="p-1.5 sm:p-2.5 hover:text-red-500 transition-colors rounded-xl"
                   style={{ color: 'var(--text-muted)' }}
                   title="Logout"
                 >
-                  <i className="fa-solid fa-right-from-bracket"></i>
+                  <i className="fa-solid fa-right-from-bracket text-sm sm:text-base"></i>
                 </button>
               </div>
             ) : (
               <button
                 onClick={onLogin}
-                className="px-4 py-2 hover:text-[#C9A961] text-[11px] font-bold uppercase tracking-widest transition-colors"
+                className="px-2 sm:px-4 py-1.5 sm:py-2 hover:text-[#C9A961] text-[10px] sm:text-[11px] font-bold uppercase tracking-widest transition-colors"
                 style={{ color: 'var(--text-secondary)' }}
               >
                 Login
@@ -147,14 +152,15 @@ const Navbar: React.FC<NavbarProps> = ({
             {plan === 'FREE' ? (
               <button 
                 onClick={onUpgrade}
-                className="px-6 py-2.5 bg-[#C9A961] text-white text-[11px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#3A342D] transition-all shadow-md active:scale-95"
+                className="px-3 sm:px-6 py-2 sm:py-2.5 bg-[#C9A961] text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-widest rounded-lg sm:rounded-xl hover:bg-[#3A342D] transition-all shadow-md active:scale-95"
               >
-                View Pricing
+                <span className="hidden sm:inline">View Pricing</span>
+                <span className="sm:hidden">Pricing</span>
               </button>
             ) : (
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)', color: 'var(--text-primary)' }}>
-                <i className="fa-solid fa-crown text-[#C9A961]"></i>
-                Premium
+              <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)', color: 'var(--text-primary)' }}>
+                <i className="fa-solid fa-crown text-[#C9A961] text-[10px] sm:text-xs"></i>
+                <span className="hidden min-[400px]:inline">Premium</span>
               </div>
             )}
           </div>
