@@ -16,19 +16,10 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // Format phone number as user types
-  const formatPhone = (value: string) => {
-    const digits = value.replace(/\D/g, '');
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
-    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 9)}`;
-  };
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -48,22 +39,12 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
     }
   };
 
-  const validatePhone = (phone: string) => {
-    const digits = phone.replace(/\D/g, '');
-    return digits.length >= 9; // Australian mobile: 4XX XXX XXX (9 digits without country code)
-  };
-
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!validateEmail(email)) {
       setError('Please enter a valid email address');
-      return;
-    }
-
-    if (!validatePhone(phone)) {
-      setError('Please enter a valid phone number for account recovery');
       return;
     }
 
@@ -85,19 +66,6 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
       if (error) throw error;
 
       if (user) {
-        // Store phone locally for recovery (will sync to Supabase profile)
-        const fullPhone = '+61' + phone.replace(/\D/g, '');
-        localStorage.setItem('prop_user_phone', fullPhone);
-        
-        // Update profile with phone number
-        if (supabaseService.isConfigured()) {
-          try {
-            await supabaseService.updateProfile(user.id, { phone: fullPhone });
-          } catch (e) {
-            console.log('Could not save phone to profile');
-          }
-        }
-        
         onSuccess(email, true);
       }
     } catch (err: any) {
@@ -280,23 +248,6 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
                   disabled={isLoading}
                   required
                 />
-              </div>
-              <div>
-                <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3A342D]/40 font-medium text-sm">
-                    +61
-                  </div>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(formatPhone(e.target.value))}
-                    placeholder="4XX XXX XXX"
-                    className="w-full pl-14 pr-4 py-2.5 sm:py-3.5 rounded-xl border-2 border-[#C9A961]/20 focus:border-[#C9A961] focus:outline-none text-[#3A342D] font-medium text-sm transition-all"
-                    disabled={isLoading}
-                    required
-                  />
-                </div>
-                <p className="text-[10px] text-[#3A342D]/40 mt-1 ml-1">For account recovery if you forget your password</p>
               </div>
               <div>
                 <input
