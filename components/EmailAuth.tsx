@@ -202,17 +202,17 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, initialMode 
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-      <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 md:p-12 max-w-md w-full shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 md:p-12 max-w-md w-full shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ backgroundColor: 'var(--bg-card)' }}>
         <div className="text-center space-y-5 sm:space-y-6">
           <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#C9A961]/10 rounded-2xl flex items-center justify-center mx-auto">
             <i className={`fa-solid ${getIcon()} text-xl sm:text-2xl text-[#C9A961]`}></i>
           </div>
           
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#3A342D] tracking-tighter mb-2">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tighter mb-2" style={{ color: 'var(--text-primary)' }}>
               {getTitle()}
             </h2>
-            <p className="text-xs sm:text-sm text-[#3A342D]/60 font-medium">
+            <p className="text-xs sm:text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
               {getSubtitle()}
             </p>
           </div>

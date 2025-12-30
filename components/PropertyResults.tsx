@@ -201,53 +201,53 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
     <div className="max-w-4xl mx-auto space-y-12 pb-32 animate-in fade-in slide-in-from-bottom-6 duration-700">
       
       {/* Header Property Summary */}
-      <div className="bg-white p-5 sm:p-8 md:p-12 rounded-[2rem] sm:rounded-[3rem] border border-[#D6A270]/10 shadow-sm relative overflow-hidden">
+      <div className="p-5 sm:p-8 md:p-12 rounded-[2rem] sm:rounded-[3rem] border shadow-sm relative overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#D6A270]/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
         <div className="space-y-4 sm:space-y-6 relative z-10">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-[#D6A270]/10 text-[#D6A270] rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-[0.2em]">
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-[#D6A270] rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-[0.2em]" style={{ backgroundColor: 'var(--accent-gold-light)' }}>
                 <span className="hidden sm:inline">Property</span> Strategy Guide
               </div>
-              <button onClick={handleShare} className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#4A4137]/30 hover:text-[#D6A270] transition-colors flex items-center gap-1">
+              <button onClick={handleShare} className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:text-[#D6A270] transition-colors flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                 <i className={`fa-solid ${copied ? 'fa-check' : 'fa-share-nodes'}`}></i>
                 {copied ? 'Copied' : 'Share'}
               </button>
             </div>
             <div className="flex gap-3 sm:gap-4">
-               <div className="flex items-center gap-1.5 sm:gap-2 text-[#4A4137]/60 font-bold text-xs sm:text-sm">
+               <div className="flex items-center gap-1.5 sm:gap-2 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                   <i className="fa-solid fa-bed text-[#D6A270]"></i> {data?.attributes?.beds || 0}
                </div>
-               <div className="flex items-center gap-1.5 sm:gap-2 text-[#4A4137]/60 font-bold text-xs sm:text-sm">
+               <div className="flex items-center gap-1.5 sm:gap-2 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                   <i className="fa-solid fa-bath text-[#D6A270]"></i> {data?.attributes?.baths || 0}
                </div>
-               <div className="flex items-center gap-1.5 sm:gap-2 text-[#4A4137]/60 font-bold text-xs sm:text-sm">
+               <div className="flex items-center gap-1.5 sm:gap-2 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                   <i className="fa-solid fa-car text-[#D6A270]"></i> {data?.attributes?.cars || 0}
                </div>
             </div>
           </div>
           <div>
-            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-[#4A4137] tracking-tighter font-address leading-tight">{data.address}</h1>
-            <p className="text-[#4A4137]/40 font-medium text-sm sm:text-base mt-2">{data.propertyType} • {data.landSize || 'Unknown Land Size'}</p>
+            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter font-address leading-tight" style={{ color: 'var(--text-primary)' }}>{data.address}</h1>
+            <p className="font-medium text-sm sm:text-base mt-2" style={{ color: 'var(--text-muted)' }}>{data.propertyType} • {data.landSize || 'Unknown Land Size'}</p>
           </div>
-          <div className="flex flex-wrap gap-8 pt-8 border-t border-slate-100">
+          <div className="flex flex-wrap gap-8 pt-8 border-t" style={{ borderColor: 'var(--border-color)' }}>
              <div className="space-y-1">
-                <p className="text-[11px] sm:text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Estimated Market Value</p>
+                <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Estimated Market Value</p>
                 <p className="text-xl sm:text-2xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
              </div>
              <div className="space-y-1">
-                <p className="text-[11px] sm:text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Potential Value After Improvements</p>
-                <p className={`text-xl sm:text-2xl font-black transition-colors ${effectiveSelection.size > 0 ? 'text-[#8A9A6D]' : 'text-[#4A4137]'}`}>
+                <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Potential Value After Improvements</p>
+                <p className={`text-xl sm:text-2xl font-black transition-colors ${effectiveSelection.size > 0 ? 'text-[#8A9A6D]' : ''}`} style={{ color: effectiveSelection.size > 0 ? '#8A9A6D' : 'var(--text-primary)' }}>
                    {baseline === undefined ? 'TBA' : effectiveSelection.size === 0 ? formatValue(baseline) : `${formatValue(afterLow)} – ${formatValue(afterHigh)}`}
                 </p>
              </div>
              <div className="space-y-1">
-                <p className="text-[11px] sm:text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Growth Trend</p>
-                <p className="text-xl sm:text-2xl font-black text-[#4A4137]">{data?.valueSnapshot?.growth || 'TBA'}</p>
+                <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Growth Trend</p>
+                <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{data?.valueSnapshot?.growth || 'TBA'}</p>
              </div>
              <div className="space-y-1">
-                <p className="text-[11px] sm:text-[10px] font-bold text-[#4A4137]/30 uppercase tracking-widest">Data Confidence</p>
-                <p className="text-xl sm:text-2xl font-black text-[#4A4137] flex items-center gap-2">
+                <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Data Confidence</p>
+                <p className="text-xl sm:text-2xl font-black flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                    {data?.valueSnapshot?.confidenceLevel || 'Low'}
                    <i className={`fa-solid fa-circle-check text-xs ${data?.valueSnapshot?.confidenceLevel === 'High' ? 'text-emerald-500' : 'text-amber-500'}`}></i>
                 </p>
@@ -257,7 +257,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
       </div>
 
       {/* GOOGLE MAP INTEGRATION */}
-      <div className="w-full h-[400px] rounded-[3rem] overflow-hidden shadow-lg border border-slate-100 bg-slate-50 relative group">
+      <div className="w-full h-[400px] rounded-[3rem] overflow-hidden shadow-lg border relative group" style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}>
          <div className="absolute inset-0 bg-slate-200/50 animate-pulse group-hover:hidden"></div>
          <iframe
           title="Property Location Map"
@@ -280,20 +280,20 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
                 <i className="fa-solid fa-map-pin"></i>
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-[#4A4137] tracking-tight">Proximity & Infrastructure</h2>
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Proximity & Infrastructure</h2>
                 <p className="text-[11px] sm:text-[10px] font-bold text-[#B8C5A0] uppercase tracking-widest mt-0.5">Local Amenities & Community DNA</p>
               </div>
            </div>
            
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {filteredProximity.map((amenity, i) => (
-                <div key={i} className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group">
+                <div key={i} className="p-6 rounded-3xl border shadow-sm hover:shadow-md transition-shadow group" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 ${getAmenityColor(amenity.type)}`}>
                       {getAmenityIcon(amenity.type)}
                    </div>
                    <div className="space-y-1">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-[#4A4137]/30">{amenity.type}</p>
-                      <h4 className="text-sm font-bold text-[#4A4137] leading-tight line-clamp-2">{amenity.name}</h4>
+                      <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{amenity.type}</p>
+                      <h4 className="text-sm font-bold leading-tight line-clamp-2" style={{ color: 'var(--text-primary)' }}>{amenity.name}</h4>
                       <p className="text-xs font-black text-[#B8C5A0]">{amenity.distance}</p>
                    </div>
                 </div>
@@ -301,7 +301,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
            </div>
 
            {(data.localAreaIntel || data.localMarketVibe) && (
-             <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm space-y-8">
+             <div className="p-10 rounded-[3rem] border shadow-sm space-y-8" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
                 {data.localAreaIntel?.schools && (
                   <div className="space-y-6">
                     <div className="flex items-center gap-3">
@@ -452,7 +452,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              {data.valueAddStrategies.map((strategy, i) => (
-               <div key={i} className={`bg-white p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col ${selectedStrategies.has(i) ? 'border-[#D3D9B5] shadow-md ring-1 ring-[#D3D9B5]/20' : 'border-slate-100 border-b-[#D6A270]/20 hover:shadow-md'}`}>
+               <div key={i} className={`p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col ${selectedStrategies.has(i) ? 'border-[#D3D9B5] shadow-md ring-1 ring-[#D3D9B5]/20' : 'border-b-[#D6A270]/20 hover:shadow-md'}`} style={{ backgroundColor: 'var(--bg-card)', borderColor: selectedStrategies.has(i) ? '#D3D9B5' : 'var(--border-color)' }}>
                   <div className="flex justify-between items-start mb-4">
                      <div className="space-y-1">
                         <h3 className="text-base sm:text-lg font-bold text-[#4A4137] group-hover:text-[#D6A270] transition-colors">{strategy.title}</h3>
@@ -489,24 +489,24 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
             <i className="fa-solid fa-key"></i>
           </div>
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-[#3A342D] tracking-tight">Indicative Post-Renovation Rental Position</h2>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Indicative Post-Renovation Rental Position</h2>
             <p className="text-[11px] sm:text-[10px] font-bold text-[#C9A961] uppercase tracking-widest mt-0.5">Yield & Cash Flow (After Improvements)</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-center">
-            <p className="text-[11px] sm:text-[10px] font-bold text-[#3A342D]/40 uppercase tracking-widest mb-2">Indicative Weekly Rent</p>
-            <p className="text-xl sm:text-2xl font-black text-[#3A342D]">
+          <div className="p-8 rounded-[2.5rem] border shadow-sm flex flex-col justify-center" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+            <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Indicative Weekly Rent</p>
+            <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>
               {data.rentalPosition?.estimatedWeeklyRent ? `$${data.rentalPosition.estimatedWeeklyRent} / wk` : 'Indicative only'}
             </p>
           </div>
-          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col justify-center">
-            <p className="text-[11px] sm:text-[10px] font-bold text-[#3A342D]/40 uppercase tracking-widest mb-2">Indicative Annual Rent</p>
-            <p className="text-xl sm:text-2xl font-black text-[#3A342D]">
+          <div className="p-8 rounded-[2.5rem] border shadow-sm flex flex-col justify-center" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+            <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Indicative Annual Rent</p>
+            <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>
               {data.rentalPosition?.estimatedWeeklyRent ? formatValue(data.rentalPosition.estimatedWeeklyRent * 52) : 'Indicative only'}
             </p>
           </div>
-          <div className="bg-[#FCF9F3] p-10 rounded-[3rem] border border-slate-100 shadow-sm relative group">
+          <div className="p-10 rounded-[3rem] border shadow-sm relative group" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-color)' }}>
             <div className="flex items-center justify-between mb-4">
               <p className="text-[11px] font-black text-[#3A342D] uppercase tracking-[0.1em] max-w-[180px]">INDICATIVE WEEKLY CASH POSITION</p>
               <div className="w-6 h-6 rounded-full bg-slate-200/50 flex items-center justify-center cursor-help">
@@ -548,7 +548,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
            </div>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {data.developmentScenarios.map((scenario, i) => (
-                <div key={i} className="bg-white p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col border-slate-100 border-b-slate-200 hover:shadow-md">
+                <div key={i} className="p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col hover:shadow-md" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
                    <div className="flex justify-between items-start mb-4">
                       <div className="space-y-1">
                          <h3 className="text-lg font-bold text-[#4A4137]">{scenario.title}</h3>
@@ -584,7 +584,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
       {/* APPROVAL PATHWAY & ZONING INTEL */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {data.approvalPathway && (
-          <div className="bg-white p-10 rounded-[3rem] border border-[#D6A270]/10 shadow-sm space-y-8">
+          <div className="p-10 rounded-[3rem] border shadow-sm space-y-8" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
              <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-blue-500 text-white rounded-xl flex items-center justify-center shadow-md"><i className="fa-solid fa-file-shield"></i></div>
                 <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Approval Pathway</h2>
@@ -621,7 +621,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-6">
                  {data.comparableSales.nearbySales && data.comparableSales.nearbySales.length > 0 && (
-                   <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm space-y-4">
+                   <div className="p-8 rounded-[3rem] border shadow-sm space-y-4" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
                       {data.comparableSales.nearbySales.map((sale, i) => (
                          <div key={i} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-slate-100 group transition-all hover:border-[#D6A270]/20">
                             <div className="flex gap-4 items-center">
