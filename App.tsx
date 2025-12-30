@@ -473,6 +473,13 @@ const App: React.FC = () => {
     }
     
     setShowEmailAuth(false);
+    
+    // For NEW signups, prompt for phone verification
+    if (isNewUser) {
+      setShowPhoneVerification(true);
+      return; // Don't proceed further until phone is verified
+    }
+    
     setAppState(AppState.IDLE); // Go back so they can continue
     
     // Check if there was a pending upgrade (user tried to pay before logging in)
@@ -498,6 +505,20 @@ const App: React.FC = () => {
     }
     
     setShowPhoneVerification(false);
+    setAppState(AppState.IDLE); // Now they can continue
+    
+    // Check if there was a pending upgrade (user tried to pay before logging in)
+    const pendingUpgrade = localStorage.getItem('prop_pending_upgrade');
+    if (pendingUpgrade) {
+      localStorage.removeItem('prop_pending_upgrade');
+      setTimeout(() => {
+        if (pendingUpgrade === 'STARTER_PACK') {
+          handleBuyStarterPack();
+        } else {
+          handleUpgradeToPro();
+        }
+      }, 500);
+    }
   };
 
   const detectLocation = useCallback(() => {
@@ -842,11 +863,27 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Phone Verification Modal (optional security) */}
+      {/* Phone Verification Modal (after email signup) */}
       {showPhoneVerification && (
         <PhoneVerification
           onSuccess={handlePhoneVerified}
-          onCancel={() => setShowPhoneVerification(false)}
+          onCancel={() => {
+            // Allow skip - they can verify later
+            setShowPhoneVerification(false);
+            setAppState(AppState.IDLE);
+            // Still check for pending upgrades
+            const pendingUpgrade = localStorage.getItem('prop_pending_upgrade');
+            if (pendingUpgrade) {
+              localStorage.removeItem('prop_pending_upgrade');
+              setTimeout(() => {
+                if (pendingUpgrade === 'STARTER_PACK') {
+                  handleBuyStarterPack();
+                } else {
+                  handleUpgradeToPro();
+                }
+              }, 500);
+            }
+          }}
         />
       )}
 

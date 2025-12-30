@@ -127,7 +127,7 @@ const PhoneVerification: React.FC<PhoneVerificationProps> = ({ onSuccess, onCanc
             </h2>
             <p className="text-xs sm:text-sm text-[#3A342D]/60 font-medium">
               {step === 'phone' 
-                ? "We'll send you a code to verify your phone number and unlock 1 bonus audit."
+                ? "Add your phone number to secure your account and enable easy login recovery."
                 : `We sent a 6-digit code to ${phone}. Enter it below.`}
             </p>
           </div>
@@ -175,7 +175,7 @@ const PhoneVerification: React.FC<PhoneVerificationProps> = ({ onSuccess, onCanc
                   disabled={isLoading}
                   className="w-full py-3 text-[#3A342D]/40 hover:text-[#3A342D] font-medium text-sm transition-colors disabled:opacity-50"
                 >
-                  Cancel
+                  Skip for now
                 </button>
               </div>
             </form>
@@ -233,6 +233,15 @@ const PhoneVerification: React.FC<PhoneVerificationProps> = ({ onSuccess, onCanc
                   className="w-full py-3 text-[#3A342D]/40 hover:text-[#3A342D] font-medium text-sm transition-colors disabled:opacity-50"
                 >
                   Change Phone Number
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  disabled={isLoading}
+                  className="w-full py-2 text-[#3A342D]/30 hover:text-[#3A342D] font-medium text-xs transition-colors disabled:opacity-50"
+                >
+                  Skip for now
                 </button>
               </div>
             </form>
