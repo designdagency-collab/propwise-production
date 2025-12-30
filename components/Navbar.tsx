@@ -113,8 +113,8 @@ const Navbar: React.FC<NavbarProps> = ({
             {/* Tier badge - hidden on mobile */}
             <div className="hidden lg:flex items-center space-x-6 border-r pr-6" style={{ borderColor: 'var(--border-color)' }}>
                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                 Tier: <span className={plan === 'FREE_TRIAL' ? 'opacity-60' : 'text-[#C9A961]'}>
-                   {plan === 'FREE_TRIAL' ? 'Free Trial' : plan === 'PRO' ? 'Pro' : plan === 'UNLIMITED_PRO' ? 'Unlimited' : 'Free Trial'}
+                 Tier: <span className={(plan === 'PRO' || plan === 'UNLIMITED_PRO') ? 'text-[#C9A961]' : 'opacity-60'}>
+                   {plan === 'PRO' ? 'Pro' : plan === 'UNLIMITED_PRO' ? 'Unlimited' : 'Free Trial'}
                  </span>
                </span>
             </div>
@@ -149,7 +149,13 @@ const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {plan === 'FREE_TRIAL' ? (
+            {/* Only show Premium badge for PRO or UNLIMITED_PRO plans */}
+            {(plan === 'PRO' || plan === 'UNLIMITED_PRO') ? (
+              <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)', color: 'var(--text-primary)' }}>
+                <i className="fa-solid fa-crown text-[#C9A961] text-[10px] sm:text-xs"></i>
+                <span className="hidden min-[400px]:inline">Premium</span>
+              </div>
+            ) : (
               <button 
                 onClick={onUpgrade}
                 className="px-3 sm:px-6 py-2 sm:py-2.5 bg-[#C9A961] text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-widest rounded-lg sm:rounded-xl hover:bg-[#3A342D] transition-all shadow-md active:scale-95"
@@ -157,11 +163,6 @@ const Navbar: React.FC<NavbarProps> = ({
                 <span className="hidden sm:inline">View Pricing</span>
                 <span className="sm:hidden">Pricing</span>
               </button>
-            ) : (
-              <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)', color: 'var(--text-primary)' }}>
-                <i className="fa-solid fa-crown text-[#C9A961] text-[10px] sm:text-xs"></i>
-                <span className="hidden min-[400px]:inline">Premium</span>
-              </div>
             )}
           </div>
         </div>
