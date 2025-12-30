@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PropertyData, PlanType, DevEligibility, Amenity } from '../types';
+import html2pdf from 'html2pdf.js';
 
 interface PropertyResultsProps {
   data: PropertyData;
@@ -9,9 +10,28 @@ interface PropertyResultsProps {
   onHome: () => void;
 }
 
-const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
+const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade, onHome }) => {
   const [copied, setCopied] = useState(false);
   const [selectedStrategies, setSelectedStrategies] = useState<Set<number>>(new Set());
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
+  const shareMenuRef = useRef<HTMLDivElement>(null);
+
+  const isPaidUser = plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK';
+
+  // Close share menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (shareMenuRef.current && !shareMenuRef.current.contains(event.target as Node)) {
+        setShowShareMenu(false);
+      }
+    };
+    if (showShareMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showShareMenu]);
 
   const isStrata = (data.propertyType || '').toLowerCase().match(/apartment|unit|townhouse|villa|strata|flat|duplex/);
 
@@ -128,6 +148,42 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const exportToPDF = async () => {
+    if (!reportRef.current || !isPaidUser) return;
+    
+    setIsExporting(true);
+    setShowShareMenu(false);
+    
+    try {
+      const element = reportRef.current;
+      const filename = `blockcheck-${data.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+      
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+          scrollY: 0
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'a4', 
+          orientation: 'portrait' 
+        },
+        pagebreak: { mode: 'avoid-all' }
+      };
+      
+      await html2pdf().set(opt).from(element).save();
+    } catch (error) {
+      console.error('PDF export error:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const getAmenityIcon = (type: Amenity['type']) => {
     switch (type) {
       case 'transport': return <i className="fa-solid fa-train-subway"></i>;
@@ -198,7 +254,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
   const cashColorClass = isPositive ? 'text-[#10B981]' : isNegative ? 'text-[#E11D48]' : 'text-[#3A342D]';
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 pb-32 animate-in fade-in slide-in-from-bottom-6 duration-700">
+    <div ref={reportRef} id="property-report" className="max-w-4xl mx-auto space-y-12 pb-32 animate-in fade-in slide-in-from-bottom-6 duration-700">
       
       {/* Header Property Summary */}
       <div className="p-5 sm:p-8 md:p-12 rounded-[2rem] sm:rounded-[3rem] border shadow-sm relative overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
@@ -209,10 +265,56 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, onHome }) => {
               <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 text-[#D6A270] rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-[0.2em]" style={{ backgroundColor: 'var(--accent-gold-light)' }}>
                 <span className="hidden sm:inline">Property</span> Strategy Guide
               </div>
-              <button onClick={handleShare} className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:text-[#D6A270] transition-colors flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
-                <i className={`fa-solid ${copied ? 'fa-check' : 'fa-share-nodes'}`}></i>
-                {copied ? 'Copied' : 'Share'}
-              </button>
+              
+              {/* Share/Export Button with Dropdown */}
+              <div className="relative" ref={shareMenuRef}>
+                <button 
+                  onClick={() => setShowShareMenu(!showShareMenu)} 
+                  className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:text-[#D6A270] transition-colors flex items-center gap-1" 
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <i className={`fa-solid ${isExporting ? 'fa-spinner fa-spin' : copied ? 'fa-check' : 'fa-share-nodes'}`}></i>
+                  {isExporting ? 'Exporting...' : copied ? 'Copied' : 'Share'}
+                </button>
+                
+                {/* Dropdown Menu */}
+                {showShareMenu && (
+                  <div 
+                    className="absolute top-full left-0 mt-2 py-2 rounded-xl shadow-xl border z-50 min-w-[160px]"
+                    style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
+                  >
+                    <button
+                      onClick={() => { handleShare(); setShowShareMenu(false); }}
+                      className="w-full px-4 py-2 text-left text-xs font-medium hover:bg-[#C9A961]/10 flex items-center gap-2"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      <i className="fa-solid fa-share-nodes text-[#C9A961]"></i>
+                      Share Link
+                    </button>
+                    
+                    {isPaidUser ? (
+                      <button
+                        onClick={exportToPDF}
+                        disabled={isExporting}
+                        className="w-full px-4 py-2 text-left text-xs font-medium hover:bg-[#C9A961]/10 flex items-center gap-2 disabled:opacity-50"
+                        style={{ color: 'var(--text-primary)' }}
+                      >
+                        <i className="fa-solid fa-file-pdf text-[#C9A961]"></i>
+                        Export PDF
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => { setShowShareMenu(false); onUpgrade(); }}
+                        className="w-full px-4 py-2 text-left text-xs font-medium hover:bg-[#C9A961]/10 flex items-center gap-2"
+                        style={{ color: 'var(--text-muted)' }}
+                      >
+                        <i className="fa-solid fa-lock text-[#C9A961]"></i>
+                        <span>Export PDF <span className="text-[9px] text-[#C9A961]">(Pro)</span></span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex gap-3 sm:gap-4">
                <div className="flex items-center gap-1.5 sm:gap-2 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
