@@ -89,7 +89,7 @@ const Navbar: React.FC<NavbarProps> = ({
             <img 
               src="/upblock.ai-logo.png" 
               alt="upblock.ai" 
-              className="h-12 sm:h-14 md:h-16 max-w-[140px] sm:max-w-[160px] md:max-w-[180px] object-contain transition-transform group-active:scale-95"
+              className="w-[140px] h-[48px] sm:w-[160px] sm:h-[55px] md:w-[170px] md:h-[60px] object-contain transition-transform group-active:scale-95"
             />
           </button>
           
