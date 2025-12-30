@@ -128,8 +128,8 @@ const Navbar: React.FC<NavbarProps> = ({
             {/* Tier badge - hidden on mobile */}
             <div className="hidden lg:flex items-center space-x-6 border-r pr-6" style={{ borderColor: 'var(--border-color)' }}>
                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                 Tier: <span className={(plan === 'PRO' || plan === 'UNLIMITED_PRO') ? 'text-[#C9A961]' : 'opacity-60'}>
-                   {plan === 'PRO' ? 'Pro' : plan === 'UNLIMITED_PRO' ? 'Unlimited' : 'Free Trial'}
+                 Tier: <span className={(plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK') ? 'text-[#C9A961]' : 'opacity-60'}>
+                   {plan === 'PRO' ? 'Pro' : plan === 'UNLIMITED_PRO' ? 'Unlimited' : plan === 'STARTER_PACK' ? 'Starter Pack' : 'Free Trial'}
                  </span>
                </span>
             </div>
@@ -173,11 +173,16 @@ const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Only show Premium badge for PRO or UNLIMITED_PRO plans */}
+            {/* Show badge based on plan */}
             {(plan === 'PRO' || plan === 'UNLIMITED_PRO') ? (
               <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)', color: 'var(--text-primary)' }}>
                 <i className="fa-solid fa-crown text-[#C9A961] text-[10px] sm:text-xs"></i>
                 <span className="hidden min-[400px]:inline">Premium</span>
+              </div>
+            ) : plan === 'STARTER_PACK' ? (
+              <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)', color: 'var(--text-primary)' }}>
+                <i className="fa-solid fa-bolt text-[#C9A961] text-[10px] sm:text-xs"></i>
+                <span className="hidden min-[400px]:inline">Starter</span>
               </div>
             ) : (
               <button 

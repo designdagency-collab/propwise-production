@@ -246,6 +246,8 @@ const App: React.FC = () => {
         // Activate the purchased plan
         if (purchasedPlan === 'STARTER_PACK') {
           addStarterPackCredits();
+          setPlan('STARTER_PACK');
+          localStorage.setItem('prop_plan', 'STARTER_PACK');
         } else {
           activateProSubscription();
           setPlan('PRO');
