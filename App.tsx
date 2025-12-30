@@ -653,7 +653,7 @@ const App: React.FC = () => {
                 <i className="fa-solid fa-file-contract"></i>
                 <span>Professional Site Audit & Intelligence</span>
               </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-tighter leading-tight" style={{ color: 'var(--text-primary)' }}>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-tight" style={{ color: 'var(--text-primary)' }}>
                 See the property <br/> <span className="text-[#C9A961] opacity-90">behind the listing.</span>
               </h1>
               <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium" style={{ color: 'var(--text-muted)' }}>
