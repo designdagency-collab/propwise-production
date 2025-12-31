@@ -854,17 +854,23 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
               <div className="flex-grow space-y-4 text-center md:text-left">
                  <div>
                     <span className="text-[11px] sm:text-[10px] font-black text-[#D6A270] uppercase tracking-[0.3em] mb-1 block">Best Strategy Uplift</span>
-                    <h3 className="text-xl sm:text-2xl font-bold tracking-tight">{data.portfolioSelloutSummary.bestStrategyByProfit}</h3>
+                    <MaybeBlur>
+                      <h3 className="text-xl sm:text-2xl font-bold tracking-tight">{data.portfolioSelloutSummary.bestStrategyByProfit}</h3>
+                    </MaybeBlur>
                  </div>
                  <div className="flex flex-col md:flex-row items-center gap-6">
                     <div className="space-y-1">
                        <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Indicative Predicted Profit From Sale</p>
-                       <p className="text-2xl sm:text-3xl font-black text-[#D6A270]">
-                          {formatValue(data.portfolioSelloutSummary.estimatedNetProfitRange?.low)} – {formatValue(data.portfolioSelloutSummary.estimatedNetProfitRange?.high)}
-                       </p>
+                       <MaybeBlur>
+                         <p className="text-2xl sm:text-3xl font-black text-[#D6A270]">
+                            {formatValue(data.portfolioSelloutSummary.estimatedNetProfitRange?.low)} – {formatValue(data.portfolioSelloutSummary.estimatedNetProfitRange?.high)}
+                         </p>
+                       </MaybeBlur>
                     </div>
                  </div>
-                 <p className="text-sm text-white/60 leading-relaxed max-w-xl italic">"{data.portfolioSelloutSummary.selloutExplanation}"</p>
+                 <MaybeBlur>
+                   <p className="text-sm text-white/60 leading-relaxed max-w-xl italic">"{data.portfolioSelloutSummary.selloutExplanation}"</p>
+                 </MaybeBlur>
               </div>
            </div>
         </div>
@@ -900,7 +906,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                         <div className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${getEffortColor(strategy.effort)}`}>{strategy.effort} Effort</div>
                      </div>
                   </div>
-                  <p className="text-sm text-[#4A4137]/60 leading-relaxed mb-6">{strategy.description}</p>
+                  <MaybeBlur>
+                    <p className="text-sm text-[#4A4137]/60 leading-relaxed mb-6">{strategy.description}</p>
+                  </MaybeBlur>
                   <div className="grid grid-cols-2 gap-3 mb-2 mt-auto">
                      <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-center">
                         <p className="text-[8px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Estimated Cost</p>
@@ -1005,21 +1013,29 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                          </div>
                       </div>
                    </div>
-                   <p className="text-sm text-[#4A4137]/60 leading-relaxed mb-4">{scenario.description}</p>
+                   <MaybeBlur>
+                     <p className="text-sm text-[#4A4137]/60 leading-relaxed mb-4">{scenario.description}</p>
+                   </MaybeBlur>
                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-6">
                       <p className="text-[10px] font-bold text-[#4A4137]/50 uppercase tracking-widest mb-1">Rationale</p>
-                      <p className="text-xs text-[#4A4137]/70 italic leading-relaxed">{scenario.whyAllowedOrNot}</p>
+                      <MaybeBlur>
+                        <p className="text-xs text-[#4A4137]/70 italic leading-relaxed">{scenario.whyAllowedOrNot}</p>
+                      </MaybeBlur>
                    </div>
                    <div className="grid grid-cols-1 gap-4 mb-4">
                       <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                          <p className="text-[10px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Est. Build Cost</p>
-                         <p className="text-lg font-bold text-[#4A4137]">{formatValue(scenario.estimatedCost?.low)} – {formatValue(scenario.estimatedCost?.high)}</p>
+                         <MaybeBlur>
+                           <p className="text-lg font-bold text-[#4A4137]">{formatValue(scenario.estimatedCost?.low)} – {formatValue(scenario.estimatedCost?.high)}</p>
+                         </MaybeBlur>
                       </div>
                    </div>
                    {scenario.estimatedNetProfit && (
                      <div className="p-5 bg-emerald-50 rounded-[2rem] border border-emerald-100 mb-2 mt-auto">
                         <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2 text-center text-emerald-700">INDICATIVE DEVELOPMENT MARGIN</p>
-                        <p className="text-2xl font-black text-emerald-700 text-center">{formatValue(scenario.estimatedNetProfit.low)} – {formatValue(scenario.estimatedNetProfit.high)}</p>
+                        <MaybeBlur>
+                          <p className="text-2xl font-black text-emerald-700 text-center">{formatValue(scenario.estimatedNetProfit.low)} – {formatValue(scenario.estimatedNetProfit.high)}</p>
+                        </MaybeBlur>
                      </div>
                    )}
                 </div>
@@ -1038,7 +1054,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
              </div>
              <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
                 <div className="mb-4"><PathwayBadgeWithTooltip pathway={data.approvalPathway.likelyPathway} /></div>
-                <p className="text-sm text-[#4A4137]/60 leading-relaxed">{data.approvalPathway.explanation}</p>
+                <MaybeBlur>
+                  <p className="text-sm text-[#4A4137]/60 leading-relaxed">{data.approvalPathway.explanation}</p>
+                </MaybeBlur>
              </div>
           </div>
         )}
@@ -1053,7 +1071,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                 <p className="text-2xl font-black text-[#4A4137] tracking-widest">{data.zoningIntel.currentZoneCode}</p>
                 <p className="text-xs font-bold text-[#D3D9B5] uppercase">{data.zoningIntel.currentZoneTitle}</p>
              </div>
-             <p className="text-sm text-[#4A4137]/70 font-medium leading-relaxed">{data.zoningIntel.whatItMeans}</p>
+             <MaybeBlur>
+               <p className="text-sm text-[#4A4137]/70 font-medium leading-relaxed">{data.zoningIntel.whatItMeans}</p>
+             </MaybeBlur>
           </div>
         )}
       </section>
@@ -1087,7 +1107,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                  )}
               </div>
               <div className="bg-[#4A4137] p-8 rounded-[3rem] text-white space-y-6 relative overflow-hidden h-fit" data-pdf-no-break>
-                 <p className="text-sm font-medium leading-relaxed text-white/80">{data.comparableSales.pricingContextSummary}</p>
+                 <MaybeBlur>
+                   <p className="text-sm font-medium leading-relaxed text-white/80">{data.comparableSales.pricingContextSummary}</p>
+                 </MaybeBlur>
               </div>
            </div>
         </section>
@@ -1105,8 +1127,12 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                <div key={i} className="bg-white p-8 rounded-[2.5rem] flex flex-col md:flex-row gap-6 border border-rose-100 shadow-sm group">
                   <div className="flex-shrink-0 mt-1 text-2xl">{getSeverityIcon(wo.severity)}</div>
                   <div className="space-y-3 flex-grow">
-                     <h3 className="text-lg font-bold text-[#4A4137]">{wo.title}</h3>
-                     <p className="text-sm text-[#4A4137]/60 leading-relaxed">{wo.description}</p>
+                     <MaybeBlur>
+                       <h3 className="text-lg font-bold text-[#4A4137]">{wo.title}</h3>
+                     </MaybeBlur>
+                     <MaybeBlur>
+                       <p className="text-sm text-[#4A4137]/60 leading-relaxed">{wo.description}</p>
+                     </MaybeBlur>
                   </div>
                </div>
              ))}
