@@ -36,8 +36,14 @@ const App: React.FC = () => {
   const [remainingCredits, setRemainingCredits] = useState(() => getRemainingCredits(getCreditState()));
   
   // Device fingerprint state (for anonymous users)
-  const [deviceCanSearch, setDeviceCanSearch] = useState<boolean | null>(null); // null = loading
-  const [deviceSearchesUsed, setDeviceSearchesUsed] = useState(0);
+  // Initialize from localStorage cache for instant display, then verify with Supabase
+  const [deviceCanSearch, setDeviceCanSearch] = useState<boolean>(() => {
+    const cached = localStorage.getItem('prop_device_searches');
+    return !cached || parseInt(cached, 10) < 1; // Can search if no cache or searches < 1
+  });
+  const [deviceSearchesUsed, setDeviceSearchesUsed] = useState(() => {
+    return parseInt(localStorage.getItem('prop_device_searches') || '0', 10);
+  });
   
   const [isQuotaError, setIsQuotaError] = useState(false);
   const [hasKey, setHasKey] = useState(false);
@@ -112,12 +118,19 @@ const App: React.FC = () => {
           const { canSearch, searchesUsed } = await checkDeviceSearchLimit();
           setDeviceCanSearch(canSearch);
           setDeviceSearchesUsed(searchesUsed);
+          // Also update localStorage for instant display on next load
+          localStorage.setItem('prop_device_searches', searchesUsed.toString());
           console.log('[Fingerprint] Device check:', { canSearch, searchesUsed });
         } catch (error) {
           console.error('[Fingerprint] Error checking device:', error);
-          // Default to allowing search if fingerprint fails
-          setDeviceCanSearch(true);
+          // Check localStorage fallback
+          const cached = parseInt(localStorage.getItem('prop_device_searches') || '0', 10);
+          setDeviceCanSearch(cached < 1);
+          setDeviceSearchesUsed(cached);
         }
+      } else {
+        // Logged in users don't need device fingerprint
+        setDeviceCanSearch(true);
       }
     };
     checkDevice();
@@ -396,8 +409,8 @@ const App: React.FC = () => {
     }
     
     // Anonymous users: check device fingerprint
-    // Allow if deviceCanSearch is true OR null (still loading)
-    return deviceCanSearch !== false;
+    // Only allow if deviceCanSearch is explicitly true
+    return deviceCanSearch === true;
   };
 
   const incrementSearchCount = async () => {
@@ -423,10 +436,17 @@ const App: React.FC = () => {
       try {
         await recordDeviceSearch();
         setDeviceCanSearch(false); // Used their 1 free search
-        setDeviceSearchesUsed(prev => prev + 1);
-        console.log('[Fingerprint] Device search recorded');
+        setDeviceSearchesUsed(prev => {
+          const newCount = prev + 1;
+          localStorage.setItem('prop_device_searches', newCount.toString());
+          return newCount;
+        });
+        console.log('[Fingerprint] Device search recorded - no more free searches');
       } catch (error) {
         console.error('[Fingerprint] Error recording device search:', error);
+        // Still update local state to block further searches
+        setDeviceCanSearch(false);
+        localStorage.setItem('prop_device_searches', '1');
       }
     }
   };
@@ -867,7 +887,7 @@ const App: React.FC = () => {
     <div className="min-h-screen pb-20 selection:bg-[#C9A961] selection:text-white" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <Navbar 
         plan={plan} 
-        remainingCredits={remainingCredits}
+        remainingCredits={isLoggedIn ? remainingCredits : (deviceCanSearch ? 1 : 0)}
         onUpgrade={() => { setShowTerms(false); setShowAccountSettings(false); setShowPricing(true); }} 
         onHome={handleHome}
         onLogin={() => { setShowTerms(false); setShowPricing(false); setShowAccountSettings(false); handleLogin(); }}
