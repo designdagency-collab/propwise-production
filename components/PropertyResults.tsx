@@ -889,8 +889,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         </div>
       )}
 
-      {/* VALUE-ADD STRATEGIES */}
-      {data.valueAddStrategies && data.valueAddStrategies.length > 0 && (
+      {/* VALUE-ADD STRATEGIES - Hidden for anonymous users */}
+      {data.valueAddStrategies && data.valueAddStrategies.length > 0 && !isBlurred && (
         <section className="space-y-6 pdf-no-break">
           <div className="flex items-center justify-between px-4">
              <div className="flex items-center gap-4">
@@ -951,7 +951,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         </section>
       )}
 
-      {/* INDICATIVE POST-RENOVATION RENTAL POSITION */}
+      {/* INDICATIVE POST-RENOVATION RENTAL POSITION - Hidden for anonymous users */}
+      {!isBlurred && (
       <section className="space-y-6 pdf-no-break">
         <div className="flex items-center gap-4 px-4">
           <div className="w-10 h-10 bg-[#C9A961] text-white rounded-xl flex items-center justify-center shadow-md">
@@ -1008,9 +1009,10 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
           Indicative weekly figures based on predicted property condition after improvements. Includes simulated debt servicing. Does not account for taxes, vacancy, or strata.
         </p>
       </section>
+      )}
 
-      {/* DEVELOPMENT SCENARIOS */}
-      {data.developmentScenarios && data.developmentScenarios.length > 0 && (
+      {/* DEVELOPMENT SCENARIOS - Hidden for anonymous users */}
+      {data.developmentScenarios && data.developmentScenarios.length > 0 && !isBlurred && (
         <section className="space-y-6 pdf-no-break">
            <div className="flex items-center justify-between px-4">
               <div className="flex items-center gap-4">
@@ -1069,7 +1071,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         </section>
       )}
 
-      {/* APPROVAL PATHWAY & ZONING INTEL */}
+      {/* APPROVAL PATHWAY & ZONING INTEL - Hidden for anonymous users */}
+      {!isBlurred && (
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 pdf-no-break">
         {data.approvalPathway && (
           <div className="p-10 rounded-[3rem] border shadow-sm space-y-8 relative overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
@@ -1126,9 +1129,10 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
           </div>
         )}
       </section>
+      )}
 
-      {/* COMPARABLE SALES */}
-      {data.comparableSales && (
+      {/* COMPARABLE SALES - Hidden for anonymous users */}
+      {data.comparableSales && !isBlurred && (
         <section className="space-y-8 pdf-no-break">
            <div className="flex items-center gap-4 px-4">
               <div className="w-10 h-10 bg-slate-800 text-white rounded-xl flex items-center justify-center shadow-sm"><i className="fa-solid fa-tags"></i></div>
@@ -1164,8 +1168,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         </section>
       )}
 
-      {/* WATCH OUTS */}
-      {data.watchOuts && data.watchOuts.length > 0 && (
+      {/* WATCH OUTS - Hidden for anonymous users */}
+      {data.watchOuts && data.watchOuts.length > 0 && !isBlurred && (
         <section data-pdf-watchouts data-pdf-no-break className="bg-rose-50/50 p-10 md:p-14 rounded-[4rem] border border-rose-100 space-y-8 pdf-no-break">
           <div className="flex items-center gap-4">
              <div className="w-10 h-10 bg-rose-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-rose-200"><i className="fa-solid fa-eye"></i></div>
