@@ -33,6 +33,9 @@ const App: React.FC = () => {
   // Credit state for new pricing model
   const [creditState, setCreditState] = useState<CreditState>(getCreditState);
   const [remainingCredits, setRemainingCredits] = useState(() => getRemainingCredits(getCreditState()));
+  
+  // Derived: is user a paid customer
+  const isPaidUser = plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK';
   const [isQuotaError, setIsQuotaError] = useState(false);
   const [hasKey, setHasKey] = useState(false);
   const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
@@ -364,17 +367,27 @@ const App: React.FC = () => {
     // API key users bypass limits
     if (hasKey) return true;
     
-    // Use new credit system
+    // Anonymous users can search unlimited times (blurred preview mode)
+    // They don't consume credits - they see blurred results
+    if (!isLoggedIn) return true;
+    
+    // Logged-in users need credits for unblurred results
     return canAudit();
   };
 
   const incrementSearchCount = async () => {
+    // Only logged-in users consume credits (anonymous get blurred previews for free)
+    if (!isLoggedIn) {
+      console.log('Anonymous preview - no credit consumed');
+      return;
+    }
+    
     // Use new credit system - consume one credit
     consumeCredit();
     refreshCreditState();
     
     // Save search to Supabase if user is authenticated
-    if (isLoggedIn && supabaseService.isConfigured()) {
+    if (supabaseService.isConfigured()) {
       try {
         // Get user ID directly from Supabase session (more reliable than userProfile)
         const user = await supabaseService.getCurrentUser();
@@ -997,9 +1010,14 @@ const App: React.FC = () => {
             <PropertyResults 
               data={results} 
               address={address} 
-              plan={plan} 
+              plan={plan}
+              isBlurred={!isLoggedIn && !isPaidUser} // Anonymous users see blurred preview
               onUpgrade={() => setShowPricing(true)}
               onHome={handleHome}
+              onSignUp={() => {
+                setEmailAuthMode('signup');
+                setShowEmailAuth(true);
+              }}
             />
           )}
 

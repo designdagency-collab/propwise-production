@@ -5,16 +5,44 @@ interface PropertyResultsProps {
   data: PropertyData;
   address: string;
   plan: PlanType;
+  isBlurred?: boolean; // True for anonymous preview mode
   onUpgrade: () => void;
   onHome: () => void;
+  onSignUp?: () => void; // For blur unlock CTA
 }
 
-const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade, onHome }) => {
+// Blurred value component - shows blur overlay with sign-up CTA
+const BlurredValue: React.FC<{ 
+  children: React.ReactNode; 
+  onSignUp?: () => void;
+  inline?: boolean;
+}> = ({ children, onSignUp, inline = false }) => (
+  <span className={`relative ${inline ? 'inline-block' : 'block'}`}>
+    <span className="blur-sm select-none pointer-events-none">{children}</span>
+    {!inline && onSignUp && (
+      <button 
+        onClick={onSignUp}
+        className="absolute inset-0 flex items-center justify-center bg-slate-900/5 rounded-lg backdrop-blur-[1px] hover:bg-slate-900/10 transition-all group"
+      >
+        <span className="text-[9px] font-black uppercase tracking-widest text-[#C9A961] flex items-center gap-1.5 opacity-80 group-hover:opacity-100">
+          <i className="fa-solid fa-lock text-[8px]"></i>
+          Sign up to unlock
+        </span>
+      </button>
+    )}
+  </span>
+);
+
+const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade, onHome, isBlurred = false, onSignUp }) => {
   const [selectedStrategies, setSelectedStrategies] = useState<Set<number>>(new Set());
   const [isExporting, setIsExporting] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   const isPaidUser = plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK';
+  
+  // Helper to conditionally blur values
+  const MaybeBlur: React.FC<{ children: React.ReactNode; inline?: boolean }> = ({ children, inline }) => 
+    isBlurred ? <BlurredValue onSignUp={onSignUp} inline={inline}>{children}</BlurredValue> : <>{children}</>;
 
   const isStrata = (data.propertyType || '').toLowerCase().match(/apartment|unit|townhouse|villa|strata|flat|duplex/);
 
@@ -605,28 +633,60 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
           <div className="flex flex-wrap gap-8 pt-8 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
              <div className="space-y-1" data-pdf-kpi>
                 <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Estimated Market Value</p>
-                <p className="text-xl sm:text-2xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
+                <MaybeBlur>
+                  <p className="text-xl sm:text-2xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
+                </MaybeBlur>
              </div>
+             {/* THE HOOK - Always visible even when blurred */}
              <div className="space-y-1" data-pdf-kpi>
-                <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Potential Value After Improvements</p>
+                <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                  Potential Value After Improvements
+                  {isBlurred && <span className="ml-2 text-[#C9A961]">✨</span>}
+                </p>
                 <p className={`text-xl sm:text-2xl font-black transition-colors ${effectiveSelection.size > 0 ? 'text-[#8A9A6D]' : ''}`} style={{ color: effectiveSelection.size > 0 ? '#8A9A6D' : 'var(--text-primary)' }}>
                    {baseline === undefined ? 'TBA' : effectiveSelection.size === 0 ? formatValue(baseline) : `${formatValue(afterLow)} – ${formatValue(afterHigh)}`}
                 </p>
              </div>
              <div className="space-y-1" data-pdf-kpi>
                 <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Growth Trend</p>
-                <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{data?.valueSnapshot?.growth || 'TBA'}</p>
+                <MaybeBlur>
+                  <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{data?.valueSnapshot?.growth || 'TBA'}</p>
+                </MaybeBlur>
              </div>
              <div className="space-y-1" data-pdf-kpi>
                 <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Data Confidence</p>
-                <p className="text-xl sm:text-2xl font-black flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                   {data?.valueSnapshot?.confidenceLevel || 'Low'}
-                   <i className={`fa-solid fa-circle-check text-xs ${data?.valueSnapshot?.confidenceLevel === 'High' ? 'text-emerald-500' : 'text-amber-500'}`}></i>
-                </p>
+                <MaybeBlur>
+                  <p className="text-xl sm:text-2xl font-black flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                     {data?.valueSnapshot?.confidenceLevel || 'Low'}
+                     <i className={`fa-solid fa-circle-check text-xs ${data?.valueSnapshot?.confidenceLevel === 'High' ? 'text-emerald-500' : 'text-amber-500'}`}></i>
+                  </p>
+                </MaybeBlur>
              </div>
           </div>
         </div>
       </div>
+
+      {/* BLUR MODE CTA BANNER */}
+      {isBlurred && (
+        <div className="p-6 sm:p-8 rounded-[2rem] border-2 border-[#C9A961] bg-gradient-to-r from-[#C9A961]/10 to-[#C9A961]/5 text-center space-y-4">
+          <div className="flex items-center justify-center gap-3">
+            <i className="fa-solid fa-lock text-[#C9A961] text-xl"></i>
+            <h3 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+              Sign up FREE to unlock full report
+            </h3>
+          </div>
+          <p className="text-sm max-w-md mx-auto" style={{ color: 'var(--text-secondary)' }}>
+            Get detailed valuations, rental yields, comparable sales, and development scenarios. Plus <strong>2 full property audits FREE</strong>.
+          </p>
+          <button 
+            onClick={onSignUp}
+            className="inline-flex items-center gap-2 px-8 py-3 bg-[#C9A961] text-white font-bold uppercase tracking-widest text-[11px] rounded-xl hover:bg-[#3A342D] transition-all shadow-lg"
+          >
+            <i className="fa-solid fa-user-plus"></i>
+            Create Free Account
+          </button>
+        </div>
+      )}
 
       {/* GOOGLE MAP INTEGRATION - Replaced with static image in PDF export */}
       <div 
@@ -844,12 +904,16 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                   <div className="grid grid-cols-2 gap-3 mb-2 mt-auto">
                      <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-center">
                         <p className="text-[8px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Estimated Cost</p>
-                        <p className="text-sm font-bold text-[#4A4137]">{formatValue(strategy.estimatedCost?.low)} – {formatValue(strategy.estimatedCost?.high)}</p>
+                        <MaybeBlur>
+                          <p className="text-sm font-bold text-[#4A4137]">{formatValue(strategy.estimatedCost?.low)} – {formatValue(strategy.estimatedCost?.high)}</p>
+                        </MaybeBlur>
                      </div>
                      {(strategy.indicativeEquityUplift || strategy.saleProfitEstimate) && (
                        <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col justify-center">
                           <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1">Equity Gain $</p>
-                          <p className="text-sm font-black text-emerald-700">{strategy.indicativeEquityUplift ? `${formatValue(strategy.indicativeEquityUplift.low)} – ${formatValue(strategy.indicativeEquityUplift.high)}` : `${formatValue(strategy.saleProfitEstimate?.low)} – ${formatValue(strategy.saleProfitEstimate?.high)}`}</p>
+                          <MaybeBlur>
+                            <p className="text-sm font-black text-emerald-700">{strategy.indicativeEquityUplift ? `${formatValue(strategy.indicativeEquityUplift.low)} – ${formatValue(strategy.indicativeEquityUplift.high)}` : `${formatValue(strategy.saleProfitEstimate?.low)} – ${formatValue(strategy.saleProfitEstimate?.high)}`}</p>
+                          </MaybeBlur>
                        </div>
                      )}
                   </div>
@@ -873,15 +937,19 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="p-8 rounded-[2.5rem] border shadow-sm flex flex-col justify-center" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
             <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Indicative Weekly Rent</p>
-            <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>
-              {data.rentalPosition?.estimatedWeeklyRent ? `$${data.rentalPosition.estimatedWeeklyRent} / wk` : 'Indicative only'}
-            </p>
+            <MaybeBlur>
+              <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>
+                {data.rentalPosition?.estimatedWeeklyRent ? `$${data.rentalPosition.estimatedWeeklyRent} / wk` : 'Indicative only'}
+              </p>
+            </MaybeBlur>
           </div>
           <div className="p-8 rounded-[2.5rem] border shadow-sm flex flex-col justify-center" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
             <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>Indicative Annual Rent</p>
-            <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>
-              {data.rentalPosition?.estimatedWeeklyRent ? formatValue(data.rentalPosition.estimatedWeeklyRent * 52) : 'Indicative only'}
-            </p>
+            <MaybeBlur>
+              <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>
+                {data.rentalPosition?.estimatedWeeklyRent ? formatValue(data.rentalPosition.estimatedWeeklyRent * 52) : 'Indicative only'}
+              </p>
+            </MaybeBlur>
           </div>
           <div className="p-10 rounded-[3rem] border shadow-sm relative group" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-color)' }}>
             <div className="flex items-center justify-between mb-4">
@@ -891,11 +959,13 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
               </div>
             </div>
             <div className="space-y-1">
-              <p className={`text-xl sm:text-2xl md:text-3xl font-black ${cashColorClass} tracking-tight leading-none`}>
-                {cashPos !== undefined 
-                  ? `${isNegative ? '' : isPositive ? '+' : ''}${formatValue(cashPos)} / wk`
-                  : 'TBA'}
-              </p>
+              <MaybeBlur>
+                <p className={`text-xl sm:text-2xl md:text-3xl font-black ${cashColorClass} tracking-tight leading-none`}>
+                  {cashPos !== undefined 
+                    ? `${isNegative ? '' : isPositive ? '+' : ''}${formatValue(cashPos)} / wk`
+                    : 'TBA'}
+                </p>
+              </MaybeBlur>
             </div>
             {/* Tooltip Content */}
             <div className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-72 p-4 bg-[#3A342D] text-white text-[11px] font-medium rounded-2xl shadow-2xl z-50 transition-all opacity-0 group-hover:opacity-100 pointer-events-none leading-relaxed text-center">
@@ -1008,7 +1078,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                                   <p className="text-[10px] text-[#4A4137]/40">{sale.date}</p>
                                </div>
                             </div>
-                            <p className="text-sm font-black text-[#D6A270]">{formatValue(sale.price)}</p>
+                            <MaybeBlur inline>
+                              <p className="text-sm font-black text-[#D6A270]">{formatValue(sale.price)}</p>
+                            </MaybeBlur>
                          </div>
                       ))}
                    </div>
