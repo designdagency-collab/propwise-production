@@ -812,7 +812,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
 
       {/* VALUE-ADD STRATEGIES */}
       {data.valueAddStrategies && data.valueAddStrategies.length > 0 && (
-        <section className="space-y-6 pdf-no-break">
+        <section className="space-y-6 pdf-no-break" data-pdf-page-break>
           <div className="flex items-center justify-between px-4">
              <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-[#D3D9B5] text-white rounded-xl flex items-center justify-center shadow-sm">
@@ -913,7 +913,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
 
       {/* DEVELOPMENT SCENARIOS */}
       {data.developmentScenarios && data.developmentScenarios.length > 0 && (
-        <section className="space-y-6 pdf-no-break">
+        <section className="space-y-6 pdf-no-break" data-pdf-page-break>
            <div className="flex items-center justify-between px-4">
               <div className="flex items-center gap-4">
                  <div className="w-10 h-10 bg-[#4A4137] text-white rounded-xl flex items-center justify-center shadow-sm"><i className="fa-solid fa-city"></i></div>
@@ -959,7 +959,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       )}
 
       {/* APPROVAL PATHWAY & ZONING INTEL */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 pdf-no-break">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 pdf-no-break" data-pdf-page-break>
         {data.approvalPathway && (
           <div className="p-10 rounded-[3rem] border shadow-sm space-y-8" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
              <div className="flex items-center gap-4">

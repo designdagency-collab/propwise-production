@@ -124,9 +124,18 @@
    PAGE BREAK CONTROLS
    ============================================ */
 
+/* Force page break before major sections */
+.pdf-mode .pdf-page-break,
+.pdf-mode [data-pdf-page-break] {
+  break-before: page !important;
+  page-break-before: always !important;
+  padding-top: 8mm !important;
+}
+
 /* Avoid breaking inside these elements */
 .pdf-mode .pdf-no-break,
 .pdf-mode [data-pdf-no-break],
+.pdf-mode .avoid-break,
 .pdf-mode section,
 .pdf-mode [class*="rounded-[2"],
 .pdf-mode [class*="rounded-[3"],
@@ -304,11 +313,12 @@
 }
 
 /* ============================================
-   MAP CONTAINER
+   MAP CONTAINER - with max-height to prevent blank pages
    ============================================ */
 .pdf-mode [data-pdf-map] {
   width: 100% !important;
-  height: 300px !important;
+  height: auto !important;
+  max-height: 80mm !important;
   border-radius: 16px !important;
   overflow: hidden !important;
   background-color: #f3f4f6 !important;
@@ -318,9 +328,27 @@
 
 .pdf-mode [data-pdf-map] img {
   width: 100% !important;
-  height: 100% !important;
+  height: auto !important;
+  max-height: 80mm !important;
   object-fit: cover !important;
   display: block !important;
+}
+
+/* ============================================
+   IMAGE MAX-HEIGHT - prevent large images causing blank pages
+   ============================================ */
+.pdf-mode img:not(.pdf-icon) {
+  max-height: 90mm !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+.pdf-mode [class*="h-64"],
+.pdf-mode [class*="h-72"],
+.pdf-mode [class*="h-80"],
+.pdf-mode [class*="h-96"] {
+  height: auto !important;
+  max-height: 80mm !important;
 }
 
 /* Map placeholder when unavailable */
