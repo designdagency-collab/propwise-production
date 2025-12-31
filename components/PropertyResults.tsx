@@ -1070,16 +1070,28 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       {/* APPROVAL PATHWAY & ZONING INTEL */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 pdf-no-break">
         {data.approvalPathway && (
-          <div className="p-10 rounded-[3rem] border shadow-sm space-y-8" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+          <div className="p-10 rounded-[3rem] border shadow-sm space-y-8 relative" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
              <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-blue-500 text-white rounded-xl flex items-center justify-center shadow-md"><i className="fa-solid fa-file-shield"></i></div>
                 <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Approval Pathway</h2>
              </div>
-             <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                <div className="mb-4"><PathwayBadgeWithTooltip pathway={data.approvalPathway.likelyPathway} /></div>
-                <MaybeBlur>
+             <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 relative">
+                {/* BLUR OVERLAY for approval pathway content */}
+                {isBlurred && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-[2px] rounded-[2rem]">
+                    <button 
+                      onClick={onSignUp}
+                      className="text-[10px] font-black uppercase tracking-widest text-[#C9A961] flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-lg border border-[#C9A961]/20 hover:bg-[#C9A961] hover:text-white transition-all"
+                    >
+                      <i className="fa-solid fa-lock text-[9px]"></i>
+                      Sign up to unlock
+                    </button>
+                  </div>
+                )}
+                <div className={isBlurred ? 'blur-lg grayscale opacity-30 select-none pointer-events-none' : ''}>
+                  <div className="mb-4"><PathwayBadgeWithTooltip pathway={data.approvalPathway.likelyPathway} /></div>
                   <p className="text-sm text-[#4A4137]/60 leading-relaxed">{data.approvalPathway.explanation}</p>
-                </MaybeBlur>
+                </div>
              </div>
           </div>
         )}
@@ -1089,10 +1101,24 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                 <div className="w-10 h-10 bg-[#D3D9B5] text-white rounded-xl flex items-center justify-center shadow-md"><i className="fa-solid fa-map-location-dot"></i></div>
                 <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Zoning Intel</h2>
              </div>
-             <div className="px-6 py-4 bg-white rounded-3xl border border-[#D3D9B5]/20 text-center space-y-2 shadow-sm">
-                <p className="text-[10px] font-black text-[#4A4137]/40 uppercase tracking-widest">Zone Code</p>
-                <p className="text-2xl font-black text-[#4A4137] tracking-widest">{data.zoningIntel.currentZoneCode}</p>
-                <p className="text-xs font-bold text-[#D3D9B5] uppercase">{data.zoningIntel.currentZoneTitle}</p>
+             <div className="px-6 py-4 bg-white rounded-3xl border border-[#D3D9B5]/20 text-center space-y-2 shadow-sm relative">
+                {/* BLUR OVERLAY for zone code box */}
+                {isBlurred && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-[2px] rounded-3xl">
+                    <button 
+                      onClick={onSignUp}
+                      className="text-[10px] font-black uppercase tracking-widest text-[#C9A961] flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-lg border border-[#C9A961]/20 hover:bg-[#C9A961] hover:text-white transition-all"
+                    >
+                      <i className="fa-solid fa-lock text-[9px]"></i>
+                      Sign up to unlock
+                    </button>
+                  </div>
+                )}
+                <div className={isBlurred ? 'blur-lg grayscale opacity-30 select-none pointer-events-none' : ''}>
+                  <p className="text-[10px] font-black text-[#4A4137]/40 uppercase tracking-widest">Zone Code</p>
+                  <p className="text-2xl font-black text-[#4A4137] tracking-widest">{data.zoningIntel.currentZoneCode}</p>
+                  <p className="text-xs font-bold text-[#D3D9B5] uppercase">{data.zoningIntel.currentZoneTitle}</p>
+                </div>
              </div>
              <MaybeBlur>
                <p className="text-sm text-[#4A4137]/70 font-medium leading-relaxed">{data.zoningIntel.whatItMeans}</p>
