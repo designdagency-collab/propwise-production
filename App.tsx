@@ -33,7 +33,6 @@ const App: React.FC = () => {
   // Credit state for new pricing model
   const [creditState, setCreditState] = useState<CreditState>(getCreditState);
   const [remainingCredits, setRemainingCredits] = useState(() => getRemainingCredits(getCreditState()));
-  
   const [isQuotaError, setIsQuotaError] = useState(false);
   const [hasKey, setHasKey] = useState(false);
   const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
@@ -59,9 +58,6 @@ const App: React.FC = () => {
     return localStorage.getItem('prop_user_phone') || '';
   });
   const [isLoginMode, setIsLoginMode] = useState(false); // true = login, false = signup
-  
-  // Derived: is user a paid customer (MUST be logged in to be considered paid)
-  const isPaidUser = isLoggedIn && (plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK');
   
   // Progress tracking states
   const [progress, setProgress] = useState(0);
@@ -368,27 +364,17 @@ const App: React.FC = () => {
     // API key users bypass limits
     if (hasKey) return true;
     
-    // Anonymous users can search unlimited times (blurred preview mode)
-    // They don't consume credits - they see blurred results
-    if (!isLoggedIn) return true;
-    
-    // Logged-in users need credits for unblurred results
+    // Use new credit system
     return canAudit();
   };
 
   const incrementSearchCount = async () => {
-    // Only logged-in users consume credits (anonymous get blurred previews for free)
-    if (!isLoggedIn) {
-      console.log('Anonymous preview - no credit consumed');
-      return;
-    }
-    
     // Use new credit system - consume one credit
     consumeCredit();
     refreshCreditState();
     
     // Save search to Supabase if user is authenticated
-    if (supabaseService.isConfigured()) {
+    if (isLoggedIn && supabaseService.isConfigured()) {
       try {
         // Get user ID directly from Supabase session (more reliable than userProfile)
         const user = await supabaseService.getCurrentUser();
@@ -1011,14 +997,9 @@ const App: React.FC = () => {
             <PropertyResults 
               data={results} 
               address={address} 
-              plan={plan}
-              isBlurred={!isPaidUser} // Non-paid users (anonymous OR free logged-in) see hidden sections
+              plan={plan} 
               onUpgrade={() => setShowPricing(true)}
               onHome={handleHome}
-              onSignUp={() => {
-                setEmailAuthMode('signup');
-                setShowEmailAuth(true);
-              }}
             />
           )}
 
