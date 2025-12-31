@@ -72,19 +72,19 @@
         }
         
         .dark {
-            --bg-primary: #121212;
-            --bg-secondary: #1A1A1A;
-            --bg-card: #1E1E1E;
-            --bg-input: #2A2A2A;
-            --text-primary: #F5F5F4;
-            --text-secondary: rgba(245, 245, 244, 0.7);
-            --text-muted: rgba(245, 245, 244, 0.4);
-            --accent-gold: #C9A961;
-            --accent-gold-light: rgba(201, 169, 97, 0.15);
-            --accent-green: #B8C5A0;
-            --border-color: rgba(201, 169, 97, 0.15);
-            --border-input: rgba(201, 169, 97, 0.3);
-            --shadow-color: rgba(0, 0, 0, 0.3);
+            --bg-primary: #0F0F0F;
+            --bg-secondary: #161616;
+            --bg-card: #1C1C1C;
+            --bg-input: #252525;
+            --text-primary: #FAFAF9;
+            --text-secondary: rgba(250, 250, 249, 0.8);
+            --text-muted: rgba(250, 250, 249, 0.55);
+            --accent-gold: #D4B06A;
+            --accent-gold-light: rgba(212, 176, 106, 0.18);
+            --accent-green: #C4D1AC;
+            --border-color: rgba(212, 176, 106, 0.22);
+            --border-input: rgba(212, 176, 106, 0.35);
+            --shadow-color: rgba(0, 0, 0, 0.5);
         }
         
         body { 
@@ -105,6 +105,40 @@
         * {
             transition: background-color 0.3s ease, border-color 0.3s ease;
         }
+        
+        /* Dark mode enhancements for better contrast */
+        .dark .bg-slate-50 { background-color: #1C1C1C !important; }
+        .dark .bg-slate-50\/50 { background-color: rgba(28, 28, 28, 0.5) !important; }
+        .dark .border-slate-100 { border-color: rgba(212, 176, 106, 0.15) !important; }
+        .dark .border-slate-200 { border-color: rgba(212, 176, 106, 0.2) !important; }
+        .dark .text-\[\#4A4137\] { color: var(--text-primary) !important; }
+        .dark .text-\[\#4A4137\]\/60 { color: var(--text-secondary) !important; }
+        .dark .text-\[\#4A4137\]\/50 { color: var(--text-muted) !important; }
+        .dark .text-\[\#4A4137\]\/40 { color: var(--text-muted) !important; }
+        .dark .text-\[\#4A4137\]\/30 { color: rgba(250, 250, 249, 0.35) !important; }
+        
+        /* Dark mode badge backgrounds */
+        .dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.15) !important; }
+        .dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.15) !important; }
+        .dark .bg-rose-50 { background-color: rgba(244, 63, 94, 0.15) !important; }
+        .dark .bg-blue-50 { background-color: rgba(59, 130, 246, 0.15) !important; }
+        .dark .bg-rose-50\/50 { background-color: rgba(244, 63, 94, 0.1) !important; }
+        .dark .border-rose-100 { border-color: rgba(244, 63, 94, 0.25) !important; }
+        .dark .border-emerald-100 { border-color: rgba(16, 185, 129, 0.25) !important; }
+        .dark .border-amber-100 { border-color: rgba(245, 158, 11, 0.25) !important; }
+        
+        /* Dark mode text colors for badges */
+        .dark .text-emerald-600 { color: #34D399 !important; }
+        .dark .text-emerald-700 { color: #34D399 !important; }
+        .dark .text-amber-600 { color: #FBBF24 !important; }
+        .dark .text-rose-600 { color: #FB7185 !important; }
+        
+        /* Dark mode white backgrounds to card color */
+        .dark .bg-white { background-color: var(--bg-card) !important; }
+        
+        /* Zoning intel section in dark mode */
+        .dark .bg-\[\#D3D9B5\]\/10 { background-color: rgba(211, 217, 181, 0.08) !important; }
+        .dark .border-\[\#D3D9B5\]\/20 { border-color: rgba(211, 217, 181, 0.2) !important; }
         
         /* PDF Export - main styles in /pdf-mode.css */
         @media print {
