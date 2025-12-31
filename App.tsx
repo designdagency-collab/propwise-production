@@ -1041,6 +1041,8 @@ const App: React.FC = () => {
           onUpgrade={handleUpgrade}
           onBack={() => setShowPricing(false)}
           onShowTerms={() => { setShowPricing(false); setShowTerms(true); }}
+          onSignUp={() => { setShowPricing(false); setEmailAuthMode('signup'); setShowEmailAuth(true); }}
+          isLoggedIn={isLoggedIn}
         />
       ) : (
         <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">

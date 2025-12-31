@@ -6,9 +6,11 @@ interface PricingProps {
   onUpgrade: (plan: PlanType) => void;
   onBack: () => void;
   onShowTerms?: () => void;
+  onSignUp?: () => void;
+  isLoggedIn?: boolean;
 }
 
-const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade, onBack, onShowTerms }) => {
+const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade, onBack, onShowTerms, onSignUp, isLoggedIn = false }) => {
   const [isProcessing, setIsProcessing] = React.useState<PlanType | null>(null);
 
   const handleSelectStarter = async () => {
@@ -54,9 +56,55 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
           </div>
         </div>
 
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 items-stretch">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 items-stretch">
+          {/* Free Trial - Sign up */}
+          <div className="p-8 rounded-[3rem] border-2 flex flex-col hover:border-[#C9A961]/50 transition-all" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+            <div className="mb-8">
+              <h3 className="text-lg sm:text-xl font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Free Trial</h3>
+              <div className="flex items-baseline gap-1">
+                <span className="text-3xl sm:text-4xl font-black" style={{ color: 'var(--text-primary)' }}>FREE</span>
+              </div>
+              <p className="text-[11px] sm:text-xs font-medium mt-2" style={{ color: 'var(--text-muted)' }}>Sign up to get started</p>
+            </div>
+            <ul className="space-y-4 mb-10 flex-grow">
+              <li className="flex items-start gap-3 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
+                <i className="fa-solid fa-gift mt-1 text-[#C9A961]"></i>
+                2 Property Audits
+              </li>
+              <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
+                Full Intelligence Reports
+              </li>
+              <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
+                Value-add Strategies
+              </li>
+              <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
+                No credit card required
+              </li>
+            </ul>
+            <button
+              onClick={onSignUp}
+              disabled={isLoggedIn}
+              className="w-full py-3 sm:py-4 rounded-2xl font-bold uppercase tracking-widest text-[12px] sm:text-[11px] border-2 border-[#C9A961] text-[#C9A961] hover:bg-[#C9A961] hover:text-white transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {isLoggedIn ? (
+                <>
+                  <i className="fa-solid fa-check"></i>
+                  Already Signed Up
+                </>
+              ) : (
+                <>
+                  <i className="fa-solid fa-user-plus"></i>
+                  Create Free Account
+                </>
+              )}
+            </button>
+          </div>
+
           {/* Starter Pack - One-time purchase */}
-          <div className="p-10 rounded-[3rem] border-2 flex flex-col hover:border-[#C9A961]/50 transition-all" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+          <div className="p-8 rounded-[3rem] border-2 flex flex-col hover:border-[#C9A961]/50 transition-all" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
             <div className="mb-8">
               <h3 className="text-lg sm:text-xl font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Starter Pack</h3>
               <div className="flex items-baseline gap-1">
@@ -103,7 +151,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
           </div>
 
           {/* Pro Subscription */}
-          <div className="p-10 rounded-[3rem] border-2 border-[#C9A961] shadow-2xl relative flex flex-col transform hover:scale-[1.02] transition-all" style={{ backgroundColor: 'var(--bg-card)' }}>
+          <div className="p-8 rounded-[3rem] border-2 border-[#C9A961] shadow-2xl relative flex flex-col transform hover:scale-[1.02] transition-all" style={{ backgroundColor: 'var(--bg-card)' }}>
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
               <span className="bg-[#C9A961] text-white px-3 sm:px-4 py-1 rounded-full text-[11px] sm:text-[10px] font-black uppercase tracking-widest">
                 Best Value
