@@ -109,6 +109,21 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [checkKeySelection]);
 
+  // Clear processing overlay on page load (handles browser back from Stripe)
+  useEffect(() => {
+    // Small delay to allow payment success check to run first
+    const timeout = setTimeout(() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isPaymentRedirect = urlParams.get('payment') === 'success';
+      // Only clear if NOT a payment success redirect
+      if (!isPaymentRedirect && isProcessingUpgrade) {
+        console.log('[Stripe] Clearing stale processing state (browser back detected)');
+        setIsProcessingUpgrade(false);
+      }
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, []);
+
   // Check device fingerprint for anonymous users on page load
   useEffect(() => {
     const checkDevice = async () => {
@@ -944,6 +959,12 @@ const App: React.FC = () => {
           <div className="w-16 h-16 border-4 border-[#C9A961]/20 border-t-[#C9A961] rounded-full animate-spin mb-6"></div>
           <h3 className="text-xl sm:text-2xl font-bold text-[#3A342D] tracking-tighter">Connecting to Secure Gateway</h3>
           <p className="text-[#3A342D]/40 font-medium text-xs sm:text-sm mt-2">Finalising your purchase...</p>
+          <button 
+            onClick={() => setIsProcessingUpgrade(false)}
+            className="mt-8 text-sm text-[#3A342D]/50 hover:text-[#C9A961] transition-colors underline"
+          >
+            Cancel and go back
+          </button>
         </div>
       )}
 
