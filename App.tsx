@@ -933,7 +933,7 @@ const App: React.FC = () => {
                         disabled={!address.trim()}
                         className="bg-[#C9A961] text-white px-6 sm:px-8 h-11 sm:h-12 rounded-xl font-bold hover:bg-[#3A342D] transition-all flex items-center gap-2 shadow-sm disabled:opacity-30 uppercase tracking-widest text-[11px] sm:text-[10px]"
                       >
-                        Audit Site
+                        Audit Block
                       </button>
                     </div>
                   </div>
