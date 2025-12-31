@@ -34,8 +34,8 @@ const App: React.FC = () => {
   const [creditState, setCreditState] = useState<CreditState>(getCreditState);
   const [remainingCredits, setRemainingCredits] = useState(() => getRemainingCredits(getCreditState()));
   
-  // Derived: is user a paid customer
-  const isPaidUser = plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK';
+  // Derived: is user a paid customer (MUST be logged in to be considered paid)
+  const isPaidUser = isLoggedIn && (plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK');
   const [isQuotaError, setIsQuotaError] = useState(false);
   const [hasKey, setHasKey] = useState(false);
   const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
