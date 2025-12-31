@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabaseService } from '../services/supabaseService';
 
 type AuthMode = 'signup' | 'login' | 'forgot' | 'reset';
@@ -20,6 +20,25 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Clear loading states on mount and when window regains focus (handles browser back from Google OAuth)
+  useEffect(() => {
+    // Clear on mount (in case of stale state)
+    setIsGoogleLoading(false);
+    setIsLoading(false);
+    
+    // Clear when window regains focus (user closed OAuth popup or hit back)
+    const handleFocus = () => {
+      // Small delay to allow OAuth success to process first
+      setTimeout(() => {
+        setIsGoogleLoading(false);
+        setIsLoading(false);
+      }, 500);
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
