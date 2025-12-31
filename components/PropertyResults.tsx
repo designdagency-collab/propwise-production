@@ -597,7 +597,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       className={`max-w-4xl mx-auto space-y-12 pb-32 animate-in fade-in slide-in-from-bottom-6 duration-700 ${isBlurred ? 'select-none' : ''}`}
       onContextMenu={isBlurred ? (e) => e.preventDefault() : undefined}
       style={isBlurred ? { userSelect: 'none', WebkitUserSelect: 'none' } as React.CSSProperties : undefined}
-      
+    >
       {/* Header Property Summary */}
       <div className="p-5 sm:p-8 md:p-12 rounded-[2rem] sm:rounded-[3rem] border shadow-sm relative overflow-hidden pdf-no-break" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#D6A270]/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
