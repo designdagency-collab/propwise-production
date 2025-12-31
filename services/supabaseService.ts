@@ -126,6 +126,25 @@ export class SupabaseService {
     }
   }
 
+  // Get user's search history (most recent first, limit 20)
+  async getSearchHistory(userId: string): Promise<{ address: string; created_at: string }[]> {
+    if (!this.supabase) return [];
+    try {
+      const { data, error } = await this.supabase
+        .from('search_history')
+        .select('address, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching search history:', error);
+      return [];
+    }
+  }
+
   // Get user's active subscription
   async getActiveSubscription(userId: string): Promise<{ plan_type: string; status: string } | null> {
     if (!this.supabase) return null;

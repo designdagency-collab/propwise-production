@@ -1,15 +1,22 @@
 import React, { useState } from 'react';
 import { PlanType, CreditState } from '../types';
 
+interface SearchHistoryItem {
+  address: string;
+  created_at: string;
+}
+
 interface AccountSettingsProps {
   plan: PlanType;
   creditState: CreditState;
   remainingCredits: number;
   userEmail?: string;
   isLoggedIn: boolean;
+  searchHistory: SearchHistoryItem[];
   onBack: () => void;
   onCancelSubscription: () => Promise<void>;
   onLogout: () => void | Promise<void>;
+  onSearchAddress: (address: string) => void;
 }
 
 const AccountSettings: React.FC<AccountSettingsProps> = ({
@@ -18,9 +25,11 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
   remainingCredits,
   userEmail,
   isLoggedIn,
+  searchHistory,
   onBack,
   onCancelSubscription,
-  onLogout
+  onLogout,
+  onSearchAddress
 }) => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -185,6 +194,69 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                     </span>
                   </div>
                 </div>
+              )}
+            </div>
+
+            {/* Search History */}
+            <div className="p-6 rounded-2xl border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+              <h2 className="text-sm font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
+                Search History
+              </h2>
+              
+              {searchHistory.length === 0 ? (
+                <div className="text-center py-8">
+                  <i className="fa-solid fa-clock-rotate-left text-2xl mb-3" style={{ color: 'var(--text-muted)' }}></i>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    No searches yet. Your property audits will appear here.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {searchHistory.map((item, index) => {
+                    const date = new Date(item.created_at);
+                    const formattedDate = date.toLocaleDateString('en-AU', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric'
+                    });
+                    
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => onSearchAddress(item.address)}
+                        className="w-full flex items-center justify-between p-3 rounded-xl border transition-all hover:border-[#C9A961] hover:shadow-sm group"
+                        style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
+                      >
+                        <div className="flex items-center gap-3 text-left min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-[#C9A961]/10 flex items-center justify-center flex-shrink-0">
+                            <i className="fa-solid fa-location-dot text-[#C9A961] text-xs"></i>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate group-hover:text-[#C9A961] transition-colors" style={{ color: 'var(--text-primary)' }}>
+                              {item.address}
+                            </p>
+                            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                              {formattedDate}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                          <span className="text-[9px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--text-muted)' }}>
+                            Search Again
+                          </span>
+                          <i className="fa-solid fa-arrow-right text-[10px] text-[#C9A961] opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              
+              {searchHistory.length > 0 && (
+                <p className="text-[10px] mt-4 text-center" style={{ color: 'var(--text-muted)' }}>
+                  <i className="fa-solid fa-info-circle mr-1"></i>
+                  Re-searching uses 1 audit credit
+                </p>
               )}
             </div>
 

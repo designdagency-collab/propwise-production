@@ -45,6 +45,7 @@ const App: React.FC = () => {
   const [showTerms, setShowTerms] = useState(false);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [searchHistory, setSearchHistory] = useState<{ address: string; created_at: string }[]>([]);
   
   // Login state - restore from localStorage to persist across Stripe redirects
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -476,6 +477,7 @@ const App: React.FC = () => {
     setUserEmail('');
     setUserPhone('');
     setUserProfile(null);
+    setSearchHistory([]);
     setShowAccountSettings(false);
     setPlan('FREE_TRIAL');
     
@@ -501,6 +503,36 @@ const App: React.FC = () => {
     } catch (error) {
       console.log('Supabase signout error (ignored):', error);
     }
+  };
+
+  // Fetch search history from Supabase
+  const fetchSearchHistory = async () => {
+    if (!isLoggedIn || !supabaseService.isConfigured()) {
+      setSearchHistory([]);
+      return;
+    }
+    
+    try {
+      const user = await supabaseService.getCurrentUser();
+      if (user) {
+        const history = await supabaseService.getSearchHistory(user.id);
+        setSearchHistory(history);
+      }
+    } catch (error) {
+      console.error('Failed to fetch search history:', error);
+      setSearchHistory([]);
+    }
+  };
+
+  // Handle searching an address from history
+  const handleSearchFromHistory = (historyAddress: string) => {
+    setAddress(historyAddress);
+    setShowAccountSettings(false);
+    // Trigger search after state updates
+    setTimeout(() => {
+      const searchEvent = new Event('submit');
+      document.querySelector('form')?.dispatchEvent(searchEvent);
+    }, 100);
   };
 
   // Handle subscription cancellation
@@ -690,7 +722,7 @@ const App: React.FC = () => {
         onHome={handleHome}
         onLogin={() => { setShowTerms(false); setShowPricing(false); setShowAccountSettings(false); handleLogin(); }}
         onLogout={handleLogout}
-        onAccountSettings={() => { setShowTerms(false); setShowPricing(false); setShowAccountSettings(true); }}
+        onAccountSettings={() => { setShowTerms(false); setShowPricing(false); setShowAccountSettings(true); fetchSearchHistory(); }}
         isLoggedIn={isLoggedIn}
         userName={userProfile?.full_name}
         userEmail={userEmail}
@@ -739,9 +771,11 @@ const App: React.FC = () => {
           remainingCredits={remainingCredits}
           userEmail={userEmail}
           isLoggedIn={isLoggedIn}
+          searchHistory={searchHistory}
           onBack={() => setShowAccountSettings(false)}
           onCancelSubscription={handleCancelSubscription}
           onLogout={handleLogout}
+          onSearchAddress={handleSearchFromHistory}
         />
       ) : showTerms ? (
         <TermsAndConditions onBack={() => setShowTerms(false)} />
