@@ -40,7 +40,12 @@ const BlurredValue: React.FC<{
   </span>
 );
 
+// v2.1 - Sections completely hidden for anonymous users (no hooks/titles visible)
 const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade, onHome, isBlurred = false, onSignUp }) => {
+  // Debug: Log blur state to verify deployment
+  if (typeof window !== 'undefined' && isBlurred) {
+    console.log('[upblock v2.1] Anonymous preview mode - strategy sections hidden');
+  }
   const [selectedStrategies, setSelectedStrategies] = useState<Set<number>>(new Set());
   const [isExporting, setIsExporting] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
