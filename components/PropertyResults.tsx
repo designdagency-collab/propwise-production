@@ -909,20 +909,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-pdf-strategy-grid>
              {data.valueAddStrategies.map((strategy, i) => (
                <div key={i} data-pdf-strategy-card data-pdf-no-break className={`p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col relative overflow-hidden ${selectedStrategies.has(i) ? 'border-[#D3D9B5] shadow-md ring-1 ring-[#D3D9B5]/20' : 'border-b-[#D6A270]/20 hover:shadow-md'}`} style={{ backgroundColor: 'var(--bg-card)', borderColor: selectedStrategies.has(i) ? '#D3D9B5' : 'var(--border-color)' }}>
-                  {/* BLUR OVERLAY for entire card when in preview mode */}
-                  {isBlurred && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 rounded-[2.5rem]">
-                      <button 
-                        onClick={onSignUp}
-                        className="text-[10px] font-black uppercase tracking-widest text-[#C9A961] flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-lg border border-[#C9A961]/20 hover:bg-[#C9A961] hover:text-white transition-all"
-                      >
-                        <i className="fa-solid fa-lock text-[9px]"></i>
-                        Sign up to unlock
-                      </button>
-                    </div>
-                  )}
                   {/* ALL CARD CONTENT - Blurred when isBlurred */}
-                  <div className={isBlurred ? 'blur-xl grayscale opacity-20 select-none pointer-events-none' : ''}>
+                  <div className={isBlurred ? 'blur-[20px] grayscale opacity-[0.15] select-none pointer-events-none' : ''} style={isBlurred ? { filter: 'blur(20px) grayscale(100%)', opacity: 0.15 } : {}}>
                     <div className="flex justify-between items-start mb-4">
                        <div className="space-y-1">
                           <h3 className="text-base sm:text-lg font-bold text-[#4A4137] group-hover:text-[#D6A270] transition-colors">{strategy.title}</h3>
@@ -947,6 +935,18 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                        )}
                     </div>
                   </div>
+                  {/* OPAQUE OVERLAY with CTA - on top of blurred content */}
+                  {isBlurred && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/90 rounded-[2.5rem]">
+                      <button 
+                        onClick={onSignUp}
+                        className="text-[11px] font-black uppercase tracking-widest text-white flex items-center gap-2 bg-[#C9A961] px-5 py-3 rounded-full shadow-xl hover:bg-[#3A342D] transition-all"
+                      >
+                        <i className="fa-solid fa-lock text-[10px]"></i>
+                        Sign up to unlock
+                      </button>
+                    </div>
+                  )}
                </div>
              ))}
           </div>
@@ -1026,20 +1026,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {data.developmentScenarios.map((scenario, i) => (
                 <div key={i} className="p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col hover:shadow-md relative overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                   {/* BLUR OVERLAY for entire card when in preview mode */}
-                   {isBlurred && (
-                     <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 rounded-[2.5rem]">
-                       <button 
-                         onClick={onSignUp}
-                         className="text-[10px] font-black uppercase tracking-widest text-[#C9A961] flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-lg border border-[#C9A961]/20 hover:bg-[#C9A961] hover:text-white transition-all"
-                       >
-                         <i className="fa-solid fa-lock text-[9px]"></i>
-                         Sign up to unlock
-                       </button>
-                     </div>
-                   )}
                    {/* ALL CARD CONTENT - Blurred when isBlurred */}
-                   <div className={isBlurred ? 'blur-xl grayscale opacity-20 select-none pointer-events-none' : ''}>
+                   <div className={isBlurred ? 'blur-[20px] grayscale opacity-[0.15] select-none pointer-events-none' : ''} style={isBlurred ? { filter: 'blur(20px) grayscale(100%)', opacity: 0.15 } : {}}>
                      <div className="flex justify-between items-start mb-4">
                         <div className="space-y-1">
                            <h3 className="text-lg font-bold text-[#4A4137]">{scenario.title}</h3>
@@ -1067,6 +1055,18 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                        </div>
                      )}
                    </div>
+                   {/* OPAQUE OVERLAY with CTA - on top of blurred content */}
+                   {isBlurred && (
+                     <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/90 rounded-[2.5rem]">
+                       <button 
+                         onClick={onSignUp}
+                         className="text-[11px] font-black uppercase tracking-widest text-white flex items-center gap-2 bg-[#C9A961] px-5 py-3 rounded-full shadow-xl hover:bg-[#3A342D] transition-all"
+                       >
+                         <i className="fa-solid fa-lock text-[10px]"></i>
+                         Sign up to unlock
+                       </button>
+                     </div>
+                   )}
                 </div>
               ))}
            </div>
