@@ -433,22 +433,34 @@ const App: React.FC = () => {
   };
 
   const incrementSearchCount = async () => {
+    console.log('[Search] incrementSearchCount called, isLoggedIn:', isLoggedIn);
+    
     // Logged-in users: consume credit from credit system
     if (isLoggedIn) {
       consumeCredit();
       refreshCreditState();
       
       // Save search to Supabase if user is authenticated
-      if (supabaseService.isConfigured()) {
+      const isConfigured = supabaseService.isConfigured();
+      console.log('[Search] Supabase configured:', isConfigured);
+      
+      if (isConfigured) {
         try {
           const user = await supabaseService.getCurrentUser();
+          console.log('[Search] Current user:', user?.id, user?.email);
+          
           if (user?.id) {
-            console.log('Saving search to Supabase for user:', user.id, 'Address:', address);
+            console.log('[Search] Saving to Supabase - User:', user.id, 'Address:', address);
             await supabaseService.incrementSearchCountInDB(user.id, address);
+            console.log('[Search] Save completed successfully');
+          } else {
+            console.warn('[Search] No user ID found, cannot save to Supabase');
           }
         } catch (error) {
-          console.error('Failed to save search to Supabase:', error);
+          console.error('[Search] Failed to save search to Supabase:', error);
         }
+      } else {
+        console.warn('[Search] Supabase not configured, skipping save');
       }
     } else {
       // Anonymous users: record device search via fingerprint

@@ -107,12 +107,14 @@ export class SupabaseService {
 
   // Increment search count in Supabase and save to search history
   async incrementSearchCountInDB(userId: string, address: string): Promise<void> {
+    console.log('[Supabase] incrementSearchCountInDB called:', { userId, address });
+    
     if (!this.supabase) {
-      console.log('Supabase not configured, skipping DB update');
+      console.error('[Supabase] Client not initialized!');
       return;
     }
     try {
-      console.log('Saving search to Supabase:', { userId, address });
+      console.log('[Supabase] Starting save process...');
       
       // First, ensure the profile exists (upsert if needed)
       const user = await this.getCurrentUser();
