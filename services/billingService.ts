@@ -8,8 +8,8 @@
 import { CreditState, PlanType } from '../types';
 
 // Constants
-const FREE_LIFETIME_BASE = 1;      // 1 free audit for everyone
-const ACCOUNT_BONUS = 1;           // +1 if they create an account (total 2)
+const FREE_LIFETIME_BASE = 0;      // No free audits for anonymous users - must sign up
+const ACCOUNT_BONUS = 2;           // 2 free audits when they create an account
 const STARTER_PACK_CREDITS = 3;    // 3 audits per purchase
 const PRO_MONTHLY_LIMIT = 10;      // 10 audits per month for PRO
 

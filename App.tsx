@@ -1009,19 +1009,19 @@ const App: React.FC = () => {
                 <i className="fa-solid fa-lock text-[#C9A961]"></i>
               </div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter leading-none" style={{ color: 'var(--text-primary)' }}>
-                You've Used Your Free Credits
+                {creditState.hasAccount ? "You've Used Your Free Audits" : "Sign Up to Get Started"}
               </h2>
               <p className="text-sm sm:text-base max-w-md mx-auto font-medium leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 {creditState.hasAccount 
                   ? "Get more credits, or upgrade to Pro for 10 audits per month."
-                  : "You've used your free audit. Create an account for 1 bonus audit, or upgrade for more."}
+                  : "Create a free account to unlock 2 property audits. No credit card required."}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
-                {/* CTA 1: Create Account (if no account yet) */}
+                {/* CTA 1: Create Account (if no account yet) - PRIMARY for anonymous users */}
                 {!creditState.hasAccount && (
-                  <button onClick={handleCreateAccount} className="border-2 px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold transition-all text-[11px] sm:text-[10px] uppercase tracking-widest hover:border-[#C9A961] hover:text-[#C9A961]" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--text-primary)', color: 'var(--text-primary)' }}>
+                  <button onClick={handleCreateAccount} className="bg-[#C9A961] text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold shadow-lg hover:bg-[#3A342D] transition-all text-[11px] sm:text-[10px] uppercase tracking-widest">
                     <i className="fa-solid fa-user-plus mr-2"></i>
-                    Create Account (+1 Audit)
+                    Sign Up Free (2 Audits)
                   </button>
                 )}
                 {/* CTA 2: Buy Starter Pack */}
