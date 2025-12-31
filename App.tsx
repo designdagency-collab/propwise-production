@@ -34,8 +34,6 @@ const App: React.FC = () => {
   const [creditState, setCreditState] = useState<CreditState>(getCreditState);
   const [remainingCredits, setRemainingCredits] = useState(() => getRemainingCredits(getCreditState()));
   
-  // Derived: is user a paid customer (MUST be logged in to be considered paid)
-  const isPaidUser = isLoggedIn && (plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK');
   const [isQuotaError, setIsQuotaError] = useState(false);
   const [hasKey, setHasKey] = useState(false);
   const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
@@ -61,6 +59,9 @@ const App: React.FC = () => {
     return localStorage.getItem('prop_user_phone') || '';
   });
   const [isLoginMode, setIsLoginMode] = useState(false); // true = login, false = signup
+  
+  // Derived: is user a paid customer (MUST be logged in to be considered paid)
+  const isPaidUser = isLoggedIn && (plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK');
   
   // Progress tracking states
   const [progress, setProgress] = useState(0);
@@ -1011,7 +1012,7 @@ const App: React.FC = () => {
               data={results} 
               address={address} 
               plan={plan}
-              isBlurred={!isLoggedIn && !isPaidUser} // Anonymous users see blurred preview
+              isBlurred={!isPaidUser} // Non-paid users (anonymous OR free logged-in) see hidden sections
               onUpgrade={() => setShowPricing(true)}
               onHome={handleHome}
               onSignUp={() => {
