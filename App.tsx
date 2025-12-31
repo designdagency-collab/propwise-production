@@ -10,6 +10,7 @@ import { geminiService } from './services/geminiService';
 import { stripeService } from './services/stripeService';
 import { supabaseService } from './services/supabaseService';
 import { billingService, getCreditState, getRemainingCredits, canAudit, consumeCredit, grantAccountBonus, addStarterPackCredits, activateProSubscription } from './services/billingService';
+import { fingerprintService, checkDeviceSearchLimit, recordDeviceSearch } from './services/fingerprintService';
 import { AppState, PropertyData, PlanType, CreditState } from './types';
 
 const App: React.FC = () => {
@@ -33,6 +34,11 @@ const App: React.FC = () => {
   // Credit state for new pricing model
   const [creditState, setCreditState] = useState<CreditState>(getCreditState);
   const [remainingCredits, setRemainingCredits] = useState(() => getRemainingCredits(getCreditState()));
+  
+  // Device fingerprint state (for anonymous users)
+  const [deviceCanSearch, setDeviceCanSearch] = useState<boolean | null>(null); // null = loading
+  const [deviceSearchesUsed, setDeviceSearchesUsed] = useState(0);
+  
   const [isQuotaError, setIsQuotaError] = useState(false);
   const [hasKey, setHasKey] = useState(false);
   const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
@@ -96,6 +102,26 @@ const App: React.FC = () => {
     const interval = setInterval(checkKeySelection, 3000);
     return () => clearInterval(interval);
   }, [checkKeySelection]);
+
+  // Check device fingerprint for anonymous users on page load
+  useEffect(() => {
+    const checkDevice = async () => {
+      // Only check for anonymous users
+      if (!isLoggedIn) {
+        try {
+          const { canSearch, searchesUsed } = await checkDeviceSearchLimit();
+          setDeviceCanSearch(canSearch);
+          setDeviceSearchesUsed(searchesUsed);
+          console.log('[Fingerprint] Device check:', { canSearch, searchesUsed });
+        } catch (error) {
+          console.error('[Fingerprint] Error checking device:', error);
+          // Default to allowing search if fingerprint fails
+          setDeviceCanSearch(true);
+        }
+      }
+    };
+    checkDevice();
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (appState === AppState.LOADING) {
@@ -364,29 +390,43 @@ const App: React.FC = () => {
     // API key users bypass limits
     if (hasKey) return true;
     
-    // Use new credit system
-    return canAudit();
+    // Logged-in users use credit system
+    if (isLoggedIn) {
+      return canAudit();
+    }
+    
+    // Anonymous users: check device fingerprint
+    // Allow if deviceCanSearch is true OR null (still loading)
+    return deviceCanSearch !== false;
   };
 
   const incrementSearchCount = async () => {
-    // Use new credit system - consume one credit
-    consumeCredit();
-    refreshCreditState();
-    
-    // Save search to Supabase if user is authenticated
-    if (isLoggedIn && supabaseService.isConfigured()) {
-      try {
-        // Get user ID directly from Supabase session (more reliable than userProfile)
-        const user = await supabaseService.getCurrentUser();
-        if (user?.id) {
-          console.log('Saving search to Supabase for user:', user.id, 'Address:', address);
-          await supabaseService.incrementSearchCountInDB(user.id, address);
-        } else {
-          console.log('No Supabase user found, search not saved to history');
+    // Logged-in users: consume credit from credit system
+    if (isLoggedIn) {
+      consumeCredit();
+      refreshCreditState();
+      
+      // Save search to Supabase if user is authenticated
+      if (supabaseService.isConfigured()) {
+        try {
+          const user = await supabaseService.getCurrentUser();
+          if (user?.id) {
+            console.log('Saving search to Supabase for user:', user.id, 'Address:', address);
+            await supabaseService.incrementSearchCountInDB(user.id, address);
+          }
+        } catch (error) {
+          console.error('Failed to save search to Supabase:', error);
         }
+      }
+    } else {
+      // Anonymous users: record device search via fingerprint
+      try {
+        await recordDeviceSearch();
+        setDeviceCanSearch(false); // Used their 1 free search
+        setDeviceSearchesUsed(prev => prev + 1);
+        console.log('[Fingerprint] Device search recorded');
       } catch (error) {
-        console.error('Failed to save search to Supabase:', error);
-        // Fail silently - localStorage is the source of truth
+        console.error('[Fingerprint] Error recording device search:', error);
       }
     }
   };
@@ -1009,16 +1049,16 @@ const App: React.FC = () => {
                 <i className="fa-solid fa-lock text-[#C9A961]"></i>
               </div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter leading-none" style={{ color: 'var(--text-primary)' }}>
-                {creditState.hasAccount ? "You've Used Your Free Audits" : "Sign Up to Get Started"}
+                {isLoggedIn ? "You've Used Your Free Audits" : "Liked What You Saw?"}
               </h2>
               <p className="text-sm sm:text-base max-w-md mx-auto font-medium leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                {creditState.hasAccount 
+                {isLoggedIn 
                   ? "Get more credits, or upgrade to Pro for 10 audits per month."
-                  : "Create a free account to unlock 2 property audits. No credit card required."}
+                  : "Sign up free to unlock 2 more property audits. No credit card required."}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
-                {/* CTA 1: Create Account (if no account yet) - PRIMARY for anonymous users */}
-                {!creditState.hasAccount && (
+                {/* CTA 1: Create Account (if not logged in) - PRIMARY for anonymous users */}
+                {!isLoggedIn && (
                   <button onClick={handleCreateAccount} className="bg-[#C9A961] text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold shadow-lg hover:bg-[#3A342D] transition-all text-[11px] sm:text-[10px] uppercase tracking-widest">
                     <i className="fa-solid fa-user-plus mr-2"></i>
                     Sign Up Free (2 Audits)

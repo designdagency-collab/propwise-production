@@ -131,3 +131,32 @@ CREATE TRIGGER update_subscriptions_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+-- ============================================
+-- DEVICE FINGERPRINTS TABLE (for abuse prevention)
+-- ============================================
+CREATE TABLE IF NOT EXISTS device_fingerprints (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  fingerprint TEXT UNIQUE NOT NULL,
+  searches_used INTEGER DEFAULT 0,
+  first_seen TIMESTAMPTZ DEFAULT NOW(),
+  last_seen TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index for fast fingerprint lookups
+CREATE INDEX IF NOT EXISTS idx_device_fingerprints_fingerprint ON device_fingerprints(fingerprint);
+
+-- RLS policies for device_fingerprints (allow anonymous access for tracking)
+ALTER TABLE device_fingerprints ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow anonymous fingerprint read" ON device_fingerprints;
+CREATE POLICY "Allow anonymous fingerprint read" ON device_fingerprints
+  FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow anonymous fingerprint insert" ON device_fingerprints;
+CREATE POLICY "Allow anonymous fingerprint insert" ON device_fingerprints
+  FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow anonymous fingerprint update" ON device_fingerprints;
+CREATE POLICY "Allow anonymous fingerprint update" ON device_fingerprints
+  FOR UPDATE USING (true);
+
