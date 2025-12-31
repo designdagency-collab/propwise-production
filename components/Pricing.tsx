@@ -60,7 +60,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
           {/* Free Trial - Sign up */}
           <div className="p-8 rounded-[3rem] border-2 flex flex-col hover:border-[#C9A961]/50 transition-all" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
             <div className="mb-8">
-              <h3 className="text-lg sm:text-xl font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Free Trial</h3>
+              <h3 className="text-lg sm:text-xl font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Trial</h3>
               <div className="flex items-baseline gap-1">
                 <span className="text-3xl sm:text-4xl font-black" style={{ color: 'var(--text-primary)' }}>FREE</span>
               </div>
