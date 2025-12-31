@@ -201,22 +201,13 @@ const App: React.FC = () => {
           
           // If different user than stored, clear ALL their data (prevents profile mixing)
           if (storedEmail && sessionEmail && storedEmail !== sessionEmail) {
-            console.log('Session email mismatch - clearing ALL stale data for new user');
-            // Clear ALL credit data for old user
-            localStorage.removeItem('prop_free_used');
+            console.log('Session email mismatch - clearing stale data for new user');
+            // Clear credit data for old user (will be loaded from Supabase for new user)
             localStorage.removeItem('prop_credit_topups');
             localStorage.removeItem('prop_pro_used');
             localStorage.removeItem('prop_pro_month');
-            localStorage.removeItem('prop_has_account');
             localStorage.removeItem('prop_plan');
-          }
-          
-          // For brand new users (no stored email), ensure clean state
-          if (!storedEmail && sessionEmail) {
-            console.log('New user detected - ensuring clean credit state');
-            // Don't clear if this is their first visit ever (values might not exist)
-            // Just ensure they start fresh
-            localStorage.removeItem('prop_free_used');
+            // NOTE: Don't clear prop_free_used or prop_has_account - loadUserData will sync from Supabase
           }
           
           setIsLoggedIn(true);
@@ -227,21 +218,23 @@ const App: React.FC = () => {
           localStorage.setItem('prop_signed_up', 'true');
           localStorage.setItem('prop_user_email', sessionEmail);
           
-          // Grant account bonus on sign in (idempotent - only adds if not already set)
-          grantAccountBonus();
-          
           // Close auth modal if open (for Google OAuth redirect)
           setShowEmailAuth(false);
           
+          // Load user data from Supabase - this syncs credits properly
           await loadUserData(session.user?.id);
+          
+          // Account bonus is now handled by loadUserData (sets prop_has_account if user exists)
+          // This ensures we don't reset credits for returning users
           
           // Refresh credit state after loading user data
           const state = getCreditState();
           setCreditState(state);
           setRemainingCredits(getRemainingCredits(state));
           
-          // Return to idle state so they can search
-          if (appState === AppState.LIMIT_REACHED) {
+          // Only return to idle if user has remaining credits
+          // Don't reset LIMIT_REACHED if they're actually out of credits
+          if (appState === AppState.LIMIT_REACHED && getRemainingCredits(state) > 0) {
             setAppState(AppState.IDLE);
           }
           
@@ -358,16 +351,26 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Load user data from Supabase (optional enhancement)
+  // Load user data from Supabase and sync credit state
   const loadUserData = async (userId?: string) => {
     try {
       const profile = await supabaseService.getCurrentProfile();
       if (profile) {
         setUserProfile(profile);
-        // Sync Supabase count with localStorage if available
-        if (profile.search_count) {
-          localStorage.setItem('prop_search_count_total', profile.search_count.toString());
-        }
+        
+        // CRITICAL: Sync search count from Supabase to localStorage
+        // This ensures credits persist across devices/sessions
+        const supabaseSearchCount = profile.search_count || 0;
+        const localSearchCount = parseInt(localStorage.getItem('prop_free_used') || '0', 10);
+        
+        // Use the HIGHER count (prevents abuse by clearing localStorage)
+        const actualSearchCount = Math.max(supabaseSearchCount, localSearchCount);
+        localStorage.setItem('prop_free_used', actualSearchCount.toString());
+        
+        // User has an account (they're in the profiles table)
+        localStorage.setItem('prop_has_account', 'true');
+        
+        console.log('[Credits] Synced from Supabase:', { supabaseSearchCount, localSearchCount, actualSearchCount });
       }
       
       // Check subscription status
@@ -384,6 +387,7 @@ const App: React.FC = () => {
         }
       }
     } catch (error) {
+      console.error('[Credits] Error loading user data:', error);
       // Fail silently - localStorage is the fallback
     }
   };
@@ -683,21 +687,14 @@ const App: React.FC = () => {
   const handleEmailAuthSuccess = async (email: string, isNewUser: boolean) => {
     const storedEmail = localStorage.getItem('prop_user_email') || '';
     
-    // If this is a different user, clear their old data first
+    // If this is a different user, clear their paid plan data (not free credits - Supabase has those)
     if (storedEmail && storedEmail !== email) {
-      console.log('Different user logging in - clearing old user data');
-      localStorage.removeItem('prop_free_used');
+      console.log('Different user logging in - clearing old user plan data');
       localStorage.removeItem('prop_credit_topups');
       localStorage.removeItem('prop_pro_used');
       localStorage.removeItem('prop_pro_month');
-      localStorage.removeItem('prop_has_account');
       localStorage.removeItem('prop_plan');
-    }
-    
-    // If brand new user (no previous email stored), ensure fresh start
-    if (!storedEmail && isNewUser) {
-      console.log('Brand new user signup - ensuring clean slate');
-      localStorage.removeItem('prop_free_used');
+      // NOTE: Don't clear prop_free_used or prop_has_account - loadUserData will sync from Supabase
     }
     
     setIsLoggedIn(true);
@@ -707,9 +704,14 @@ const App: React.FC = () => {
     localStorage.setItem('prop_signed_up', 'true');
     localStorage.setItem('prop_user_email', email);
     
-    // Grant account bonus (+1 free audit) for creating account
-    console.log('Granting account bonus for:', email);
-    grantAccountBonus();
+    // Only grant account bonus for NEW signups (not returning users logging in)
+    // loadUserData will set prop_has_account for existing users
+    if (isNewUser) {
+      console.log('New user signup - granting account bonus for:', email);
+      grantAccountBonus();
+    } else {
+      console.log('Returning user login - credits will be loaded from Supabase');
+    }
     
     // Force refresh credit state
     const state = getCreditState();
