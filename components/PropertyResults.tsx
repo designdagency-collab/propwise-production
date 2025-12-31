@@ -909,35 +909,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-pdf-strategy-grid>
              {data.valueAddStrategies.map((strategy, i) => (
                <div key={i} data-pdf-strategy-card data-pdf-no-break className={`p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col relative overflow-hidden ${selectedStrategies.has(i) ? 'border-[#D3D9B5] shadow-md ring-1 ring-[#D3D9B5]/20' : 'border-b-[#D6A270]/20 hover:shadow-md'}`} style={{ backgroundColor: 'var(--bg-card)', borderColor: selectedStrategies.has(i) ? '#D3D9B5' : 'var(--border-color)' }}>
-                  {/* ALL CARD CONTENT - Blurred when isBlurred */}
-                  <div className={isBlurred ? 'blur-[20px] grayscale opacity-[0.15] select-none pointer-events-none' : ''} style={isBlurred ? { filter: 'blur(20px) grayscale(100%)', opacity: 0.15 } : {}}>
-                    <div className="flex justify-between items-start mb-4">
-                       <div className="space-y-1">
-                          <h3 className="text-base sm:text-lg font-bold text-[#4A4137] group-hover:text-[#D6A270] transition-colors">{strategy.title}</h3>
-                          <PathwayBadgeWithTooltip pathway={strategy.planningPathway} />
-                       </div>
-                       <div className="flex flex-col items-end gap-2">
-                          <button onClick={() => toggleStrategy(i)} data-no-pdf="true" className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${selectedStrategies.has(i) ? 'bg-[#D3D9B5] text-white border-[#D3D9B5]' : 'bg-white text-[#4A4137]/40 border-slate-200 hover:border-[#D3D9B5] hover:text-[#D3D9B5]'}`}>{selectedStrategies.has(i) ? <><i className="fa-solid fa-check mr-1"></i> Included</> : 'Include'}</button>
-                          <div className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${getEffortColor(strategy.effort)}`}>{strategy.effort} Effort</div>
-                       </div>
-                    </div>
-                    <p className="text-sm text-[#4A4137]/60 leading-relaxed mb-6">{strategy.description}</p>
-                    <div className="grid grid-cols-2 gap-3 mb-2 mt-auto">
-                       <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-center">
-                          <p className="text-[8px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Estimated Cost</p>
-                          <p className="text-sm font-bold text-[#4A4137]">{formatValue(strategy.estimatedCost?.low)} – {formatValue(strategy.estimatedCost?.high)}</p>
-                       </div>
-                       {(strategy.indicativeEquityUplift || strategy.saleProfitEstimate) && (
-                         <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col justify-center">
-                            <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1">Equity Gain $</p>
-                            <p className="text-sm font-black text-emerald-700">{strategy.indicativeEquityUplift ? `${formatValue(strategy.indicativeEquityUplift.low)} – ${formatValue(strategy.indicativeEquityUplift.high)}` : `${formatValue(strategy.saleProfitEstimate?.low)} – ${formatValue(strategy.saleProfitEstimate?.high)}`}</p>
-                         </div>
-                       )}
-                    </div>
-                  </div>
-                  {/* OPAQUE OVERLAY with CTA - on top of blurred content */}
+                  {/* SOLID WHITE OVERLAY - completely hides all content */}
                   {isBlurred && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/90 rounded-[2.5rem]">
+                    <div className="absolute inset-0 z-30 flex items-center justify-center rounded-[2.5rem]" style={{ backgroundColor: 'rgba(255,255,255,0.97)' }}>
                       <button 
                         onClick={onSignUp}
                         className="text-[11px] font-black uppercase tracking-widest text-white flex items-center gap-2 bg-[#C9A961] px-5 py-3 rounded-full shadow-xl hover:bg-[#3A342D] transition-all"
@@ -947,6 +921,30 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                       </button>
                     </div>
                   )}
+                  {/* Card content - hidden by overlay when isBlurred */}
+                  <div className="flex justify-between items-start mb-4">
+                     <div className="space-y-1">
+                        <h3 className="text-base sm:text-lg font-bold text-[#4A4137] group-hover:text-[#D6A270] transition-colors">{strategy.title}</h3>
+                        <PathwayBadgeWithTooltip pathway={strategy.planningPathway} />
+                     </div>
+                     <div className="flex flex-col items-end gap-2">
+                        <button onClick={() => toggleStrategy(i)} data-no-pdf="true" className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all ${selectedStrategies.has(i) ? 'bg-[#D3D9B5] text-white border-[#D3D9B5]' : 'bg-white text-[#4A4137]/40 border-slate-200 hover:border-[#D3D9B5] hover:text-[#D3D9B5]'}`}>{selectedStrategies.has(i) ? <><i className="fa-solid fa-check mr-1"></i> Included</> : 'Include'}</button>
+                        <div className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${getEffortColor(strategy.effort)}`}>{strategy.effort} Effort</div>
+                     </div>
+                  </div>
+                  <p className="text-sm text-[#4A4137]/60 leading-relaxed mb-6">{strategy.description}</p>
+                  <div className="grid grid-cols-2 gap-3 mb-2 mt-auto">
+                     <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                        <p className="text-[8px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Estimated Cost</p>
+                        <p className="text-sm font-bold text-[#4A4137]">{formatValue(strategy.estimatedCost?.low)} – {formatValue(strategy.estimatedCost?.high)}</p>
+                     </div>
+                     {(strategy.indicativeEquityUplift || strategy.saleProfitEstimate) && (
+                       <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col justify-center">
+                          <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1">Equity Gain $</p>
+                          <p className="text-sm font-black text-emerald-700">{strategy.indicativeEquityUplift ? `${formatValue(strategy.indicativeEquityUplift.low)} – ${formatValue(strategy.indicativeEquityUplift.high)}` : `${formatValue(strategy.saleProfitEstimate?.low)} – ${formatValue(strategy.saleProfitEstimate?.high)}`}</p>
+                       </div>
+                     )}
+                  </div>
                </div>
              ))}
           </div>
@@ -1026,38 +1024,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {data.developmentScenarios.map((scenario, i) => (
                 <div key={i} className="p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col hover:shadow-md relative overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                   {/* ALL CARD CONTENT - Blurred when isBlurred */}
-                   <div className={isBlurred ? 'blur-[20px] grayscale opacity-[0.15] select-none pointer-events-none' : ''} style={isBlurred ? { filter: 'blur(20px) grayscale(100%)', opacity: 0.15 } : {}}>
-                     <div className="flex justify-between items-start mb-4">
-                        <div className="space-y-1">
-                           <h3 className="text-lg font-bold text-[#4A4137]">{scenario.title}</h3>
-                           <div className="flex flex-wrap gap-2">
-                              <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${getEligibilityBadgeColor(scenario.eligibility)}`}>{scenario.eligibility}</span>
-                              <PathwayBadgeWithTooltip pathway={scenario.planningPathway} />
-                           </div>
-                        </div>
-                     </div>
-                     <p className="text-sm text-[#4A4137]/60 leading-relaxed mb-4">{scenario.description}</p>
-                     <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-6">
-                        <p className="text-[10px] font-bold text-[#4A4137]/50 uppercase tracking-widest mb-1">Rationale</p>
-                        <p className="text-xs text-[#4A4137]/70 italic leading-relaxed">{scenario.whyAllowedOrNot}</p>
-                     </div>
-                     <div className="grid grid-cols-1 gap-4 mb-4">
-                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                           <p className="text-[10px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Est. Build Cost</p>
-                           <p className="text-lg font-bold text-[#4A4137]">{formatValue(scenario.estimatedCost?.low)} – {formatValue(scenario.estimatedCost?.high)}</p>
-                        </div>
-                     </div>
-                     {scenario.estimatedNetProfit && (
-                       <div className="p-5 bg-emerald-50 rounded-[2rem] border border-emerald-100 mb-2 mt-auto">
-                          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2 text-center text-emerald-700">INDICATIVE DEVELOPMENT MARGIN</p>
-                          <p className="text-2xl font-black text-emerald-700 text-center">{formatValue(scenario.estimatedNetProfit.low)} – {formatValue(scenario.estimatedNetProfit.high)}</p>
-                       </div>
-                     )}
-                   </div>
-                   {/* OPAQUE OVERLAY with CTA - on top of blurred content */}
+                   {/* SOLID WHITE OVERLAY - completely hides all content */}
                    {isBlurred && (
-                     <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/90 rounded-[2.5rem]">
+                     <div className="absolute inset-0 z-30 flex items-center justify-center rounded-[2.5rem]" style={{ backgroundColor: 'rgba(255,255,255,0.97)' }}>
                        <button 
                          onClick={onSignUp}
                          className="text-[11px] font-black uppercase tracking-widest text-white flex items-center gap-2 bg-[#C9A961] px-5 py-3 rounded-full shadow-xl hover:bg-[#3A342D] transition-all"
@@ -1065,6 +1034,33 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                          <i className="fa-solid fa-lock text-[10px]"></i>
                          Sign up to unlock
                        </button>
+                     </div>
+                   )}
+                   {/* Card content - hidden by overlay when isBlurred */}
+                   <div className="flex justify-between items-start mb-4">
+                      <div className="space-y-1">
+                         <h3 className="text-lg font-bold text-[#4A4137]">{scenario.title}</h3>
+                         <div className="flex flex-wrap gap-2">
+                            <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${getEligibilityBadgeColor(scenario.eligibility)}`}>{scenario.eligibility}</span>
+                            <PathwayBadgeWithTooltip pathway={scenario.planningPathway} />
+                         </div>
+                      </div>
+                   </div>
+                   <p className="text-sm text-[#4A4137]/60 leading-relaxed mb-4">{scenario.description}</p>
+                   <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-6">
+                      <p className="text-[10px] font-bold text-[#4A4137]/50 uppercase tracking-widest mb-1">Rationale</p>
+                      <p className="text-xs text-[#4A4137]/70 italic leading-relaxed">{scenario.whyAllowedOrNot}</p>
+                   </div>
+                   <div className="grid grid-cols-1 gap-4 mb-4">
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                         <p className="text-[10px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Est. Build Cost</p>
+                         <p className="text-lg font-bold text-[#4A4137]">{formatValue(scenario.estimatedCost?.low)} – {formatValue(scenario.estimatedCost?.high)}</p>
+                      </div>
+                   </div>
+                   {scenario.estimatedNetProfit && (
+                     <div className="p-5 bg-emerald-50 rounded-[2rem] border border-emerald-100 mb-2 mt-auto">
+                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2 text-center text-emerald-700">INDICATIVE DEVELOPMENT MARGIN</p>
+                        <p className="text-2xl font-black text-emerald-700 text-center">{formatValue(scenario.estimatedNetProfit.low)} – {formatValue(scenario.estimatedNetProfit.high)}</p>
                      </div>
                    )}
                 </div>
@@ -1076,55 +1072,53 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       {/* APPROVAL PATHWAY & ZONING INTEL */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 pdf-no-break">
         {data.approvalPathway && (
-          <div className="p-10 rounded-[3rem] border shadow-sm space-y-8 relative" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+          <div className="p-10 rounded-[3rem] border shadow-sm space-y-8 relative overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
              <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-blue-500 text-white rounded-xl flex items-center justify-center shadow-md"><i className="fa-solid fa-file-shield"></i></div>
                 <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Approval Pathway</h2>
              </div>
-             <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 relative">
-                {/* BLUR OVERLAY for approval pathway content */}
+             <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 relative overflow-hidden">
+                {/* SOLID WHITE OVERLAY - completely hides content */}
                 {isBlurred && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-[2px] rounded-[2rem]">
+                  <div className="absolute inset-0 z-30 flex items-center justify-center rounded-[2rem]" style={{ backgroundColor: 'rgba(255,255,255,0.97)' }}>
                     <button 
                       onClick={onSignUp}
-                      className="text-[10px] font-black uppercase tracking-widest text-[#C9A961] flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-lg border border-[#C9A961]/20 hover:bg-[#C9A961] hover:text-white transition-all"
+                      className="text-[11px] font-black uppercase tracking-widest text-white flex items-center gap-2 bg-[#C9A961] px-5 py-3 rounded-full shadow-xl hover:bg-[#3A342D] transition-all"
                     >
-                      <i className="fa-solid fa-lock text-[9px]"></i>
+                      <i className="fa-solid fa-lock text-[10px]"></i>
                       Sign up to unlock
                     </button>
                   </div>
                 )}
-                <div className={isBlurred ? 'blur-lg grayscale opacity-30 select-none pointer-events-none' : ''}>
-                  <div className="mb-4"><PathwayBadgeWithTooltip pathway={data.approvalPathway.likelyPathway} /></div>
-                  <p className="text-sm text-[#4A4137]/60 leading-relaxed">{data.approvalPathway.explanation}</p>
-                </div>
+                {/* Content - hidden by overlay */}
+                <div className="mb-4"><PathwayBadgeWithTooltip pathway={data.approvalPathway.likelyPathway} /></div>
+                <p className="text-sm text-[#4A4137]/60 leading-relaxed">{data.approvalPathway.explanation}</p>
              </div>
           </div>
         )}
         {data.zoningIntel && (
-          <div className="bg-[#D3D9B5]/10 p-10 rounded-[3rem] border border-[#D3D9B5]/20 space-y-8">
+          <div className="bg-[#D3D9B5]/10 p-10 rounded-[3rem] border border-[#D3D9B5]/20 space-y-8 relative overflow-hidden">
              <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-[#D3D9B5] text-white rounded-xl flex items-center justify-center shadow-md"><i className="fa-solid fa-map-location-dot"></i></div>
                 <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Zoning Intel</h2>
              </div>
-             <div className="px-6 py-4 bg-white rounded-3xl border border-[#D3D9B5]/20 text-center space-y-2 shadow-sm relative">
-                {/* BLUR OVERLAY for zone code box */}
+             <div className="px-6 py-4 bg-white rounded-3xl border border-[#D3D9B5]/20 text-center space-y-2 shadow-sm relative overflow-hidden">
+                {/* SOLID WHITE OVERLAY - completely hides zone code */}
                 {isBlurred && (
-                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-[2px] rounded-3xl">
+                  <div className="absolute inset-0 z-30 flex items-center justify-center rounded-3xl" style={{ backgroundColor: 'rgba(255,255,255,0.97)' }}>
                     <button 
                       onClick={onSignUp}
-                      className="text-[10px] font-black uppercase tracking-widest text-[#C9A961] flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-lg border border-[#C9A961]/20 hover:bg-[#C9A961] hover:text-white transition-all"
+                      className="text-[11px] font-black uppercase tracking-widest text-white flex items-center gap-2 bg-[#C9A961] px-5 py-3 rounded-full shadow-xl hover:bg-[#3A342D] transition-all"
                     >
-                      <i className="fa-solid fa-lock text-[9px]"></i>
+                      <i className="fa-solid fa-lock text-[10px]"></i>
                       Sign up to unlock
                     </button>
                   </div>
                 )}
-                <div className={isBlurred ? 'blur-lg grayscale opacity-30 select-none pointer-events-none' : ''}>
-                  <p className="text-[10px] font-black text-[#4A4137]/40 uppercase tracking-widest">Zone Code</p>
-                  <p className="text-2xl font-black text-[#4A4137] tracking-widest">{data.zoningIntel.currentZoneCode}</p>
-                  <p className="text-xs font-bold text-[#D3D9B5] uppercase">{data.zoningIntel.currentZoneTitle}</p>
-                </div>
+                {/* Content - hidden by overlay */}
+                <p className="text-[10px] font-black text-[#4A4137]/40 uppercase tracking-widest">Zone Code</p>
+                <p className="text-2xl font-black text-[#4A4137] tracking-widest">{data.zoningIntel.currentZoneCode}</p>
+                <p className="text-xs font-bold text-[#D3D9B5] uppercase">{data.zoningIntel.currentZoneTitle}</p>
              </div>
              <MaybeBlur>
                <p className="text-sm text-[#4A4137]/70 font-medium leading-relaxed">{data.zoningIntel.whatItMeans}</p>
