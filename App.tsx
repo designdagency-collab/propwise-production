@@ -1069,12 +1069,12 @@ const App: React.FC = () => {
                 <i className="fa-solid fa-lock text-[#C9A961]"></i>
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter leading-none" style={{ color: 'var(--text-primary)' }}>
-                {isLoggedIn ? "You've Used Your Free Audits" : "Got Another Property in Mind?"}
+                {isLoggedIn ? "You've Used Your Free Audits" : "Sign Up to Get Started"}
               </h2>
               <p className="text-base sm:text-lg max-w-md mx-auto font-medium leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 {isLoggedIn 
                   ? "Get more credits, or upgrade to Pro for 10 audits per month."
-                  : "Create a free account to audit 2 more addresses."}
+                  : "Create a free account to unlock 2 property audits. No credit card required."}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
                 {/* CTA 1: Create Account (if not logged in) - PRIMARY for anonymous users */}
