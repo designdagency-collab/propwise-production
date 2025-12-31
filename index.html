@@ -37,16 +37,74 @@
     
     <title>upblock.ai – AI Property Insights | Zoning, Sales & Value Scenarios</title>
     <script>
-      // Fix Safari viewport zoom issue after redirects
-      if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
-        window.addEventListener('pageshow', function(event) {
-          if (event.persisted || window.location.search.includes('payment=')) {
-            // Force viewport reset for Safari after back/forward or payment redirect
-            document.body.style.zoom = 1;
+      // Fix Safari viewport zoom issue after redirects (OAuth, payment, etc.)
+      (function() {
+        var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        
+        function resetViewport() {
+          // Force viewport reset
+          document.body.style.zoom = 1;
+          document.body.style.transform = 'scale(1)';
+          document.body.style.webkitTransform = 'scale(1)';
+          
+          // Reset any viewport scaling
+          var viewport = document.querySelector('meta[name="viewport"]');
+          if (viewport) {
+            viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover');
+          }
+          
+          // Scroll to top
+          window.scrollTo(0, 0);
+          
+          // For iOS Safari, also try visual viewport reset
+          if (window.visualViewport && window.visualViewport.scale !== 1) {
             window.scrollTo(0, 0);
           }
-        });
-      }
+        }
+        
+        function isRedirectScenario() {
+          var search = window.location.search;
+          var hash = window.location.hash;
+          
+          // Check for various redirect scenarios
+          return search.includes('payment=') ||       // Stripe payment redirect
+                 search.includes('code=') ||          // OAuth code flow
+                 search.includes('error=') ||         // OAuth error
+                 hash.includes('access_token') ||     // OAuth implicit flow (Supabase)
+                 hash.includes('error') ||            // OAuth hash error
+                 hash.includes('type=recovery') ||    // Password recovery
+                 hash.includes('type=signup') ||      // Email confirmation
+                 document.referrer.includes('accounts.google.com') ||  // Google OAuth
+                 document.referrer.includes('supabase');               // Supabase auth
+        }
+        
+        if (isSafari || isIOS) {
+          // On page show (including back/forward navigation)
+          window.addEventListener('pageshow', function(event) {
+            if (event.persisted || isRedirectScenario()) {
+              resetViewport();
+            }
+          });
+          
+          // On initial load if coming from redirect
+          window.addEventListener('load', function() {
+            if (isRedirectScenario()) {
+              // Small delay to ensure DOM is ready
+              setTimeout(resetViewport, 100);
+              // Double-check after a longer delay
+              setTimeout(resetViewport, 500);
+            }
+          });
+          
+          // Listen for Supabase auth state changes
+          window.addEventListener('hashchange', function() {
+            if (isRedirectScenario()) {
+              resetViewport();
+            }
+          });
+        }
+      })();
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
