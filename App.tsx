@@ -270,6 +270,22 @@ const App: React.FC = () => {
             }
           }
         } else if (event === 'SIGNED_OUT') {
+          // CRITICAL: Verify session is actually gone before logging out
+          // Browser back from Stripe can trigger spurious SIGNED_OUT events
+          const wasLoggedIn = localStorage.getItem('prop_is_logged_in') === 'true';
+          
+          if (wasLoggedIn) {
+            // Double-check the session is actually gone
+            const { data: { session: currentSession } } = await supabaseService.supabase!.auth.getSession();
+            
+            if (currentSession?.user) {
+              // Session still exists! Don't log out - this was a spurious event
+              console.log('SIGNED_OUT event but session still exists - ignoring');
+              return;
+            }
+            console.log('SIGNED_OUT event confirmed - session is gone');
+          }
+          
           setIsLoggedIn(false);
           setUserEmail('');
           setUserPhone('');

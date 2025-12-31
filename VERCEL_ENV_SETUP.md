@@ -54,3 +54,4 @@ cp env.example .env.local
 - [ ] Enable Phone Auth in Supabase Dashboard
 - [ ] Test deployment
 
+
