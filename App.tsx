@@ -1065,13 +1065,13 @@ const App: React.FC = () => {
 
           {appState === AppState.LIMIT_REACHED && (
             <div className="max-w-3xl mx-auto py-24 text-center space-y-8">
-              <div className="w-20 h-20 rounded-3xl flex items-center justify-center text-3xl mx-auto border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
+              <div className="w-24 h-24 rounded-3xl flex items-center justify-center text-4xl mx-auto border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
                 <i className="fa-solid fa-lock text-[#C9A961]"></i>
               </div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter leading-none" style={{ color: 'var(--text-primary)' }}>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tighter leading-none" style={{ color: 'var(--text-primary)' }}>
                 {isLoggedIn ? "You've Used Your Free Audits" : "Got Another Property in Mind?"}
               </h2>
-              <p className="text-sm sm:text-base max-w-md mx-auto font-medium leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-base sm:text-lg max-w-md mx-auto font-medium leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 {isLoggedIn 
                   ? "Get more credits, or upgrade to Pro for 10 audits per month."
                   : "Create a free account to audit 2 more addresses."}
