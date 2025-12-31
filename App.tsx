@@ -160,13 +160,24 @@ const App: React.FC = () => {
           const sessionEmail = session.user?.email || '';
           const storedEmail = localStorage.getItem('prop_user_email') || '';
           
-          // If different user than stored, clear their data (prevents profile mixing)
+          // If different user than stored, clear ALL their data (prevents profile mixing)
           if (storedEmail && sessionEmail && storedEmail !== sessionEmail) {
-            console.log('Session email mismatch - clearing stale data');
-            // Clear credit data for old user
+            console.log('Session email mismatch - clearing ALL stale data for new user');
+            // Clear ALL credit data for old user
             localStorage.removeItem('prop_free_used');
             localStorage.removeItem('prop_credit_topups');
             localStorage.removeItem('prop_pro_used');
+            localStorage.removeItem('prop_pro_month');
+            localStorage.removeItem('prop_has_account');
+            localStorage.removeItem('prop_plan');
+          }
+          
+          // For brand new users (no stored email), ensure clean state
+          if (!storedEmail && sessionEmail) {
+            console.log('New user detected - ensuring clean credit state');
+            // Don't clear if this is their first visit ever (values might not exist)
+            // Just ensure they start fresh
+            localStorage.removeItem('prop_free_used');
           }
           
           setIsLoggedIn(true);
@@ -565,6 +576,25 @@ const App: React.FC = () => {
 
   // Handle email auth success (both signup and login)
   const handleEmailAuthSuccess = async (email: string, isNewUser: boolean) => {
+    const storedEmail = localStorage.getItem('prop_user_email') || '';
+    
+    // If this is a different user, clear their old data first
+    if (storedEmail && storedEmail !== email) {
+      console.log('Different user logging in - clearing old user data');
+      localStorage.removeItem('prop_free_used');
+      localStorage.removeItem('prop_credit_topups');
+      localStorage.removeItem('prop_pro_used');
+      localStorage.removeItem('prop_pro_month');
+      localStorage.removeItem('prop_has_account');
+      localStorage.removeItem('prop_plan');
+    }
+    
+    // If brand new user (no previous email stored), ensure fresh start
+    if (!storedEmail && isNewUser) {
+      console.log('Brand new user signup - ensuring clean slate');
+      localStorage.removeItem('prop_free_used');
+    }
+    
     setIsLoggedIn(true);
     setUserEmail(email);
     setIsSignedUp(true);
@@ -573,8 +603,14 @@ const App: React.FC = () => {
     localStorage.setItem('prop_user_email', email);
     
     // Grant account bonus (+1 free audit) for creating account
+    console.log('Granting account bonus for:', email);
     grantAccountBonus();
-    refreshCreditState();
+    
+    // Force refresh credit state
+    const state = getCreditState();
+    console.log('Credit state after signup:', state, 'Remaining:', getRemainingCredits(state));
+    setCreditState(state);
+    setRemainingCredits(getRemainingCredits(state));
     
     // Get current user and load their data + subscription
     const user = await supabaseService.getCurrentUser();

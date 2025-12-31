@@ -127,7 +127,13 @@ export function consumeCredit(): boolean {
  * Grant account bonus (+1 free audit)
  */
 export function grantAccountBonus(): void {
+  const hadAccount = localStorage.getItem(KEYS.HAS_ACCOUNT) === 'true';
   localStorage.setItem(KEYS.HAS_ACCOUNT, 'true');
+  if (!hadAccount) {
+    console.log('[Billing] Account bonus granted - user now has +1 free audit');
+  } else {
+    console.log('[Billing] Account bonus already granted (no change)');
+  }
 }
 
 /**
