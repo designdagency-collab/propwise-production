@@ -660,21 +660,77 @@ const App: React.FC = () => {
     }
   };
 
-  const detectLocation = useCallback(() => {
+  // Check if user is on a mobile device (for GPS location feature)
+  const isMobileDevice = useCallback(() => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }, []);
+
+  const detectLocation = useCallback(async () => {
     if (!navigator.geolocation) {
-      setError("Geolocation is not supported");
+      setError("GPS not available on this device");
       return;
     }
+    
     setIsLocating(true);
+    setError(null);
+    
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
-        setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        
+        try {
+          // Reverse geocode to get street address using OpenStreetMap Nominatim
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
+            { 
+              headers: { 
+                'User-Agent': 'upblock.ai/1.0',
+                'Accept-Language': 'en-AU'
+              } 
+            }
+          );
+          const data = await response.json();
+          
+          if (data.address) {
+            const addr = data.address;
+            // Build Australian-style address: "123 Smith St, Suburb NSW 2000"
+            const parts = [
+              addr.house_number,
+              addr.road,
+              addr.suburb || addr.city || addr.town || addr.village,
+              addr.state,
+              addr.postcode
+            ].filter(Boolean);
+            
+            const formattedAddress = parts.join(' ');
+            setAddress(formattedAddress || data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          } else {
+            // Fallback to coordinates if geocoding fails
+            setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          }
+        } catch (err) {
+          console.error('Reverse geocoding failed:', err);
+          // Fallback to coordinates
+          setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        }
+        
         setIsLocating(false);
       },
-      () => {
-        setError("Location access denied");
+      (err) => {
+        console.error('Geolocation error:', err);
+        if (err.code === 1) {
+          setError("Please enable location access in your phone settings");
+        } else if (err.code === 2) {
+          setError("Unable to determine your location. Please try again.");
+        } else {
+          setError("Location request timed out. Please try again.");
+        }
         setIsLocating(false);
+      },
+      { 
+        enableHighAccuracy: true,  // Use GPS hardware, not cell towers
+        timeout: 15000,            // 15 second timeout
+        maximumAge: 60000          // Cache for 1 minute
       }
     );
   }, []);
@@ -860,13 +916,18 @@ const App: React.FC = () => {
                       />
                     </div>
                     <div className="flex items-center gap-2 pr-2">
-                      <button
-                        type="button"
-                        onClick={detectLocation}
-                        className="w-12 h-12 text-[#B8C5A0] hover:text-[#C9A961] transition-all"
-                      >
-                        <i className={`fa-solid ${isLocating ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'}`}></i>
-                      </button>
+                      {/* GPS Location button - only show on mobile devices */}
+                      {isMobileDevice() && (
+                        <button
+                          type="button"
+                          onClick={detectLocation}
+                          disabled={isLocating}
+                          className="w-12 h-12 text-[#B8C5A0] hover:text-[#C9A961] transition-all disabled:opacity-50"
+                          title="Use my current location"
+                        >
+                          <i className={`fa-solid ${isLocating ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'}`}></i>
+                        </button>
+                      )}
                       <button
                         type="submit"
                         disabled={!address.trim()}
