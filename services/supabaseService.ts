@@ -105,7 +105,7 @@ export class SupabaseService {
     }
   }
 
-  // Increment search count in Supabase (optional enhancement)
+  // Increment search count in Supabase and save to search history
   async incrementSearchCountInDB(userId: string, address: string): Promise<void> {
     if (!this.supabase) {
       console.log('Supabase not configured, skipping DB update');
@@ -114,7 +114,29 @@ export class SupabaseService {
     try {
       console.log('Saving search to Supabase:', { userId, address });
       
-      const profile = await this.getCurrentProfile();
+      // First, ensure the profile exists (upsert if needed)
+      const user = await this.getCurrentUser();
+      if (user) {
+        const { error: profileError } = await this.supabase
+          .from('profiles')
+          .upsert({
+            id: userId,
+            email: user.email,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'id' });
+        
+        if (profileError) {
+          console.error('Failed to upsert profile:', profileError);
+        }
+      }
+      
+      // Update search count
+      const { data: profile } = await this.supabase
+        .from('profiles')
+        .select('search_count')
+        .eq('id', userId)
+        .single();
+      
       const currentCount = profile?.search_count || 0;
 
       await this.supabase
@@ -122,14 +144,17 @@ export class SupabaseService {
         .update({ search_count: currentCount + 1 })
         .eq('id', userId);
 
+      // Insert search history
       const { error } = await this.supabase
         .from('search_history')
         .insert({ user_id: userId, address });
       
       if (error) {
         console.error('Failed to insert search history:', error);
+        // Log more details for debugging
+        console.error('Error details:', { code: error.code, message: error.message, details: error.details });
       } else {
-        console.log('Search history saved successfully');
+        console.log('Search history saved successfully for:', address);
       }
     } catch (error) {
       console.error('Supabase update failed:', error);

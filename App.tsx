@@ -368,16 +368,26 @@ const App: React.FC = () => {
     return canAudit();
   };
 
-  const incrementSearchCount = () => {
+  const incrementSearchCount = async () => {
     // Use new credit system - consume one credit
     consumeCredit();
     refreshCreditState();
     
-    // Also sync to Supabase if user is authenticated (optional enhancement)
-    if (userProfile?.id) {
-      supabaseService.incrementSearchCountInDB(userProfile.id, address).catch(() => {
+    // Save search to Supabase if user is authenticated
+    if (isLoggedIn && supabaseService.isConfigured()) {
+      try {
+        // Get user ID directly from Supabase session (more reliable than userProfile)
+        const user = await supabaseService.getCurrentUser();
+        if (user?.id) {
+          console.log('Saving search to Supabase for user:', user.id, 'Address:', address);
+          await supabaseService.incrementSearchCountInDB(user.id, address);
+        } else {
+          console.log('No Supabase user found, search not saved to history');
+        }
+      } catch (error) {
+        console.error('Failed to save search to Supabase:', error);
         // Fail silently - localStorage is the source of truth
-      });
+      }
     }
   };
 
