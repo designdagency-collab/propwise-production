@@ -11,20 +11,27 @@ interface PropertyResultsProps {
   onSignUp?: () => void; // For blur unlock CTA
 }
 
-// Blurred value component - shows blur overlay with sign-up CTA
+// Blurred value component - shows HEAVY blur overlay with sign-up CTA
+// Uses blur-lg + grayscale + opacity for completely unreadable content
 const BlurredValue: React.FC<{ 
   children: React.ReactNode; 
   onSignUp?: () => void;
   inline?: boolean;
 }> = ({ children, onSignUp, inline = false }) => (
-  <span className={`relative ${inline ? 'inline-block' : 'block'}`}>
-    <span className="blur-sm select-none pointer-events-none">{children}</span>
+  <span className={`relative ${inline ? 'inline-block' : 'block'} select-none`}>
+    <span 
+      className="blur-lg grayscale opacity-40 select-none pointer-events-none"
+      style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+      aria-hidden="true"
+    >
+      {children}
+    </span>
     {!inline && onSignUp && (
       <button 
         onClick={onSignUp}
-        className="absolute inset-0 flex items-center justify-center bg-slate-900/5 rounded-lg backdrop-blur-[1px] hover:bg-slate-900/10 transition-all group"
+        className="absolute inset-0 flex items-center justify-center bg-slate-900/20 rounded-lg backdrop-blur-sm hover:bg-slate-900/30 transition-all group"
       >
-        <span className="text-[9px] font-black uppercase tracking-widest text-[#C9A961] flex items-center gap-1.5 opacity-80 group-hover:opacity-100">
+        <span className="text-[9px] font-black uppercase tracking-widest text-[#C9A961] flex items-center gap-1.5 opacity-90 group-hover:opacity-100 bg-white/80 px-3 py-1.5 rounded-full shadow-sm">
           <i className="fa-solid fa-lock text-[8px]"></i>
           Sign up to unlock
         </span>
@@ -578,7 +585,13 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
   const cashColorClass = isPositive ? 'text-[#10B981]' : isNegative ? 'text-[#E11D48]' : 'text-[#3A342D]';
 
   return (
-    <div ref={reportRef} id="property-report" data-pdf-root="true" className="max-w-4xl mx-auto space-y-12 pb-32 animate-in fade-in slide-in-from-bottom-6 duration-700">
+    <div 
+      ref={reportRef} 
+      id="property-report" 
+      data-pdf-root="true" 
+      className={`max-w-4xl mx-auto space-y-12 pb-32 animate-in fade-in slide-in-from-bottom-6 duration-700 ${isBlurred ? 'select-none' : ''}`}
+      onContextMenu={isBlurred ? (e) => e.preventDefault() : undefined}
+      style={isBlurred ? { userSelect: 'none', WebkitUserSelect: 'none' } as React.CSSProperties : undefined}
       
       {/* Header Property Summary */}
       <div className="p-5 sm:p-8 md:p-12 rounded-[2rem] sm:rounded-[3rem] border shadow-sm relative overflow-hidden pdf-no-break" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
@@ -898,7 +911,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                <div key={i} data-pdf-strategy-card data-pdf-no-break className={`p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col ${selectedStrategies.has(i) ? 'border-[#D3D9B5] shadow-md ring-1 ring-[#D3D9B5]/20' : 'border-b-[#D6A270]/20 hover:shadow-md'}`} style={{ backgroundColor: 'var(--bg-card)', borderColor: selectedStrategies.has(i) ? '#D3D9B5' : 'var(--border-color)' }}>
                   <div className="flex justify-between items-start mb-4">
                      <div className="space-y-1">
-                        <h3 className="text-base sm:text-lg font-bold text-[#4A4137] group-hover:text-[#D6A270] transition-colors">{strategy.title}</h3>
+                        <MaybeBlur>
+                          <h3 className="text-base sm:text-lg font-bold text-[#4A4137] group-hover:text-[#D6A270] transition-colors">{strategy.title}</h3>
+                        </MaybeBlur>
                         <PathwayBadgeWithTooltip pathway={strategy.planningPathway} />
                      </div>
                      <div className="flex flex-col items-end gap-2">
@@ -1006,7 +1021,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                 <div key={i} className="p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col hover:shadow-md" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
                    <div className="flex justify-between items-start mb-4">
                       <div className="space-y-1">
-                         <h3 className="text-lg font-bold text-[#4A4137]">{scenario.title}</h3>
+                         <MaybeBlur>
+                           <h3 className="text-lg font-bold text-[#4A4137]">{scenario.title}</h3>
+                         </MaybeBlur>
                          <div className="flex flex-wrap gap-2">
                             <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${getEligibilityBadgeColor(scenario.eligibility)}`}>{scenario.eligibility}</span>
                             <PathwayBadgeWithTooltip pathway={scenario.planningPathway} />
