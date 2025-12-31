@@ -76,6 +76,10 @@ DROP POLICY IF EXISTS "Users can view own search history" ON search_history;
 CREATE POLICY "Users can view own search history" ON search_history
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own search history" ON search_history;
+CREATE POLICY "Users can insert own search history" ON search_history
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
 DROP POLICY IF EXISTS "Service role full access search_history" ON search_history;
 CREATE POLICY "Service role full access search_history" ON search_history FOR ALL USING (true);
 

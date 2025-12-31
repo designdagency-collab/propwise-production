@@ -507,16 +507,24 @@ const App: React.FC = () => {
 
   // Fetch search history from Supabase
   const fetchSearchHistory = async () => {
+    console.log('Fetching search history...', { isLoggedIn, configured: supabaseService.isConfigured() });
+    
     if (!isLoggedIn || !supabaseService.isConfigured()) {
+      console.log('Not fetching - not logged in or Supabase not configured');
       setSearchHistory([]);
       return;
     }
     
     try {
       const user = await supabaseService.getCurrentUser();
+      console.log('Current user for history:', user?.id);
       if (user) {
         const history = await supabaseService.getSearchHistory(user.id);
+        console.log('Fetched search history:', history);
         setSearchHistory(history);
+      } else {
+        console.log('No user found');
+        setSearchHistory([]);
       }
     } catch (error) {
       console.error('Failed to fetch search history:', error);

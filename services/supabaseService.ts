@@ -107,8 +107,13 @@ export class SupabaseService {
 
   // Increment search count in Supabase (optional enhancement)
   async incrementSearchCountInDB(userId: string, address: string): Promise<void> {
-    if (!this.supabase) return;
+    if (!this.supabase) {
+      console.log('Supabase not configured, skipping DB update');
+      return;
+    }
     try {
+      console.log('Saving search to Supabase:', { userId, address });
+      
       const profile = await this.getCurrentProfile();
       const currentCount = profile?.search_count || 0;
 
@@ -117,12 +122,17 @@ export class SupabaseService {
         .update({ search_count: currentCount + 1 })
         .eq('id', userId);
 
-      await this.supabase
+      const { error } = await this.supabase
         .from('search_history')
         .insert({ user_id: userId, address });
+      
+      if (error) {
+        console.error('Failed to insert search history:', error);
+      } else {
+        console.log('Search history saved successfully');
+      }
     } catch (error) {
-      // Fail silently - localStorage is the fallback
-      console.log('Supabase update failed, using localStorage fallback');
+      console.error('Supabase update failed:', error);
     }
   }
 
