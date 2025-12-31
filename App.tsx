@@ -473,8 +473,26 @@ const App: React.FC = () => {
 
   // Handle "Buy Starter Pack" CTA - calls Stripe checkout
   const handleBuyStarterPack = async () => {
-    // REQUIRE LOGIN before payment
-    if (!isLoggedIn) {
+    // REQUIRE LOGIN before payment - double-check with Supabase to avoid stale state
+    let userLoggedIn = isLoggedIn;
+    let email = userEmail;
+    
+    if (!userLoggedIn) {
+      // State might be stale - verify with Supabase directly
+      const user = await supabaseService.getCurrentUser();
+      if (user) {
+        console.log('[Auth] Session recovered from Supabase:', user.email);
+        setIsLoggedIn(true);
+        setUserEmail(user.email || '');
+        localStorage.setItem('prop_is_logged_in', 'true');
+        localStorage.setItem('prop_user_email', user.email || '');
+        userLoggedIn = true;
+        email = user.email || '';
+      }
+    }
+    
+    if (!userLoggedIn) {
+      // User is truly not logged in - show signup
       setShowPricing(false);
       setEmailAuthMode('signup');
       setShowEmailAuth(true);
@@ -484,8 +502,9 @@ const App: React.FC = () => {
     
     setIsProcessingUpgrade(true);
     
-    // Call Stripe checkout for Starter Pack
-    const result = await stripeService.createCheckoutSession('STARTER_PACK', userEmail);
+    // Call Stripe checkout for Starter Pack (use recovered email if available)
+    const checkoutEmail = email || userProfile?.email || localStorage.getItem('prop_user_email') || '';
+    const result = await stripeService.createCheckoutSession('STARTER_PACK', checkoutEmail);
     
     if (result.success && result.url) {
       // Redirect to Stripe checkout
@@ -502,8 +521,26 @@ const App: React.FC = () => {
 
   // Handle "Upgrade to Pro" CTA
   const handleUpgradeToPro = async () => {
-    // REQUIRE LOGIN before payment
-    if (!isLoggedIn) {
+    // REQUIRE LOGIN before payment - double-check with Supabase to avoid stale state
+    let userLoggedIn = isLoggedIn;
+    let email = userProfile?.email || userEmail || localStorage.getItem('prop_user_email');
+    
+    if (!userLoggedIn) {
+      // State might be stale - verify with Supabase directly
+      const user = await supabaseService.getCurrentUser();
+      if (user) {
+        console.log('[Auth] Session recovered from Supabase:', user.email);
+        setIsLoggedIn(true);
+        setUserEmail(user.email || '');
+        localStorage.setItem('prop_is_logged_in', 'true');
+        localStorage.setItem('prop_user_email', user.email || '');
+        userLoggedIn = true;
+        email = user.email || '';
+      }
+    }
+    
+    if (!userLoggedIn) {
+      // User is truly not logged in - show signup
       setShowPricing(false);
       setEmailAuthMode('signup');
       setShowEmailAuth(true);
@@ -513,8 +550,6 @@ const App: React.FC = () => {
     
     setIsProcessingUpgrade(true);
     setError(null);
-    
-    const email = userProfile?.email || userEmail || localStorage.getItem('prop_user_email');
     
     if (!email) {
       setIsProcessingUpgrade(false);
