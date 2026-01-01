@@ -218,7 +218,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
                   {searchHistory.map((item, index) => {
                     const date = new Date(item.created_at);
                     const formattedDate = date.toLocaleDateString('en-AU', {
