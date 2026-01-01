@@ -63,14 +63,25 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
     <div className="min-h-screen pb-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-32">
         <div className="mb-8">
-          <button
-            onClick={onBack}
-            className="inline-flex items-center gap-2 text-sm font-medium hover:text-[#C9A961] transition-colors mb-8"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            <i className="fa-solid fa-arrow-left"></i>
-            Back to Home
-          </button>
+          <div className="flex items-center justify-between mb-8">
+            <button
+              onClick={onBack}
+              className="inline-flex items-center gap-2 text-sm font-medium hover:text-[#C9A961] transition-colors"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              <i className="fa-solid fa-arrow-left"></i>
+              Back to Home
+            </button>
+            
+            <a
+              href="mailto:support@upblock.ai"
+              className="w-10 h-10 rounded-xl border flex items-center justify-center hover:border-[#C9A961] hover:text-[#C9A961] transition-all"
+              style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
+              title="Contact Support"
+            >
+              <i className="fa-solid fa-envelope text-sm"></i>
+            </a>
+          </div>
           
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tighter" style={{ color: 'var(--text-primary)' }}>
             Account Settings
