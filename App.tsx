@@ -219,13 +219,24 @@ const App: React.FC = () => {
     };
 
     // Check for existing session on mount
-    // Supabase's detectSessionInUrl:true will auto-parse OAuth hash before this runs
-    supabaseService.supabase!.auth.getSession().then(({ data: { session }, error }) => {
-      console.log('[Auth] getSession:', { hasSession: !!session, email: session?.user?.email, error: error?.message });
+    // Supabase's detectSessionInUrl:true will auto-parse OAuth hash
+    const checkSession = async (attempt = 1) => {
+      const { data: { session }, error } = await supabaseService.supabase!.auth.getSession();
+      console.log(`[Auth] getSession attempt ${attempt}:`, { hasSession: !!session, email: session?.user?.email, error: error?.message });
+      
       if (session?.user) {
         handleSessionLogin(session);
+        return;
       }
-    });
+      
+      // If OAuth hash present but no session yet, retry a few times (Supabase may still be processing)
+      if (window.location.hash.includes('access_token') && attempt < 5) {
+        console.log('[Auth] OAuth hash detected but no session, retrying in 500ms...');
+        setTimeout(() => checkSession(attempt + 1), 500);
+      }
+    };
+    
+    checkSession();
 
     // Listen to auth changes
     const { data: { subscription } } = supabaseService.supabase!.auth.onAuthStateChange(
