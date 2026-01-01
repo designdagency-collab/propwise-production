@@ -902,25 +902,31 @@ const App: React.FC = () => {
     }
   };
 
-  // Fetch search history from Supabase
+  // Fetch search history from Supabase via server API (bypasses RLS)
   const fetchSearchHistory = async () => {
-    console.log('Fetching search history...', { isLoggedIn, configured: supabaseService.isConfigured() });
+    const userId = userProfile?.id;
+    console.log('Fetching search history...', { isLoggedIn, userId });
     
-    if (!isLoggedIn || !supabaseService.isConfigured()) {
-      console.log('Not fetching - not logged in or Supabase not configured');
+    if (!isLoggedIn || !userId) {
+      console.log('Not fetching - not logged in or no userId');
       setSearchHistory([]);
       return;
     }
     
     try {
-      const user = await supabaseService.getCurrentUser();
-      console.log('Current user for history:', user?.id);
-      if (user) {
-        const history = await supabaseService.getSearchHistory(user.id);
+      const response = await fetch('/api/get-search-history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+      
+      if (response.ok) {
+        const { history } = await response.json();
         console.log('Fetched search history:', history);
-        setSearchHistory(history);
+        setSearchHistory(history || []);
       } else {
-        console.log('No user found');
+        const errorData = await response.json();
+        console.error('Failed to fetch search history:', errorData.error);
         setSearchHistory([]);
       }
     } catch (error) {
