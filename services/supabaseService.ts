@@ -65,47 +65,52 @@ export class SupabaseService {
       return null;
     }
     
-    const MAX_RETRIES = 3;
-    const RETRY_DELAY = 500; // ms
+    const MAX_RETRIES = 5;
+    const RETRY_DELAY = 1000; // 1 second between retries
     
     try {
       let targetUserId = userId;
       
-      // Only call getUser if userId not provided
+      // CRITICAL: First verify the session is ready for authenticated queries
+      // RLS requires auth.uid() to work, which needs a valid session
+      const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
+      console.log('[Supabase] getCurrentProfile - session check:', session ? { userId: session.user?.id, email: session.user?.email } : 'NO SESSION', 'error:', sessionError?.message);
+      
+      if (!session) {
+        console.log('[Supabase] getCurrentProfile - no session yet, attempt:', retryCount + 1);
+        if (retryCount < MAX_RETRIES) {
+          console.log('[Supabase] getCurrentProfile - waiting', RETRY_DELAY, 'ms for session...');
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+          return this.getCurrentProfile(userId, retryCount + 1);
+        }
+        console.log('[Supabase] getCurrentProfile - max retries reached, no session');
+        return null;
+      }
+      
+      // Use session user ID if not provided
       if (!targetUserId) {
-        console.log('[Supabase] getCurrentProfile - calling getUser...');
-        const { data: { user }, error: userError } = await this.supabase.auth.getUser();
-        console.log('[Supabase] getCurrentProfile - getUser result:', user ? { id: user.id, email: user.email } : null, 'error:', userError?.message);
-        if (!user) return null;
-        targetUserId = user.id;
+        targetUserId = session.user?.id;
+      }
+      
+      if (!targetUserId) {
+        console.log('[Supabase] getCurrentProfile - no userId available');
+        return null;
       }
 
       console.log('[Supabase] getCurrentProfile - querying profile for userId:', targetUserId, 'attempt:', retryCount + 1);
       
-      // Create a timeout promise to prevent hanging
-      const timeoutPromise = new Promise<{data: null, error: {message: string}}>((resolve) => {
-        setTimeout(() => {
-          resolve({ data: null, error: { message: 'Query timed out after 5s' } });
-        }, 5000);
-      });
-      
-      // Create the query promise
-      const queryPromise = this.supabase
+      // Now query with a valid session - RLS should work
+      const { data, error: profileError } = await this.supabase
         .from('profiles')
         .select('*')
         .eq('id', targetUserId)
         .single();
-      
-      // Race between query and timeout
-      const { data, error: profileError } = await Promise.race([queryPromise, timeoutPromise]);
 
       console.log('[Supabase] getCurrentProfile - result:', data ? { id: data.id, credit_topups: data.credit_topups, search_count: data.search_count } : null, 'error:', profileError?.message);
       
-      // If query timed out or failed due to RLS, retry after delay
-      if (!data && retryCount < MAX_RETRIES) {
-        console.log('[Supabase] getCurrentProfile - retrying in', RETRY_DELAY, 'ms...');
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-        return this.getCurrentProfile(targetUserId, retryCount + 1);
+      // If no data but we have a session, the profile might not exist yet - create it
+      if (!data && profileError?.code === 'PGRST116') {
+        console.log('[Supabase] getCurrentProfile - profile not found, may need to create');
       }
       
       return data;
@@ -114,7 +119,7 @@ export class SupabaseService {
       
       // Retry on exception if we haven't exhausted retries
       if (retryCount < MAX_RETRIES) {
-        console.log('[Supabase] getCurrentProfile - retrying after exception...');
+        console.log('[Supabase] getCurrentProfile - retrying after exception in', RETRY_DELAY, 'ms...');
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
         return this.getCurrentProfile(userId, retryCount + 1);
       }
