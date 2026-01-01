@@ -135,18 +135,18 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       display: none !important; 
     }
     
-    /* Container - 30px margins between major sections */
+    /* Container - Tighter margins between sections */
     .pdf-mode [data-pdf-root="true"] {
       max-width: 100% !important;
       padding: 0 !important;
       margin: 0 !important;
     }
-    .pdf-mode .space-y-12 > * + * { margin-top: 30px !important; }
-    .pdf-mode .space-y-8 > * + * { margin-top: 25px !important; }
-    .pdf-mode .space-y-6 > * + * { margin-top: 20px !important; }
-    .pdf-mode .space-y-4 > * + * { margin-top: 15px !important; }
-    .pdf-mode .space-y-3 > * + * { margin-top: 12px !important; }
-    .pdf-mode .space-y-2 > * + * { margin-top: 10px !important; }
+    .pdf-mode .space-y-12 > * + * { margin-top: 20px !important; }
+    .pdf-mode .space-y-8 > * + * { margin-top: 16px !important; }
+    .pdf-mode .space-y-6 > * + * { margin-top: 14px !important; }
+    .pdf-mode .space-y-4 > * + * { margin-top: 10px !important; }
+    .pdf-mode .space-y-3 > * + * { margin-top: 8px !important; }
+    .pdf-mode .space-y-2 > * + * { margin-top: 6px !important; }
     
     /* Cards - Clean padding, NO SHADOWS, respect page breaks */
     .pdf-mode [class*="rounded-[2"],
@@ -227,23 +227,23 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     .pdf-mode h3 { font-size: 11px !important; line-height: 1.2 !important; color: #3A342D !important; margin-bottom: 2px !important; }
     .pdf-mode p { font-size: 9px !important; line-height: 1.35 !important; margin: 0 !important; }
     
-    /* Section spacing - 30px between major sections, respect page breaks */
+    /* Section spacing - Tighter, respect page breaks */
     .pdf-mode section { 
-      margin-bottom: 30px !important; 
+      margin-bottom: 16px !important; 
       break-inside: avoid !important;
       page-break-inside: avoid !important;
     }
-    .pdf-mode .gap-2 { gap: 8px !important; }
-    .pdf-mode .gap-3 { gap: 10px !important; }
-    .pdf-mode .gap-4 { gap: 12px !important; }
-    .pdf-mode .gap-5, .pdf-mode .gap-6 { gap: 15px !important; }
-    .pdf-mode .gap-8 { gap: 20px !important; }
+    .pdf-mode .gap-2 { gap: 6px !important; }
+    .pdf-mode .gap-3 { gap: 8px !important; }
+    .pdf-mode .gap-4 { gap: 10px !important; }
+    .pdf-mode .gap-5, .pdf-mode .gap-6 { gap: 12px !important; }
+    .pdf-mode .gap-8 { gap: 14px !important; }
     
     /* Page break control */
     .pdf-mode [data-pdf-section] {
       break-inside: avoid !important;
       page-break-inside: avoid !important;
-      margin-bottom: 30px !important;
+      margin-bottom: 16px !important;
     }
     .pdf-mode h2, .pdf-mode h3 {
       break-after: avoid !important;
@@ -320,15 +320,15 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     
     /* Map Container - LARGE */
     .pdf-mode [data-map="true"] {
-      height: 440px !important;
+      height: 400px !important;
       border-radius: 10px !important;
       overflow: hidden !important;
       break-inside: avoid !important;
-      margin-bottom: 10px !important;
+      margin-bottom: 6px !important;
     }
     .pdf-mode .pdf-map-image {
       width: 100% !important;
-      height: 440px !important;
+      height: 400px !important;
       object-fit: cover !important;
       display: block !important;
       border-radius: 10px !important;
