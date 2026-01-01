@@ -135,28 +135,28 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       display: none !important; 
     }
     
-    /* Container - ULTRA TIGHT */
+    /* Container - More breathing room between sections */
     .pdf-mode [data-pdf-root="true"] {
       max-width: 100% !important;
       padding: 0 !important;
       margin: 0 !important;
     }
-    .pdf-mode .space-y-12 > * + * { margin-top: 10px !important; }
-    .pdf-mode .space-y-8 > * + * { margin-top: 8px !important; }
-    .pdf-mode .space-y-6 > * + * { margin-top: 6px !important; }
-    .pdf-mode .space-y-4 > * + * { margin-top: 4px !important; }
-    .pdf-mode .space-y-3 > * + * { margin-top: 3px !important; }
-    .pdf-mode .space-y-2 > * + * { margin-top: 2px !important; }
+    .pdf-mode .space-y-12 > * + * { margin-top: 20px !important; }
+    .pdf-mode .space-y-8 > * + * { margin-top: 16px !important; }
+    .pdf-mode .space-y-6 > * + * { margin-top: 14px !important; }
+    .pdf-mode .space-y-4 > * + * { margin-top: 10px !important; }
+    .pdf-mode .space-y-3 > * + * { margin-top: 8px !important; }
+    .pdf-mode .space-y-2 > * + * { margin-top: 6px !important; }
     
-    /* Cards - COMPACT padding, NO SHADOWS */
+    /* Cards - Clean padding, NO SHADOWS */
     .pdf-mode [class*="rounded-[2"],
     .pdf-mode [class*="rounded-[3"],
     .pdf-mode [class*="rounded-[4"] {
       border-radius: 10px !important;
       border: 1px solid rgba(201, 169, 97, 0.2) !important;
       background-color: #ffffff !important;
-      padding: 10px !important;
-      margin-bottom: 6px !important;
+      padding: 12px !important;
+      margin-bottom: 12px !important;
       overflow: visible !important;
       break-inside: avoid !important;
       page-break-inside: avoid !important;
@@ -184,11 +184,17 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       padding-left: 8px !important;
       padding-right: 8px !important;
     }
-    .pdf-mode .mb-3, .pdf-mode .mb-4, .pdf-mode .mb-5, .pdf-mode .mb-6, .pdf-mode .mb-8 {
-      margin-bottom: 4px !important;
+    .pdf-mode .mb-3, .pdf-mode .mb-4 {
+      margin-bottom: 6px !important;
     }
-    .pdf-mode .mt-3, .pdf-mode .mt-4, .pdf-mode .mt-5, .pdf-mode .mt-6, .pdf-mode .mt-8 {
-      margin-top: 4px !important;
+    .pdf-mode .mb-5, .pdf-mode .mb-6, .pdf-mode .mb-8 {
+      margin-bottom: 10px !important;
+    }
+    .pdf-mode .mt-3, .pdf-mode .mt-4 {
+      margin-top: 6px !important;
+    }
+    .pdf-mode .mt-5, .pdf-mode .mt-6, .pdf-mode .mt-8 {
+      margin-top: 10px !important;
     }
     
     /* KPI Row - Grid Layout COMPACT */
@@ -221,13 +227,13 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     .pdf-mode h3 { font-size: 11px !important; line-height: 1.2 !important; color: #3A342D !important; margin-bottom: 2px !important; }
     .pdf-mode p { font-size: 9px !important; line-height: 1.35 !important; margin: 0 !important; }
     
-    /* Section spacing - COMPACT */
-    .pdf-mode section { margin-bottom: 8px !important; break-inside: avoid !important; }
-    .pdf-mode .gap-2 { gap: 4px !important; }
-    .pdf-mode .gap-3 { gap: 5px !important; }
-    .pdf-mode .gap-4 { gap: 6px !important; }
-    .pdf-mode .gap-5, .pdf-mode .gap-6 { gap: 6px !important; }
-    .pdf-mode .gap-8 { gap: 8px !important; }
+    /* Section spacing - More breathing room */
+    .pdf-mode section { margin-bottom: 16px !important; break-inside: avoid !important; }
+    .pdf-mode .gap-2 { gap: 6px !important; }
+    .pdf-mode .gap-3 { gap: 8px !important; }
+    .pdf-mode .gap-4 { gap: 10px !important; }
+    .pdf-mode .gap-5, .pdf-mode .gap-6 { gap: 12px !important; }
+    .pdf-mode .gap-8 { gap: 14px !important; }
     
     /* Strategy Grid - COMPACT */
     .pdf-mode [data-pdf-strategy-grid] {
