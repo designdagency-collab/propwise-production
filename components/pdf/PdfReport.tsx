@@ -175,16 +175,23 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
           <div className="pdf-metric">
             <span className="pdf-metric-label">POST-IMPROVEMENT</span>
             <span className="pdf-metric-value pdf-metric-highlight">
-              {formatRange(data.valueSnapshot?.postImprovementRange?.low, data.valueSnapshot?.postImprovementRange?.high)}
+              {(() => {
+                const baseline = data.valueSnapshot?.indicativeMidpoint || 0;
+                const strategies = data.valueAddStrategies || [];
+                if (strategies.length === 0) return '—';
+                const totalUpliftLow = strategies.reduce((sum, s) => sum + (s.estimatedUplift?.low || 0), 0);
+                const totalUpliftHigh = strategies.reduce((sum, s) => sum + (s.estimatedUplift?.high || 0), 0);
+                return formatRange(baseline + totalUpliftLow, baseline + totalUpliftHigh);
+              })()}
             </span>
           </div>
           <div className="pdf-metric">
             <span className="pdf-metric-label">GROWTH TREND (5YR)</span>
-            <span className="pdf-metric-value">{data.marketContext?.growthTrend || '—'}</span>
+            <span className="pdf-metric-value">{data.valueSnapshot?.growth || '—'}</span>
           </div>
           <div className="pdf-metric">
             <span className="pdf-metric-label">DATA CONFIDENCE</span>
-            <span className="pdf-metric-value">{data.marketContext?.dataConfidence || '—'}</span>
+            <span className="pdf-metric-value">{data.valueSnapshot?.confidenceLevel || '—'}</span>
           </div>
         </div>
 
