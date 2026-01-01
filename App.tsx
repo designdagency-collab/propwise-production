@@ -538,9 +538,7 @@ const App: React.FC = () => {
   const loadUserData = async (userId?: string) => {
     console.log('[loadUserData] Called with userId:', userId);
     
-    // Small delay to let session fully establish for RLS
-    console.log('[loadUserData] Waiting 500ms for session to settle...');
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Using server-side API now, no delay needed
     
     try {
       // Pass userId directly to avoid getUser() hanging during OAuth

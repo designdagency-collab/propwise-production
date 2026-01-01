@@ -57,58 +57,46 @@ export class SupabaseService {
     return { user: data?.user, session: data?.session, error };
   }
 
-  // Get current user profile - simplified to avoid hanging during OAuth
-  // userId is REQUIRED to avoid any auth calls that might hang
+  // Get current user profile using server-side API to bypass RLS issues during OAuth
   async getCurrentProfile(userId?: string): Promise<any | null> {
-    if (!this.supabase) {
-      console.log('[Supabase] getCurrentProfile - not configured');
-      return null;
-    }
-    
     if (!userId) {
-      console.log('[Supabase] getCurrentProfile - no userId provided, cannot query');
+      console.log('[Supabase] getCurrentProfile - no userId provided');
       return null;
     }
     
-    console.log('[Supabase] getCurrentProfile - querying profile for userId:', userId);
+    console.log('[Supabase] getCurrentProfile - fetching via API for userId:', userId);
     
     try {
-      // Query profile directly - RLS policy should allow if session is valid
-      // Use a timeout to prevent hanging
-      const timeoutMs = 8000;
+      // Get current access token for verification
+      let accessToken = '';
+      if (this.supabase) {
+        const { data: { session } } = await this.supabase.auth.getSession();
+        accessToken = session?.access_token || '';
+      }
       
-      const queryPromise = this.supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      
-      const timeoutPromise = new Promise<{data: null, error: {message: string, code: string}}>((resolve) => {
-        setTimeout(() => {
-          resolve({ data: null, error: { message: 'Query timed out', code: 'TIMEOUT' } });
-        }, timeoutMs);
+      // Use server-side API to bypass RLS
+      const response = await fetch('/api/get-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, accessToken })
       });
       
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
-      
-      if (error) {
-        console.log('[Supabase] getCurrentProfile - error:', error.message, 'code:', error.code);
-        
-        // If timeout or RLS error, profile query failed
-        if (error.code === 'TIMEOUT') {
-          console.log('[Supabase] getCurrentProfile - query timed out, RLS may not be ready');
-        }
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.log('[Supabase] getCurrentProfile - API error:', errorData.error);
         return null;
       }
       
-      console.log('[Supabase] getCurrentProfile - SUCCESS:', data ? { 
-        id: data.id, 
-        credit_topups: data.credit_topups, 
-        search_count: data.search_count,
-        email: data.email
-      } : null);
+      const { profile } = await response.json();
       
-      return data;
+      console.log('[Supabase] getCurrentProfile - SUCCESS:', profile ? { 
+        id: profile.id, 
+        credit_topups: profile.credit_topups, 
+        search_count: profile.search_count,
+        email: profile.email
+      } : 'no profile');
+      
+      return profile;
     } catch (err: any) {
       console.error('[Supabase] getCurrentProfile - exception:', err?.message);
       return null;
