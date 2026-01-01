@@ -431,51 +431,24 @@ const App: React.FC = () => {
       if (profile) {
         setUserProfile(profile);
         
-        // SUPABASE IS SOURCE OF TRUTH - Calculate credits directly from profile
-        const searchesUsed = profile.search_count || 0;
-        const creditTopups = profile.credit_topups || 0;
-        const planType = profile.plan_type || 'FREE_TRIAL';
+        // Use billingService for consistent credit calculation (single source of truth)
+        const state = calculateCreditState(profile);
+        const calculatedCredits = getRemainingCredits(state);
         
-        // Account bonus: 2 free searches for having an account
-        const ACCOUNT_BONUS = 2;
-        const freeCreditsRemaining = Math.max(0, ACCOUNT_BONUS - searchesUsed);
-        
-        // PRO subscription logic
-        const now = new Date();
-        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-        const proMonth = profile.pro_month || '';
-        const proUsed = profile.pro_used || 0;
-        
-        let calculatedCredits = 0;
-        
-        if (planType === 'PRO') {
-          // PRO gets 10/month
-          const PRO_MONTHLY = 10;
-          if (proMonth === currentMonth) {
-            calculatedCredits = Math.max(0, PRO_MONTHLY - proUsed);
-          } else {
-            // New month - reset to 10
-            calculatedCredits = PRO_MONTHLY;
-          }
-        } else if (planType === 'UNLIMITED_PRO') {
-          calculatedCredits = 999;
-        } else {
-          // FREE_TRIAL or STARTER_PACK - use free credits + topups
-          calculatedCredits = freeCreditsRemaining + creditTopups;
-        }
-        
-        console.log('[Credits] Calculated from Supabase:', {
-          searchesUsed,
-          creditTopups,
-          planType,
-          freeCreditsRemaining,
-          calculatedCredits
+        console.log('[loadUserData] Calculated from Supabase:', {
+          profile: { 
+            search_count: profile.search_count, 
+            credit_topups: profile.credit_topups,
+            plan_type: profile.plan_type,
+            pro_used: profile.pro_used,
+            pro_month: profile.pro_month
+          },
+          calculatedCredits,
+          plan: state.plan
         });
         
-        // Set React state from Supabase profile - NO localStorage
         setRemainingCredits(calculatedCredits);
-        setPlan(planType as PlanType);
-        console.log('[loadUserData] Loaded from Supabase:', { planType, calculatedCredits });
+        setPlan(state.plan);
       } else {
         console.log('[loadUserData] No profile found - user may need to complete signup');
       }
