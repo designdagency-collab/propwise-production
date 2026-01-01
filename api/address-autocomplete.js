@@ -38,28 +38,16 @@ export default async function handler(req, res) {
     url.searchParams.set('components', 'country:au'); // Australia only
     url.searchParams.set('key', googleApiKey);
 
-    console.log('[Autocomplete] Fetching suggestions for:', input);
-    console.log('[Autocomplete] API Key present:', !!googleApiKey, 'length:', googleApiKey?.length);
-
     const response = await fetch(url.toString());
     const data = await response.json();
 
-    console.log('[Autocomplete] Google response status:', data.status);
-    if (data.error_message) {
-      console.log('[Autocomplete] Error message:', data.error_message);
-    }
-
     if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
       console.error('[Autocomplete] API error:', data.status, data.error_message);
-      // Return the error for debugging
-      return res.status(200).json({ 
-        predictions: [], 
-        debug: { status: data.status, error: data.error_message }
-      });
+      return res.status(200).json({ predictions: [] });
     }
 
-    // Extract and format predictions
-    const predictions = (data.predictions || []).slice(0, 5).map(p => ({
+    // Extract and format predictions - only 1 for clean UX
+    const predictions = (data.predictions || []).slice(0, 1).map(p => ({
       description: p.description,
       placeId: p.place_id,
       // Extract main text (street address) and secondary text (suburb, state)
