@@ -58,23 +58,32 @@ export class SupabaseService {
   }
 
   // Get current user profile (optional - doesn't break if fails)
-  async getCurrentProfile(): Promise<any | null> {
+  // Can pass userId directly to avoid calling getUser() which may hang during OAuth
+  async getCurrentProfile(userId?: string): Promise<any | null> {
     if (!this.supabase) {
       console.log('[Supabase] getCurrentProfile - not configured');
       return null;
     }
     try {
-      const { data: { user }, error: userError } = await this.supabase.auth.getUser();
-      console.log('[Supabase] getCurrentProfile - getUser:', user ? { id: user.id, email: user.email } : null, 'error:', userError?.message);
-      if (!user) return null;
+      let targetUserId = userId;
+      
+      // Only call getUser if userId not provided
+      if (!targetUserId) {
+        console.log('[Supabase] getCurrentProfile - calling getUser...');
+        const { data: { user }, error: userError } = await this.supabase.auth.getUser();
+        console.log('[Supabase] getCurrentProfile - getUser result:', user ? { id: user.id, email: user.email } : null, 'error:', userError?.message);
+        if (!user) return null;
+        targetUserId = user.id;
+      }
 
+      console.log('[Supabase] getCurrentProfile - querying profile for userId:', targetUserId);
       const { data, error: profileError } = await this.supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('id', targetUserId)
         .single();
 
-      console.log('[Supabase] getCurrentProfile - profile query:', data ? { id: data.id, credit_topups: data.credit_topups, search_count: data.search_count } : null, 'error:', profileError?.message);
+      console.log('[Supabase] getCurrentProfile - profile result:', data ? { id: data.id, credit_topups: data.credit_topups, search_count: data.search_count } : null, 'error:', profileError?.message);
       return data;
     } catch (err: any) {
       console.error('[Supabase] getCurrentProfile - exception:', err?.message);
