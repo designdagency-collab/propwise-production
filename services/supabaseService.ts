@@ -108,6 +108,50 @@ export class SupabaseService {
     }
   }
 
+  // Update PRO subscription usage (monthly quota tracking)
+  async updateProUsage(userId: string, proMonth: string, proUsed: number): Promise<void> {
+    if (!this.supabase) return;
+    try {
+      const { error } = await this.supabase
+        .from('profiles')
+        .update({ 
+          pro_month: proMonth, 
+          pro_used: proUsed, 
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', userId);
+      
+      if (error) throw error;
+      console.log('[Supabase] PRO usage updated:', { proMonth, proUsed });
+    } catch (error) {
+      console.error('[Supabase] Failed to update PRO usage:', error);
+    }
+  }
+
+  // Increment PRO usage count
+  async incrementProUsage(userId: string): Promise<void> {
+    if (!this.supabase) return;
+    try {
+      const profile = await this.getCurrentProfile();
+      const now = new Date();
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      
+      let proMonth = profile?.pro_month || currentMonth;
+      let proUsed = profile?.pro_used || 0;
+      
+      // Reset if new month
+      if (proMonth !== currentMonth) {
+        proMonth = currentMonth;
+        proUsed = 0;
+      }
+      
+      proUsed += 1;
+      await this.updateProUsage(userId, proMonth, proUsed);
+    } catch (error) {
+      console.error('[Supabase] Failed to increment PRO usage:', error);
+    }
+  }
+
   // Update user profile (phone, name, etc.)
   async updateProfile(userId: string, updates: { phone?: string; full_name?: string }): Promise<void> {
     if (!this.supabase) return;

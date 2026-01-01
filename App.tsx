@@ -341,6 +341,7 @@ const App: React.FC = () => {
         } else {
           activateProSubscription();
           setPlan('PRO');
+          localStorage.setItem('prop_plan', 'PRO');
         }
         
         refreshCreditState();
@@ -359,12 +360,17 @@ const App: React.FC = () => {
             // Update subscription in Supabase for THIS user
             await supabaseService.updateSubscription(user.id, purchasedPlan as PlanType, sessionId);
             
-            // CRITICAL: Save credit topups to Supabase for STARTER_PACK purchases
-            // This ensures credits persist across devices/sessions
+            // CRITICAL: Save credits/quota to Supabase for persistence
             if (purchasedPlan === 'STARTER_PACK') {
               const currentCredits = parseInt(localStorage.getItem('prop_credit_topups') || '0', 10);
               console.log('[Payment] Saving credit topups to Supabase:', currentCredits);
               await supabaseService.updateCreditTopups(user.id, currentCredits);
+            } else if (purchasedPlan === 'PRO') {
+              // Initialize PRO quota in Supabase
+              const now = new Date();
+              const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+              console.log('[Payment] Initializing PRO quota in Supabase:', currentMonth);
+              await supabaseService.updateProUsage(user.id, currentMonth, 0);
             }
             
             // Load user profile
@@ -421,6 +427,33 @@ const App: React.FC = () => {
           await supabaseService.updateCreditTopups(userId, localCreditTopups);
         }
         
+        // CRITICAL: Sync PRO monthly quota from Supabase
+        // This prevents abuse by clearing browser/switching devices
+        const now = new Date();
+        const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const supabaseProMonth = profile.pro_month || currentMonth;
+        const supabaseProUsed = profile.pro_used || 0;
+        const localProMonth = localStorage.getItem('prop_pro_month') || currentMonth;
+        const localProUsed = parseInt(localStorage.getItem('prop_pro_used') || '0', 10);
+        
+        // If same month, use the HIGHER usage count (prevents abuse)
+        // If different month, Supabase is source of truth
+        if (supabaseProMonth === localProMonth) {
+          const actualProUsed = Math.max(supabaseProUsed, localProUsed);
+          localStorage.setItem('prop_pro_month', supabaseProMonth);
+          localStorage.setItem('prop_pro_used', actualProUsed.toString());
+          
+          // Sync back to Supabase if local had higher usage
+          if (localProUsed > supabaseProUsed && userId) {
+            console.log('[Credits] Local has higher PRO usage - syncing to Supabase:', localProUsed);
+            await supabaseService.updateProUsage(userId, localProMonth, localProUsed);
+          }
+        } else {
+          // Different months - use Supabase values (server is source of truth)
+          localStorage.setItem('prop_pro_month', supabaseProMonth);
+          localStorage.setItem('prop_pro_used', supabaseProUsed.toString());
+        }
+        
         // User has an account (they're in the profiles table)
         localStorage.setItem('prop_has_account', 'true');
         
@@ -475,7 +508,7 @@ const App: React.FC = () => {
   };
 
   const incrementSearchCount = async () => {
-    console.log('[Search] incrementSearchCount called, isLoggedIn:', isLoggedIn);
+    console.log('[Search] incrementSearchCount called, isLoggedIn:', isLoggedIn, 'plan:', plan);
     
     // Logged-in users: consume credit from credit system
     if (isLoggedIn) {
@@ -494,6 +527,14 @@ const App: React.FC = () => {
           if (user?.id) {
             console.log('[Search] Saving to Supabase - User:', user.id, 'Address:', address);
             await supabaseService.incrementSearchCountInDB(user.id, address);
+            
+            // CRITICAL: If PRO user, also sync PRO usage to Supabase
+            // This prevents abuse by clearing browser/switching devices
+            if (plan === 'PRO') {
+              console.log('[Search] PRO user - syncing usage to Supabase');
+              await supabaseService.incrementProUsage(user.id);
+            }
+            
             console.log('[Search] Save completed successfully');
           } else {
             console.warn('[Search] No user ID found, cannot save to Supabase');
