@@ -181,16 +181,16 @@ const PhoneRecoveryModal: React.FC<PhoneRecoveryModalProps> = ({
 
               <div className="space-y-3 pt-4">
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-[#C9A961]/10 text-left">
-                  <i className="fa-solid fa-check text-[#C9A961]"></i>
-                  <span className="text-sm" style={{ color: 'var(--text-primary)' }}>Recover your account if locked out</span>
+                  <span className="text-lg">🔑</span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Recover your account if locked out</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-[#C9A961]/10 text-left">
-                  <i className="fa-solid fa-check text-[#C9A961]"></i>
-                  <span className="text-sm" style={{ color: 'var(--text-primary)' }}>Additional layer of security</span>
+                  <span className="text-lg">🛡️</span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Additional layer of security</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-[#C9A961]/10 text-left">
-                  <i className="fa-solid fa-check text-[#C9A961]"></i>
-                  <span className="text-sm" style={{ color: 'var(--text-primary)' }}>We'll never spam you</span>
+                  <span className="text-lg">🔒</span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>We'll never spam you</span>
                 </div>
               </div>
 
