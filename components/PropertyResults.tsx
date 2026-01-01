@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { PropertyData, PlanType, DevEligibility, Amenity } from '../types';
+import PdfReport, { getPdfDocumentStyles } from './pdf/PdfReport';
 
 interface PropertyResultsProps {
   data: PropertyData;
@@ -121,463 +123,18 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
   };
 
   /**
-   * PDF Export Styles - FIXED: No blank gaps, no duplicates, deterministic output
-   * 
-   * KEY FIXES:
-   * 1. REMOVED global break-inside:avoid from sections/grids (caused blank pages)
-   * 2. Added .avoid-break class for targeted use on small cards only
-   * 3. Force desktop layout with explicit grid columns (no Tailwind breakpoint dependency)
-   * 4. Hide tooltips completely (prevent duplicate labels)
-   * 5. Ensure single layout renders (no mobile + desktop variants)
-   */
-  const getPdfStyles = () => `
-    /* ===== BASE PDF RESET ===== */
-    .pdf-mode {
-      background-color: #ffffff !important;
-      color: #3A342D !important;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-      font-size: 10px !important;
-      line-height: 1.35 !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    .pdf-mode * {
-      transition: none !important;
-      animation: none !important;
-      box-sizing: border-box !important;
-    }
-    
-    /* ===== HIDE NON-PDF ELEMENTS ===== */
-    /* Hide buttons, tooltips, hover states, and mobile-only elements */
-    .pdf-mode [data-no-pdf="true"],
-    .pdf-mode button:not([data-pdf-keep]),
-    .pdf-mode .invisible { 
-      display: none !important; 
-    }
-    
-    /* CRITICAL FIX: Hide tooltip containers completely to prevent duplicate labels */
-    .pdf-mode .group .invisible,
-    .pdf-mode .group > div:last-child:not(:first-child),
-    .pdf-mode [class*="group-hover"] {
-      display: none !important;
-      visibility: hidden !important;
-      opacity: 0 !important;
-      height: 0 !important;
-      overflow: hidden !important;
-    }
-    
-    /* ===== CONTAINER LAYOUT ===== */
-    .pdf-mode [data-pdf-root="true"] {
-      max-width: 100% !important;
-      padding: 0 !important;
-      margin: 0 !important;
-    }
-    .pdf-mode .space-y-12 > * + * { margin-top: 14px !important; }
-    .pdf-mode .space-y-8 > * + * { margin-top: 12px !important; }
-    .pdf-mode .space-y-6 > * + * { margin-top: 10px !important; }
-    .pdf-mode .space-y-4 > * + * { margin-top: 8px !important; }
-    .pdf-mode .space-y-3 > * + * { margin-top: 6px !important; }
-    .pdf-mode .space-y-2 > * + * { margin-top: 4px !important; }
-    
-    /* ===== CARDS - NO GLOBAL BREAK-INSIDE ===== */
-    .pdf-mode [class*="rounded-[2"],
-    .pdf-mode [class*="rounded-[3"],
-    .pdf-mode [class*="rounded-[4"] {
-      border-radius: 12px !important;
-      border: 1px solid rgba(201, 169, 97, 0.25) !important;
-      background-color: #ffffff !important;
-      padding: 12px !important;
-      margin-bottom: 8px !important;
-      overflow: visible !important;
-      box-shadow: none !important;
-      /* NO break-inside here - let content flow naturally */
-    }
-    
-    /* Remove ALL shadows in PDF */
-    .pdf-mode * {
-      box-shadow: none !important;
-      -webkit-box-shadow: none !important;
-    }
-    .pdf-mode [class*="shadow"] {
-      box-shadow: none !important;
-    }
-    
-    /* ===== PADDING NORMALIZATION ===== */
-    .pdf-mode .p-4, .pdf-mode .p-5, .pdf-mode .p-6, .pdf-mode .p-8, .pdf-mode .p-10, .pdf-mode .p-12 {
-      padding: 10px !important;
-    }
-    .pdf-mode .md\\:p-8, .pdf-mode .md\\:p-10, .pdf-mode .md\\:p-12, .pdf-mode .md\\:p-14 {
-      padding: 12px !important;
-    }
-    .pdf-mode .py-3, .pdf-mode .py-4, .pdf-mode .py-5, .pdf-mode .py-6 {
-      padding-top: 6px !important;
-      padding-bottom: 6px !important;
-    }
-    .pdf-mode .px-4, .pdf-mode .px-5, .pdf-mode .px-6 {
-      padding-left: 8px !important;
-      padding-right: 8px !important;
-    }
-    .pdf-mode .mb-3, .pdf-mode .mb-4 { margin-bottom: 8px !important; }
-    .pdf-mode .mb-5, .pdf-mode .mb-6, .pdf-mode .mb-8 { margin-bottom: 12px !important; }
-    .pdf-mode .mt-3, .pdf-mode .mt-4 { margin-top: 8px !important; }
-    .pdf-mode .mt-5, .pdf-mode .mt-6, .pdf-mode .mt-8 { margin-top: 12px !important; }
-    
-    /* ===== KPI ROW ===== */
-    .pdf-mode [data-pdf-kpi-row] {
-      display: grid !important;
-      grid-template-columns: repeat(4, 1fr) !important;
-      gap: 8px !important;
-      padding-top: 8px !important;
-      margin-top: 8px !important;
-    }
-    .pdf-mode [data-pdf-kpi] {
-      min-width: 0 !important;
-    }
-    .pdf-mode [data-pdf-kpi] p:first-child {
-      font-size: 7px !important;
-      color: #777 !important;
-      margin-bottom: 1px !important;
-      text-transform: uppercase !important;
-      letter-spacing: 0.4px !important;
-    }
-    .pdf-mode [data-pdf-kpi] p:last-child {
-      font-size: 16px !important;
-      font-weight: 800 !important;
-      font-variant-numeric: tabular-nums !important;
-    }
-    
-    /* ===== TYPOGRAPHY ===== */
-    .pdf-mode h1 { font-size: 20px !important; line-height: 1.1 !important; color: #3A342D !important; margin-bottom: 2px !important; }
-    .pdf-mode h2 { font-size: 13px !important; line-height: 1.15 !important; color: #3A342D !important; margin-bottom: 4px !important; }
-    .pdf-mode h3 { font-size: 11px !important; line-height: 1.2 !important; color: #3A342D !important; margin-bottom: 2px !important; }
-    .pdf-mode p { font-size: 9px !important; line-height: 1.35 !important; margin: 0 !important; }
-    
-    /* ===== SECTION SPACING - NO GLOBAL BREAK-INSIDE ===== */
-    .pdf-mode section { 
-      margin-bottom: 12px !important; 
-      /* NO break-inside: avoid here - causes blank gaps */
-    }
-    .pdf-mode .gap-2 { gap: 4px !important; }
-    .pdf-mode .gap-3 { gap: 6px !important; }
-    .pdf-mode .gap-4 { gap: 8px !important; }
-    .pdf-mode .gap-5, .pdf-mode .gap-6 { gap: 10px !important; }
-    .pdf-mode .gap-8 { gap: 12px !important; }
-    
-    /* ===== TARGETED PAGE BREAK CONTROL ===== */
-    /* Only use break-inside:avoid on SMALL elements that should stay together */
-    .pdf-mode .avoid-break,
-    .pdf-mode [data-pdf-no-break] {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-    }
-    
-    /* Keep headings with their first content */
-    .pdf-mode h2 {
-      break-after: avoid !important;
-      page-break-after: avoid !important;
-    }
-    
-    /* ===== STRATEGY CARDS - Small enough to avoid-break ===== */
-    .pdf-mode [data-pdf-strategy-grid] {
-      display: grid !important;
-      grid-template-columns: repeat(2, 1fr) !important;
-      gap: 12px !important;
-    }
-    .pdf-mode [data-pdf-strategy-card] {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-      padding: 12px !important;
-    }
-    .pdf-mode [data-pdf-strategy-card] h3 {
-      font-size: 13px !important;
-      font-weight: 700 !important;
-      color: #3A342D !important;
-      margin-bottom: 6px !important;
-      display: block !important;
-    }
-    .pdf-mode [data-pdf-strategy-card] .space-y-1 {
-      display: block !important;
-    }
-    .pdf-mode [data-pdf-strategy-card] .flex.justify-between {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 8px !important;
-    }
-    
-    /* ===== BADGES - SINGLE RENDER ONLY ===== */
-    .pdf-mode span[class*="rounded"] {
-      display: inline-block !important;
-      white-space: nowrap !important;
-      overflow: visible !important;
-      text-overflow: clip !important;
-      padding: 2px 6px !important;
-      font-size: 7px !important;
-      font-weight: 700 !important;
-      letter-spacing: 0.4px !important;
-      line-height: 1.2 !important;
-    }
-    .pdf-mode .text-\\[8px\\], .pdf-mode .text-\\[9px\\], .pdf-mode .text-\\[10px\\] {
-      font-size: 7px !important;
-      white-space: nowrap !important;
-      overflow: visible !important;
-    }
-    .pdf-mode .tracking-widest, .pdf-mode .tracking-wider {
-      letter-spacing: 0.2px !important;
-    }
-    
-    /* ===== CALLOUT BANNER ===== */
-    .pdf-mode [data-pdf-callout] {
-      background-color: #4A4137 !important;
-      color: #ffffff !important;
-      border-radius: 10px !important;
-      padding: 14px !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-      margin-bottom: 12px !important;
-    }
-    .pdf-mode [data-pdf-callout] * { color: inherit !important; }
-    .pdf-mode [data-pdf-callout] .text-\\[\\#D6A270\\] { color: #D6A270 !important; }
-    .pdf-mode [data-pdf-callout] h3 { font-size: 16px !important; margin-bottom: 3px !important; font-weight: 700 !important; }
-    .pdf-mode [data-pdf-callout] p { font-size: 11px !important; line-height: 1.4 !important; }
-    .pdf-mode [data-pdf-callout] .text-\\[8px\\], .pdf-mode [data-pdf-callout] .text-\\[9px\\] { font-size: 9px !important; }
-    /* Callout icon - SMALLER */
-    .pdf-mode [data-pdf-callout] .w-16, .pdf-mode [data-pdf-callout] .w-20 { width: 40px !important; }
-    .pdf-mode [data-pdf-callout] .h-16, .pdf-mode [data-pdf-callout] .h-20 { height: 40px !important; }
-    .pdf-mode [data-pdf-callout] [class*="rounded-[2"] { width: 40px !important; height: 40px !important; padding: 8px !important; }
-    .pdf-mode [data-pdf-callout] i.fa-sack-dollar { font-size: 18px !important; }
-    
-    /* ===== MAP CONTAINER ===== */
-    .pdf-mode [data-map="true"] {
-      height: 350px !important;
-      border-radius: 10px !important;
-      overflow: hidden !important;
-      break-inside: avoid !important;
-      margin-bottom: 8px !important;
-    }
-    .pdf-mode .pdf-map-image {
-      width: 100% !important;
-      height: 350px !important;
-      object-fit: cover !important;
-      display: block !important;
-      border-radius: 10px !important;
-    }
-    .pdf-mode .pdf-map-placeholder {
-      width: 100% !important;
-      height: 350px !important;
-      background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      border-radius: 10px !important;
-      color: #6b7280 !important;
-      font-size: 14px !important;
-    }
-    
-    /* ===== AMENITY CARDS ===== */
-    .pdf-mode [data-pdf-amenities] {
-      display: grid !important;
-      grid-template-columns: repeat(2, 1fr) !important;
-      gap: 10px !important;
-    }
-    .pdf-mode [data-pdf-amenities] > div {
-      padding: 12px !important;
-      text-align: center !important;
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
-      border-left: none !important;
-      border: 1px solid rgba(201, 169, 97, 0.2) !important;
-      border-radius: 12px !important;
-      break-inside: avoid !important;
-    }
-    .pdf-mode [data-pdf-amenities] > div::before,
-    .pdf-mode [data-pdf-amenities] > div::after {
-      display: none !important;
-    }
-    .pdf-mode [data-pdf-amenities] > div > div:first-child {
-      margin: 0 auto 6px auto !important;
-      width: 24px !important;
-      height: 24px !important;
-    }
-    .pdf-mode [data-pdf-amenities] .space-y-1 {
-      text-align: center !important;
-      width: 100% !important;
-    }
-    .pdf-mode [data-pdf-amenities] .space-y-1 p {
-      text-align: center !important;
-      font-size: 8px !important;
-    }
-    .pdf-mode [data-pdf-amenities] .space-y-1 h4 {
-      text-align: center !important;
-      font-size: 11px !important;
-      font-weight: 700 !important;
-      border-radius: 8px !important;
-    }
-    .pdf-mode [data-pdf-amenities] p:first-child { font-size: 6px !important; margin-bottom: 1px !important; }
-    .pdf-mode [data-pdf-amenities] p:nth-child(2) { font-size: 9px !important; font-weight: 600 !important; margin-bottom: 0 !important; }
-    .pdf-mode [data-pdf-amenities] p:last-child { font-size: 8px !important; }
-    
-    /* ===== WATCH OUTS ===== */
-    .pdf-mode [data-pdf-watchouts] {
-      background-color: #fff5f5 !important;
-      border: 1px solid #fecaca !important;
-      padding: 12px !important;
-      border-radius: 16px !important;
-    }
-    .pdf-mode [data-pdf-watchouts] .grid {
-      gap: 8px !important;
-    }
-    .pdf-mode [data-pdf-watchouts] .bg-white {
-      padding: 10px !important;
-      border-radius: 10px !important;
-      flex-direction: row !important;
-      gap: 10px !important;
-      break-inside: avoid !important;
-    }
-    .pdf-mode [data-pdf-watchouts] h3 { font-size: 12px !important; font-weight: 700 !important; margin-bottom: 4px !important; }
-    .pdf-mode [data-pdf-watchouts] .text-2xl { font-size: 16px !important; }
-    
-    /* ===== BADGE COLORS ===== */
-    .pdf-mode .bg-emerald-500 { background-color: #10b981 !important; color: white !important; }
-    .pdf-mode .bg-blue-500 { background-color: #3b82f6 !important; color: white !important; }
-    .pdf-mode .bg-amber-500 { background-color: #f59e0b !important; color: white !important; }
-    .pdf-mode .bg-rose-500 { background-color: #f43f5e !important; color: white !important; }
-    .pdf-mode .bg-indigo-600 { background-color: #4f46e5 !important; color: white !important; }
-    .pdf-mode .bg-slate-500 { background-color: #64748b !important; color: white !important; }
-    
-    /* ===== TEXT COLORS ===== */
-    .pdf-mode .text-emerald-600, .pdf-mode .text-emerald-700 { color: #059669 !important; }
-    .pdf-mode .text-\\[\\#B8864A\\] { color: #B8864A !important; }
-    .pdf-mode .text-\\[\\#8A9A6D\\] { color: #8A9A6D !important; }
-    .pdf-mode .text-\\[\\#D6A270\\] { color: #D6A270 !important; }
-    .pdf-mode .text-\\[\\#4A4137\\] { color: #3A342D !important; }
-    .pdf-mode .text-\\[\\#3A342D\\] { color: #3A342D !important; }
-    
-    /* ===== BACKGROUND COLORS ===== */
-    .pdf-mode .bg-slate-50 { background-color: #f8fafc !important; }
-    .pdf-mode .bg-slate-50\\/50 { background-color: #fafbfc !important; }
-    .pdf-mode .bg-emerald-50 { background-color: #ecfdf5 !important; }
-    .pdf-mode .bg-amber-50 { background-color: #fffbeb !important; }
-    
-    /* ===== GRID LAYOUTS - FORCE DESKTOP (no Tailwind breakpoint dependency) ===== */
-    .pdf-mode .grid-cols-1.md\\:grid-cols-2,
-    .pdf-mode .grid.md\\:grid-cols-2 { 
-      display: grid !important; 
-      grid-template-columns: repeat(2, 1fr) !important; 
-      gap: 8px !important; 
-    }
-    .pdf-mode .grid-cols-1.md\\:grid-cols-3,
-    .pdf-mode .grid.md\\:grid-cols-3 { 
-      display: grid !important; 
-      grid-template-columns: repeat(3, 1fr) !important; 
-      gap: 8px !important; 
-    }
-    .pdf-mode .grid-cols-1.lg\\:grid-cols-2,
-    .pdf-mode .grid.lg\\:grid-cols-2 { 
-      display: grid !important; 
-      grid-template-columns: repeat(2, 1fr) !important; 
-      gap: 8px !important; 
-    }
-    .pdf-mode .grid-cols-1.lg\\:grid-cols-3,
-    .pdf-mode .grid.lg\\:grid-cols-3 { 
-      display: grid !important; 
-      grid-template-columns: 2fr 1fr !important; 
-      gap: 8px !important; 
-    }
-    .pdf-mode .grid-cols-1.lg\\:grid-cols-4 { 
-      display: grid !important; 
-      grid-template-columns: repeat(2, 1fr) !important; 
-      gap: 8px !important; 
-    }
-    
-    /* Force flex layouts to row for desktop */
-    .pdf-mode .flex-col.md\\:flex-row,
-    .pdf-mode .flex.md\\:flex-row {
-      flex-direction: row !important;
-    }
-    .pdf-mode .text-center.md\\:text-left {
-      text-align: left !important;
-    }
-    
-    /* ===== DECORATIVE - HIDE ===== */
-    .pdf-mode [class*="blur-"], .pdf-mode [class*="-mr-32"], .pdf-mode [class*="-mt-32"] { display: none !important; }
-    .pdf-mode .absolute:not([data-pdf-keep]) { position: relative !important; }
-    
-    /* ===== BORDER SPACING ===== */
-    .pdf-mode .border-t { border-top-width: 1px !important; padding-top: 6px !important; margin-top: 6px !important; }
-    .pdf-mode .border-b { border-bottom-width: 1px !important; padding-bottom: 6px !important; margin-bottom: 6px !important; }
-    
-    /* ===== FOOTER ===== */
-    .pdf-mode footer { 
-      margin-top: 20px !important; 
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-    }
-    .pdf-mode footer p { font-size: 9px !important; color: #888 !important; }
-    .pdf-mode footer img { height: 28px !important; }
-    
-    /* ===== ICON SIZING ===== */
-    .pdf-mode .w-10.h-10 { width: 28px !important; height: 28px !important; min-width: 28px !important; }
-    .pdf-mode .w-8.h-8 { width: 22px !important; height: 22px !important; }
-    .pdf-mode .w-6.h-6 { width: 18px !important; height: 18px !important; }
-    .pdf-mode i { font-size: inherit !important; }
-    
-    /* ===== SECTION HEADERS ===== */
-    .pdf-mode .flex.items-center.gap-4 {
-      display: flex !important;
-      align-items: center !important;
-      gap: 10px !important;
-      margin-bottom: 12px !important;
-    }
-    .pdf-mode .flex.items-center.gap-4 h2 {
-      font-size: 16px !important;
-      font-weight: 700 !important;
-      color: #3A342D !important;
-      margin: 0 !important;
-      display: block !important;
-    }
-    .pdf-mode .flex.items-center.gap-4 p {
-      font-size: 8px !important;
-      color: #888 !important;
-      margin: 0 !important;
-      display: block !important;
-    }
-    
-    /* ===== TABLES ===== */
-    .pdf-mode table { margin: 4px 0 !important; width: 100% !important; border-collapse: collapse !important; }
-    .pdf-mode th, .pdf-mode td { padding: 4px 6px !important; font-size: 9px !important; }
-    
-    /* ===== PRICES - BIGGER FONTS ===== */
-    .pdf-mode .text-2xl, .pdf-mode .text-3xl, .pdf-mode .text-4xl {
-      font-size: 18px !important;
-      font-weight: 800 !important;
-    }
-    .pdf-mode .text-xl { font-size: 16px !important; font-weight: 700 !important; }
-    .pdf-mode .text-lg { font-size: 14px !important; font-weight: 700 !important; }
-    .pdf-mode .font-black, .pdf-mode .font-extrabold, .pdf-mode .font-bold { font-weight: 800 !important; }
-    
-    /* Strategy card costs */
-    .pdf-mode [data-pdf-strategy-card] .text-emerald-700,
-    .pdf-mode [data-pdf-strategy-card] .text-\\[\\#8A9A6D\\] {
-      font-size: 16px !important;
-      font-weight: 800 !important;
-    }
-    /* Development scenario costs/margins */
-    .pdf-mode .text-emerald-600 { font-size: 14px !important; font-weight: 700 !important; }
-    /* Callout profit numbers */
-    .pdf-mode [data-pdf-callout] .text-\\[\\#D6A270\\] { font-size: 20px !important; font-weight: 800 !important; }
-  `;
-
-  /**
    * Export report to PDF using server-side Puppeteer
    * 
-   * Key features:
-   * - Server-side rendering with headless Chrome for pixel-perfect output
-   * - Consistent results across all browsers
-   * - Professional quality suitable for premium users
+   * NEW APPROACH: Render a dedicated PDF-only component (PdfReport.tsx)
+   * instead of cloning the live UI DOM. This provides:
+   * - Deterministic layout with explicit A4 pages
+   * - No truncation or clipped text
+   * - Single-source-of-truth badges (no duplicates)
+   * - Clean tables for comparables
+   * - Inline SVG icons (no CDN dependency)
    */
   const exportToPDF = async () => {
-    if (!reportRef.current || !isPaidUser) return;
+    if (!isPaidUser) return;
     
     setIsExporting(true);
     
@@ -588,20 +145,16 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       
       for (let attempt = 1; attempt <= 2; attempt++) {
         try {
-          const staticMapUrl = `/api/static-map?address=${encodeURIComponent(data.address)}&width=800&height=440&zoom=18`;
+          const staticMapUrl = `/api/static-map?address=${encodeURIComponent(data.address)}&width=800&height=300&zoom=17`;
           console.log('[PDF] Map fetch attempt', attempt);
           
           const mapResponse = await fetch(staticMapUrl);
           const contentType = mapResponse.headers.get('content-type') || '';
           
-          console.log('[PDF] Map response:', mapResponse.status, contentType);
-          
-          // Accept PNG, JPEG images (not SVG placeholder)
           if (mapResponse.ok && (contentType.includes('image/png') || contentType.includes('image/jpeg'))) {
             const blob = await mapResponse.blob();
-            console.log('[PDF] Map blob size:', blob.size);
             
-            if (blob.size > 5000) { // Real map should be > 5KB
+            if (blob.size > 5000) {
               mapDataUrl = await new Promise<string>((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result as string);
@@ -613,122 +166,46 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
             }
           }
           
-          // Wait before retry
           if (attempt < 2) await new Promise(r => setTimeout(r, 1000));
         } catch (mapError) {
           console.warn('[PDF] Map fetch error:', mapError);
         }
       }
-      
-      if (!mapDataUrl) {
-        console.warn('[PDF] Could not load map - using placeholder');
-      }
 
-      // 2. Clone and prepare HTML for PDF
-      const element = reportRef.current;
-      const clonedElement = element.cloneNode(true) as HTMLElement;
+      // 2. Render the dedicated PDF component to HTML
+      // This is the key change: we render a clean, print-first component
+      // instead of cloning the messy live UI DOM
+      console.log('[PDF] Rendering PDF template...');
       
-      // Remove elements not needed in PDF
-      const noPdfElements = clonedElement.querySelectorAll('[data-no-pdf="true"]');
-      noPdfElements.forEach(el => el.remove());
-      
-      const buttons = clonedElement.querySelectorAll('button:not([data-pdf-keep])');
-      buttons.forEach(btn => btn.remove());
-      
-      // CRITICAL: Aggressively remove tooltips to prevent duplicate labels
-      const tooltips = clonedElement.querySelectorAll('.invisible, [class*="group-hover"]:not([data-pdf-keep])');
-      tooltips.forEach(el => el.remove());
-      
-      // Also remove any tooltip containers that might have duplicate content
-      const tooltipContainers = clonedElement.querySelectorAll('.group > div.absolute, .group > div.invisible');
-      tooltipContainers.forEach(el => el.remove());
-      
-      // Replace map with static image
-      const mapContainers = clonedElement.querySelectorAll('[data-map="true"]');
-      mapContainers.forEach(container => {
-        const mapEl = container as HTMLElement;
-        mapEl.innerHTML = '';
-        
-        if (mapDataUrl) {
-          const img = document.createElement('img');
-          img.src = mapDataUrl;
-          img.alt = `Map of ${data.address}`;
-          img.style.cssText = 'width: 100%; height: auto; border-radius: 12px;';
-          mapEl.appendChild(img);
-        } else {
-          const placeholder = document.createElement('div');
-          placeholder.style.cssText = 'padding: 40px; text-align: center; background: #f5f5f5; border-radius: 12px;';
-          placeholder.innerHTML = `<span>📍 ${data.address}</span>`;
-          mapEl.appendChild(placeholder);
-        }
-      });
-      
-      // Remove animations and blur elements
-      const blurElements = clonedElement.querySelectorAll('[class*="blur-3xl"], [class*="blur-2xl"]');
-      blurElements.forEach(el => el.remove());
+      const pdfMarkup = renderToStaticMarkup(
+        <PdfReport 
+          data={data} 
+          address={data.address} 
+          mapImageUrl={mapDataUrl || undefined}
+        />
+      );
 
-      // 3. Build complete HTML document for PDF
-      // CRITICAL: Do NOT add global break-inside:avoid rules - they cause blank pages
+      // 3. Build complete HTML document
       const htmlContent = `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=1240">
-          <script src="https://cdn.tailwindcss.com"></script>
-          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
           <style>
-            * { box-sizing: border-box; }
-            body {
-              font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-              background: #ffffff;
-              color: #3A342D;
-              margin: 0;
-              padding: 10px;
-              line-height: 1.5;
-            }
-            ${getPdfStyles()}
-            
-            /* Print optimizations */
-            @media print {
-              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            }
-            
-            /* FIX: NO global break-inside:avoid on sections/grids */
-            /* Only small cards get avoid-break via .avoid-break or data-pdf-no-break */
-            
-            /* Table layouts */
-            table { width: 100%; border-collapse: collapse; }
-            th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #eee; }
-            
-            /* Ensure colors render */
-            .bg-\\[\\#C9A961\\] { background-color: #C9A961 !important; }
-            .text-\\[\\#C9A961\\] { color: #C9A961 !important; }
-            .text-\\[\\#D6A270\\] { color: #D6A270 !important; }
-            .bg-\\[\\#D6A270\\] { background-color: #D6A270 !important; }
+            ${getPdfDocumentStyles()}
           </style>
         </head>
-        <body class="pdf-mode">
-          ${clonedElement.outerHTML}
-          <footer style="margin-top: 20px; padding: 12px 16px; border-top: 1px solid #C9A961; background: #fafaf8;">
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <img src="https://upblock.ai/upblock.ai-logo.png" alt="upblock.ai" style="height: 20px;" onerror="this.style.display='none'">
-                <span style="font-size: 14px; font-weight: 800; color: #3A342D; letter-spacing: -0.5px;">upblock.ai</span>
-              </div>
-              <p style="font-size: 8px; color: #888; line-height: 1.4; max-width: 400px; text-align: right; margin: 0;">
-                AI-assisted property insights using public data. Not financial advice, valuation, or planning approval. Consult qualified professionals.
-              </p>
-            </div>
-          </footer>
+        <body>
+          ${pdfMarkup}
         </body>
         </html>
       `;
 
       const filename = `upblock-${data.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
 
-      // 4. Generate PDF via Puppeteer API (premium server-side rendering)
+      // 4. Generate PDF via Puppeteer API
       console.log('[PDF] Sending to Puppeteer API...');
       
       const response = await fetch('/api/generate-pdf', {
@@ -737,13 +214,11 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         body: JSON.stringify({ html: htmlContent, filename })
       });
 
-      // Check for errors
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(errorData.details || errorData.error || 'PDF generation failed');
       }
 
-      // Verify we got a PDF
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/pdf')) {
         throw new Error('Server did not return a valid PDF');
