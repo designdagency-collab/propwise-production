@@ -173,8 +173,18 @@ const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Show badge based on plan */}
-            {(plan === 'PRO' || plan === 'UNLIMITED_PRO') ? (
+            {/* Show badge based on plan - or Top Up button when credits low */}
+            {(plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK') && remainingCredits <= 1 ? (
+              // Low credits - show Top Up button
+              <button 
+                onClick={onUpgrade}
+                className="px-3 sm:px-6 py-2 sm:py-2.5 bg-[#C9A961] text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-widest rounded-lg sm:rounded-xl hover:bg-[#3A342D] transition-all shadow-md active:scale-95 animate-pulse"
+              >
+                <i className="fa-solid fa-bolt mr-1 sm:mr-2"></i>
+                <span className="hidden sm:inline">Top Up</span>
+                <span className="sm:hidden">Top Up</span>
+              </button>
+            ) : (plan === 'PRO' || plan === 'UNLIMITED_PRO') ? (
               <div className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)', color: 'var(--text-primary)' }}>
                 <i className="fa-solid fa-crown text-[#C9A961] text-[10px] sm:text-xs"></i>
                 <span className="hidden min-[400px]:inline">Premium</span>
