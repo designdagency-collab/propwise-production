@@ -57,75 +57,60 @@ export class SupabaseService {
     return { user: data?.user, session: data?.session, error };
   }
 
-  // Get current user profile with retry logic for OAuth timing issues
-  // Can pass userId directly to avoid calling getUser() which may hang during OAuth
-  async getCurrentProfile(userId?: string, retryCount = 0): Promise<any | null> {
+  // Get current user profile - simplified to avoid hanging during OAuth
+  // userId is REQUIRED to avoid any auth calls that might hang
+  async getCurrentProfile(userId?: string): Promise<any | null> {
     if (!this.supabase) {
       console.log('[Supabase] getCurrentProfile - not configured');
       return null;
     }
     
-    const MAX_RETRIES = 5;
-    const RETRY_DELAY = 1000; // 1 second between retries
+    if (!userId) {
+      console.log('[Supabase] getCurrentProfile - no userId provided, cannot query');
+      return null;
+    }
+    
+    console.log('[Supabase] getCurrentProfile - querying profile for userId:', userId);
     
     try {
-      let targetUserId = userId;
+      // Query profile directly - RLS policy should allow if session is valid
+      // Use a timeout to prevent hanging
+      const timeoutMs = 8000;
       
-      // CRITICAL: First verify the session is ready for authenticated queries
-      // RLS requires auth.uid() to work, which needs a valid session
-      console.log('[Supabase] getCurrentProfile - about to call getSession...');
-      const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
-      console.log('[Supabase] getCurrentProfile - getSession returned');
-      console.log('[Supabase] getCurrentProfile - session check:', session ? { userId: session.user?.id, email: session.user?.email } : 'NO SESSION', 'error:', sessionError?.message);
-      
-      if (!session) {
-        console.log('[Supabase] getCurrentProfile - no session yet, attempt:', retryCount + 1);
-        if (retryCount < MAX_RETRIES) {
-          console.log('[Supabase] getCurrentProfile - waiting', RETRY_DELAY, 'ms for session...');
-          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-          return this.getCurrentProfile(userId, retryCount + 1);
-        }
-        console.log('[Supabase] getCurrentProfile - max retries reached, no session');
-        return null;
-      }
-      
-      // Use session user ID if not provided
-      if (!targetUserId) {
-        targetUserId = session.user?.id;
-      }
-      
-      if (!targetUserId) {
-        console.log('[Supabase] getCurrentProfile - no userId available');
-        return null;
-      }
-
-      console.log('[Supabase] getCurrentProfile - querying profile for userId:', targetUserId, 'attempt:', retryCount + 1);
-      
-      // Now query with a valid session - RLS should work
-      const { data, error: profileError } = await this.supabase
+      const queryPromise = this.supabase
         .from('profiles')
         .select('*')
-        .eq('id', targetUserId)
+        .eq('id', userId)
         .single();
-
-      console.log('[Supabase] getCurrentProfile - result:', data ? { id: data.id, credit_topups: data.credit_topups, search_count: data.search_count } : null, 'error:', profileError?.message);
       
-      // If no data but we have a session, the profile might not exist yet - create it
-      if (!data && profileError?.code === 'PGRST116') {
-        console.log('[Supabase] getCurrentProfile - profile not found, may need to create');
+      const timeoutPromise = new Promise<{data: null, error: {message: string, code: string}}>((resolve) => {
+        setTimeout(() => {
+          resolve({ data: null, error: { message: 'Query timed out', code: 'TIMEOUT' } });
+        }, timeoutMs);
+      });
+      
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+      
+      if (error) {
+        console.log('[Supabase] getCurrentProfile - error:', error.message, 'code:', error.code);
+        
+        // If timeout or RLS error, profile query failed
+        if (error.code === 'TIMEOUT') {
+          console.log('[Supabase] getCurrentProfile - query timed out, RLS may not be ready');
+        }
+        return null;
       }
+      
+      console.log('[Supabase] getCurrentProfile - SUCCESS:', data ? { 
+        id: data.id, 
+        credit_topups: data.credit_topups, 
+        search_count: data.search_count,
+        email: data.email
+      } : null);
       
       return data;
     } catch (err: any) {
       console.error('[Supabase] getCurrentProfile - exception:', err?.message);
-      
-      // Retry on exception if we haven't exhausted retries
-      if (retryCount < MAX_RETRIES) {
-        console.log('[Supabase] getCurrentProfile - retrying after exception in', RETRY_DELAY, 'ms...');
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-        return this.getCurrentProfile(userId, retryCount + 1);
-      }
-      
       return null;
     }
   }
