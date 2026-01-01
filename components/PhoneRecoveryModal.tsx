@@ -22,6 +22,7 @@ const PhoneRecoveryModal: React.FC<PhoneRecoveryModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
+  const [testCode, setTestCode] = useState<string | null>(null); // For testing without Twilio
 
   if (!isOpen) return null;
 
@@ -77,6 +78,12 @@ const PhoneRecoveryModal: React.FC<PhoneRecoveryModalProps> = ({
       
       if (!response.ok) {
         throw new Error(data.error || 'Failed to send code');
+      }
+
+      // If test code is returned (Twilio not configured), show it
+      if (data.testCode) {
+        setTestCode(data.testCode);
+        console.log('[PhoneRecovery] Test code:', data.testCode);
       }
 
       setStep('verify');
@@ -291,6 +298,15 @@ const PhoneRecoveryModal: React.FC<PhoneRecoveryModalProps> = ({
                 <p className="text-xs sm:text-sm text-[#3A342D]/60 font-medium">
                   We sent a 6-digit code to <span className="font-bold">{normalizePhone(phone)}</span>
                 </p>
+                {/* Test mode - show code when Twilio not configured */}
+                {testCode && (
+                  <div className="mt-3 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                    <p className="text-xs text-amber-700 font-medium">
+                      <i className="fa-solid fa-flask mr-1"></i>
+                      Test Mode - Your code is: <span className="font-bold text-lg">{testCode}</span>
+                    </p>
+                  </div>
+                )}
               </div>
 
               <form onSubmit={handleVerifyOTP} className="space-y-4">
