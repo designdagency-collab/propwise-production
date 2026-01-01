@@ -1,4 +1,4 @@
-// Vercel serverless function to save search history - bypasses RLS using service role
+// Vercel serverless function to save search history and sync credits - bypasses RLS
 import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req, res) {
@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { userId, address } = req.body;
+  const { userId, address, creditTopups } = req.body;
 
   if (!userId || !address) {
     return res.status(400).json({ error: 'userId and address are required' });
@@ -27,25 +27,35 @@ export default async function handler(req, res) {
   });
 
   try {
-    // Update search count in profile
+    // Get current profile
     const { data: profile } = await supabase
       .from('profiles')
-      .select('search_count')
+      .select('search_count, credit_topups')
       .eq('id', userId)
       .single();
 
     const currentCount = profile?.search_count || 0;
     
+    // Build update object
+    const updates = { 
+      search_count: currentCount + 1,
+      updated_at: new Date().toISOString()
+    };
+    
+    // If creditTopups provided, sync it to Supabase
+    // This ensures purchased credits stay in sync
+    if (typeof creditTopups === 'number') {
+      updates.credit_topups = creditTopups;
+      console.log('Syncing credit_topups to:', creditTopups);
+    }
+    
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ 
-        search_count: currentCount + 1,
-        updated_at: new Date().toISOString()
-      })
+      .update(updates)
       .eq('id', userId);
 
     if (updateError) {
-      console.error('Failed to update search count:', updateError);
+      console.error('Failed to update profile:', updateError);
     }
 
     // Insert search history
@@ -58,8 +68,12 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: historyError.message });
     }
 
-    console.log('Search saved for user:', userId, 'address:', address);
-    return res.status(200).json({ success: true, searchCount: currentCount + 1 });
+    console.log('Search saved for user:', userId, 'address:', address, 'newCount:', currentCount + 1);
+    return res.status(200).json({ 
+      success: true, 
+      searchCount: currentCount + 1,
+      creditTopups: updates.credit_topups ?? profile?.credit_topups
+    });
   } catch (error) {
     console.error('Server error:', error);
     return res.status(500).json({ error: 'Internal server error' });

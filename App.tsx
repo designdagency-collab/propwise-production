@@ -652,12 +652,20 @@ const App: React.FC = () => {
     
     // Logged-in users: consume credit from credit system
     if (isLoggedIn) {
+      // First consume the credit locally
       consumeCredit();
-      refreshCreditState();
+      
+      // Get the UPDATED credit state after consumption
+      const updatedState = getCreditState();
+      const updatedCredits = getRemainingCredits(updatedState);
+      
+      // Refresh UI
+      setCreditState(updatedState);
+      setRemainingCredits(updatedCredits);
       
       // Save search to Supabase using server API (bypasses RLS issues)
       const userId = userProfile?.id;
-      console.log('[Search] User profile ID:', userId, 'Address:', address);
+      console.log('[Search] User profile ID:', userId, 'Address:', address, 'Updated creditTopups:', updatedState.creditTopups);
       
       if (userId && address) {
         try {
@@ -665,12 +673,23 @@ const App: React.FC = () => {
           const response = await fetch('/api/save-search', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, address })
+            body: JSON.stringify({ 
+              userId, 
+              address,
+              creditTopups: updatedState.creditTopups // Sync purchased credits to Supabase
+            })
           });
           
           if (response.ok) {
             const result = await response.json();
-            console.log('[Search] Save completed successfully, new count:', result.searchCount);
+            console.log('[Search] Save completed successfully, new count:', result.searchCount, 'creditTopups:', result.creditTopups);
+            
+            // Update userProfile with new values
+            setUserProfile((prev: any) => prev ? {
+              ...prev,
+              search_count: result.searchCount,
+              credit_topups: result.creditTopups
+            } : prev);
             
             // CRITICAL: If PRO user, also sync PRO usage to Supabase
             if (plan === 'PRO') {
@@ -685,7 +704,7 @@ const App: React.FC = () => {
           console.error('[Search] Failed to save search:', error);
         }
       } else {
-        console.warn('[Search] No user ID or address, cannot save to Supabase');
+        console.warn('[Search] No user ID or address, cannot save to Supabase. userProfile:', userProfile);
       }
     } else {
       // Anonymous users: record device search via fingerprint
