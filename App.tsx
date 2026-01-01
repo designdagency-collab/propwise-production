@@ -214,6 +214,7 @@ const App: React.FC = () => {
       // Load user data and then refresh credit state
       await loadUserData(session.user.id);
       refreshCreditState();
+      console.log('[Credits] After refreshCreditState - remaining:', getRemainingCredits(getCreditState()));
       
       // Clean up OAuth hash from URL if present
       if (window.location.hash.includes('access_token')) {
@@ -271,6 +272,7 @@ const App: React.FC = () => {
               
               // CRITICAL: Refresh credit state to update React state from localStorage
               refreshCreditState();
+              console.log('[Credits] OAuth flow - After refresh, remaining:', getRemainingCredits(getCreditState()));
               
               return;
             } else {
@@ -550,6 +552,12 @@ const App: React.FC = () => {
           supabaseSearchCount, localSearchCount, actualSearchCount,
           supabaseCreditTopups, localCreditTopups, actualCreditTopups
         });
+        
+        // Debug: Log what's now in localStorage and what getRemainingCredits will return
+        const debugState = getCreditState();
+        const debugRemaining = getRemainingCredits(debugState);
+        console.log('[Credits] After sync - localStorage state:', debugState);
+        console.log('[Credits] After sync - remaining credits:', debugRemaining);
       }
       
       // Check subscription status
