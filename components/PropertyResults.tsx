@@ -253,19 +253,25 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       letter-spacing: 0.2px !important;
     }
     
-    /* Callout Banner - COMPACT */
+    /* Callout Banner - COMPACT with smaller icon, bigger text */
     .pdf-mode [data-pdf-callout] {
       background-color: #4A4137 !important;
       color: #ffffff !important;
       border-radius: 10px !important;
-      padding: 12px !important;
+      padding: 14px !important;
       break-inside: avoid !important;
       margin-bottom: 8px !important;
     }
     .pdf-mode [data-pdf-callout] * { color: inherit !important; }
     .pdf-mode [data-pdf-callout] .text-\\[\\#D6A270\\] { color: #D6A270 !important; }
-    .pdf-mode [data-pdf-callout] h3 { font-size: 12px !important; margin-bottom: 2px !important; }
-    .pdf-mode [data-pdf-callout] p { font-size: 9px !important; }
+    .pdf-mode [data-pdf-callout] h3 { font-size: 16px !important; margin-bottom: 3px !important; font-weight: 700 !important; }
+    .pdf-mode [data-pdf-callout] p { font-size: 11px !important; line-height: 1.4 !important; }
+    .pdf-mode [data-pdf-callout] .text-\\[8px\\], .pdf-mode [data-pdf-callout] .text-\\[9px\\] { font-size: 9px !important; }
+    /* Callout icon - SMALLER */
+    .pdf-mode [data-pdf-callout] .w-16, .pdf-mode [data-pdf-callout] .w-20 { width: 40px !important; }
+    .pdf-mode [data-pdf-callout] .h-16, .pdf-mode [data-pdf-callout] .h-20 { height: 40px !important; }
+    .pdf-mode [data-pdf-callout] [class*="rounded-[2"] { width: 40px !important; height: 40px !important; padding: 8px !important; }
+    .pdf-mode [data-pdf-callout] i.fa-sack-dollar { font-size: 18px !important; }
     
     /* Map Container - COMPACT */
     .pdf-mode [data-map="true"] {
