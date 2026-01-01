@@ -22,6 +22,15 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
     }
   };
 
+  const handleSelectBulkPack = async () => {
+    setIsProcessing('BULK_PACK' as PlanType);
+    try {
+      await onUpgrade('BULK_PACK' as PlanType);
+    } finally {
+      setIsProcessing(null);
+    }
+  };
+
   const handleSelectPro = async () => {
     if (currentPlan === 'PRO') return;
     setIsProcessing('PRO');
@@ -59,23 +68,18 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
           </div>
         </div>
 
-        {/* PRO USERS: Show Credit Pack + Enterprise */}
+        {/* PRO USERS: Show Credit Packs + Enterprise */}
         {isPro ? (
-          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 items-stretch">
-            {/* Credit Pack for PRO users */}
-            <div className="p-8 rounded-[3rem] border-2 border-[#C9A961] shadow-xl flex flex-col transition-all relative" style={{ backgroundColor: 'var(--bg-card)' }}>
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                <span className="bg-[#C9A961] text-white px-3 sm:px-4 py-1 rounded-full text-[11px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
-                  Top Up Credits
-                </span>
-              </div>
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 items-stretch">
+            {/* 3 Credit Pack */}
+            <div className="p-8 rounded-[3rem] border-2 flex flex-col transition-all relative hover:border-[#C9A961]/50" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
               <div className="mb-8">
-                <h3 className="text-xl sm:text-2xl font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-primary)' }}>Credit Pack</h3>
+                <h3 className="text-lg sm:text-xl font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>3 Pack</h3>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl sm:text-5xl font-black" style={{ color: 'var(--text-primary)' }}>$19</span>
-                  <span className="text-xs sm:text-sm font-bold" style={{ color: 'var(--text-muted)' }}>AUD one-time</span>
+                  <span className="text-3xl sm:text-4xl font-black" style={{ color: 'var(--text-primary)' }}>$19</span>
+                  <span className="text-xs sm:text-sm font-bold" style={{ color: 'var(--text-muted)' }}>AUD</span>
                 </div>
-                <p className="text-[11px] sm:text-xs font-medium mt-2" style={{ color: 'var(--text-muted)' }}>Add credits to your Pro account</p>
+                <p className="text-[11px] sm:text-xs font-medium mt-2" style={{ color: 'var(--text-muted)' }}>$6.33 per credit</p>
               </div>
               <ul className="space-y-4 mb-10 flex-grow">
                 <li className="flex items-start gap-3 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
@@ -84,21 +88,17 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
                 </li>
                 <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                   <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
-                  Added to your existing balance
-                </li>
-                <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
                   Credits never expire
                 </li>
                 <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                   <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
-                  Buy as many as you need
+                  Added to balance
                 </li>
               </ul>
               <button
                 onClick={handleSelectStarter}
                 disabled={isProcessing !== null}
-                className="w-full py-4 sm:py-5 rounded-2xl font-bold uppercase tracking-widest text-[13px] sm:text-[12px] bg-[#C9A961] text-white hover:bg-[#3A342D] shadow-xl shadow-[#C9A961]/30 transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 sm:py-4 rounded-2xl font-bold uppercase tracking-widest text-[12px] sm:text-[11px] border-2 border-[#C9A961] text-[#C9A961] hover:bg-[#C9A961] hover:text-white transition-all flex items-center justify-center gap-2"
               >
                 {isProcessing === 'STARTER_PACK' ? (
                   <>
@@ -108,7 +108,59 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
                 ) : (
                   <>
                     <i className="fa-solid fa-bolt"></i>
-                    Add 3 Credits – $19
+                    Buy 3 Credits
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* 20 Credit Pack - Best Value */}
+            <div className="p-8 rounded-[3rem] border-2 border-[#C9A961] shadow-2xl flex flex-col transition-all relative transform hover:scale-[1.02]" style={{ backgroundColor: 'var(--bg-card)' }}>
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <span className="bg-[#C9A961] text-white px-3 sm:px-4 py-1 rounded-full text-[11px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                  Best Value
+                </span>
+              </div>
+              <div className="mb-8">
+                <h3 className="text-xl sm:text-2xl font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-primary)' }}>20 Pack</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl sm:text-5xl font-black" style={{ color: 'var(--text-primary)' }}>$99</span>
+                  <span className="text-xs sm:text-sm font-bold" style={{ color: 'var(--text-muted)' }}>AUD</span>
+                </div>
+                <p className="text-[11px] sm:text-xs font-bold text-[#C9A961] mt-2">$4.95 per credit – Save 22%</p>
+              </div>
+              <ul className="space-y-4 mb-10 flex-grow">
+                <li className="flex items-start gap-3 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
+                  <i className="fa-solid fa-bolt mt-1 text-[#C9A961]"></i>
+                  +20 Property Audits
+                </li>
+                <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
+                  Credits never expire
+                </li>
+                <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
+                  Added to balance
+                </li>
+                <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
+                  <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
+                  Best for active investors
+                </li>
+              </ul>
+              <button
+                onClick={handleSelectBulkPack}
+                disabled={isProcessing !== null}
+                className="w-full py-4 sm:py-5 rounded-2xl font-bold uppercase tracking-widest text-[13px] sm:text-[12px] bg-[#C9A961] text-white hover:bg-[#3A342D] shadow-xl shadow-[#C9A961]/30 transition-all flex items-center justify-center gap-2"
+              >
+                {isProcessing === ('BULK_PACK' as PlanType) ? (
+                  <>
+                    <i className="fa-solid fa-spinner fa-spin"></i>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-bolt"></i>
+                    Buy 20 Credits
                   </>
                 )}
               </button>

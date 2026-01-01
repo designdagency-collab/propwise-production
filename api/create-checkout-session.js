@@ -20,9 +20,18 @@ const PLAN_CONFIGS = {
   STARTER_PACK: {
     amount: 1900, // $19.00 AUD in cents
     currency: 'aud',
-    name: 'upblock.ai Starter Pack',
+    name: 'upblock.ai 3 Pack',
     description: '3 property audit credits - one-time purchase',
     mode: 'payment', // One-time payment
+    credits: 3,
+  },
+  BULK_PACK: {
+    amount: 9900, // $99.00 AUD in cents
+    currency: 'aud',
+    name: 'upblock.ai 20 Pack',
+    description: '20 property audit credits - best value',
+    mode: 'payment', // One-time payment
+    credits: 20,
   },
   PRO: {
     amount: 4900, // $49.00 AUD in cents

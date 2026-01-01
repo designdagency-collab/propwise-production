@@ -305,7 +305,7 @@ export interface PropertyData {
 }
 
 // New pricing model plan types
-export type PlanType = 'FREE_TRIAL' | 'PRO' | 'STARTER_PACK' | 'UNLIMITED_PRO';
+export type PlanType = 'FREE_TRIAL' | 'PRO' | 'STARTER_PACK' | 'BULK_PACK' | 'UNLIMITED_PRO';
 
 // Credit system types
 export interface CreditState {

@@ -395,6 +395,12 @@ const App: React.FC = () => {
             const newCredits = currentCredits + 3;
             console.log('[Payment] Adding 3 credits:', currentCredits, '->', newCredits);
             await supabaseService.updateCreditTopups(user.id, newCredits);
+          } else if (purchasedPlan === 'BULK_PACK') {
+            const currentProfile = await supabaseService.getCurrentProfile(user.id);
+            const currentCredits = currentProfile?.credit_topups || 0;
+            const newCredits = currentCredits + 20;
+            console.log('[Payment] Adding 20 credits:', currentCredits, '->', newCredits);
+            await supabaseService.updateCreditTopups(user.id, newCredits);
           } else if (purchasedPlan === 'PRO') {
             const now = new Date();
             const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -1108,11 +1114,13 @@ const App: React.FC = () => {
             </div>
             <div>
               <p className="text-sm font-bold">
-                {plan === 'STARTER_PACK' ? '3 Audits Added!' : 'Pro Access Activated'}
+                {plan === 'STARTER_PACK' ? '3 Audits Added!' : plan === 'BULK_PACK' ? '20 Audits Added!' : 'Pro Access Activated'}
               </p>
               <p className="text-[10px] text-white/60">
                 {plan === 'STARTER_PACK' 
-                  ? 'You have 3 additional property audits.' 
+                  ? 'You have 3 additional property audits.'
+                  : plan === 'BULK_PACK'
+                  ? 'You have 20 additional property audits.'
                   : '10 audits per month. Search confidently.'}
               </p>
             </div>
