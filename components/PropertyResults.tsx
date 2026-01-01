@@ -135,28 +135,28 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       display: none !important; 
     }
     
-    /* Container - More breathing room between sections */
+    /* Container - 60px margins between major sections */
     .pdf-mode [data-pdf-root="true"] {
       max-width: 100% !important;
       padding: 0 !important;
       margin: 0 !important;
     }
-    .pdf-mode .space-y-12 > * + * { margin-top: 20px !important; }
-    .pdf-mode .space-y-8 > * + * { margin-top: 16px !important; }
-    .pdf-mode .space-y-6 > * + * { margin-top: 14px !important; }
-    .pdf-mode .space-y-4 > * + * { margin-top: 10px !important; }
-    .pdf-mode .space-y-3 > * + * { margin-top: 8px !important; }
-    .pdf-mode .space-y-2 > * + * { margin-top: 6px !important; }
+    .pdf-mode .space-y-12 > * + * { margin-top: 60px !important; }
+    .pdf-mode .space-y-8 > * + * { margin-top: 50px !important; }
+    .pdf-mode .space-y-6 > * + * { margin-top: 40px !important; }
+    .pdf-mode .space-y-4 > * + * { margin-top: 30px !important; }
+    .pdf-mode .space-y-3 > * + * { margin-top: 20px !important; }
+    .pdf-mode .space-y-2 > * + * { margin-top: 15px !important; }
     
-    /* Cards - Clean padding, NO SHADOWS */
+    /* Cards - Clean padding, NO SHADOWS, respect page breaks */
     .pdf-mode [class*="rounded-[2"],
     .pdf-mode [class*="rounded-[3"],
     .pdf-mode [class*="rounded-[4"] {
-      border-radius: 10px !important;
-      border: 1px solid rgba(201, 169, 97, 0.2) !important;
+      border-radius: 12px !important;
+      border: 1px solid rgba(201, 169, 97, 0.25) !important;
       background-color: #ffffff !important;
-      padding: 12px !important;
-      margin-bottom: 12px !important;
+      padding: 16px !important;
+      margin-bottom: 20px !important;
       overflow: visible !important;
       break-inside: avoid !important;
       page-break-inside: avoid !important;
@@ -185,16 +185,16 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       padding-right: 8px !important;
     }
     .pdf-mode .mb-3, .pdf-mode .mb-4 {
-      margin-bottom: 6px !important;
+      margin-bottom: 15px !important;
     }
     .pdf-mode .mb-5, .pdf-mode .mb-6, .pdf-mode .mb-8 {
-      margin-bottom: 10px !important;
+      margin-bottom: 25px !important;
     }
     .pdf-mode .mt-3, .pdf-mode .mt-4 {
-      margin-top: 6px !important;
+      margin-top: 15px !important;
     }
     .pdf-mode .mt-5, .pdf-mode .mt-6, .pdf-mode .mt-8 {
-      margin-top: 10px !important;
+      margin-top: 25px !important;
     }
     
     /* KPI Row - Grid Layout COMPACT */
@@ -227,13 +227,28 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     .pdf-mode h3 { font-size: 11px !important; line-height: 1.2 !important; color: #3A342D !important; margin-bottom: 2px !important; }
     .pdf-mode p { font-size: 9px !important; line-height: 1.35 !important; margin: 0 !important; }
     
-    /* Section spacing - More breathing room */
-    .pdf-mode section { margin-bottom: 16px !important; break-inside: avoid !important; }
-    .pdf-mode .gap-2 { gap: 6px !important; }
-    .pdf-mode .gap-3 { gap: 8px !important; }
-    .pdf-mode .gap-4 { gap: 10px !important; }
-    .pdf-mode .gap-5, .pdf-mode .gap-6 { gap: 12px !important; }
-    .pdf-mode .gap-8 { gap: 14px !important; }
+    /* Section spacing - 60px between major sections, respect page breaks */
+    .pdf-mode section { 
+      margin-bottom: 60px !important; 
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+    .pdf-mode .gap-2 { gap: 10px !important; }
+    .pdf-mode .gap-3 { gap: 15px !important; }
+    .pdf-mode .gap-4 { gap: 20px !important; }
+    .pdf-mode .gap-5, .pdf-mode .gap-6 { gap: 25px !important; }
+    .pdf-mode .gap-8 { gap: 30px !important; }
+    
+    /* Page break control */
+    .pdf-mode [data-pdf-section] {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      margin-bottom: 60px !important;
+    }
+    .pdf-mode h2, .pdf-mode h3 {
+      break-after: avoid !important;
+      page-break-after: avoid !important;
+    }
     
     /* Strategy Grid - COMPACT */
     .pdf-mode [data-pdf-strategy-grid] {
@@ -395,9 +410,19 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     .pdf-mode .border-t { border-top-width: 1px !important; padding-top: 6px !important; margin-top: 6px !important; }
     .pdf-mode .border-b { border-bottom-width: 1px !important; padding-bottom: 6px !important; margin-bottom: 6px !important; }
     
-    /* Footer - COMPACT */
-    .pdf-mode footer { margin-top: 10px !important; padding-top: 8px !important; border-top: 1px solid #eee !important; }
-    .pdf-mode footer p { font-size: 7px !important; color: #999 !important; }
+    /* Footer - Branded */
+    .pdf-mode footer { 
+      margin-top: 60px !important; 
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+    .pdf-mode footer p { 
+      font-size: inherit !important; 
+      color: inherit !important; 
+    }
+    .pdf-mode footer img {
+      height: 32px !important;
+    }
     
     /* Fix icon sizing */
     .pdf-mode .w-10.h-10 { width: 24px !important; height: 24px !important; }
@@ -591,9 +616,18 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         </head>
         <body class="pdf-mode">
           ${clonedElement.outerHTML}
-          <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; font-size: 10px; color: #888;">
-            upblock.ai provides AI-assisted, scenario-based property insights using publicly available data.<br>
-            It does not constitute financial advice, a property valuation, or planning approval.
+          <footer style="margin-top: 60px; padding: 30px 20px; border-top: 2px solid #C9A961; text-align: center; background: linear-gradient(to bottom, #fafaf8, #f5f5f0);">
+            <div style="margin-bottom: 15px;">
+              <img src="https://upblock.ai/logo.svg" alt="upblock.ai" style="height: 32px; display: inline-block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+              <span style="display: none; font-size: 18px; font-weight: 800; color: #3A342D; letter-spacing: -0.5px;">upblock.ai</span>
+            </div>
+            <p style="font-size: 11px; color: #666; line-height: 1.6; max-width: 500px; margin: 0 auto 10px auto;">
+              upblock.ai provides AI-assisted, scenario-based property insights using publicly available data.
+            </p>
+            <p style="font-size: 10px; color: #999; line-height: 1.5; max-width: 500px; margin: 0 auto;">
+              This report does not constitute financial advice, a property valuation, or planning approval.<br>
+              Always consult qualified professionals before making property decisions.
+            </p>
           </footer>
         </body>
         </html>
