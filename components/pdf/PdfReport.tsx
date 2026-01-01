@@ -151,6 +151,15 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
   
   const totalPages = 4; // Fixed layout for consistency
 
+  // Calculate post-improvement range
+  const baseline = data.valueSnapshot?.indicativeMidpoint || 0;
+  const strategies = data.valueAddStrategies || [];
+  const totalUpliftLow = strategies.reduce((sum, s) => sum + (s.estimatedUplift?.low || 0), 0);
+  const totalUpliftHigh = strategies.reduce((sum, s) => sum + (s.estimatedUplift?.high || 0), 0);
+  const postImprovementRange = strategies.length > 0 
+    ? formatRange(baseline + totalUpliftLow, baseline + totalUpliftHigh)
+    : '—';
+
   return (
     <div className="pdf-document">
       {/* ================================================================
@@ -175,14 +184,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
           <div className="pdf-metric">
             <span className="pdf-metric-label">POST-IMPROVEMENT</span>
             <span className="pdf-metric-value pdf-metric-highlight">
-              {(() => {
-                const baseline = data.valueSnapshot?.indicativeMidpoint || 0;
-                const strategies = data.valueAddStrategies || [];
-                if (strategies.length === 0) return '—';
-                const totalUpliftLow = strategies.reduce((sum, s) => sum + (s.estimatedUplift?.low || 0), 0);
-                const totalUpliftHigh = strategies.reduce((sum, s) => sum + (s.estimatedUplift?.high || 0), 0);
-                return formatRange(baseline + totalUpliftLow, baseline + totalUpliftHigh);
-              })()}
+              {postImprovementRange}
             </span>
           </div>
           <div className="pdf-metric">
