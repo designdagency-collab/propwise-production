@@ -24,6 +24,7 @@ const App: React.FC = () => {
   const [suggestions, setSuggestions] = useState<{ description: string; mainText: string; secondaryText: string }[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [isValidAddress, setIsValidAddress] = useState(false); // Must select from autocomplete
   const autocompleteRef = useRef<HTMLDivElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -121,6 +122,7 @@ const App: React.FC = () => {
   // Debounced address input handler
   const handleAddressChange = useCallback((value: string) => {
     setAddress(value);
+    setIsValidAddress(false); // Reset - must select from autocomplete
     
     // Clear existing timer
     if (debounceTimerRef.current) {
@@ -136,6 +138,7 @@ const App: React.FC = () => {
   // Handle suggestion selection
   const handleSelectSuggestion = useCallback((suggestion: { description: string }) => {
     setAddress(suggestion.description);
+    setIsValidAddress(true); // Valid address selected from autocomplete
     setSuggestions([]);
     setShowSuggestions(false);
   }, []);
@@ -885,6 +888,7 @@ const App: React.FC = () => {
   // Handle searching an address from history
   const handleSearchFromHistory = (historyAddress: string) => {
     setAddress(historyAddress);
+    setIsValidAddress(true); // History addresses are valid
     setShowAccountSettings(false);
     // Trigger search after state updates
     setTimeout(() => {
@@ -1022,14 +1026,17 @@ const App: React.FC = () => {
             
             const formattedAddress = parts.join(' ');
             setAddress(formattedAddress || data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+            setIsValidAddress(true); // GPS location is valid
           } else {
             // Fallback to coordinates if geocoding fails
             setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+            setIsValidAddress(true); // GPS coordinates are valid
           }
         } catch (err) {
           console.error('Reverse geocoding failed:', err);
           // Fallback to coordinates
           setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+          setIsValidAddress(true); // GPS coordinates are valid
         }
         
         setIsLocating(false);
@@ -1067,6 +1074,7 @@ const App: React.FC = () => {
     setAppState(AppState.IDLE);
     setResults(null);
     setAddress('');
+    setIsValidAddress(false); // Reset valid address
     // Close any open pages
     setShowTerms(false);
     setShowPricing(false);
@@ -1270,8 +1278,9 @@ const App: React.FC = () => {
                       )}
                       <button
                         type="submit"
-                        disabled={!address.trim()}
+                        disabled={!isValidAddress}
                         className="bg-[#C9A961] text-white px-6 sm:px-8 h-11 sm:h-12 rounded-xl font-bold hover:bg-[#3A342D] transition-all flex items-center gap-2 shadow-sm disabled:opacity-30 uppercase tracking-widest text-[11px] sm:text-[10px]"
+                        title={!isValidAddress ? "Select an address from the dropdown" : ""}
                       >
                         Audit Block
                       </button>
