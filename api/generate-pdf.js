@@ -4,6 +4,7 @@ import puppeteer from 'puppeteer-core';
 
 export const config = {
   maxDuration: 60, // Allow up to 60 seconds for PDF generation
+  memory: 1024, // Increase memory for Chromium
 };
 
 export default async function handler(req, res) {
@@ -22,43 +23,55 @@ export default async function handler(req, res) {
   try {
     console.log('[PDF] Starting Puppeteer...');
     
+    // Ensure chromium binary is available (downloads if needed on Vercel)
+    const executablePath = await chromium.executablePath();
+    console.log('[PDF] Chromium path:', executablePath);
+    
     // Launch browser with Vercel-optimized settings
     browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      args: [
+        ...chromium.args,
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--single-process',
+      ],
+      defaultViewport: {
+        width: 1200,
+        height: 800,
+        deviceScaleFactor: 2,
+      },
+      executablePath,
+      headless: 'new', // Use new headless mode
     });
 
     console.log('[PDF] Browser launched, creating page...');
     const page = await browser.newPage();
 
-    // Set viewport for consistent rendering
-    await page.setViewport({
-      width: 1200,
-      height: 800,
-      deviceScaleFactor: 2, // High DPI for crisp text
-    });
-
-    // Set the HTML content
+    // Set the HTML content with increased timeout
+    console.log('[PDF] Setting page content...');
     await page.setContent(html, {
-      waitUntil: ['networkidle0', 'domcontentloaded'],
-      timeout: 30000,
+      waitUntil: ['load', 'domcontentloaded'],
+      timeout: 45000,
     });
 
-    // Wait for any images/maps to load
+    // Wait for fonts and images to load
     await page.evaluate(() => {
-      return Promise.all(
-        Array.from(document.images)
+      return Promise.all([
+        // Wait for fonts
+        document.fonts.ready,
+        // Wait for images
+        ...Array.from(document.images)
           .filter(img => !img.complete)
           .map(img => new Promise(resolve => {
             img.onload = img.onerror = resolve;
           }))
-      );
+      ]);
     });
 
-    // Add a small delay for any final rendering
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Small delay for final rendering
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     console.log('[PDF] Generating PDF...');
     
@@ -67,35 +80,39 @@ export default async function handler(req, res) {
       format: 'A4',
       printBackground: true,
       margin: {
-        top: '15mm',
-        right: '15mm',
-        bottom: '15mm',
-        left: '15mm',
+        top: '12mm',
+        right: '12mm',
+        bottom: '12mm',
+        left: '12mm',
       },
       displayHeaderFooter: false,
-      preferCSSPageSize: true,
+      preferCSSPageSize: false,
     });
 
-    console.log('[PDF] PDF generated successfully, size:', pdf.length);
+    console.log('[PDF] PDF generated successfully, size:', pdf.length, 'bytes');
 
     // Set response headers for PDF download
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Length', pdf.length);
 
-    return res.send(pdf);
+    return res.send(Buffer.from(pdf));
 
   } catch (error) {
     console.error('[PDF] Error generating PDF:', error);
     return res.status(500).json({ 
       error: 'Failed to generate PDF',
-      details: error.message 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   } finally {
     if (browser) {
-      await browser.close();
-      console.log('[PDF] Browser closed');
+      try {
+        await browser.close();
+        console.log('[PDF] Browser closed');
+      } catch (closeError) {
+        console.error('[PDF] Error closing browser:', closeError);
+      }
     }
   }
 }
-
