@@ -38,17 +38,30 @@ Before generating ANY data, you MUST search and verify:
    - Use "Unknown" if you cannot verify residential property type
    - NEVER default to "House" without verification
 
-5. COMBINED/AMALGAMATED LOTS DETECTION:
-   Search real estate listings (realestate.com.au, Domain) for this property and check:
-   - Is the listing described as "combined lots", "amalgamated", "dual blocks", or "multiple lots"?
-   - Does the listing mention adjacent street numbers being sold together (e.g., "2 & 4" or "2-4")?
-   - Is the land size unusually large for a single house in that suburb (e.g., 1000sqm+ in suburban area)?
-   - Does the listing specifically mention development potential due to combined land?
+5. COMBINED/AMALGAMATED LOTS DETECTION (CRITICAL - CROSS-REFERENCE LISTINGS):
+   When searching for this property on realestate.com.au or Domain:
    
-   If ANY of the above are true AND property type is House/Land (NOT apartment):
-   - Set isCombinedLots = true
-   - Use the COMBINED land area for all calculations
-   - Emphasise development potential in your analysis
+   ⚠️ IMPORTANT: The user may enter "2 Grace Avenue" but the ACTUAL listing might be for "2-4 Grace Avenue" or "2 & 4 Grace Avenue" (combined lots). You MUST check:
+   
+   a) LISTING TITLE CHECK: Does the listing title include MULTIPLE street numbers?
+      - User searched: "2 Grace Avenue"
+      - Actual listing: "2-4 Grace Avenue" or "2 & 4 Grace Avenue" → THIS IS COMBINED LOTS
+      - Look for patterns like "2-4", "2 & 4", "2, 4", "Lots 1 & 2"
+   
+   b) LISTING DESCRIPTION CHECK: Does it mention:
+      - "combined lots", "amalgamated", "dual blocks", "two titles", "multiple lots"
+      - "sold together", "both properties", "development site"
+      - "combined area", "total land"
+   
+   c) LAND SIZE CHECK: Is the land size LARGER than typical for one house?
+      - If listing shows 1,000sqm+ in suburban area, likely combined lots
+      - Cross-reference: typical house lot in that suburb is 600-800sqm
+   
+   d) IF COMBINED LOTS DETECTED:
+      - Set isCombinedLots = true
+      - Use the COMBINED land area from the listing (e.g., 1,443sqm not 715sqm)
+      - Update the address to reflect the combined lots (e.g., "2-4 Grace Avenue")
+      - Emphasise development potential in your analysis
 
 FOCUS: Value Uplift, Renovation Feasibility, Development Potential, Comparable Sales, Rental Yield, and Local Amenities.
 MANDATORY MODULES:
@@ -70,7 +83,8 @@ MANDATORY MODULES:
 - Include schools and key public transport (trains/buses).
 
 RULES:
-- Address match is king.
+- LISTING ADDRESS is king: If user searches "2 Grace Ave" but listing is "2-4 Grace Ave", use "2-4 Grace Ave" and treat as combined lots.
+- Always use data from the ACTUAL listing found, not assumptions based on search input.
 - Output ONLY valid JSON. No markdown blocks.`;
 
     try {
