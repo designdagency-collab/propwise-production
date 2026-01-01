@@ -170,9 +170,16 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
         <div className="pdf-property-header">
           <div className="pdf-property-badge">PROPERTY STRATEGY REPORT</div>
           <h1 className="pdf-property-address">{address}</h1>
-          <p className="pdf-property-meta">
-            {data.propertyType || 'Residential'} • {data.landSize || 'Land size TBC'}
-          </p>
+          <div className="pdf-property-meta-row">
+            <p className="pdf-property-meta">
+              {data.propertyType || 'Residential'} • {data.landSize || 'Land size TBC'}
+            </p>
+            {data.isCombinedLots && (
+              <span className="pdf-combined-lots-badge">
+                📦 Combined Lots Analysis
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Key Metrics Row */}
@@ -631,9 +638,27 @@ export const getPdfDocumentStyles = () => `
     margin-bottom: 4px;
     letter-spacing: -0.5px;
   }
+  .pdf-property-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
   .pdf-property-meta {
     font-size: 11px;
     color: #777;
+  }
+  .pdf-combined-lots-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: #F3E8FF;
+    color: #7C3AED;
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   /* ===== METRICS ROW ===== */

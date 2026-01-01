@@ -1,12 +1,43 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { PropertyData } from "../types";
 
+// Detect if address indicates combined/amalgamated lots
+function detectCombinedLots(address: string): boolean {
+  // Patterns that indicate multiple lots:
+  // "2-6 Smith St" (range with hyphen)
+  // "2 & 4 Smith St" (ampersand)
+  // "2, 4, 6 Smith St" (comma separated numbers)
+  // "2-4/6 Smith St" (range with slash)
+  const patterns = [
+    /^\d+\s*-\s*\d+\s+/,           // "2-6 Smith St"
+    /^\d+\s*&\s*\d+\s+/,           // "2 & 4 Smith St"
+    /^\d+\s*,\s*\d+/,              // "2, 4 Smith St"
+    /^\d+\s*-\s*\d+\s*\/\s*\d+/,   // "2-4/6 Smith St"
+    /lots?\s*\d+\s*(&|,|-)\s*\d+/i // "Lot 1 & 2" or "Lots 1-3"
+  ];
+  
+  return patterns.some(pattern => pattern.test(address.trim()));
+}
+
 export class GeminiService {
   async fetchPropertyInsights(address: string): Promise<PropertyData> {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const isCombinedLots = detectCombinedLots(address);
     
+    // Build combined lots context if detected
+    const combinedLotsContext = isCombinedLots ? `
+⚠️ COMBINED/AMALGAMATED LOTS DETECTED:
+This address appears to represent multiple adjoining lots being analysed together (e.g., "${address}").
+- Calculate the COMBINED total land area for all lots
+- Analyse development potential based on the amalgamated site
+- Consider that combining lots often unlocks greater development opportunities
+- Factor in that the buyer is likely considering development/subdivision
+- Note any benefits of the combined site (larger frontage, better access, etc.)
+` : '';
+
     const prompt = `You are a professional Australian property planning analyst and prop-tech engineer for upblock.ai.
 Your task is to generate a structured Property DNA report for: "${address}".
+${combinedLotsContext}
 
 ⚠️ MANDATORY FIRST STEP - ZONING & PROPERTY TYPE VERIFICATION:
 Before generating ANY data, you MUST search and verify:
@@ -301,6 +332,7 @@ RULES:
         });
       }
       data.sources = sources;
+      data.isCombinedLots = isCombinedLots;
       return data;
     } catch (error: any) {
       console.error("Strategy Compilation Error:", error);

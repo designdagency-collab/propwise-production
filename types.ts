@@ -275,6 +275,7 @@ export interface PropertyData {
   address: string;
   propertyType: string;
   landSize: string;
+  isCombinedLots?: boolean;  // Indicates amalgamated/combined lot analysis
   attributes: {
     beds: number;
     baths: number;

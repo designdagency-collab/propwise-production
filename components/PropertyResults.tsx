@@ -407,7 +407,15 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
           </div>
           <div>
             <h1 className="text-[2rem] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter font-address leading-tight" style={{ color: 'var(--text-primary)' }}>{data.address}</h1>
-            <p className="font-medium text-sm sm:text-base mt-2" style={{ color: 'var(--text-muted)' }}>{data.propertyType} • {data.landSize || 'Unknown Land Size'}</p>
+            <div className="flex items-center gap-3 mt-2">
+              <p className="font-medium text-sm sm:text-base" style={{ color: 'var(--text-muted)' }}>{data.propertyType} • {data.landSize || 'Unknown Land Size'}</p>
+              {data.isCombinedLots && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-500/10 text-purple-600 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                  <i className="fa-solid fa-layer-group text-[8px]"></i>
+                  Combined Lots
+                </span>
+              )}
+            </div>
           </div>
           <div className="flex flex-wrap gap-8 pt-8 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
              <div className="space-y-1" data-pdf-kpi>
