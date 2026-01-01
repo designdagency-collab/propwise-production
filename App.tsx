@@ -238,64 +238,34 @@ const App: React.FC = () => {
           });
           
           if (accessToken) {
-            console.log('[Auth] Calling setSession with timeout...');
-            
-            // Clear hash immediately to prevent issues
+            // Clear hash immediately
             window.history.replaceState({}, document.title, window.location.pathname);
             
-            // Wrap setSession in a timeout to prevent hanging
-            const setSessionWithTimeout = () => {
-              return Promise.race([
-                supabaseService.supabase!.auth.setSession({
-                  access_token: accessToken,
-                  refresh_token: refreshToken
-                }),
-                new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('setSession timeout after 5s')), 5000)
-                )
-              ]);
-            };
+            console.log('[Auth] Verifying user with token...');
             
-            try {
-              const result = await setSessionWithTimeout() as any;
+            // Use getUser directly - it's faster and more reliable
+            const { data: userData, error: userError } = await supabaseService.supabase!.auth.getUser(accessToken);
+            
+            if (userData.user) {
+              console.log('[Auth] User verified:', userData.user.email);
               
-              console.log('[Auth] setSession completed:', { 
-                hasData: !!result.data,
-                hasSession: !!result.data?.session, 
-                email: result.data?.session?.user?.email,
-                errorMessage: result.error?.message
-              });
+              // Now set the session properly for persistence
+              supabaseService.supabase!.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken
+              }).catch(() => {}); // Fire and forget - don't wait
               
-              if (result.data?.session?.user) {
-                handleSessionLogin(result.data.session);
-                return;
-              } else if (result.error) {
-                console.error('[Auth] setSession error:', result.error);
-              }
-            } catch (timeoutErr: any) {
-              console.error('[Auth] setSession timed out or failed:', timeoutErr.message);
-              
-              // Fallback: Try to get user directly with the token
-              console.log('[Auth] Trying fallback: getUser with token...');
-              try {
-                const { data: userData, error: userError } = await supabaseService.supabase!.auth.getUser(accessToken);
-                console.log('[Auth] getUser result:', { hasUser: !!userData.user, email: userData.user?.email, error: userError?.message });
-                
-                if (userData.user) {
-                  // User is valid, manually set login state
-                  console.log('[Auth] User verified via token, setting login state');
-                  setIsLoggedIn(true);
-                  setUserEmail(userData.user.email || '');
-                  setIsSignedUp(true);
-                  localStorage.setItem('prop_is_logged_in', 'true');
-                  localStorage.setItem('prop_user_email', userData.user.email || '');
-                  setShowEmailAuth(false);
-                  loadUserData(userData.user.id);
-                  return;
-                }
-              } catch (fallbackErr: any) {
-                console.error('[Auth] Fallback also failed:', fallbackErr.message);
-              }
+              // Set login state immediately
+              setIsLoggedIn(true);
+              setUserEmail(userData.user.email || '');
+              setIsSignedUp(true);
+              localStorage.setItem('prop_is_logged_in', 'true');
+              localStorage.setItem('prop_user_email', userData.user.email || '');
+              setShowEmailAuth(false);
+              loadUserData(userData.user.id);
+              return;
+            } else {
+              console.error('[Auth] Token verification failed:', userError?.message);
             }
           }
         } catch (err: any) {
