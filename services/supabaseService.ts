@@ -76,6 +76,38 @@ export class SupabaseService {
     }
   }
 
+  // Update credit topups in profile
+  async updateCreditTopups(userId: string, credits: number): Promise<void> {
+    if (!this.supabase) return;
+    try {
+      const { error } = await this.supabase
+        .from('profiles')
+        .update({ credit_topups: credits, updated_at: new Date().toISOString() })
+        .eq('id', userId);
+      
+      if (error) throw error;
+      console.log('[Supabase] Credit topups updated:', credits);
+    } catch (error) {
+      console.error('[Supabase] Failed to update credit topups:', error);
+    }
+  }
+
+  // Add credits to existing topups
+  async addCreditTopups(userId: string, additionalCredits: number): Promise<void> {
+    if (!this.supabase) return;
+    try {
+      // Get current credits first
+      const profile = await this.getCurrentProfile();
+      const currentCredits = profile?.credit_topups || 0;
+      const newTotal = currentCredits + additionalCredits;
+      
+      await this.updateCreditTopups(userId, newTotal);
+      console.log('[Supabase] Added credits:', additionalCredits, '-> Total:', newTotal);
+    } catch (error) {
+      console.error('[Supabase] Failed to add credit topups:', error);
+    }
+  }
+
   // Update user profile (phone, name, etc.)
   async updateProfile(userId: string, updates: { phone?: string; full_name?: string }): Promise<void> {
     if (!this.supabase) return;

@@ -9,9 +9,13 @@ CREATE TABLE IF NOT EXISTS profiles (
   phone TEXT UNIQUE,
   phone_verified BOOLEAN DEFAULT false,
   search_count INTEGER DEFAULT 0,
+  credit_topups INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Add credit_topups column if it doesn't exist (for existing tables)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS credit_topups INTEGER DEFAULT 0;
 
 -- Create subscriptions table
 CREATE TABLE IF NOT EXISTS subscriptions (

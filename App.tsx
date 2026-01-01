@@ -359,6 +359,14 @@ const App: React.FC = () => {
             // Update subscription in Supabase for THIS user
             await supabaseService.updateSubscription(user.id, purchasedPlan as PlanType, sessionId);
             
+            // CRITICAL: Save credit topups to Supabase for STARTER_PACK purchases
+            // This ensures credits persist across devices/sessions
+            if (purchasedPlan === 'STARTER_PACK') {
+              const currentCredits = parseInt(localStorage.getItem('prop_credit_topups') || '0', 10);
+              console.log('[Payment] Saving credit topups to Supabase:', currentCredits);
+              await supabaseService.updateCreditTopups(user.id, currentCredits);
+            }
+            
             // Load user profile
             const profile = await supabaseService.getCurrentProfile();
             if (profile) {
@@ -398,10 +406,28 @@ const App: React.FC = () => {
         const actualSearchCount = Math.max(supabaseSearchCount, localSearchCount);
         localStorage.setItem('prop_free_used', actualSearchCount.toString());
         
+        // CRITICAL: Sync credit topups from Supabase to localStorage
+        // This ensures purchased credits persist across devices/sessions
+        const supabaseCreditTopups = profile.credit_topups || 0;
+        const localCreditTopups = parseInt(localStorage.getItem('prop_credit_topups') || '0', 10);
+        
+        // Use the HIGHER count (prevents loss of purchased credits)
+        const actualCreditTopups = Math.max(supabaseCreditTopups, localCreditTopups);
+        localStorage.setItem('prop_credit_topups', actualCreditTopups.toString());
+        
+        // If localStorage had more credits than Supabase, sync back to Supabase
+        if (localCreditTopups > supabaseCreditTopups && userId) {
+          console.log('[Credits] Local has more credits - syncing to Supabase:', localCreditTopups);
+          await supabaseService.updateCreditTopups(userId, localCreditTopups);
+        }
+        
         // User has an account (they're in the profiles table)
         localStorage.setItem('prop_has_account', 'true');
         
-        console.log('[Credits] Synced from Supabase:', { supabaseSearchCount, localSearchCount, actualSearchCount });
+        console.log('[Credits] Synced from Supabase:', { 
+          supabaseSearchCount, localSearchCount, actualSearchCount,
+          supabaseCreditTopups, localCreditTopups, actualCreditTopups
+        });
       }
       
       // Check subscription status
