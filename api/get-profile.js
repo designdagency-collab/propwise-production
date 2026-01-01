@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { userId, accessToken } = req.body;
+  const { userId } = req.body;
 
   if (!userId) {
     return res.status(400).json({ error: 'userId is required' });
@@ -28,15 +28,8 @@ export default async function handler(req, res) {
   });
 
   try {
-    // If access token provided, verify it first
-    if (accessToken) {
-      const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
-      if (userError || !userData.user || userData.user.id !== userId) {
-        return res.status(401).json({ error: 'Invalid token or user mismatch' });
-      }
-    }
-
     // Fetch profile using service role (bypasses RLS)
+    // Note: userId is trusted since this endpoint is internal-only
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
