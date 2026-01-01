@@ -183,7 +183,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
               <div className="mb-8">
                 <h3 className="text-xl sm:text-2xl font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-primary)' }}>Enterprise</h3>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl sm:text-5xl font-black" style={{ color: 'var(--text-primary)' }}>$900</span>
+                  <span className="text-4xl sm:text-5xl font-black" style={{ color: 'var(--text-primary)' }}>$1,200</span>
                   <span className="text-xs sm:text-sm font-bold" style={{ color: 'var(--text-muted)' }}>AUD / month</span>
                 </div>
                 <p className="text-[11px] sm:text-xs font-bold mt-2" style={{ color: 'var(--text-muted)' }}>For Buyers Agents & Real Estate Professionals</p>
@@ -195,20 +195,16 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
                   Unlimited Property Audits
                 </li>
                 <li className="flex items-start gap-3 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
-                  <i className="fa-solid fa-users mt-1 text-[#C9A961]"></i>
-                  Qualified Buyer Leads
+                  <i className="fa-solid fa-user-check mt-1 text-[#C9A961]"></i>
+                  Qualified Leads
                 </li>
-                <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
-                  Seller Interest Notifications
+                <li className="flex items-start gap-3 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
+                  <i className="fa-solid fa-file-contract mt-1 text-[#C9A961]"></i>
+                  Commercial-Use Reports
                 </li>
-                <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
-                  White-label Reports
-                </li>
-                <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
-                  Priority Support
+                <li className="flex items-start gap-3 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
+                  <i className="fa-solid fa-bolt mt-1 text-[#C9A961]"></i>
+                  Priority Compute & Support
                 </li>
               </ul>
 
