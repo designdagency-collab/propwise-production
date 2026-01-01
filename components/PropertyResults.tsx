@@ -145,7 +145,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       
       for (let attempt = 1; attempt <= 2; attempt++) {
         try {
-          const staticMapUrl = `/api/static-map?address=${encodeURIComponent(data.address)}&width=800&height=300&zoom=17`;
+          const staticMapUrl = `/api/static-map?address=${encodeURIComponent(data.address)}&width=800&height=300&zoom=16`;
           console.log('[PDF] Map fetch attempt', attempt, staticMapUrl);
           
           const mapResponse = await fetch(staticMapUrl);
