@@ -180,17 +180,17 @@ const PhoneRecoveryModal: React.FC<PhoneRecoveryModalProps> = ({
               </div>
 
               <div className="space-y-3 pt-4">
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-green-50 text-left">
-                  <i className="fa-solid fa-check-circle text-green-500"></i>
-                  <span className="text-sm text-green-700">Recover your account if locked out</span>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-[#C9A961]/10 text-left">
+                  <i className="fa-solid fa-check text-[#C9A961]"></i>
+                  <span className="text-sm" style={{ color: 'var(--text-primary)' }}>Recover your account if locked out</span>
                 </div>
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-green-50 text-left">
-                  <i className="fa-solid fa-check-circle text-green-500"></i>
-                  <span className="text-sm text-green-700">Additional layer of security</span>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-[#C9A961]/10 text-left">
+                  <i className="fa-solid fa-check text-[#C9A961]"></i>
+                  <span className="text-sm" style={{ color: 'var(--text-primary)' }}>Additional layer of security</span>
                 </div>
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-green-50 text-left">
-                  <i className="fa-solid fa-check-circle text-green-500"></i>
-                  <span className="text-sm text-green-700">We'll never spam you</span>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-[#C9A961]/10 text-left">
+                  <i className="fa-solid fa-check text-[#C9A961]"></i>
+                  <span className="text-sm" style={{ color: 'var(--text-primary)' }}>We'll never spam you</span>
                 </div>
               </div>
 
@@ -355,8 +355,8 @@ const PhoneRecoveryModal: React.FC<PhoneRecoveryModalProps> = ({
           {/* Success Step */}
           {step === 'success' && (
             <>
-              <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto">
-                <i className="fa-solid fa-check text-2xl text-green-600"></i>
+              <div className="w-16 h-16 bg-[#C9A961]/10 rounded-2xl flex items-center justify-center mx-auto">
+                <i className="fa-solid fa-check text-2xl text-[#C9A961]"></i>
               </div>
               
               <div>
@@ -369,7 +369,7 @@ const PhoneRecoveryModal: React.FC<PhoneRecoveryModalProps> = ({
               </div>
 
               <div className="pt-4">
-                <div className="flex items-center justify-center gap-2 text-green-600">
+                <div className="flex items-center justify-center gap-2 text-[#C9A961]">
                   <i className="fa-solid fa-shield-check text-lg"></i>
                   <span className="font-medium">Account Protected</span>
                 </div>
