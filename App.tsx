@@ -498,6 +498,9 @@ const App: React.FC = () => {
             // Update subscription in Supabase for THIS user
             await supabaseService.updateSubscription(user.id, purchasedPlan as PlanType, sessionId);
             
+            // CRITICAL: Sync plan_type to profiles table for consistency
+            await supabaseService.updatePlanType(user.id, purchasedPlan as string);
+            
             // CRITICAL: Save credits/quota to Supabase for persistence
             if (purchasedPlan === 'STARTER_PACK') {
               const currentCredits = parseInt(localStorage.getItem('prop_credit_topups') || '0', 10);

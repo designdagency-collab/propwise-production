@@ -112,6 +112,22 @@ export class SupabaseService {
     }
   }
 
+  // Update plan type in profile
+  async updatePlanType(userId: string, planType: string): Promise<void> {
+    if (!this.supabase) return;
+    try {
+      const { error } = await this.supabase
+        .from('profiles')
+        .update({ plan_type: planType, updated_at: new Date().toISOString() })
+        .eq('id', userId);
+      
+      if (error) throw error;
+      console.log('[Supabase] Plan type updated:', planType);
+    } catch (error) {
+      console.error('[Supabase] Failed to update plan type:', error);
+    }
+  }
+
   // Add credits to existing topups
   async addCreditTopups(userId: string, additionalCredits: number): Promise<void> {
     if (!this.supabase) return;

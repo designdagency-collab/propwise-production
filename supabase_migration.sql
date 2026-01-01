@@ -17,6 +17,9 @@ CREATE TABLE IF NOT EXISTS profiles (
 -- Add credit_topups column if it doesn't exist (for existing tables)
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS credit_topups INTEGER DEFAULT 0;
 
+-- Add plan_type column to profiles for tracking membership tier
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan_type TEXT DEFAULT 'FREE_TRIAL';
+
 -- Create subscriptions table
 CREATE TABLE IF NOT EXISTS subscriptions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

@@ -47,13 +47,17 @@ export function getRemainingCredits(state: CreditState): number {
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   
-  // PRO subscription - 10 per month
+  // PRO subscription - 10 per month + any bonus topups
   if (state.plan === 'PRO') {
+    let monthlyRemaining: number;
     // Reset if new month
     if (state.proMonth !== currentMonth) {
-      return PRO_MONTHLY_LIMIT;
+      monthlyRemaining = PRO_MONTHLY_LIMIT;
+    } else {
+      monthlyRemaining = Math.max(0, PRO_MONTHLY_LIMIT - state.proUsed);
     }
-    return Math.max(0, PRO_MONTHLY_LIMIT - state.proUsed);
+    // Add any purchased bonus credits
+    return monthlyRemaining + state.creditTopups;
   }
   
   // UNLIMITED_PRO - unlimited (hidden tier)
@@ -94,8 +98,15 @@ export function consumeCredit(): boolean {
       localStorage.setItem(KEYS.PRO_USED, '1');
       return true;
     }
+    // Use monthly credits first
     if (state.proUsed < PRO_MONTHLY_LIMIT) {
       localStorage.setItem(KEYS.PRO_USED, String(state.proUsed + 1));
+      return true;
+    }
+    // Monthly exhausted - fall back to purchased credit topups
+    if (state.creditTopups > 0) {
+      localStorage.setItem(KEYS.CREDIT_TOPUPS, String(state.creditTopups - 1));
+      console.log('[Billing] PRO user using bonus credit, remaining:', state.creditTopups - 1);
       return true;
     }
     return false;
