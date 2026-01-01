@@ -204,9 +204,9 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                   Search History
                 </h2>
                 {searchHistory.length > 0 && (
-                  <span className="text-[10px] px-2 py-1 rounded-full bg-[#C9A961]/10 text-[#C9A961] font-medium">
-                    <i className="fa-solid fa-bolt mr-1"></i>
-                    1 credit per search
+                  <span className="text-[9px] px-2 py-1 rounded-full bg-green-500/10 text-green-500 font-medium">
+                    <i className="fa-solid fa-gift mr-1"></i>
+                    Free within 7 days
                   </span>
                 )}
               </div>
@@ -228,6 +228,11 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                       year: 'numeric'
                     });
                     
+                    // Check if this search is within 7 days (FREE re-search)
+                    const now = new Date();
+                    const daysSinceSearch = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+                    const isFreeResearch = daysSinceSearch <= 7;
+                    
                     return (
                       <button
                         key={index}
@@ -243,9 +248,16 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                             <p className="text-sm font-medium truncate group-hover:text-[#C9A961] transition-colors" style={{ color: 'var(--text-primary)' }}>
                               {item.address}
                             </p>
-                            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                              {formattedDate}
-                            </p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                                {formattedDate}
+                              </p>
+                              {isFreeResearch && (
+                                <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-500 font-bold uppercase">
+                                  Free
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0 ml-2">

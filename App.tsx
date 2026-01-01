@@ -647,6 +647,56 @@ const App: React.FC = () => {
     return deviceCanSearch === true;
   };
 
+  // Check if address was searched within the last 7 days (FREE re-search)
+  const checkIfRecentSearch = (searchAddress: string): boolean => {
+    const DAYS_FREE = 7;
+    const now = new Date();
+    const cutoffDate = new Date(now.getTime() - DAYS_FREE * 24 * 60 * 60 * 1000);
+    
+    // Check searchHistory for this address
+    const recentMatch = searchHistory.find(item => {
+      const itemDate = new Date(item.created_at);
+      const addressMatch = item.address.toLowerCase().trim() === searchAddress.toLowerCase().trim();
+      const isRecent = itemDate >= cutoffDate;
+      return addressMatch && isRecent;
+    });
+    
+    console.log('[Search] Checking recent search:', { 
+      address: searchAddress, 
+      found: !!recentMatch,
+      cutoffDate: cutoffDate.toISOString()
+    });
+    
+    return !!recentMatch;
+  };
+
+  // Save search to history without consuming a credit (for free re-searches)
+  const saveSearchWithoutCredit = async () => {
+    const userId = userProfile?.id;
+    if (!userId || !address) return;
+    
+    try {
+      // Just save to history, don't update search_count or credit_topups
+      const response = await fetch('/api/save-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId, 
+          address,
+          skipCreditConsumption: true // New flag to skip credit changes
+        })
+      });
+      
+      if (response.ok) {
+        console.log('[Search] Free re-search saved to history');
+        // Refresh search history to show the new entry
+        fetchSearchHistory();
+      }
+    } catch (error) {
+      console.error('[Search] Failed to save free re-search:', error);
+    }
+  };
+
   const incrementSearchCount = async () => {
     console.log('[Search] incrementSearchCount called, isLoggedIn:', isLoggedIn, 'plan:', plan);
     
@@ -1170,7 +1220,17 @@ const App: React.FC = () => {
         setResults(data);
         setAppState(AppState.RESULTS);
         // Only consume credit on successful results
-        if (!hasKey) incrementSearchCount();
+        // Check if this is a FREE re-search (searched within last 7 days)
+        if (!hasKey) {
+          const isRecentSearch = checkIfRecentSearch(address);
+          if (isRecentSearch) {
+            console.log('[Search] FREE re-search - address searched within 7 days');
+            // Still save to history but don't consume credit
+            saveSearchWithoutCredit();
+          } else {
+            incrementSearchCount();
+          }
+        }
       }, 200);
     } catch (err: any) {
       console.error("Audit Error:", err);
