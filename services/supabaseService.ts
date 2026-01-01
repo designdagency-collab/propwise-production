@@ -128,6 +128,22 @@ export class SupabaseService {
     }
   }
 
+  // Update phone number in profile
+  async updatePhone(userId: string, phone: string): Promise<void> {
+    if (!this.supabase) return;
+    try {
+      const { error } = await this.supabase
+        .from('profiles')
+        .update({ phone, updated_at: new Date().toISOString() })
+        .eq('id', userId);
+      
+      if (error) throw error;
+      console.log('[Supabase] Phone updated');
+    } catch (error) {
+      console.error('[Supabase] Failed to update phone:', error);
+    }
+  }
+
   // Add credits to existing topups
   async addCreditTopups(userId: string, additionalCredits: number): Promise<void> {
     if (!this.supabase) return;
@@ -374,11 +390,6 @@ export class SupabaseService {
       }
     });
     
-    // If user was created, store email locally for session recovery
-    if (data?.user?.email) {
-      localStorage.setItem('prop_user_email', data.user.email);
-    }
-    
     return { user: data?.user, session: data?.session, error };
   }
 
@@ -395,12 +406,6 @@ export class SupabaseService {
       email,
       password
     });
-    
-    // Store email locally for session recovery (verified against Supabase on load)
-    if (data?.user?.email) {
-      localStorage.setItem('prop_user_email', data.user.email);
-    }
-    
     return { user: data?.user, session: data?.session, error };
   }
 

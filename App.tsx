@@ -41,7 +41,6 @@ const App: React.FC = () => {
   const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
   const [showUpgradeSuccess, setShowUpgradeSuccess] = useState(false);
   const [showPricing, setShowPricing] = useState(false);
-  const [isSignedUp, setIsSignedUp] = useState(() => localStorage.getItem('prop_signed_up') === 'true');
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [showEmailAuth, setShowEmailAuth] = useState(false);
   const [emailAuthMode, setEmailAuthMode] = useState<'signup' | 'login' | 'reset'>('signup');
@@ -50,17 +49,14 @@ const App: React.FC = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [searchHistory, setSearchHistory] = useState<{ address: string; created_at: string }[]>([]);
   
-  // Login state - restore from localStorage to persist across Stripe redirects
-  const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return localStorage.getItem('prop_is_logged_in') === 'true';
-  });
-  const [userEmail, setUserEmail] = useState<string>(() => {
-    return localStorage.getItem('prop_user_email') || '';
-  });
-  const [userPhone, setUserPhone] = useState<string>(() => {
-    return localStorage.getItem('prop_user_phone') || '';
-  });
+  // Auth state - derived from Supabase session (no localStorage)
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(false); // true = login, false = signup
+  
+  // Derived from userProfile (Supabase is source of truth)
+  const userEmail = userProfile?.email || '';
+  const userPhone = userProfile?.phone || '';
+  const isSignedUp = !!userProfile;
   
   // Progress tracking states
   const [progress, setProgress] = useState(0);
@@ -195,17 +191,11 @@ const App: React.FC = () => {
       
       console.log('[Auth] Login successful for:', session.user.email);
       setIsLoggedIn(true);
-      setUserEmail(session.user.email || '');
-      setUserPhone(session.user.phone || '');
-      setIsSignedUp(true);
-      localStorage.setItem('prop_is_logged_in', 'true');
-      localStorage.setItem('prop_user_email', session.user.email || '');
       setShowEmailAuth(false);
       
-      // Load user data and then refresh credit state
+      // Load user data from Supabase (sets userProfile which derives email/phone)
       await loadUserData(session.user.id);
       refreshCreditState();
-      console.log('[Credits] After refreshCreditState - remaining:', remainingCredits);
       
       // Clean up OAuth hash from URL if present
       if (window.location.hash.includes('access_token')) {
@@ -252,37 +242,22 @@ const App: React.FC = () => {
             
             if (sessionData.session?.user) {
               console.log('[Auth] Session established for:', sessionData.session.user.email);
-              console.log('[Auth] OAuth flow - now calling loadUserData (session is ready)...');
-              
-              // Set login state
               setIsLoggedIn(true);
-              setUserEmail(sessionData.session.user.email || '');
-              setIsSignedUp(true);
-              localStorage.setItem('prop_is_logged_in', 'true');
-              localStorage.setItem('prop_user_email', sessionData.session.user.email || '');
               setShowEmailAuth(false);
               
-              // Load user data from Supabase - session is now fully established
+              // Load user data from Supabase (sets userProfile)
               await loadUserData(sessionData.session.user.id);
-              console.log('[Auth] OAuth flow - loadUserData completed');
-              
-              // CRITICAL: Refresh credit state to update React state from localStorage
               refreshCreditState();
-              console.log('[Credits] OAuth flow - credits loaded from Supabase');
-              
+              console.log('[Auth] OAuth flow complete');
               return;
             } else {
               console.error('[Auth] setSession failed:', sessionError?.message);
               
               // Fallback: try getUser
-              console.log('[Auth] Trying getUser fallback...');
               const { data: userData } = await supabaseService.supabase!.auth.getUser(accessToken);
               if (userData.user) {
                 console.log('[Auth] User verified via fallback:', userData.user.email);
                 setIsLoggedIn(true);
-                setUserEmail(userData.user.email || '');
-                localStorage.setItem('prop_is_logged_in', 'true');
-                localStorage.setItem('prop_user_email', userData.user.email || '');
                 setShowEmailAuth(false);
                 await loadUserData(userData.user.id);
                 refreshCreditState();
@@ -296,23 +271,12 @@ const App: React.FC = () => {
       
       // Normal session check (no OAuth hash or OAuth failed)
       const { data: { session }, error } = await supabaseService.supabase!.auth.getSession();
-      const localLoggedIn = localStorage.getItem('prop_is_logged_in') === 'true';
-      const localEmail = localStorage.getItem('prop_user_email');
       console.log('[Auth] getSession:', { hasSession: !!session, email: session?.user?.email, error: error?.message });
-      console.log('[Auth] localStorage fallback:', { localLoggedIn, localEmail });
       
       if (session?.user) {
         handleSessionLogin(session);
-      } else if (localLoggedIn && localEmail) {
-        // We have localStorage but no session - user may have been logged in before
-        console.log('[Auth] No Supabase session but localStorage says logged in - checking credits anyway');
-        // Still try to show credits from localStorage
-        setIsLoggedIn(true);
-        setUserEmail(localEmail);
-        setIsSignedUp(true);
-        refreshCreditState();
-        console.log('[Credits] Session restored - will load from Supabase');
       }
+      // No localStorage fallback - Supabase session is the only source of truth
     };
     
     initAuth();
@@ -329,61 +293,36 @@ const App: React.FC = () => {
         // The OAuth code will call loadUserData AFTER setSession completes
         if (oauthInProgress && event === 'SIGNED_IN') {
           console.log('[Auth] Skipping loadUserData in event handler - OAuth flow will handle it');
-          // Just update UI state, don't load data
           setIsLoggedIn(true);
-          setUserEmail(session?.user?.email || '');
           setShowEmailAuth(false);
-          localStorage.setItem('prop_is_logged_in', 'true');
-          localStorage.setItem('prop_user_email', session?.user?.email || '');
           return; // Let OAuth code handle the rest
         }
         
         // Handle session restore on page load (INITIAL_SESSION) or sign in
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session) {
-          const sessionEmail = session.user?.email || '';
-          const storedEmail = localStorage.getItem('prop_user_email') || '';
-          
-          // If different user than stored, clear ALL their data (prevents profile mixing)
-          if (storedEmail && sessionEmail && storedEmail !== sessionEmail) {
-            console.log('Session email mismatch - clearing stale data for new user');
-            // Clear credit data for old user (will be loaded from Supabase for new user)
-            localStorage.removeItem('prop_credit_topups');
-            localStorage.removeItem('prop_pro_used');
-            localStorage.removeItem('prop_pro_month');
-            localStorage.removeItem('prop_plan');
-            // NOTE: Don't clear prop_free_used or prop_has_account - loadUserData will sync from Supabase
-          }
-          
           setIsLoggedIn(true);
-          setUserEmail(sessionEmail);
-          setUserPhone(session.user?.phone || '');
-          setIsSignedUp(true);
-          localStorage.setItem('prop_is_logged_in', 'true');
-          localStorage.setItem('prop_signed_up', 'true');
-          localStorage.setItem('prop_user_email', sessionEmail);
-          
-          // Close auth modal if open (for Google OAuth redirect)
           setShowEmailAuth(false);
           
-          // Load user data from Supabase - this syncs credits properly
+          // Load user data from Supabase (sets userProfile which derives email/phone)
           await loadUserData(session.user?.id);
           
-          // Credits are now loaded from Supabase in loadUserData
-          // The refreshCreditState will calculate from userProfile
-          
-          // Only return to idle if user has remaining credits
-          // This will be handled when userProfile updates trigger refreshCreditState
+          // Return to idle if user has credits
           if (appState === AppState.LIMIT_REACHED && remainingCredits > 0) {
             setAppState(AppState.IDLE);
           }
           
-          // Check if there was a pending upgrade (user tried to pay before logging in)
-          // Only do this on actual SIGNED_IN, not session restore
+          // Check for pending upgrade (from URL param set before Stripe redirect)
           if (event === 'SIGNED_IN') {
-            const pendingUpgrade = localStorage.getItem('prop_pending_upgrade');
+            const urlParams = new URLSearchParams(window.location.search);
+            const pendingUpgrade = urlParams.get('pending_upgrade');
             if (pendingUpgrade) {
-              localStorage.removeItem('prop_pending_upgrade');
-              // Small delay to let the UI update, then redirect to payment
+              // Clear from URL
+              urlParams.delete('pending_upgrade');
+              const newUrl = urlParams.toString() 
+                ? `${window.location.pathname}?${urlParams}` 
+                : window.location.pathname;
+              window.history.replaceState({}, document.title, newUrl);
+              
               setTimeout(() => {
                 if (pendingUpgrade === 'STARTER_PACK') {
                   handleBuyStarterPack();
@@ -394,30 +333,16 @@ const App: React.FC = () => {
             }
           }
         } else if (event === 'SIGNED_OUT') {
-          // CRITICAL: Verify session is actually gone before logging out
-          // Browser back from Stripe can trigger spurious SIGNED_OUT events
-          const wasLoggedIn = localStorage.getItem('prop_is_logged_in') === 'true';
+          // Verify session is actually gone (browser back can trigger spurious events)
+          const { data: { session: currentSession } } = await supabaseService.supabase!.auth.getSession();
           
-          if (wasLoggedIn) {
-            // Double-check the session is actually gone
-            const { data: { session: currentSession } } = await supabaseService.supabase!.auth.getSession();
-            
-            if (currentSession?.user) {
-              // Session still exists! Don't log out - this was a spurious event
-              console.log('SIGNED_OUT event but session still exists - ignoring');
-              return;
-            }
-            console.log('SIGNED_OUT event confirmed - session is gone');
+          if (currentSession?.user) {
+            console.log('SIGNED_OUT event but session still exists - ignoring');
+            return;
           }
           
           setIsLoggedIn(false);
-          setUserEmail('');
-          setUserPhone('');
           setUserProfile(null);
-          // Clear user-specific localStorage
-          localStorage.removeItem('prop_is_logged_in');
-          localStorage.removeItem('prop_user_email');
-          localStorage.removeItem('prop_user_phone');
         } else if (event === 'PASSWORD_RECOVERY') {
           // User clicked password reset link - show reset form
           setEmailAuthMode('reset');
@@ -434,81 +359,60 @@ const App: React.FC = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const paymentStatus = urlParams.get('payment');
     const sessionId = urlParams.get('session_id');
-    const purchasedPlan = urlParams.get('plan') || 'PRO'; // Default to PRO
+    const purchasedPlan = urlParams.get('plan') || 'PRO';
 
     if (paymentStatus === 'success' && sessionId) {
-      // Check if this session has already been processed (prevent duplicate credits on refresh)
-      const processedSessions = JSON.parse(localStorage.getItem('prop_processed_sessions') || '[]');
-      if (processedSessions.includes(sessionId)) {
-        // Already processed - just clear URL and return
-        window.history.replaceState({}, document.title, window.location.pathname);
-        return;
-      }
-      
-      // Mark session as processed IMMEDIATELY to prevent race conditions
-      processedSessions.push(sessionId);
-      localStorage.setItem('prop_processed_sessions', JSON.stringify(processedSessions));
-      
-      // Clear URL params FIRST to prevent refresh issues
+      // Clear URL params to prevent re-processing on refresh
       window.history.replaceState({}, document.title, window.location.pathname);
       
-      // Payment was successful - process after a small delay to let Supabase auth settle
+      // Payment was successful - process via Supabase
       const processPaymentSuccess = async () => {
-        // Give Supabase auth time to restore session
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Activate the purchased plan - Supabase is source of truth
-        setPlan(purchasedPlan as PlanType);
         setShowUpgradeSuccess(true);
         
-        // Update Supabase with the new plan
-        if (supabaseService.isConfigured()) {
-          const user = await supabaseService.getCurrentUser();
-          if (user) {
-            setIsLoggedIn(true);
-            setUserEmail(user.email || '');
-            
-            // Update subscription in Supabase
-            await supabaseService.updateSubscription(user.id, purchasedPlan as PlanType, sessionId);
-            
-            // Update plan_type in profiles table
-            await supabaseService.updatePlanType(user.id, purchasedPlan as string);
-            
-            // Update credits in Supabase
-            if (purchasedPlan === 'STARTER_PACK') {
-              // Add 3 credits to existing topups
-              const currentProfile = await supabaseService.getCurrentProfile(user.id);
-              const currentCredits = currentProfile?.credit_topups || 0;
-              const newCredits = currentCredits + 3; // STARTER_PACK_CREDITS
-              console.log('[Payment] Adding 3 credits to Supabase. Before:', currentCredits, 'After:', newCredits);
-              await supabaseService.updateCreditTopups(user.id, newCredits);
-            } else if (purchasedPlan === 'PRO') {
-              // Initialize PRO quota in Supabase
-              const now = new Date();
-              const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-              console.log('[Payment] Initializing PRO quota in Supabase:', currentMonth);
-              await supabaseService.updateProUsage(user.id, currentMonth, 0);
-            }
-            
-            // Load user profile
-            const profile = await supabaseService.getCurrentProfile();
-            if (profile) {
-              setUserProfile(profile);
-            }
-          } else {
-            // No Supabase session - clear localStorage to prevent stale data
-            localStorage.removeItem('prop_is_logged_in');
-            setIsLoggedIn(false);
+        const user = await supabaseService.getCurrentUser();
+        if (user) {
+          setIsLoggedIn(true);
+          
+          // Check if this session was already processed (prevent duplicates)
+          const existingSub = await supabaseService.getActiveSubscription(user.id);
+          if (existingSub?.stripe_session_id === sessionId) {
+            console.log('[Payment] Session already processed');
+            await loadUserData(user.id);
+            setTimeout(() => setShowUpgradeSuccess(false), 5000);
+            return;
           }
+          
+          // Update subscription in Supabase
+          await supabaseService.updateSubscription(user.id, purchasedPlan as PlanType, sessionId);
+          await supabaseService.updatePlanType(user.id, purchasedPlan as string);
+          
+          // Update credits in Supabase
+          if (purchasedPlan === 'STARTER_PACK') {
+            const currentProfile = await supabaseService.getCurrentProfile(user.id);
+            const currentCredits = currentProfile?.credit_topups || 0;
+            const newCredits = currentCredits + 3;
+            console.log('[Payment] Adding 3 credits:', currentCredits, '->', newCredits);
+            await supabaseService.updateCreditTopups(user.id, newCredits);
+          } else if (purchasedPlan === 'PRO') {
+            const now = new Date();
+            const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            console.log('[Payment] Initializing PRO quota:', currentMonth);
+            await supabaseService.updateProUsage(user.id, currentMonth, 0);
+          }
+          
+          // Reload profile to get updated state
+          await loadUserData(user.id);
+        } else {
+          setIsLoggedIn(false);
         }
         
-        // Hide success message after 5 seconds
         setTimeout(() => setShowUpgradeSuccess(false), 5000);
       };
       
       processPaymentSuccess();
     } else if (paymentStatus === 'cancel') {
-      // Payment was cancelled - clear URL params
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
@@ -768,35 +672,35 @@ const App: React.FC = () => {
   const handleBuyStarterPack = async () => {
     // REQUIRE LOGIN before payment - double-check with Supabase to avoid stale state
     let userLoggedIn = isLoggedIn;
-    let email = userEmail;
+    let email = userProfile?.email || '';
     
     if (!userLoggedIn) {
-      // State might be stale - verify with Supabase directly
+      // Verify with Supabase directly
       const user = await supabaseService.getCurrentUser();
       if (user) {
         console.log('[Auth] Session recovered from Supabase:', user.email);
         setIsLoggedIn(true);
-        setUserEmail(user.email || '');
-        localStorage.setItem('prop_is_logged_in', 'true');
-        localStorage.setItem('prop_user_email', user.email || '');
+        await loadUserData(user.id);
         userLoggedIn = true;
         email = user.email || '';
       }
     }
     
     if (!userLoggedIn) {
-      // User is truly not logged in - show signup
+      // Not logged in - show signup with pending upgrade in URL
       setShowPricing(false);
       setEmailAuthMode('signup');
       setShowEmailAuth(true);
-      localStorage.setItem('prop_pending_upgrade', 'STARTER_PACK');
+      const url = new URL(window.location.href);
+      url.searchParams.set('pending_upgrade', 'STARTER_PACK');
+      window.history.replaceState({}, document.title, url.toString());
       return;
     }
     
     setIsProcessingUpgrade(true);
     
-    // Call Stripe checkout for Starter Pack (use recovered email if available)
-    const checkoutEmail = email || userProfile?.email || localStorage.getItem('prop_user_email') || '';
+    // Call Stripe checkout for Starter Pack
+    const checkoutEmail = email || userProfile?.email || '';
     const result = await stripeService.createCheckoutSession('STARTER_PACK', checkoutEmail);
     
     if (result.success && result.url) {
@@ -814,30 +718,30 @@ const App: React.FC = () => {
 
   // Handle "Upgrade to Pro" CTA
   const handleUpgradeToPro = async () => {
-    // REQUIRE LOGIN before payment - double-check with Supabase to avoid stale state
+    // Double-check login with Supabase
     let userLoggedIn = isLoggedIn;
-    let email = userProfile?.email || userEmail || localStorage.getItem('prop_user_email');
+    let email = userProfile?.email || '';
     
     if (!userLoggedIn) {
-      // State might be stale - verify with Supabase directly
       const user = await supabaseService.getCurrentUser();
       if (user) {
         console.log('[Auth] Session recovered from Supabase:', user.email);
         setIsLoggedIn(true);
-        setUserEmail(user.email || '');
-        localStorage.setItem('prop_is_logged_in', 'true');
-        localStorage.setItem('prop_user_email', user.email || '');
+        await loadUserData(user.id);
         userLoggedIn = true;
         email = user.email || '';
       }
     }
     
     if (!userLoggedIn) {
-      // User is truly not logged in - show signup
+      // Not logged in - show signup with pending upgrade in URL
       setShowPricing(false);
       setEmailAuthMode('signup');
       setShowEmailAuth(true);
-      localStorage.setItem('prop_pending_upgrade', 'PRO');
+      // Store pending upgrade in URL so it survives auth redirect
+      const url = new URL(window.location.href);
+      url.searchParams.set('pending_upgrade', 'PRO');
+      window.history.replaceState({}, document.title, url.toString());
       return;
     }
     
@@ -881,34 +785,17 @@ const App: React.FC = () => {
   const handleLogout = async () => {
     console.log('Logout clicked');
     
-    // Clear state FIRST (don't wait for Supabase)
+    // Clear React state
     setIsLoggedIn(false);
-    setUserEmail('');
-    setUserPhone('');
     setUserProfile(null);
     setSearchHistory([]);
     setShowAccountSettings(false);
     setPlan('FREE_TRIAL');
     
-    // Clear ALL user-specific localStorage
-    localStorage.removeItem('prop_is_logged_in');
-    localStorage.removeItem('prop_user_email');
-    localStorage.removeItem('prop_user_phone');
-    localStorage.removeItem('prop_signed_up');
-    localStorage.removeItem('prop_has_account');
-    localStorage.removeItem('prop_free_used');
-    localStorage.removeItem('prop_credit_topups');
-    localStorage.removeItem('prop_pro_used');
-    localStorage.removeItem('prop_pro_month');
-    localStorage.removeItem('prop_plan'); // CRITICAL: Clear plan on logout
-    localStorage.removeItem('prop_pro_month');
-    localStorage.removeItem('prop_plan');
-    localStorage.removeItem('prop_processed_sessions');
-    
-    // Refresh credit state to show free trial
+    // Refresh credit state
     refreshCreditState();
     
-    // Then sign out from Supabase (don't block on this)
+    // Sign out from Supabase
     try {
       await supabaseService.signOut();
     } catch (error) {
@@ -983,26 +870,11 @@ const App: React.FC = () => {
 
   // Handle email auth success (both signup and login)
   const handleEmailAuthSuccess = async (email: string, isNewUser: boolean) => {
-    const storedEmail = localStorage.getItem('prop_user_email') || '';
-    
-    // If this is a different user, clear their paid plan data (not free credits - Supabase has those)
-    if (storedEmail && storedEmail !== email) {
-      console.log('Different user logging in - clearing old user plan data');
-      localStorage.removeItem('prop_credit_topups');
-      localStorage.removeItem('prop_pro_used');
-      localStorage.removeItem('prop_pro_month');
-      localStorage.removeItem('prop_plan');
-      // NOTE: Don't clear prop_free_used or prop_has_account - loadUserData will sync from Supabase
-    }
-    
-    setIsLoggedIn(true);
-    setUserEmail(email);
-    setIsSignedUp(true);
-    // New users get 2 free credits automatically (handled by profile creation in Supabase)
-    // Returning users have their credits in Supabase profile
     console.log(isNewUser ? 'New user signup' : 'Returning user login', '- loading from Supabase');
     
-    // Get current user and load their data from Supabase
+    setIsLoggedIn(true);
+    
+    // Load user data from Supabase (sets userProfile)
     const user = await supabaseService.getCurrentUser();
     if (user?.id) {
       await loadUserData(user.id);
@@ -1010,13 +882,18 @@ const App: React.FC = () => {
     }
     
     setShowEmailAuth(false);
-    setAppState(AppState.IDLE); // Go back so they can continue
+    setAppState(AppState.IDLE);
     
-    // Check if there was a pending upgrade (user tried to pay before logging in)
-    const pendingUpgrade = localStorage.getItem('prop_pending_upgrade');
+    // Check for pending upgrade in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const pendingUpgrade = urlParams.get('pending_upgrade');
     if (pendingUpgrade) {
-      localStorage.removeItem('prop_pending_upgrade');
-      // Small delay to let the UI update, then redirect to payment
+      urlParams.delete('pending_upgrade');
+      const newUrl = urlParams.toString() 
+        ? `${window.location.pathname}?${urlParams}` 
+        : window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+      
       setTimeout(() => {
         handleUpgrade(pendingUpgrade as PlanType);
       }, 500);
@@ -1025,22 +902,26 @@ const App: React.FC = () => {
 
   // Handle phone verification success (for optional account security)
   const handlePhoneVerified = async (phone: string) => {
-    setUserPhone(phone);
-    localStorage.setItem('prop_user_phone', phone);
-    
-    // Get current user and load their data + subscription
+    // Update phone in Supabase profile
     const user = await supabaseService.getCurrentUser();
     if (user?.id) {
+      await supabaseService.updatePhone(user.id, phone);
       await loadUserData(user.id);
     }
     
     setShowPhoneVerification(false);
-    setAppState(AppState.IDLE); // Now they can continue
+    setAppState(AppState.IDLE);
     
-    // Check if there was a pending upgrade (user tried to pay before logging in)
-    const pendingUpgrade = localStorage.getItem('prop_pending_upgrade');
+    // Check for pending upgrade in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const pendingUpgrade = urlParams.get('pending_upgrade');
     if (pendingUpgrade) {
-      localStorage.removeItem('prop_pending_upgrade');
+      urlParams.delete('pending_upgrade');
+      const newUrl = urlParams.toString() 
+        ? `${window.location.pathname}?${urlParams}` 
+        : window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+      
       setTimeout(() => {
         if (pendingUpgrade === 'STARTER_PACK') {
           handleBuyStarterPack();
@@ -1485,13 +1366,17 @@ const App: React.FC = () => {
         <PhoneVerification
           onSuccess={handlePhoneVerified}
           onCancel={() => {
-            // Allow skip - they can verify later
             setShowPhoneVerification(false);
             setAppState(AppState.IDLE);
-            // Still check for pending upgrades
-            const pendingUpgrade = localStorage.getItem('prop_pending_upgrade');
+            // Check for pending upgrade in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const pendingUpgrade = urlParams.get('pending_upgrade');
             if (pendingUpgrade) {
-              localStorage.removeItem('prop_pending_upgrade');
+              urlParams.delete('pending_upgrade');
+              const newUrl = urlParams.toString() 
+                ? `${window.location.pathname}?${urlParams}` 
+                : window.location.pathname;
+              window.history.replaceState({}, document.title, newUrl);
               setTimeout(() => {
                 if (pendingUpgrade === 'STARTER_PACK') {
                   handleBuyStarterPack();
