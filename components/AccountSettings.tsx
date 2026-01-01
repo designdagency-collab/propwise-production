@@ -134,9 +134,9 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                 )}
                 {creditState.creditTopups > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Purchased Credits</span>
+                    <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Bonus Credits</span>
                     <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                      {creditState.creditTopups} remaining
+                      +{creditState.creditTopups}
                     </span>
                   </div>
                 )}
