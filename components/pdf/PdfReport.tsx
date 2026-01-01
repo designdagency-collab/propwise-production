@@ -356,10 +356,10 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
                         {formatRange(scenario.estimatedCost?.low, scenario.estimatedCost?.high)}
                       </span>
                     </div>
-                    <div className="pdf-scenario-metric">
-                      <span className="pdf-scenario-label">End Value</span>
+                    <div className="pdf-scenario-metric pdf-scenario-profit">
+                      <span className="pdf-scenario-label">Net Profit</span>
                       <span className="pdf-scenario-value">
-                        {formatRange(scenario.estimatedEndValue?.low, scenario.estimatedEndValue?.high)}
+                        {formatRange(scenario.estimatedNetProfit?.low, scenario.estimatedNetProfit?.high)}
                       </span>
                     </div>
                   </div>
@@ -946,6 +946,16 @@ export const getPdfDocumentStyles = () => `
     padding: 8px;
     background: #FAFAF8;
     border-radius: 6px;
+  }
+  .pdf-scenario-profit {
+    background: #ECFDF5;
+    border: 1px solid #A7F3D0;
+  }
+  .pdf-scenario-profit .pdf-scenario-label {
+    color: #047857;
+  }
+  .pdf-scenario-profit .pdf-scenario-value {
+    color: #065F46;
   }
   .pdf-scenario-label {
     display: block;
