@@ -135,18 +135,18 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       display: none !important; 
     }
     
-    /* Container - 60px margins between major sections */
+    /* Container - 30px margins between major sections */
     .pdf-mode [data-pdf-root="true"] {
       max-width: 100% !important;
       padding: 0 !important;
       margin: 0 !important;
     }
-    .pdf-mode .space-y-12 > * + * { margin-top: 60px !important; }
-    .pdf-mode .space-y-8 > * + * { margin-top: 50px !important; }
-    .pdf-mode .space-y-6 > * + * { margin-top: 40px !important; }
-    .pdf-mode .space-y-4 > * + * { margin-top: 30px !important; }
-    .pdf-mode .space-y-3 > * + * { margin-top: 20px !important; }
-    .pdf-mode .space-y-2 > * + * { margin-top: 15px !important; }
+    .pdf-mode .space-y-12 > * + * { margin-top: 30px !important; }
+    .pdf-mode .space-y-8 > * + * { margin-top: 25px !important; }
+    .pdf-mode .space-y-6 > * + * { margin-top: 20px !important; }
+    .pdf-mode .space-y-4 > * + * { margin-top: 15px !important; }
+    .pdf-mode .space-y-3 > * + * { margin-top: 12px !important; }
+    .pdf-mode .space-y-2 > * + * { margin-top: 10px !important; }
     
     /* Cards - Clean padding, NO SHADOWS, respect page breaks */
     .pdf-mode [class*="rounded-[2"],
@@ -185,16 +185,16 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       padding-right: 8px !important;
     }
     .pdf-mode .mb-3, .pdf-mode .mb-4 {
-      margin-bottom: 15px !important;
+      margin-bottom: 8px !important;
     }
     .pdf-mode .mb-5, .pdf-mode .mb-6, .pdf-mode .mb-8 {
-      margin-bottom: 25px !important;
+      margin-bottom: 12px !important;
     }
     .pdf-mode .mt-3, .pdf-mode .mt-4 {
-      margin-top: 15px !important;
+      margin-top: 8px !important;
     }
     .pdf-mode .mt-5, .pdf-mode .mt-6, .pdf-mode .mt-8 {
-      margin-top: 25px !important;
+      margin-top: 12px !important;
     }
     
     /* KPI Row - Grid Layout COMPACT */
@@ -227,23 +227,23 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     .pdf-mode h3 { font-size: 11px !important; line-height: 1.2 !important; color: #3A342D !important; margin-bottom: 2px !important; }
     .pdf-mode p { font-size: 9px !important; line-height: 1.35 !important; margin: 0 !important; }
     
-    /* Section spacing - 60px between major sections, respect page breaks */
+    /* Section spacing - 30px between major sections, respect page breaks */
     .pdf-mode section { 
-      margin-bottom: 60px !important; 
+      margin-bottom: 30px !important; 
       break-inside: avoid !important;
       page-break-inside: avoid !important;
     }
-    .pdf-mode .gap-2 { gap: 10px !important; }
-    .pdf-mode .gap-3 { gap: 15px !important; }
-    .pdf-mode .gap-4 { gap: 20px !important; }
-    .pdf-mode .gap-5, .pdf-mode .gap-6 { gap: 25px !important; }
-    .pdf-mode .gap-8 { gap: 30px !important; }
+    .pdf-mode .gap-2 { gap: 8px !important; }
+    .pdf-mode .gap-3 { gap: 10px !important; }
+    .pdf-mode .gap-4 { gap: 12px !important; }
+    .pdf-mode .gap-5, .pdf-mode .gap-6 { gap: 15px !important; }
+    .pdf-mode .gap-8 { gap: 20px !important; }
     
     /* Page break control */
     .pdf-mode [data-pdf-section] {
       break-inside: avoid !important;
       page-break-inside: avoid !important;
-      margin-bottom: 60px !important;
+      margin-bottom: 30px !important;
     }
     .pdf-mode h2, .pdf-mode h3 {
       break-after: avoid !important;
@@ -330,12 +330,19 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       font-size: 14px !important;
     }
     
-    /* Amenity Cards - SMALLER & COMPACT */
+    /* Amenity Cards - Centered text */
     .pdf-mode [data-pdf-amenities] {
-      gap: 4px !important;
+      gap: 8px !important;
     }
     .pdf-mode [data-pdf-amenities] > div {
-      padding: 6px 8px !important;
+      padding: 12px !important;
+      text-align: center !important;
+    }
+    .pdf-mode [data-pdf-amenities] > div > div:first-child {
+      margin: 0 auto 8px auto !important;
+    }
+    .pdf-mode [data-pdf-amenities] .space-y-1 {
+      text-align: center !important;
       border-radius: 8px !important;
     }
     .pdf-mode [data-pdf-amenities] p:first-child {
@@ -412,23 +419,44 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     
     /* Footer - Branded */
     .pdf-mode footer { 
-      margin-top: 60px !important; 
+      margin-top: 30px !important; 
       break-inside: avoid !important;
       page-break-inside: avoid !important;
     }
     .pdf-mode footer p { 
-      font-size: inherit !important; 
-      color: inherit !important; 
+      font-size: 9px !important; 
+      color: #888 !important; 
     }
     .pdf-mode footer img {
-      height: 32px !important;
+      height: 28px !important;
     }
     
     /* Fix icon sizing */
-    .pdf-mode .w-10.h-10 { width: 24px !important; height: 24px !important; }
-    .pdf-mode .w-8.h-8 { width: 20px !important; height: 20px !important; }
-    .pdf-mode .w-6.h-6 { width: 16px !important; height: 16px !important; }
+    .pdf-mode .w-10.h-10 { width: 28px !important; height: 28px !important; min-width: 28px !important; }
+    .pdf-mode .w-8.h-8 { width: 22px !important; height: 22px !important; }
+    .pdf-mode .w-6.h-6 { width: 18px !important; height: 18px !important; }
     .pdf-mode i { font-size: inherit !important; }
+    
+    /* Section headers - ensure titles are visible */
+    .pdf-mode .flex.items-center.gap-4 {
+      display: flex !important;
+      align-items: center !important;
+      gap: 10px !important;
+      margin-bottom: 12px !important;
+    }
+    .pdf-mode .flex.items-center.gap-4 h2 {
+      font-size: 16px !important;
+      font-weight: 700 !important;
+      color: #3A342D !important;
+      margin: 0 !important;
+      display: block !important;
+    }
+    .pdf-mode .flex.items-center.gap-4 p {
+      font-size: 8px !important;
+      color: #888 !important;
+      margin: 0 !important;
+      display: block !important;
+    }
     
     /* Tables - COMPACT */
     .pdf-mode table { margin: 4px 0 !important; }
@@ -616,17 +644,13 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         </head>
         <body class="pdf-mode">
           ${clonedElement.outerHTML}
-          <footer style="margin-top: 60px; padding: 30px 20px; border-top: 2px solid #C9A961; text-align: center; background: linear-gradient(to bottom, #fafaf8, #f5f5f0);">
-            <div style="margin-bottom: 15px;">
-              <img src="https://upblock.ai/logo.svg" alt="upblock.ai" style="height: 32px; display: inline-block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
-              <span style="display: none; font-size: 18px; font-weight: 800; color: #3A342D; letter-spacing: -0.5px;">upblock.ai</span>
+          <footer style="margin-top: 30px; padding: 20px; border-top: 2px solid #C9A961; text-align: center; background: #fafaf8;">
+            <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <img src="https://upblock.ai/upblock.ai-logo.png" alt="upblock.ai" style="height: 28px;" onerror="this.style.display='none'">
+              <span style="font-size: 18px; font-weight: 800; color: #3A342D; letter-spacing: -0.5px;">upblock.ai</span>
             </div>
-            <p style="font-size: 11px; color: #666; line-height: 1.6; max-width: 500px; margin: 0 auto 10px auto;">
-              upblock.ai provides AI-assisted, scenario-based property insights using publicly available data.
-            </p>
-            <p style="font-size: 10px; color: #999; line-height: 1.5; max-width: 500px; margin: 0 auto;">
-              This report does not constitute financial advice, a property valuation, or planning approval.<br>
-              Always consult qualified professionals before making property decisions.
+            <p style="font-size: 9px; color: #888; line-height: 1.5; max-width: 450px; margin: 0 auto;">
+              This report provides AI-assisted, scenario-based property insights using publicly available data. It does not constitute financial advice, a property valuation, or planning approval. Always consult qualified professionals before making property decisions.
             </p>
           </footer>
         </body>
@@ -859,7 +883,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
               </div>
            </div>
            
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" data-pdf-amenities>
               {filteredProximity.map((amenity, i) => (
                 <div key={i} className="p-6 rounded-3xl border shadow-sm hover:shadow-md transition-shadow group" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 ${getAmenityColor(amenity.type)}`}>
