@@ -263,7 +263,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
                     <div className="pdf-strategy-metric pdf-strategy-metric-highlight">
                       <span className="pdf-strategy-metric-label">Potential Uplift</span>
                       <span className="pdf-strategy-metric-value">
-                        {formatRange(strategy.indicativeEquityUplift?.low, strategy.indicativeEquityUplift?.high)}
+                        {formatRange(strategy.estimatedUplift?.low, strategy.estimatedUplift?.high)}
                       </span>
                     </div>
                   </div>
@@ -344,7 +344,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
                     <div className="pdf-scenario-metric">
                       <span className="pdf-scenario-label">Build Cost</span>
                       <span className="pdf-scenario-value">
-                        {formatRange(scenario.estimatedBuildCost?.low, scenario.estimatedBuildCost?.high)}
+                        {formatRange(scenario.estimatedCost?.low, scenario.estimatedCost?.high)}
                       </span>
                     </div>
                     <div className="pdf-scenario-metric">
