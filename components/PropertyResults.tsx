@@ -146,13 +146,15 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       for (let attempt = 1; attempt <= 2; attempt++) {
         try {
           const staticMapUrl = `/api/static-map?address=${encodeURIComponent(data.address)}&width=800&height=300&zoom=17`;
-          console.log('[PDF] Map fetch attempt', attempt);
+          console.log('[PDF] Map fetch attempt', attempt, staticMapUrl);
           
           const mapResponse = await fetch(staticMapUrl);
           const contentType = mapResponse.headers.get('content-type') || '';
+          console.log('[PDF] Map response:', mapResponse.status, contentType);
           
           if (mapResponse.ok && (contentType.includes('image/png') || contentType.includes('image/jpeg'))) {
             const blob = await mapResponse.blob();
+            console.log('[PDF] Map blob size:', blob.size);
             
             if (blob.size > 5000) {
               mapDataUrl = await new Promise<string>((resolve, reject) => {
@@ -161,9 +163,13 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                 reader.onerror = reject;
                 reader.readAsDataURL(blob);
               });
-              console.log('[PDF] Map loaded successfully');
+              console.log('[PDF] Map loaded successfully, dataUrl length:', mapDataUrl?.length);
               break;
+            } else {
+              console.warn('[PDF] Map blob too small:', blob.size);
             }
+          } else {
+            console.warn('[PDF] Map response not OK or wrong content type');
           }
           
           if (attempt < 2) await new Promise(r => setTimeout(r, 1000));
@@ -171,6 +177,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
           console.warn('[PDF] Map fetch error:', mapError);
         }
       }
+      
+      console.log('[PDF] Final mapDataUrl:', mapDataUrl ? 'present (' + mapDataUrl.length + ' chars)' : 'null');
 
       // 2. Render the dedicated PDF component to HTML
       // This is the key change: we render a clean, print-first component

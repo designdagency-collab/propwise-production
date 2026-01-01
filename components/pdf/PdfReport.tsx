@@ -191,7 +191,12 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
         {/* Map */}
         <div className="pdf-map-container">
           {mapImageUrl ? (
-            <img src={mapImageUrl} alt={`Map of ${address}`} className="pdf-map-image" />
+            <img 
+              src={mapImageUrl} 
+              alt={`Map of ${address}`} 
+              className="pdf-map-image"
+              style={{ display: 'block', width: '100%', height: '180px', objectFit: 'cover', borderRadius: '12px' }}
+            />
           ) : (
             <div className="pdf-map-placeholder">
               <span className="pdf-icon" style={{ width: 24, height: 24 }}>{Icons.mapPin}</span>
