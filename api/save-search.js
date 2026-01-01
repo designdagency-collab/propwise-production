@@ -59,20 +59,26 @@ export default async function handler(req, res) {
     }
 
     // Insert search history
-    const { error: historyError } = await supabase
+    console.log('Attempting to insert search history:', { user_id: userId, address });
+    const { data: historyData, error: historyError } = await supabase
       .from('search_history')
-      .insert({ user_id: userId, address });
+      .insert({ user_id: userId, address })
+      .select();
 
     if (historyError) {
-      console.error('Failed to save search history:', historyError);
-      return res.status(500).json({ error: historyError.message });
+      console.error('Failed to save search history:', JSON.stringify(historyError));
+      // Don't fail the whole request - credits were updated successfully
+      // Just log the error and continue
+    } else {
+      console.log('Search history saved successfully:', historyData);
     }
 
     console.log('Search saved for user:', userId, 'address:', address, 'newCount:', currentCount + 1);
     return res.status(200).json({ 
       success: true, 
       searchCount: currentCount + 1,
-      creditTopups: updates.credit_topups ?? profile?.credit_topups
+      creditTopups: updates.credit_topups ?? profile?.credit_topups,
+      historyError: historyError ? historyError.message : null
     });
   } catch (error) {
     console.error('Server error:', error);

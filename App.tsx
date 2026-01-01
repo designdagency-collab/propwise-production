@@ -684,6 +684,12 @@ const App: React.FC = () => {
             const result = await response.json();
             console.log('[Search] Save completed successfully, new count:', result.searchCount, 'creditTopups:', result.creditTopups);
             
+            if (result.historyError) {
+              console.warn('[Search] History save error:', result.historyError);
+            } else {
+              console.log('[Search] Search history saved to Supabase');
+            }
+            
             // Update userProfile with new values
             setUserProfile((prev: any) => prev ? {
               ...prev,
