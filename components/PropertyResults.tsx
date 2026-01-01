@@ -282,31 +282,31 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     .pdf-mode [data-pdf-callout] [class*="rounded-[2"] { width: 40px !important; height: 40px !important; padding: 8px !important; }
     .pdf-mode [data-pdf-callout] i.fa-sack-dollar { font-size: 18px !important; }
     
-    /* Map Container - BIGGER */
+    /* Map Container - LARGE */
     .pdf-mode [data-map="true"] {
-      height: 220px !important;
+      height: 440px !important;
       border-radius: 10px !important;
       overflow: hidden !important;
       break-inside: avoid !important;
-      margin-bottom: 8px !important;
+      margin-bottom: 10px !important;
     }
     .pdf-mode .pdf-map-image {
       width: 100% !important;
-      height: 220px !important;
+      height: 440px !important;
       object-fit: cover !important;
       display: block !important;
       border-radius: 10px !important;
     }
     .pdf-mode .pdf-map-placeholder {
       width: 100% !important;
-      height: 220px !important;
+      height: 440px !important;
       background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
       border-radius: 10px !important;
       color: #6b7280 !important;
-      font-size: 11px !important;
+      font-size: 14px !important;
     }
     
     /* Amenity Cards - SMALLER & COMPACT */
