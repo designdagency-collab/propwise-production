@@ -19,6 +19,14 @@ const App: React.FC = () => {
   const [results, setResults] = useState<PropertyData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  
+  // Address autocomplete state
+  const [suggestions, setSuggestions] = useState<{ description: string; mainText: string; secondaryText: string }[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const autocompleteRef = useRef<HTMLDivElement>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Plan and credits - loaded from Supabase profile (no localStorage)
   const [plan, setPlan] = useState<PlanType>('FREE_TRIAL');
   
@@ -82,6 +90,68 @@ const App: React.FC = () => {
   }, [isDarkMode]);
   
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
+
+  // Address autocomplete - fetch suggestions with debounce
+  const fetchSuggestions = useCallback(async (input: string) => {
+    if (input.length < 3) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    setIsLoadingSuggestions(true);
+    try {
+      const response = await fetch(`/api/address-autocomplete?input=${encodeURIComponent(input)}`);
+      const data = await response.json();
+      
+      if (data.predictions && data.predictions.length > 0) {
+        setSuggestions(data.predictions);
+        setShowSuggestions(true);
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    } catch (error) {
+      console.error('Autocomplete error:', error);
+      setSuggestions([]);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  }, []);
+
+  // Debounced address input handler
+  const handleAddressChange = useCallback((value: string) => {
+    setAddress(value);
+    
+    // Clear existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Set new debounced fetch
+    debounceTimerRef.current = setTimeout(() => {
+      fetchSuggestions(value);
+    }, 300);
+  }, [fetchSuggestions]);
+
+  // Handle suggestion selection
+  const handleSelectSuggestion = useCallback((suggestion: { description: string }) => {
+    setAddress(suggestion.description);
+    setSuggestions([]);
+    setShowSuggestions(false);
+  }, []);
+
+  // Close suggestions on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const checkKeySelection = useCallback(async () => {
     if (window.aistudio?.hasSelectedApiKey) {
@@ -1170,7 +1240,7 @@ const App: React.FC = () => {
                 A detailed AI-assisted property report that explains zoning, planning context, comparable sales, and potential value-uplift scenarios in <strong className="font-bold">Australia</strong>.
               </p>
               
-              <div className="max-w-2xl mx-auto">
+              <div className="max-w-2xl mx-auto" ref={autocompleteRef}>
                  <form onSubmit={handleSearch} className="relative group">
                   <div className="absolute -inset-1 bg-[#C9A961] rounded-[2rem] blur opacity-5 group-hover:opacity-10 transition duration-1000"></div>
                   <div className="relative flex items-center p-2 rounded-[2rem] shadow-xl border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
@@ -1178,10 +1248,12 @@ const App: React.FC = () => {
                       <input
                         type="text"
                         value={address}
-                        onChange={(e) => setAddress(e.target.value)}
+                        onChange={(e) => handleAddressChange(e.target.value)}
+                        onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                         placeholder="Enter street address..."
                         className="w-full py-3 sm:py-4 bg-transparent text-base sm:text-lg font-medium focus:outline-none"
                         style={{ color: 'var(--text-primary)' }}
+                        autoComplete="off"
                       />
                     </div>
                     <div className="flex items-center gap-2 pr-2">
@@ -1206,6 +1278,36 @@ const App: React.FC = () => {
                       </button>
                     </div>
                   </div>
+                  
+                  {/* Address Autocomplete Dropdown */}
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div 
+                      className="absolute left-0 right-0 mt-2 rounded-2xl shadow-xl border overflow-hidden z-50"
+                      style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
+                    >
+                      {suggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => handleSelectSuggestion(suggestion)}
+                          className="w-full px-6 py-3 text-left hover:bg-[#C9A961]/10 transition-colors flex items-center gap-3 border-b last:border-b-0"
+                          style={{ borderColor: 'var(--border-color)' }}
+                        >
+                          <i className="fa-solid fa-location-dot text-[#C9A961] text-sm flex-shrink-0"></i>
+                          <div className="min-w-0">
+                            <p className="font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                              {suggestion.mainText}
+                            </p>
+                            {suggestion.secondaryText && (
+                              <p className="text-sm truncate" style={{ color: 'var(--text-muted)' }}>
+                                {suggestion.secondaryText}
+                              </p>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </form>
               </div>
             </div>
