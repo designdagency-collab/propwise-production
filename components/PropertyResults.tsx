@@ -250,16 +250,31 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       page-break-after: avoid !important;
     }
     
-    /* Strategy Grid - COMPACT */
+    /* Strategy Grid - Show titles properly */
     .pdf-mode [data-pdf-strategy-grid] {
       display: grid !important;
       grid-template-columns: repeat(2, 1fr) !important;
-      gap: 6px !important;
+      gap: 12px !important;
     }
     .pdf-mode [data-pdf-strategy-card] {
       break-inside: avoid !important;
       page-break-inside: avoid !important;
-      padding: 8px !important;
+      padding: 12px !important;
+    }
+    .pdf-mode [data-pdf-strategy-card] h3 {
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      color: #3A342D !important;
+      margin-bottom: 6px !important;
+      display: block !important;
+    }
+    .pdf-mode [data-pdf-strategy-card] .space-y-1 {
+      display: block !important;
+    }
+    .pdf-mode [data-pdf-strategy-card] .flex.justify-between {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 8px !important;
     }
     
     /* BADGES - COMPACT */
@@ -330,19 +345,43 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       font-size: 14px !important;
     }
     
-    /* Amenity Cards - Centered text */
+    /* Amenity Cards - Centered text, no left border */
     .pdf-mode [data-pdf-amenities] {
-      gap: 8px !important;
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 10px !important;
     }
     .pdf-mode [data-pdf-amenities] > div {
       padding: 12px !important;
       text-align: center !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      border-left: none !important;
+      border: 1px solid rgba(201, 169, 97, 0.2) !important;
+      border-radius: 12px !important;
+    }
+    .pdf-mode [data-pdf-amenities] > div::before,
+    .pdf-mode [data-pdf-amenities] > div::after {
+      display: none !important;
     }
     .pdf-mode [data-pdf-amenities] > div > div:first-child {
-      margin: 0 auto 8px auto !important;
+      margin: 0 auto 6px auto !important;
+      width: 24px !important;
+      height: 24px !important;
     }
     .pdf-mode [data-pdf-amenities] .space-y-1 {
       text-align: center !important;
+      width: 100% !important;
+    }
+    .pdf-mode [data-pdf-amenities] .space-y-1 p {
+      text-align: center !important;
+      font-size: 8px !important;
+    }
+    .pdf-mode [data-pdf-amenities] .space-y-1 h4 {
+      text-align: center !important;
+      font-size: 11px !important;
+      font-weight: 700 !important;
       border-radius: 8px !important;
     }
     .pdf-mode [data-pdf-amenities] p:first-child {
@@ -358,11 +397,29 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       font-size: 8px !important;
     }
     
-    /* Watch Outs - COMPACT */
+    /* Watch Outs - Compact cards */
     .pdf-mode [data-pdf-watchouts] {
       background-color: #fff5f5 !important;
       border: 1px solid #fecaca !important;
+      padding: 12px !important;
+      border-radius: 16px !important;
+    }
+    .pdf-mode [data-pdf-watchouts] .grid {
+      gap: 8px !important;
+    }
+    .pdf-mode [data-pdf-watchouts] .bg-white {
       padding: 10px !important;
+      border-radius: 10px !important;
+      flex-direction: row !important;
+      gap: 10px !important;
+    }
+    .pdf-mode [data-pdf-watchouts] h3 {
+      font-size: 12px !important;
+      font-weight: 700 !important;
+      margin-bottom: 4px !important;
+    }
+    .pdf-mode [data-pdf-watchouts] .text-2xl {
+      font-size: 16px !important;
     }
     
     /* Badge Colors - ensure visibility */
@@ -1274,7 +1331,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
          </button>
       </div>
 
-      <footer className="pt-10 pb-6">
+      <footer className="pt-10 pb-6" data-no-pdf="true">
         <div className="text-center">
           <p className="text-[10px] sm:text-[11px] leading-relaxed max-w-2xl mx-auto" style={{ color: 'var(--text-muted)' }}>
             upblock.ai provides AI-assisted, scenario-based property insights using publicly available data. It does not constitute financial advice, a property valuation, or planning approval.
