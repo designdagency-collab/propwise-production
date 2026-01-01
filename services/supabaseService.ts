@@ -73,7 +73,9 @@ export class SupabaseService {
       
       // CRITICAL: First verify the session is ready for authenticated queries
       // RLS requires auth.uid() to work, which needs a valid session
+      console.log('[Supabase] getCurrentProfile - about to call getSession...');
       const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
+      console.log('[Supabase] getCurrentProfile - getSession returned');
       console.log('[Supabase] getCurrentProfile - session check:', session ? { userId: session.user?.id, email: session.user?.email } : 'NO SESSION', 'error:', sessionError?.message);
       
       if (!session) {
