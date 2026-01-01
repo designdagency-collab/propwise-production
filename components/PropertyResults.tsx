@@ -104,7 +104,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest cursor-help transition-opacity hover:opacity-90 ${getPathwayBadgeColor(pathway)}`}>
           {displayText}
         </span>
-        <div className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-[#4A4137] text-white text-[9px] font-medium rounded-lg shadow-xl z-50 transition-all opacity-0 group-hover:opacity-100 pointer-events-none leading-relaxed text-center">
+        {/* Tooltip - hidden in PDF via data-no-pdf */}
+        <div data-no-pdf="true" className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-[#4A4137] text-white text-[9px] font-medium rounded-lg shadow-xl z-50 transition-all opacity-0 group-hover:opacity-100 pointer-events-none leading-relaxed text-center">
           {getPathwayDescription(pathway)}
           <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-[#4A4137]"></div>
         </div>
@@ -120,10 +121,17 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
   };
 
   /**
-   * PDF Export Styles - ULTRA COMPACT for premium output
+   * PDF Export Styles - FIXED: No blank gaps, no duplicates, deterministic output
+   * 
+   * KEY FIXES:
+   * 1. REMOVED global break-inside:avoid from sections/grids (caused blank pages)
+   * 2. Added .avoid-break class for targeted use on small cards only
+   * 3. Force desktop layout with explicit grid columns (no Tailwind breakpoint dependency)
+   * 4. Hide tooltips completely (prevent duplicate labels)
+   * 5. Ensure single layout renders (no mobile + desktop variants)
    */
   const getPdfStyles = () => `
-    /* Base PDF Reset */
+    /* ===== BASE PDF RESET ===== */
     .pdf-mode {
       background-color: #ffffff !important;
       color: #3A342D !important;
@@ -139,28 +147,39 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       box-sizing: border-box !important;
     }
     
-    /* Hide non-PDF elements */
+    /* ===== HIDE NON-PDF ELEMENTS ===== */
+    /* Hide buttons, tooltips, hover states, and mobile-only elements */
     .pdf-mode [data-no-pdf="true"],
     .pdf-mode button:not([data-pdf-keep]),
-    .pdf-mode .invisible,
-    .pdf-mode [class*="group-hover"] { 
+    .pdf-mode .invisible { 
       display: none !important; 
     }
     
-    /* Container - VERY TIGHT margins between sections */
+    /* CRITICAL FIX: Hide tooltip containers completely to prevent duplicate labels */
+    .pdf-mode .group .invisible,
+    .pdf-mode .group > div:last-child:not(:first-child),
+    .pdf-mode [class*="group-hover"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+    }
+    
+    /* ===== CONTAINER LAYOUT ===== */
     .pdf-mode [data-pdf-root="true"] {
       max-width: 100% !important;
       padding: 0 !important;
       margin: 0 !important;
     }
-    .pdf-mode .space-y-12 > * + * { margin-top: 12px !important; }
-    .pdf-mode .space-y-8 > * + * { margin-top: 10px !important; }
-    .pdf-mode .space-y-6 > * + * { margin-top: 8px !important; }
-    .pdf-mode .space-y-4 > * + * { margin-top: 6px !important; }
-    .pdf-mode .space-y-3 > * + * { margin-top: 5px !important; }
+    .pdf-mode .space-y-12 > * + * { margin-top: 14px !important; }
+    .pdf-mode .space-y-8 > * + * { margin-top: 12px !important; }
+    .pdf-mode .space-y-6 > * + * { margin-top: 10px !important; }
+    .pdf-mode .space-y-4 > * + * { margin-top: 8px !important; }
+    .pdf-mode .space-y-3 > * + * { margin-top: 6px !important; }
     .pdf-mode .space-y-2 > * + * { margin-top: 4px !important; }
     
-    /* Cards - Clean padding, NO SHADOWS, respect page breaks */
+    /* ===== CARDS - NO GLOBAL BREAK-INSIDE ===== */
     .pdf-mode [class*="rounded-[2"],
     .pdf-mode [class*="rounded-[3"],
     .pdf-mode [class*="rounded-[4"] {
@@ -170,10 +189,10 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       padding: 12px !important;
       margin-bottom: 8px !important;
       overflow: visible !important;
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
       box-shadow: none !important;
+      /* NO break-inside here - let content flow naturally */
     }
+    
     /* Remove ALL shadows in PDF */
     .pdf-mode * {
       box-shadow: none !important;
@@ -182,6 +201,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     .pdf-mode [class*="shadow"] {
       box-shadow: none !important;
     }
+    
+    /* ===== PADDING NORMALIZATION ===== */
     .pdf-mode .p-4, .pdf-mode .p-5, .pdf-mode .p-6, .pdf-mode .p-8, .pdf-mode .p-10, .pdf-mode .p-12 {
       padding: 10px !important;
     }
@@ -196,20 +217,12 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       padding-left: 8px !important;
       padding-right: 8px !important;
     }
-    .pdf-mode .mb-3, .pdf-mode .mb-4 {
-      margin-bottom: 8px !important;
-    }
-    .pdf-mode .mb-5, .pdf-mode .mb-6, .pdf-mode .mb-8 {
-      margin-bottom: 12px !important;
-    }
-    .pdf-mode .mt-3, .pdf-mode .mt-4 {
-      margin-top: 8px !important;
-    }
-    .pdf-mode .mt-5, .pdf-mode .mt-6, .pdf-mode .mt-8 {
-      margin-top: 12px !important;
-    }
+    .pdf-mode .mb-3, .pdf-mode .mb-4 { margin-bottom: 8px !important; }
+    .pdf-mode .mb-5, .pdf-mode .mb-6, .pdf-mode .mb-8 { margin-bottom: 12px !important; }
+    .pdf-mode .mt-3, .pdf-mode .mt-4 { margin-top: 8px !important; }
+    .pdf-mode .mt-5, .pdf-mode .mt-6, .pdf-mode .mt-8 { margin-top: 12px !important; }
     
-    /* KPI Row - Grid Layout COMPACT */
+    /* ===== KPI ROW ===== */
     .pdf-mode [data-pdf-kpi-row] {
       display: grid !important;
       grid-template-columns: repeat(4, 1fr) !important;
@@ -228,22 +241,21 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       letter-spacing: 0.4px !important;
     }
     .pdf-mode [data-pdf-kpi] p:last-child {
-      font-size: 13px !important;
+      font-size: 16px !important;
       font-weight: 800 !important;
       font-variant-numeric: tabular-nums !important;
     }
     
-    /* Typography - COMPACT */
+    /* ===== TYPOGRAPHY ===== */
     .pdf-mode h1 { font-size: 20px !important; line-height: 1.1 !important; color: #3A342D !important; margin-bottom: 2px !important; }
     .pdf-mode h2 { font-size: 13px !important; line-height: 1.15 !important; color: #3A342D !important; margin-bottom: 4px !important; }
     .pdf-mode h3 { font-size: 11px !important; line-height: 1.2 !important; color: #3A342D !important; margin-bottom: 2px !important; }
     .pdf-mode p { font-size: 9px !important; line-height: 1.35 !important; margin: 0 !important; }
     
-    /* Section spacing - VERY TIGHT, respect page breaks */
+    /* ===== SECTION SPACING - NO GLOBAL BREAK-INSIDE ===== */
     .pdf-mode section { 
-      margin-bottom: 10px !important; 
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
+      margin-bottom: 12px !important; 
+      /* NO break-inside: avoid here - causes blank gaps */
     }
     .pdf-mode .gap-2 { gap: 4px !important; }
     .pdf-mode .gap-3 { gap: 6px !important; }
@@ -251,18 +263,21 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     .pdf-mode .gap-5, .pdf-mode .gap-6 { gap: 10px !important; }
     .pdf-mode .gap-8 { gap: 12px !important; }
     
-    /* Page break control */
-    .pdf-mode [data-pdf-section] {
+    /* ===== TARGETED PAGE BREAK CONTROL ===== */
+    /* Only use break-inside:avoid on SMALL elements that should stay together */
+    .pdf-mode .avoid-break,
+    .pdf-mode [data-pdf-no-break] {
       break-inside: avoid !important;
       page-break-inside: avoid !important;
-      margin-bottom: 10px !important;
     }
-    .pdf-mode h2, .pdf-mode h3 {
+    
+    /* Keep headings with their first content */
+    .pdf-mode h2 {
       break-after: avoid !important;
       page-break-after: avoid !important;
     }
     
-    /* Strategy Grid - Show titles properly */
+    /* ===== STRATEGY CARDS - Small enough to avoid-break ===== */
     .pdf-mode [data-pdf-strategy-grid] {
       display: grid !important;
       grid-template-columns: repeat(2, 1fr) !important;
@@ -289,7 +304,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       gap: 8px !important;
     }
     
-    /* BADGES - COMPACT */
+    /* ===== BADGES - SINGLE RENDER ONLY ===== */
     .pdf-mode span[class*="rounded"] {
       display: inline-block !important;
       white-space: nowrap !important;
@@ -310,14 +325,15 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       letter-spacing: 0.2px !important;
     }
     
-    /* Callout Banner - COMPACT with smaller icon, bigger text */
+    /* ===== CALLOUT BANNER ===== */
     .pdf-mode [data-pdf-callout] {
       background-color: #4A4137 !important;
       color: #ffffff !important;
       border-radius: 10px !important;
       padding: 14px !important;
       break-inside: avoid !important;
-      margin-bottom: 8px !important;
+      page-break-inside: avoid !important;
+      margin-bottom: 12px !important;
     }
     .pdf-mode [data-pdf-callout] * { color: inherit !important; }
     .pdf-mode [data-pdf-callout] .text-\\[\\#D6A270\\] { color: #D6A270 !important; }
@@ -330,24 +346,24 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     .pdf-mode [data-pdf-callout] [class*="rounded-[2"] { width: 40px !important; height: 40px !important; padding: 8px !important; }
     .pdf-mode [data-pdf-callout] i.fa-sack-dollar { font-size: 18px !important; }
     
-    /* Map Container - LARGE */
+    /* ===== MAP CONTAINER ===== */
     .pdf-mode [data-map="true"] {
-      height: 400px !important;
+      height: 350px !important;
       border-radius: 10px !important;
       overflow: hidden !important;
       break-inside: avoid !important;
-      margin-bottom: 6px !important;
+      margin-bottom: 8px !important;
     }
     .pdf-mode .pdf-map-image {
       width: 100% !important;
-      height: 400px !important;
+      height: 350px !important;
       object-fit: cover !important;
       display: block !important;
       border-radius: 10px !important;
     }
     .pdf-mode .pdf-map-placeholder {
       width: 100% !important;
-      height: 440px !important;
+      height: 350px !important;
       background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
       display: flex !important;
       align-items: center !important;
@@ -357,7 +373,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       font-size: 14px !important;
     }
     
-    /* Amenity Cards - Centered text, no left border */
+    /* ===== AMENITY CARDS ===== */
     .pdf-mode [data-pdf-amenities] {
       display: grid !important;
       grid-template-columns: repeat(2, 1fr) !important;
@@ -372,6 +388,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       border-left: none !important;
       border: 1px solid rgba(201, 169, 97, 0.2) !important;
       border-radius: 12px !important;
+      break-inside: avoid !important;
     }
     .pdf-mode [data-pdf-amenities] > div::before,
     .pdf-mode [data-pdf-amenities] > div::after {
@@ -396,20 +413,11 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       font-weight: 700 !important;
       border-radius: 8px !important;
     }
-    .pdf-mode [data-pdf-amenities] p:first-child {
-      font-size: 6px !important;
-      margin-bottom: 1px !important;
-    }
-    .pdf-mode [data-pdf-amenities] p:nth-child(2) {
-      font-size: 9px !important;
-      font-weight: 600 !important;
-      margin-bottom: 0 !important;
-    }
-    .pdf-mode [data-pdf-amenities] p:last-child {
-      font-size: 8px !important;
-    }
+    .pdf-mode [data-pdf-amenities] p:first-child { font-size: 6px !important; margin-bottom: 1px !important; }
+    .pdf-mode [data-pdf-amenities] p:nth-child(2) { font-size: 9px !important; font-weight: 600 !important; margin-bottom: 0 !important; }
+    .pdf-mode [data-pdf-amenities] p:last-child { font-size: 8px !important; }
     
-    /* Watch Outs - Compact cards */
+    /* ===== WATCH OUTS ===== */
     .pdf-mode [data-pdf-watchouts] {
       background-color: #fff5f5 !important;
       border: 1px solid #fecaca !important;
@@ -424,17 +432,12 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       border-radius: 10px !important;
       flex-direction: row !important;
       gap: 10px !important;
+      break-inside: avoid !important;
     }
-    .pdf-mode [data-pdf-watchouts] h3 {
-      font-size: 12px !important;
-      font-weight: 700 !important;
-      margin-bottom: 4px !important;
-    }
-    .pdf-mode [data-pdf-watchouts] .text-2xl {
-      font-size: 16px !important;
-    }
+    .pdf-mode [data-pdf-watchouts] h3 { font-size: 12px !important; font-weight: 700 !important; margin-bottom: 4px !important; }
+    .pdf-mode [data-pdf-watchouts] .text-2xl { font-size: 16px !important; }
     
-    /* Badge Colors - ensure visibility */
+    /* ===== BADGE COLORS ===== */
     .pdf-mode .bg-emerald-500 { background-color: #10b981 !important; color: white !important; }
     .pdf-mode .bg-blue-500 { background-color: #3b82f6 !important; color: white !important; }
     .pdf-mode .bg-amber-500 { background-color: #f59e0b !important; color: white !important; }
@@ -442,7 +445,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     .pdf-mode .bg-indigo-600 { background-color: #4f46e5 !important; color: white !important; }
     .pdf-mode .bg-slate-500 { background-color: #64748b !important; color: white !important; }
     
-    /* Text colors */
+    /* ===== TEXT COLORS ===== */
     .pdf-mode .text-emerald-600, .pdf-mode .text-emerald-700 { color: #059669 !important; }
     .pdf-mode .text-\\[\\#B8864A\\] { color: #B8864A !important; }
     .pdf-mode .text-\\[\\#8A9A6D\\] { color: #8A9A6D !important; }
@@ -450,63 +453,76 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     .pdf-mode .text-\\[\\#4A4137\\] { color: #3A342D !important; }
     .pdf-mode .text-\\[\\#3A342D\\] { color: #3A342D !important; }
     
-    /* Slate backgrounds for nested cards */
+    /* ===== BACKGROUND COLORS ===== */
     .pdf-mode .bg-slate-50 { background-color: #f8fafc !important; }
     .pdf-mode .bg-slate-50\\/50 { background-color: #fafbfc !important; }
     .pdf-mode .bg-emerald-50 { background-color: #ecfdf5 !important; }
     .pdf-mode .bg-amber-50 { background-color: #fffbeb !important; }
     
-    /* Grid layouts - COMPACT gaps */
-    .pdf-mode .grid-cols-1.md\\:grid-cols-2 { 
+    /* ===== GRID LAYOUTS - FORCE DESKTOP (no Tailwind breakpoint dependency) ===== */
+    .pdf-mode .grid-cols-1.md\\:grid-cols-2,
+    .pdf-mode .grid.md\\:grid-cols-2 { 
       display: grid !important; 
       grid-template-columns: repeat(2, 1fr) !important; 
-      gap: 6px !important; 
+      gap: 8px !important; 
     }
-    .pdf-mode .grid-cols-1.md\\:grid-cols-3 { 
+    .pdf-mode .grid-cols-1.md\\:grid-cols-3,
+    .pdf-mode .grid.md\\:grid-cols-3 { 
       display: grid !important; 
       grid-template-columns: repeat(3, 1fr) !important; 
-      gap: 6px !important; 
+      gap: 8px !important; 
     }
-    .pdf-mode .grid-cols-1.lg\\:grid-cols-3 { 
+    .pdf-mode .grid-cols-1.lg\\:grid-cols-2,
+    .pdf-mode .grid.lg\\:grid-cols-2 { 
+      display: grid !important; 
+      grid-template-columns: repeat(2, 1fr) !important; 
+      gap: 8px !important; 
+    }
+    .pdf-mode .grid-cols-1.lg\\:grid-cols-3,
+    .pdf-mode .grid.lg\\:grid-cols-3 { 
       display: grid !important; 
       grid-template-columns: 2fr 1fr !important; 
-      gap: 6px !important; 
+      gap: 8px !important; 
     }
     .pdf-mode .grid-cols-1.lg\\:grid-cols-4 { 
       display: grid !important; 
       grid-template-columns: repeat(2, 1fr) !important; 
-      gap: 6px !important; 
+      gap: 8px !important; 
     }
     
-    /* Decorative - Hide */
-    .pdf-mode [class*="blur-"], .pdf-mode [class*="-mr-32"], .pdf-mode [class*="-mt-32"] { display: none !important; }
-    .pdf-mode .absolute { position: relative !important; }
+    /* Force flex layouts to row for desktop */
+    .pdf-mode .flex-col.md\\:flex-row,
+    .pdf-mode .flex.md\\:flex-row {
+      flex-direction: row !important;
+    }
+    .pdf-mode .text-center.md\\:text-left {
+      text-align: left !important;
+    }
     
-    /* Border spacing */
+    /* ===== DECORATIVE - HIDE ===== */
+    .pdf-mode [class*="blur-"], .pdf-mode [class*="-mr-32"], .pdf-mode [class*="-mt-32"] { display: none !important; }
+    .pdf-mode .absolute:not([data-pdf-keep]) { position: relative !important; }
+    
+    /* ===== BORDER SPACING ===== */
     .pdf-mode .border-t { border-top-width: 1px !important; padding-top: 6px !important; margin-top: 6px !important; }
     .pdf-mode .border-b { border-bottom-width: 1px !important; padding-bottom: 6px !important; margin-bottom: 6px !important; }
     
-    /* Footer - Branded */
+    /* ===== FOOTER ===== */
     .pdf-mode footer { 
-      margin-top: 30px !important; 
+      margin-top: 20px !important; 
       break-inside: avoid !important;
       page-break-inside: avoid !important;
     }
-    .pdf-mode footer p { 
-      font-size: 9px !important; 
-      color: #888 !important; 
-    }
-    .pdf-mode footer img {
-      height: 28px !important;
-    }
+    .pdf-mode footer p { font-size: 9px !important; color: #888 !important; }
+    .pdf-mode footer img { height: 28px !important; }
     
-    /* Fix icon sizing */
+    /* ===== ICON SIZING ===== */
     .pdf-mode .w-10.h-10 { width: 28px !important; height: 28px !important; min-width: 28px !important; }
     .pdf-mode .w-8.h-8 { width: 22px !important; height: 22px !important; }
     .pdf-mode .w-6.h-6 { width: 18px !important; height: 18px !important; }
     .pdf-mode i { font-size: inherit !important; }
     
-    /* Section headers - ensure titles are visible */
+    /* ===== SECTION HEADERS ===== */
     .pdf-mode .flex.items-center.gap-4 {
       display: flex !important;
       align-items: center !important;
@@ -527,31 +543,19 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       display: block !important;
     }
     
-    /* Tables - COMPACT */
-    .pdf-mode table { margin: 4px 0 !important; }
+    /* ===== TABLES ===== */
+    .pdf-mode table { margin: 4px 0 !important; width: 100% !important; border-collapse: collapse !important; }
     .pdf-mode th, .pdf-mode td { padding: 4px 6px !important; font-size: 9px !important; }
     
-    /* PRICES - BIGGER fonts for costs/values */
+    /* ===== PRICES - BIGGER FONTS ===== */
     .pdf-mode .text-2xl, .pdf-mode .text-3xl, .pdf-mode .text-4xl {
       font-size: 18px !important;
       font-weight: 800 !important;
     }
-    .pdf-mode .text-xl {
-      font-size: 16px !important;
-      font-weight: 700 !important;
-    }
-    .pdf-mode .text-lg {
-      font-size: 14px !important;
-      font-weight: 700 !important;
-    }
-    /* Estimated cost labels */
-    .pdf-mode [class*="ESTIMATED"], .pdf-mode p:contains("ESTIMATED") {
-      font-size: 8px !important;
-    }
-    /* Price values - make them stand out */
-    .pdf-mode .font-black, .pdf-mode .font-extrabold, .pdf-mode .font-bold {
-      font-weight: 800 !important;
-    }
+    .pdf-mode .text-xl { font-size: 16px !important; font-weight: 700 !important; }
+    .pdf-mode .text-lg { font-size: 14px !important; font-weight: 700 !important; }
+    .pdf-mode .font-black, .pdf-mode .font-extrabold, .pdf-mode .font-bold { font-weight: 800 !important; }
+    
     /* Strategy card costs */
     .pdf-mode [data-pdf-strategy-card] .text-emerald-700,
     .pdf-mode [data-pdf-strategy-card] .text-\\[\\#8A9A6D\\] {
@@ -559,20 +563,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       font-weight: 800 !important;
     }
     /* Development scenario costs/margins */
-    .pdf-mode .text-emerald-600 {
-      font-size: 14px !important;
-      font-weight: 700 !important;
-    }
-    /* KPI values - bigger */
-    .pdf-mode [data-pdf-kpi] p:last-child {
-      font-size: 16px !important;
-      font-weight: 800 !important;
-    }
+    .pdf-mode .text-emerald-600 { font-size: 14px !important; font-weight: 700 !important; }
     /* Callout profit numbers */
-    .pdf-mode [data-pdf-callout] .text-\\[\\#D6A270\\] {
-      font-size: 20px !important;
-      font-weight: 800 !important;
-    }
+    .pdf-mode [data-pdf-callout] .text-\\[\\#D6A270\\] { font-size: 20px !important; font-weight: 800 !important; }
   `;
 
   /**
@@ -642,8 +635,13 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       const buttons = clonedElement.querySelectorAll('button:not([data-pdf-keep])');
       buttons.forEach(btn => btn.remove());
       
+      // CRITICAL: Aggressively remove tooltips to prevent duplicate labels
       const tooltips = clonedElement.querySelectorAll('.invisible, [class*="group-hover"]:not([data-pdf-keep])');
       tooltips.forEach(el => el.remove());
+      
+      // Also remove any tooltip containers that might have duplicate content
+      const tooltipContainers = clonedElement.querySelectorAll('.group > div.absolute, .group > div.invisible');
+      tooltipContainers.forEach(el => el.remove());
       
       // Replace map with static image
       const mapContainers = clonedElement.querySelectorAll('[data-map="true"]');
@@ -670,12 +668,13 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       blurElements.forEach(el => el.remove());
 
       // 3. Build complete HTML document for PDF
+      // CRITICAL: Do NOT add global break-inside:avoid rules - they cause blank pages
       const htmlContent = `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <meta name="viewport" content="width=1240">
           <script src="https://cdn.tailwindcss.com"></script>
           <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -691,16 +690,15 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
             }
             ${getPdfStyles()}
             
-            /* Additional print optimizations */
+            /* Print optimizations */
             @media print {
               body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
             
-            /* Ensure proper page breaks */
-            section { break-inside: avoid; page-break-inside: avoid; }
-            .grid { break-inside: avoid; }
+            /* FIX: NO global break-inside:avoid on sections/grids */
+            /* Only small cards get avoid-break via .avoid-break or data-pdf-no-break */
             
-            /* Fix table layouts */
+            /* Table layouts */
             table { width: 100%; border-collapse: collapse; }
             th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #eee; }
             

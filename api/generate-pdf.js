@@ -43,21 +43,25 @@ export default async function handler(req, res) {
     console.log('[PDF] Browser launched');
     const page = await browser.newPage();
 
-    // Set high-quality viewport
+    // FIXED: Use wider viewport to avoid mobile breakpoints
+    // This ensures desktop layout renders consistently
     await page.setViewport({
-      width: 1200,
-      height: 800,
+      width: 1240,  // Wide enough to avoid md: breakpoints
+      height: 1754, // A4 height at 150 DPI
       deviceScaleFactor: 2,
     });
+
+    // FIXED: Emulate print media type for proper print CSS
+    await page.emulateMediaType('print');
 
     // Set content
     console.log('[PDF] Setting page content...');
     await page.setContent(html, {
-      waitUntil: ['load', 'domcontentloaded', 'networkidle2'],
+      waitUntil: ['load', 'domcontentloaded', 'networkidle0'],
       timeout: 30000,
     });
 
-    // Wait for images
+    // Wait for all images to load
     await page.evaluate(async () => {
       const images = Array.from(document.images);
       await Promise.all(
@@ -70,18 +74,26 @@ export default async function handler(req, res) {
       );
     });
 
-    // Wait for fonts
-    await page.evaluate(() => document.fonts.ready);
+    // Wait for fonts to be ready
+    await page.evaluateHandle('document.fonts.ready');
 
-    // Brief rendering delay
-    await new Promise(r => setTimeout(r, 500));
+    // FIXED: Wait for layout to fully settle (double rAF)
+    await page.evaluate(() => new Promise(resolve => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(resolve);
+      });
+    }));
+
+    // Additional stabilization delay
+    await new Promise(r => setTimeout(r, 300));
 
     console.log('[PDF] Generating PDF...');
     
-    // Generate PDF - COMPACT margins
+    // Generate PDF with stable settings
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
+      preferCSSPageSize: true,
       margin: {
         top: '8mm',
         right: '8mm', 
