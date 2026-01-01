@@ -353,11 +353,11 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
                 </li>
                 <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                   <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
-                  Recent Comparable Sales Records
-                </li>
-                <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
                   Risk & "Watch Out" Identification
+                </li>
+                <li className="flex items-start gap-3 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
+                  <i className="fa-solid fa-tags mt-1 text-[#C9A961]"></i>
+                  Bulk credits at discounted prices
                 </li>
               </ul>
 
