@@ -342,13 +342,12 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
   `;
 
   /**
-   * Export report to PDF using html2pdf.js
+   * Export report to PDF using server-side Puppeteer
    * 
    * Key features:
-   * - PRE-FETCHES static map image as data URL before PDF generation
-   * - Injects CSS styles directly into cloned document for reliable styling
-   * - Uses onclone to apply PDF-specific modifications without affecting live UI
-   * - Removes interactive elements (buttons, tooltips) 
+   * - Server-side rendering with headless Chrome for pixel-perfect output
+   * - Consistent results across all browsers
+   * - Professional quality suitable for premium users
    */
   const exportToPDF = async () => {
     if (!reportRef.current || !isPaidUser) return;
@@ -356,8 +355,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     setIsExporting(true);
     
     try {
-      // 1. PRE-FETCH the static map image as a data URL BEFORE PDF generation
-      // This ensures the map is ready when html2canvas captures the page
+      // 1. Pre-fetch static map image
       let mapDataUrl: string | null = null;
       try {
         const staticMapUrl = `/api/static-map?address=${encodeURIComponent(data.address)}&width=800&height=400&zoom=17`;
@@ -376,105 +374,127 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         console.warn('Could not pre-fetch static map:', mapError);
       }
 
-      // 2. Dynamic import of html2pdf
-      const html2pdfModule = await import('html2pdf.js');
-      const html2pdf = html2pdfModule.default as any;
-      
+      // 2. Clone and prepare HTML for PDF
       const element = reportRef.current;
-      const filename = `upblock-${data.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
-      const addressForPlaceholder = data.address;
+      const clonedElement = element.cloneNode(true) as HTMLElement;
       
-      const opt = {
-        margin: [10, 10, 10, 10],
-        filename: filename,
-        image: { type: 'jpeg', quality: 0.95 },
-        html2canvas: { 
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          letterRendering: true,
-          scrollY: 0,
-          logging: false,
-          backgroundColor: '#ffffff',
-          windowWidth: 1100, // Wider for better layout
-          onclone: (clonedDoc: Document) => {
-            // 3. INJECT PDF styles directly into cloned document
-            const styleEl = clonedDoc.createElement('style');
-            styleEl.textContent = getPdfStyles();
-            clonedDoc.head.appendChild(styleEl);
-            
-            // Apply PDF mode class
-            clonedDoc.documentElement.classList.add('pdf-mode');
-            clonedDoc.body.classList.add('pdf-mode');
-            
-            // Remove elements marked as not for PDF
-            const noPdfElements = clonedDoc.querySelectorAll('[data-no-pdf="true"]');
-            noPdfElements.forEach(el => el.remove());
-            
-            // Remove all interactive buttons
-            const buttons = clonedDoc.querySelectorAll('button:not([data-pdf-keep])');
-            buttons.forEach(btn => btn.remove());
-            
-            // Remove tooltips and hover states
-            const tooltips = clonedDoc.querySelectorAll('.invisible, [class*="group-hover"]:not([data-pdf-keep])');
-            tooltips.forEach(el => el.remove());
-            
-            // 4. REPLACE map iframe with pre-fetched static image
-            const mapContainers = clonedDoc.querySelectorAll('[data-map="true"]');
-            mapContainers.forEach(container => {
-              const mapEl = container as HTMLElement;
-              mapEl.innerHTML = ''; // Clear iframe and loading indicator
-              
-              if (mapDataUrl) {
-                // Use pre-fetched map image (already loaded as data URL)
-                const img = clonedDoc.createElement('img');
-                img.src = mapDataUrl;
-                img.alt = `Map of ${addressForPlaceholder}`;
-                img.className = 'pdf-map-image';
-                mapEl.appendChild(img);
-              } else {
-                // Fallback: styled placeholder with address
-                const placeholder = clonedDoc.createElement('div');
-                placeholder.className = 'pdf-map-placeholder';
-                placeholder.innerHTML = `<span>📍 ${addressForPlaceholder}</span>`;
-                mapEl.appendChild(placeholder);
-              }
-            });
-            
-            // Remove decorative blur elements
-            const blurElements = clonedDoc.querySelectorAll('[class*="blur-3xl"], [class*="blur-2xl"]');
-            blurElements.forEach(el => el.remove());
-            
-            // Remove animations
-            const animatedElements = clonedDoc.querySelectorAll('[class*="animate-"]');
-            animatedElements.forEach(el => {
-              const classList = Array.from(el.classList);
-              classList.forEach(cls => {
-                if (cls.includes('animate-')) {
-                  el.classList.remove(cls);
-                }
-              });
-            });
-          }
-        },
-        jsPDF: { 
-          unit: 'mm', 
-          format: 'a4', 
-          orientation: 'portrait'
-        },
-        pagebreak: { 
-          mode: ['css', 'legacy'],
-          before: '.pdf-page-break-before',
-          after: '.pdf-page-break-after',
-          avoid: '.pdf-no-break, [data-pdf-no-break], section'
+      // Remove elements not needed in PDF
+      const noPdfElements = clonedElement.querySelectorAll('[data-no-pdf="true"]');
+      noPdfElements.forEach(el => el.remove());
+      
+      const buttons = clonedElement.querySelectorAll('button:not([data-pdf-keep])');
+      buttons.forEach(btn => btn.remove());
+      
+      const tooltips = clonedElement.querySelectorAll('.invisible, [class*="group-hover"]:not([data-pdf-keep])');
+      tooltips.forEach(el => el.remove());
+      
+      // Replace map with static image
+      const mapContainers = clonedElement.querySelectorAll('[data-map="true"]');
+      mapContainers.forEach(container => {
+        const mapEl = container as HTMLElement;
+        mapEl.innerHTML = '';
+        
+        if (mapDataUrl) {
+          const img = document.createElement('img');
+          img.src = mapDataUrl;
+          img.alt = `Map of ${data.address}`;
+          img.style.cssText = 'width: 100%; height: auto; border-radius: 12px;';
+          mapEl.appendChild(img);
+        } else {
+          const placeholder = document.createElement('div');
+          placeholder.style.cssText = 'padding: 40px; text-align: center; background: #f5f5f5; border-radius: 12px;';
+          placeholder.innerHTML = `<span>📍 ${data.address}</span>`;
+          mapEl.appendChild(placeholder);
         }
-      };
+      });
       
-      await html2pdf(element, opt).save();
+      // Remove animations and blur elements
+      const blurElements = clonedElement.querySelectorAll('[class*="blur-3xl"], [class*="blur-2xl"]');
+      blurElements.forEach(el => el.remove());
+
+      // 3. Build complete HTML document for PDF
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <script src="https://cdn.tailwindcss.com"></script>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+          <style>
+            * { box-sizing: border-box; }
+            body {
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+              background: #ffffff;
+              color: #3A342D;
+              margin: 0;
+              padding: 20px;
+              line-height: 1.5;
+            }
+            ${getPdfStyles()}
+            
+            /* Additional print optimizations */
+            @media print {
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+            
+            /* Ensure proper page breaks */
+            section { break-inside: avoid; page-break-inside: avoid; }
+            .grid { break-inside: avoid; }
+            
+            /* Fix table layouts */
+            table { width: 100%; border-collapse: collapse; }
+            th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #eee; }
+            
+            /* Ensure colors render */
+            .bg-\\[\\#C9A961\\] { background-color: #C9A961 !important; }
+            .text-\\[\\#C9A961\\] { color: #C9A961 !important; }
+            .text-\\[\\#D6A270\\] { color: #D6A270 !important; }
+            .bg-\\[\\#D6A270\\] { background-color: #D6A270 !important; }
+          </style>
+        </head>
+        <body class="pdf-mode">
+          ${clonedElement.outerHTML}
+          <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; font-size: 10px; color: #888;">
+            upblock.ai provides AI-assisted, scenario-based property insights using publicly available data.<br>
+            It does not constitute financial advice, a property valuation, or planning approval.
+          </footer>
+        </body>
+        </html>
+      `;
+
+      const filename = `upblock-${data.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+
+      // 4. Send to Puppeteer API for PDF generation
+      console.log('[PDF] Sending to Puppeteer API...');
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html: htmlContent, filename })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || errorData.error || 'PDF generation failed');
+      }
+
+      // 5. Download the PDF
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
       
-    } catch (error) {
+      console.log('[PDF] Export complete');
+      
+    } catch (error: any) {
       console.error('PDF export error:', error);
-      alert('Failed to export PDF. Please try again.');
+      alert(`Failed to export PDF: ${error.message || 'Please try again.'}`);
     } finally {
       setIsExporting(false);
     }
