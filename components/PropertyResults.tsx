@@ -148,7 +148,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     .pdf-mode .space-y-3 > * + * { margin-top: 3px !important; }
     .pdf-mode .space-y-2 > * + * { margin-top: 2px !important; }
     
-    /* Cards - COMPACT padding */
+    /* Cards - COMPACT padding, NO SHADOWS */
     .pdf-mode [class*="rounded-[2"],
     .pdf-mode [class*="rounded-[3"],
     .pdf-mode [class*="rounded-[4"] {
@@ -160,6 +160,15 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       overflow: visible !important;
       break-inside: avoid !important;
       page-break-inside: avoid !important;
+      box-shadow: none !important;
+    }
+    /* Remove ALL shadows in PDF */
+    .pdf-mode * {
+      box-shadow: none !important;
+      -webkit-box-shadow: none !important;
+    }
+    .pdf-mode [class*="shadow"] {
+      box-shadow: none !important;
     }
     .pdf-mode .p-4, .pdf-mode .p-5, .pdf-mode .p-6, .pdf-mode .p-8, .pdf-mode .p-10, .pdf-mode .p-12 {
       padding: 10px !important;
