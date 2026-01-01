@@ -218,25 +218,59 @@ const App: React.FC = () => {
       }
     };
 
-    // Check for existing session on mount
-    // Supabase's detectSessionInUrl:true will auto-parse OAuth hash
-    const checkSession = async (attempt = 1) => {
+    // Check for existing session or handle OAuth callback
+    const initAuth = async () => {
+      // First check if we have an OAuth callback with tokens in hash
+      if (window.location.hash.includes('access_token')) {
+        console.log('[Auth] OAuth callback detected - extracting tokens from hash');
+        
+        try {
+          // Parse hash manually
+          const hash = window.location.hash.substring(1);
+          const params = new URLSearchParams(hash);
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token') || '';
+          
+          if (accessToken) {
+            console.log('[Auth] Setting session with extracted tokens...');
+            
+            // Clear hash FIRST to prevent loops
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            // Set the session
+            const { data, error } = await supabaseService.supabase!.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
+            
+            console.log('[Auth] setSession result:', { 
+              hasSession: !!data.session, 
+              email: data.session?.user?.email,
+              error: error?.message 
+            });
+            
+            if (data.session?.user) {
+              handleSessionLogin(data.session);
+              return;
+            } else if (error) {
+              console.error('[Auth] setSession failed:', error);
+            }
+          }
+        } catch (err) {
+          console.error('[Auth] Error processing OAuth callback:', err);
+        }
+      }
+      
+      // Normal session check (no OAuth hash or OAuth failed)
       const { data: { session }, error } = await supabaseService.supabase!.auth.getSession();
-      console.log(`[Auth] getSession attempt ${attempt}:`, { hasSession: !!session, email: session?.user?.email, error: error?.message });
+      console.log('[Auth] getSession:', { hasSession: !!session, email: session?.user?.email, error: error?.message });
       
       if (session?.user) {
         handleSessionLogin(session);
-        return;
-      }
-      
-      // If OAuth hash present but no session yet, retry a few times (Supabase may still be processing)
-      if (window.location.hash.includes('access_token') && attempt < 5) {
-        console.log('[Auth] OAuth hash detected but no session, retrying in 500ms...');
-        setTimeout(() => checkSession(attempt + 1), 500);
       }
     };
     
-    checkSession();
+    initAuth();
 
     // Listen to auth changes
     const { data: { subscription } } = supabaseService.supabase!.auth.onAuthStateChange(
