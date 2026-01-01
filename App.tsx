@@ -197,29 +197,55 @@ const App: React.FC = () => {
     }
 
     console.log('[Auth] Checking for existing session on mount...');
-    console.log('[Auth] URL hash:', window.location.hash);
-    console.log('[Auth] URL search:', window.location.search);
+    console.log('[Auth] URL hash length:', window.location.hash.length);
+    console.log('[Auth] Has access_token:', window.location.hash.includes('access_token'));
 
-    // Check for existing session on mount
-    supabaseService.supabase!.auth.getSession().then(({ data: { session }, error }) => {
-        console.log('[Auth] getSession result:', { hasSession: !!session, error, email: session?.user?.email });
+    // Function to handle session
+    const handleSession = (session: any) => {
       if (session?.user) {
-        console.log('[Auth] Found existing session, setting logged in state');
+        console.log('[Auth] Found session, setting logged in state for:', session.user.email);
         setIsLoggedIn(true);
         setUserEmail(session.user.email || '');
         setUserPhone(session.user.phone || '');
         setIsSignedUp(true);
         localStorage.setItem('prop_is_logged_in', 'true');
         localStorage.setItem('prop_user_email', session.user.email || '');
-        setShowEmailAuth(false); // Close modal if open
+        setShowEmailAuth(false);
         loadUserData(session.user.id);
         
-        // Clear OAuth fragments from URL for cleaner display
+        // Clear OAuth fragments from URL
         if (window.location.hash.includes('access_token')) {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
+        return true;
       }
-    });
+      return false;
+    };
+
+    // If URL has access_token, we need to let Supabase process it first
+    if (window.location.hash.includes('access_token')) {
+      console.log('[Auth] OAuth callback detected, waiting for Supabase to process...');
+      
+      // Give Supabase time to process the hash
+      setTimeout(async () => {
+        const { data: { session }, error } = await supabaseService.supabase!.auth.getSession();
+        console.log('[Auth] After delay - getSession result:', { hasSession: !!session, error });
+        
+        if (!handleSession(session)) {
+          // If still no session, try refreshing
+          console.log('[Auth] No session after delay, trying to exchange token...');
+          const { data, error: refreshError } = await supabaseService.supabase!.auth.refreshSession();
+          console.log('[Auth] refreshSession result:', { hasSession: !!data.session, error: refreshError });
+          handleSession(data.session);
+        }
+      }, 500);
+    } else {
+      // Normal page load - check for existing session
+      supabaseService.supabase!.auth.getSession().then(({ data: { session }, error }) => {
+        console.log('[Auth] getSession result:', { hasSession: !!session, error });
+        handleSession(session);
+      });
+    }
 
     // Listen to auth changes
     const { data: { subscription } } = supabaseService.supabase!.auth.onAuthStateChange(
