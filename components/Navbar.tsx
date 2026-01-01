@@ -185,14 +185,13 @@ const Navbar: React.FC<NavbarProps> = ({
                 <span className="sm:hidden">Top Up</span>
               </button>
             ) : (plan === 'PRO' || plan === 'UNLIMITED_PRO') ? (
-              // PRO badge - clickable to see Credit Pack & Enterprise options
+              // PRO user - show View Pricing button to buy more credits
               <button 
                 onClick={onUpgrade}
-                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border hover:border-[#C9A961] transition-all cursor-pointer" 
-                style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)', color: 'var(--text-primary)' }}
+                className="px-3 sm:px-6 py-2 sm:py-2.5 bg-[#C9A961] text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-widest rounded-lg sm:rounded-xl hover:bg-[#3A342D] transition-all shadow-md active:scale-95"
               >
-                <i className="fa-solid fa-crown text-[#C9A961] text-[10px] sm:text-xs"></i>
-                <span className="hidden min-[400px]:inline">Premium</span>
+                <span className="hidden sm:inline">View Pricing</span>
+                <span className="sm:hidden">Pricing</span>
               </button>
             ) : plan === 'STARTER_PACK' ? (
               // Starter badge - clickable to upgrade or buy more
