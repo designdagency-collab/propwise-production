@@ -2,21 +2,26 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { PropertyData } from "../types";
 
 // Detect if address indicates combined/amalgamated lots
+// Only for small ranges (<=6 difference) - large ranges like "1-71" are unit numbers
 function detectCombinedLots(address: string): boolean {
-  // Patterns that indicate multiple lots:
-  // "2-6 Smith St" (range with hyphen)
-  // "2 & 4 Smith St" (ampersand)
-  // "2, 4, 6 Smith St" (comma separated numbers)
-  // "2-4/6 Smith St" (range with slash)
-  const patterns = [
-    /^\d+\s*-\s*\d+\s+/,           // "2-6 Smith St"
-    /^\d+\s*&\s*\d+\s+/,           // "2 & 4 Smith St"
-    /^\d+\s*,\s*\d+/,              // "2, 4 Smith St"
-    /^\d+\s*-\s*\d+\s*\/\s*\d+/,   // "2-4/6 Smith St"
-    /lots?\s*\d+\s*(&|,|-)\s*\d+/i // "Lot 1 & 2" or "Lots 1-3"
-  ];
+  const addr = address.trim();
   
-  return patterns.some(pattern => pattern.test(address.trim()));
+  // Check for hyphen range pattern (e.g., "2-6 Smith St")
+  const hyphenMatch = addr.match(/^(\d+)\s*-\s*(\d+)\s+/);
+  if (hyphenMatch) {
+    const start = parseInt(hyphenMatch[1]);
+    const end = parseInt(hyphenMatch[2]);
+    // Only combined lots if difference is small (2-3 adjacent lots, max 6)
+    if (end - start <= 6 && end > start) return true;
+  }
+  
+  // Check for ampersand pattern (e.g., "2 & 4 Smith St")
+  if (/^\d+\s*&\s*\d+\s+/.test(addr)) return true;
+  
+  // Check for "Lot 1 & 2" style
+  if (/lots?\s*\d+\s*(&|,)\s*\d+/i.test(addr)) return true;
+  
+  return false;
 }
 
 export class GeminiService {
