@@ -599,14 +599,21 @@ const App: React.FC = () => {
         localStorage.setItem('prop_free_used', searchesUsed.toString());
         localStorage.setItem('prop_credit_topups', creditTopups.toString());
         localStorage.setItem('prop_has_account', 'true');
-        if (planType !== 'FREE_TRIAL') {
+        
+        // ALWAYS set plan from profile.plan_type (Supabase is source of truth)
+        if (planType && planType !== 'FREE_TRIAL') {
+          setPlan(planType as PlanType);
           localStorage.setItem('prop_plan', planType);
+          console.log('[loadUserData] Set plan from profile:', planType);
+        } else {
+          setPlan('FREE_TRIAL');
+          localStorage.removeItem('prop_plan');
         }
       } else {
         console.log('[loadUserData] No profile found - user may need to complete signup');
       }
       
-      // Check subscription status
+      // Also check subscription status as backup (in case profile.plan_type wasn't updated)
       if (userId) {
         const subscription = await supabaseService.getActiveSubscription(userId);
         if (subscription && subscription.plan_type && subscription.plan_type !== 'FREE' && subscription.plan_type !== 'FREE_TRIAL') {
@@ -617,6 +624,7 @@ const App: React.FC = () => {
           }
           setPlan(planToSet as PlanType);
           localStorage.setItem('prop_plan', planToSet);
+          console.log('[loadUserData] Set plan from subscription:', planToSet);
         }
       }
     } catch (error) {
@@ -940,6 +948,8 @@ const App: React.FC = () => {
     localStorage.removeItem('prop_free_used');
     localStorage.removeItem('prop_credit_topups');
     localStorage.removeItem('prop_pro_used');
+    localStorage.removeItem('prop_pro_month');
+    localStorage.removeItem('prop_plan'); // CRITICAL: Clear plan on logout
     localStorage.removeItem('prop_pro_month');
     localStorage.removeItem('prop_plan');
     localStorage.removeItem('prop_processed_sessions');
