@@ -420,13 +420,13 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
               <tbody>
                 {data.comparableSales!.nearbySales!.map((sale, i) => (
                   <tr key={i}>
-                    <td className="pdf-comp-address">{sale.address || '—'}</td>
-                    <td>{sale.saleDate || '—'}</td>
+                    <td className="pdf-comp-address">{sale.addressShort || '—'}</td>
+                    <td>{sale.date || '—'}</td>
                     <td className="pdf-comp-price">{formatCurrency(sale.price)}</td>
-                    <td>{sale.distance || '—'}</td>
+                    <td>{sale.distanceKm ? `${sale.distanceKm}km` : '—'}</td>
                     <td>{sale.beds ?? '—'}</td>
                     <td>{sale.baths ?? '—'}</td>
-                    <td>{sale.car ?? '—'}</td>
+                    <td>{sale.cars ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>
