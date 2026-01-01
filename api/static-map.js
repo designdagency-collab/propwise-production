@@ -2,24 +2,10 @@
  * Static Map API Endpoint
  * Returns a static map image for PDF export
  * 
- * IMPORTANT: This endpoint FETCHES and RETURNS the image data (not redirect)
- * to support the pre-fetch approach in PDF export.
- * 
- * Supports multiple providers with fallback:
- * 1. Google Maps Static API (requires GOOGLE_MAPS_API_KEY)
- * 2. OpenStreetMap Static (no API key required)
- * 
- * Query params:
- * - address: Full address string (URL encoded)
- * - lat: Latitude (optional if address provided)
- * - lng: Longitude (optional if address provided)
- * - zoom: Zoom level (default: 17)
- * - width: Image width in pixels (default: 640)
- * - height: Image height in pixels (default: 400)
+ * Improved geocoding accuracy for Australian addresses
  */
 
 export default async function handler(req, res) {
-  // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
   res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate');
@@ -32,12 +18,11 @@ export default async function handler(req, res) {
     address,
     lat,
     lng,
-    zoom = '17',
-    width = '640',
+    zoom = '18',  // Higher zoom for better property view
+    width = '800',
     height = '400'
   } = req.query;
 
-  // Validate parameters
   if (!address && (!lat || !lng)) {
     return res.status(400).json({ 
       error: 'Missing required parameters. Provide either address or lat/lng coordinates.' 
@@ -50,119 +35,112 @@ export default async function handler(req, res) {
     let mapUrl;
     let coordinates = { lat, lng };
 
-    // If only address provided, try to geocode it first
+    // Geocode address to get precise coordinates
     if (address && (!lat || !lng)) {
-      try {
-        const geocodeUrl = `https://nominatim.openstreetmap.org/search?` +
-          `q=${encodeURIComponent(address)}` +
-          `&format=json&limit=1`;
-        
-        const geocodeRes = await fetch(geocodeUrl, {
-          headers: {
-            'User-Agent': 'upblock.ai/1.0 (Property Intelligence Platform)'
+      // Try Google Geocoding first (most accurate for Australian addresses)
+      if (googleApiKey) {
+        try {
+          const googleGeocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?` +
+            `address=${encodeURIComponent(address)}` +
+            `&region=au` +  // Bias to Australia
+            `&key=${googleApiKey}`;
+          
+          const geocodeRes = await fetch(googleGeocodeUrl);
+          if (geocodeRes.ok) {
+            const geocodeData = await geocodeRes.json();
+            if (geocodeData.status === 'OK' && geocodeData.results?.[0]) {
+              const location = geocodeData.results[0].geometry.location;
+              coordinates.lat = location.lat;
+              coordinates.lng = location.lng;
+              console.log('[StaticMap] Google geocoded:', address, '→', coordinates);
+            }
           }
-        });
-        
-        if (geocodeRes.ok) {
-          const geocodeData = await geocodeRes.json();
-          if (geocodeData && geocodeData.length > 0) {
-            coordinates.lat = geocodeData[0].lat;
-            coordinates.lng = geocodeData[0].lon;
-          }
+        } catch (geoError) {
+          console.error('[StaticMap] Google geocoding failed:', geoError);
         }
-      } catch (geoError) {
-        console.error('Geocoding failed:', geoError);
+      }
+      
+      // Fallback to Nominatim if Google failed
+      if (!coordinates.lat || !coordinates.lng) {
+        try {
+          // Add Australia country code for better accuracy
+          const nominatimUrl = `https://nominatim.openstreetmap.org/search?` +
+            `q=${encodeURIComponent(address + ', Australia')}` +
+            `&format=json&limit=1&countrycodes=au&addressdetails=1`;
+          
+          const nominatimRes = await fetch(nominatimUrl, {
+            headers: { 'User-Agent': 'upblock.ai/1.0' }
+          });
+          
+          if (nominatimRes.ok) {
+            const data = await nominatimRes.json();
+            if (data?.[0]) {
+              coordinates.lat = data[0].lat;
+              coordinates.lng = data[0].lon;
+              console.log('[StaticMap] Nominatim geocoded:', address, '→', coordinates);
+            }
+          }
+        } catch (nomError) {
+          console.error('[StaticMap] Nominatim geocoding failed:', nomError);
+        }
       }
     }
 
-    // Option 1: Google Maps Static API (best quality, requires API key)
-    if (googleApiKey) {
-      const location = address 
-        ? encodeURIComponent(address)
-        : `${coordinates.lat},${coordinates.lng}`;
-      
+    // Generate map URL
+    if (googleApiKey && coordinates.lat && coordinates.lng) {
+      // Google Maps Static API - highest quality
       mapUrl = `https://maps.googleapis.com/maps/api/staticmap?` +
-        `center=${location}` +
+        `center=${coordinates.lat},${coordinates.lng}` +
         `&zoom=${zoom}` +
         `&size=${width}x${height}` +
+        `&scale=2` +  // High DPI
         `&maptype=satellite` +
-        `&markers=color:red%7C${location}` +
+        `&markers=color:red%7Csize:mid%7C${coordinates.lat},${coordinates.lng}` +
         `&key=${googleApiKey}`;
-    }
-    // Option 2: OpenStreetMap Static (free, no API key)
-    else if (coordinates.lat && coordinates.lng) {
-      // Use OSM static map service
+    } else if (coordinates.lat && coordinates.lng) {
+      // OpenStreetMap fallback
       mapUrl = `https://staticmap.openstreetmap.de/staticmap.php?` +
         `center=${coordinates.lat},${coordinates.lng}` +
-        `&zoom=${Math.min(parseInt(zoom), 18)}` + // OSM max zoom is 18
+        `&zoom=${Math.min(parseInt(zoom), 18)}` +
         `&size=${width}x${height}` +
         `&markers=${coordinates.lat},${coordinates.lng},red-pushpin`;
     }
 
-    // If we have a map URL, fetch and return the image
+    // Fetch and return the map image
     if (mapUrl) {
       try {
-        const imageResponse = await fetch(mapUrl, {
-          headers: {
-            'User-Agent': 'upblock.ai/1.0 (Property Intelligence Platform)'
-          }
+        const imageRes = await fetch(mapUrl, {
+          headers: { 'User-Agent': 'upblock.ai/1.0' }
         });
 
-        if (imageResponse.ok) {
-          const contentType = imageResponse.headers.get('content-type');
-          const imageBuffer = await imageResponse.arrayBuffer();
+        if (imageRes.ok) {
+          const contentType = imageRes.headers.get('content-type');
+          const imageBuffer = await imageRes.arrayBuffer();
           
           res.setHeader('Content-Type', contentType || 'image/png');
           return res.send(Buffer.from(imageBuffer));
         }
       } catch (fetchError) {
-        console.error('Failed to fetch map image:', fetchError);
+        console.error('[StaticMap] Failed to fetch map:', fetchError);
       }
     }
 
-    // Fallback: Generate a simple placeholder SVG
-    const placeholderSvg = `
+    // Fallback placeholder
+    const placeholder = `
       <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-        <defs>
-          <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#f3f4f6"/>
-            <stop offset="100%" style="stop-color:#e5e7eb"/>
-          </linearGradient>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#bg)"/>
-        <text x="50%" y="45%" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6b7280">📍</text>
-        <text x="50%" y="55%" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6b7280">Map Preview</text>
-        <text x="50%" y="65%" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#9ca3af">${address ? address.substring(0, 40) : 'Location'}</text>
+        <rect width="100%" height="100%" fill="#e5e7eb"/>
+        <text x="50%" y="50%" text-anchor="middle" font-family="Arial" font-size="14" fill="#6b7280">
+          📍 ${address ? address.substring(0, 50) : 'Location'}
+        </text>
       </svg>
     `;
-
+    
     res.setHeader('Content-Type', 'image/svg+xml');
-    return res.send(placeholderSvg);
+    return res.send(placeholder);
 
   } catch (error) {
-    console.error('Static map error:', error);
-    
-    // Return a simple error placeholder
-    const errorSvg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-        <rect width="100%" height="100%" fill="#f3f4f6"/>
-        <text x="50%" y="50%" text-anchor="middle" font-family="Arial" font-size="14" fill="#9ca3af">Map unavailable</text>
-      </svg>
-    `;
-    
+    console.error('[StaticMap] Error:', error);
     res.setHeader('Content-Type', 'image/svg+xml');
-    return res.send(errorSvg);
+    return res.send(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect fill="#f3f4f6" width="100%" height="100%"/><text x="50%" y="50%" text-anchor="middle" fill="#999">Map unavailable</text></svg>`);
   }
 }
-
-/**
- * TODO: Production improvements
- * 
- * 1. Add GOOGLE_MAPS_API_KEY to Vercel environment variables for best quality
- *    - Go to Google Cloud Console > APIs & Services > Credentials
- *    - Create API key and enable "Maps Static API"
- *    - Add to Vercel: GOOGLE_MAPS_API_KEY=your_key
- * 
- * 2. Consider caching static map images to reduce API calls
- *    - Use Vercel Edge caching or a CDN
- */
