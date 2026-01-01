@@ -205,7 +205,6 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                 </h2>
                 {searchHistory.length > 0 && (
                   <span className="text-[9px] px-2 py-1 rounded-full bg-green-500/10 text-green-500 font-medium">
-                    <i className="fa-solid fa-clock mr-1"></i>
                     7-day access
                   </span>
                 )}
