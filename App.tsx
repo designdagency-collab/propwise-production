@@ -655,35 +655,37 @@ const App: React.FC = () => {
       consumeCredit();
       refreshCreditState();
       
-      // Save search to Supabase if user is authenticated
-      const isConfigured = supabaseService.isConfigured();
-      console.log('[Search] Supabase configured:', isConfigured);
+      // Save search to Supabase using server API (bypasses RLS issues)
+      const userId = userProfile?.id;
+      console.log('[Search] User profile ID:', userId, 'Address:', address);
       
-      if (isConfigured) {
+      if (userId && address) {
         try {
-          const user = await supabaseService.getCurrentUser();
-          console.log('[Search] Current user:', user?.id, user?.email);
+          console.log('[Search] Saving to Supabase via API...');
+          const response = await fetch('/api/save-search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, address })
+          });
           
-          if (user?.id) {
-            console.log('[Search] Saving to Supabase - User:', user.id, 'Address:', address);
-            await supabaseService.incrementSearchCountInDB(user.id, address);
+          if (response.ok) {
+            const result = await response.json();
+            console.log('[Search] Save completed successfully, new count:', result.searchCount);
             
             // CRITICAL: If PRO user, also sync PRO usage to Supabase
-            // This prevents abuse by clearing browser/switching devices
             if (plan === 'PRO') {
-              console.log('[Search] PRO user - syncing usage to Supabase');
-              await supabaseService.incrementProUsage(user.id);
+              console.log('[Search] PRO user - syncing usage via API');
+              await supabaseService.incrementProUsage(userId);
             }
-            
-            console.log('[Search] Save completed successfully');
           } else {
-            console.warn('[Search] No user ID found, cannot save to Supabase');
+            const errorData = await response.json();
+            console.error('[Search] API error:', errorData.error);
           }
         } catch (error) {
-          console.error('[Search] Failed to save search to Supabase:', error);
+          console.error('[Search] Failed to save search:', error);
         }
       } else {
-        console.warn('[Search] Supabase not configured, skipping save');
+        console.warn('[Search] No user ID or address, cannot save to Supabase');
       }
     } else {
       // Anonymous users: record device search via fingerprint
