@@ -61,14 +61,7 @@ export default async function handler(req, res) {
 
     if (updateError) {
       console.error('[RecoverByPhone] Failed to store code:', updateError);
-      // Try without recovery columns (columns may not exist yet)
-      console.log('[RecoverByPhone] Test mode - code:', code);
-      return res.status(200).json({ 
-        success: true, 
-        message: 'Recovery code sent',
-        email: profile.email.replace(/(.{2})(.*)(@.*)/, '$1***$3'), // Mask email
-        testCode: code // Remove in production once columns exist
-      });
+      return res.status(500).json({ error: 'Failed to process recovery. Please try again.' });
     }
 
     // Send SMS via Twilio
@@ -77,13 +70,8 @@ export default async function handler(req, res) {
     const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
     if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) {
-      console.log('[RecoverByPhone] Twilio not configured - code:', code);
-      return res.status(200).json({ 
-        success: true, 
-        message: 'Recovery code generated',
-        email: profile.email.replace(/(.{2})(.*)(@.*)/, '$1***$3'),
-        testCode: code // Remove in production
-      });
+      console.error('[RecoverByPhone] Twilio not configured');
+      return res.status(500).json({ error: 'SMS service not configured. Please use email recovery.' });
     }
 
     // Send SMS via Twilio REST API
