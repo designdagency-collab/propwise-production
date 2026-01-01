@@ -196,66 +196,36 @@ const App: React.FC = () => {
       return;
     }
 
-    console.log('[Auth] Checking for existing session on mount...');
-    console.log('[Auth] URL hash length:', window.location.hash.length);
-    console.log('[Auth] Has access_token:', window.location.hash.includes('access_token'));
-
-    // Function to handle session
-    const handleSession = (session: any) => {
-      if (session?.user) {
-        console.log('[Auth] Found session, setting logged in state for:', session.user.email);
-        setIsLoggedIn(true);
-        setUserEmail(session.user.email || '');
-        setUserPhone(session.user.phone || '');
-        setIsSignedUp(true);
-        localStorage.setItem('prop_is_logged_in', 'true');
-        localStorage.setItem('prop_user_email', session.user.email || '');
-        setShowEmailAuth(false);
-        loadUserData(session.user.id);
-        
-        // Clear OAuth fragments from URL
-        if (window.location.hash.includes('access_token')) {
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-        return true;
+    console.log('[Auth] Initializing - Supabase will auto-handle OAuth hash via detectSessionInUrl');
+    
+    // Helper function to handle successful session
+    const handleSessionLogin = (session: any) => {
+      if (!session?.user) return;
+      
+      console.log('[Auth] Login successful for:', session.user.email);
+      setIsLoggedIn(true);
+      setUserEmail(session.user.email || '');
+      setUserPhone(session.user.phone || '');
+      setIsSignedUp(true);
+      localStorage.setItem('prop_is_logged_in', 'true');
+      localStorage.setItem('prop_user_email', session.user.email || '');
+      setShowEmailAuth(false);
+      loadUserData(session.user.id);
+      
+      // Clean up OAuth hash from URL if present
+      if (window.location.hash.includes('access_token')) {
+        window.history.replaceState({}, document.title, window.location.pathname);
       }
-      return false;
     };
 
-    // If URL has access_token, manually parse and set the session
-    if (window.location.hash.includes('access_token')) {
-      console.log('[Auth] OAuth callback detected, parsing hash...');
-      
-      // Parse the hash to extract tokens
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      const refreshToken = hashParams.get('refresh_token');
-      
-      console.log('[Auth] Parsed tokens:', { hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken });
-      
-      if (accessToken) {
-        // Set the session manually using the tokens
-        supabaseService.supabase!.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken || ''
-        }).then(({ data, error }) => {
-          console.log('[Auth] setSession result:', { hasSession: !!data.session, error });
-          if (data.session) {
-            handleSession(data.session);
-          } else if (error) {
-            console.error('[Auth] setSession error:', error);
-            // Clear the hash and try getSession as fallback
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }
-        });
+    // Check for existing session on mount
+    // Supabase's detectSessionInUrl:true will auto-parse OAuth hash before this runs
+    supabaseService.supabase!.auth.getSession().then(({ data: { session }, error }) => {
+      console.log('[Auth] getSession:', { hasSession: !!session, email: session?.user?.email, error: error?.message });
+      if (session?.user) {
+        handleSessionLogin(session);
       }
-    } else {
-      // Normal page load - check for existing session
-      supabaseService.supabase!.auth.getSession().then(({ data: { session }, error }) => {
-        console.log('[Auth] getSession result:', { hasSession: !!session, error });
-        handleSession(session);
-      });
-    }
+    });
 
     // Listen to auth changes
     const { data: { subscription } } = supabaseService.supabase!.auth.onAuthStateChange(
