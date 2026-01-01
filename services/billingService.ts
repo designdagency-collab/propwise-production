@@ -1,47 +1,50 @@
 /**
- * Billing Service - Placeholder for Stripe integration
+ * Billing Service - Credit calculations (NO localStorage)
  * 
- * This module handles credit management and payment placeholders.
- * Will be connected to Stripe later.
+ * All data comes from Supabase profiles table.
+ * This module only does CALCULATIONS, not storage.
  */
 
 import { CreditState, PlanType } from '../types';
 
 // Constants
-const FREE_LIFETIME_BASE = 0;      // No free audits for anonymous users - must sign up
-const ACCOUNT_BONUS = 2;           // 2 free audits when they create an account
-const STARTER_PACK_CREDITS = 3;    // 3 audits per purchase
-const PRO_MONTHLY_LIMIT = 10;      // 10 audits per month for PRO
-
-// LocalStorage keys
-const KEYS = {
-  FREE_USED: 'prop_free_used',
-  HAS_ACCOUNT: 'prop_has_account',
-  CREDIT_TOPUPS: 'prop_credit_topups',
-  PLAN: 'prop_plan',
-  PRO_MONTH: 'prop_pro_month',
-  PRO_USED: 'prop_pro_used',
-} as const;
+export const FREE_LIFETIME_BASE = 0;      // No free audits for anonymous users - must sign up
+export const ACCOUNT_BONUS = 2;           // 2 free audits when they create an account
+export const STARTER_PACK_CREDITS = 3;    // 3 audits per purchase
+export const PRO_MONTHLY_LIMIT = 10;      // 10 audits per month for PRO
 
 /**
- * Get current credit state from localStorage
+ * Calculate credit state from Supabase profile data
+ * NO localStorage - profile is the source of truth
  */
-export function getCreditState(): CreditState {
+export function calculateCreditState(profile: any | null): CreditState {
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   
+  if (!profile) {
+    // Anonymous user - no credits
+    return {
+      freeUsed: 0,
+      hasAccount: false,
+      creditTopups: 0,
+      plan: 'FREE_TRIAL' as PlanType,
+      proMonth: currentMonth,
+      proUsed: 0,
+    };
+  }
+  
   return {
-    freeUsed: parseInt(localStorage.getItem(KEYS.FREE_USED) || '0', 10),
-    hasAccount: localStorage.getItem(KEYS.HAS_ACCOUNT) === 'true',
-    creditTopups: parseInt(localStorage.getItem(KEYS.CREDIT_TOPUPS) || '0', 10),
-    plan: (localStorage.getItem(KEYS.PLAN) as PlanType) || 'FREE_TRIAL',
-    proMonth: localStorage.getItem(KEYS.PRO_MONTH) || currentMonth,
-    proUsed: parseInt(localStorage.getItem(KEYS.PRO_USED) || '0', 10),
+    freeUsed: profile.search_count || 0,
+    hasAccount: true, // If they have a profile, they have an account
+    creditTopups: profile.credit_topups || 0,
+    plan: (profile.plan_type as PlanType) || 'FREE_TRIAL',
+    proMonth: profile.pro_month || currentMonth,
+    proUsed: profile.pro_used || 0,
   };
 }
 
 /**
- * Calculate remaining credits based on current state
+ * Calculate remaining credits based on state
  */
 export function getRemainingCredits(state: CreditState): number {
   const now = new Date();
@@ -65,7 +68,7 @@ export function getRemainingCredits(state: CreditState): number {
     return 999;
   }
   
-  // FREE_TRIAL (default) or STARTER_PACK
+  // FREE_TRIAL or STARTER_PACK
   const freeLifetimeCredits = FREE_LIFETIME_BASE + (state.hasAccount ? ACCOUNT_BONUS : 0);
   const freeRemaining = Math.max(0, freeLifetimeCredits - state.freeUsed);
   const totalRemaining = freeRemaining + state.creditTopups;
@@ -76,17 +79,19 @@ export function getRemainingCredits(state: CreditState): number {
 /**
  * Check if user can perform an audit
  */
-export function canAudit(state?: CreditState): boolean {
-  const creditState = state || getCreditState();
-  return getRemainingCredits(creditState) > 0;
+export function canAudit(state: CreditState): boolean {
+  return getRemainingCredits(state) > 0;
 }
 
 /**
- * Consume one credit after successful audit
- * Returns true if credit was consumed, false if no credits available
+ * Calculate what to update after consuming a credit
+ * Returns the fields to update in Supabase
  */
-export function consumeCredit(): boolean {
-  const state = getCreditState();
+export function calculateCreditConsumption(state: CreditState): {
+  field: 'search_count' | 'pro_used' | 'credit_topups';
+  newValue: number;
+  proMonthReset?: string;
+} | null {
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   
@@ -94,155 +99,57 @@ export function consumeCredit(): boolean {
   if (state.plan === 'PRO') {
     // Reset if new month
     if (state.proMonth !== currentMonth) {
-      localStorage.setItem(KEYS.PRO_MONTH, currentMonth);
-      localStorage.setItem(KEYS.PRO_USED, '1');
-      return true;
+      return { field: 'pro_used', newValue: 1, proMonthReset: currentMonth };
     }
     // Use monthly credits first
     if (state.proUsed < PRO_MONTHLY_LIMIT) {
-      localStorage.setItem(KEYS.PRO_USED, String(state.proUsed + 1));
-      return true;
+      return { field: 'pro_used', newValue: state.proUsed + 1 };
     }
     // Monthly exhausted - fall back to purchased credit topups
     if (state.creditTopups > 0) {
-      localStorage.setItem(KEYS.CREDIT_TOPUPS, String(state.creditTopups - 1));
-      console.log('[Billing] PRO user using bonus credit, remaining:', state.creditTopups - 1);
-      return true;
+      return { field: 'credit_topups', newValue: state.creditTopups - 1 };
     }
-    return false;
+    return null; // No credits available
   }
   
-  // UNLIMITED_PRO - never consume
+  // UNLIMITED_PRO - never consume (but track usage)
   if (state.plan === 'UNLIMITED_PRO') {
-    return true;
+    return { field: 'search_count', newValue: state.freeUsed + 1 };
   }
   
   // FREE_TRIAL or STARTER_PACK
-  // First use up free credits, then topups
   const freeLifetimeCredits = FREE_LIFETIME_BASE + (state.hasAccount ? ACCOUNT_BONUS : 0);
   
+  // First use up free credits
   if (state.freeUsed < freeLifetimeCredits) {
-    localStorage.setItem(KEYS.FREE_USED, String(state.freeUsed + 1));
-    return true;
+    return { field: 'search_count', newValue: state.freeUsed + 1 };
   }
   
+  // Then use topups
   if (state.creditTopups > 0) {
-    localStorage.setItem(KEYS.CREDIT_TOPUPS, String(state.creditTopups - 1));
-    return true;
+    return { field: 'credit_topups', newValue: state.creditTopups - 1 };
   }
   
-  return false;
+  return null; // No credits available
 }
 
-/**
- * Grant account bonus (+1 free audit)
- */
-export function grantAccountBonus(): void {
-  const hadAccount = localStorage.getItem(KEYS.HAS_ACCOUNT) === 'true';
-  localStorage.setItem(KEYS.HAS_ACCOUNT, 'true');
-  if (!hadAccount) {
-    console.log('[Billing] Account bonus granted - user now has +1 free audit');
-  } else {
-    console.log('[Billing] Account bonus already granted (no change)');
-  }
-}
-
-/**
- * Add credits from Starter Pack purchase
- */
-export function addStarterPackCredits(): void {
-  const current = parseInt(localStorage.getItem(KEYS.CREDIT_TOPUPS) || '0', 10);
-  localStorage.setItem(KEYS.CREDIT_TOPUPS, String(current + STARTER_PACK_CREDITS));
-}
-
-/**
- * Activate PRO subscription
- */
-export function activateProSubscription(): void {
-  const now = new Date();
-  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  
-  localStorage.setItem(KEYS.PLAN, 'PRO');
-  localStorage.setItem(KEYS.PRO_MONTH, currentMonth);
-  localStorage.setItem(KEYS.PRO_USED, '0');
-}
-
-/**
- * Activate UNLIMITED_PRO (hidden tier for agents)
- */
-export function activateUnlimitedPro(): void {
-  localStorage.setItem(KEYS.PLAN, 'UNLIMITED_PRO');
-}
-
-// ============================================
-// STRIPE PLACEHOLDERS - Replace when ready
-// ============================================
-
-/**
- * Start Stripe checkout for PRO subscription ($49/month)
- * TODO: Replace with actual Stripe integration
- */
-export async function startCheckoutPro(): Promise<{ success: boolean; url?: string; error?: string }> {
-  console.log('[Billing] startCheckoutPro called - placeholder');
-  // TODO: Wire to Stripe
-  // return await stripeService.createCheckoutSession('PRO', email);
-  return { success: false, error: 'Stripe not yet connected' };
-}
-
-/**
- * Start Stripe checkout for Starter Pack (one-time $X)
- * TODO: Replace with actual Stripe integration
- */
-export async function startCheckoutStarter(): Promise<{ success: boolean; url?: string; error?: string }> {
-  console.log('[Billing] startCheckoutStarter called - placeholder');
-  // TODO: Wire to Stripe
-  // return await stripeService.createCheckoutSession('STARTER_PACK', email);
-  return { success: false, error: 'Stripe not yet connected' };
-}
-
-// ============================================
-// DEV HELPERS
-// ============================================
-
-/**
- * Reset all credit-related localStorage (dev only)
- */
-export function resetCredits(): void {
-  localStorage.removeItem(KEYS.FREE_USED);
-  localStorage.removeItem(KEYS.HAS_ACCOUNT);
-  localStorage.removeItem(KEYS.CREDIT_TOPUPS);
-  localStorage.removeItem(KEYS.PLAN);
-  localStorage.removeItem(KEYS.PRO_MONTH);
-  localStorage.removeItem(KEYS.PRO_USED);
-  console.log('[Billing] All credits reset');
-}
-
-// Expose dev helper to window for testing
+// Dev helper - expose to window for debugging
 if (typeof window !== 'undefined') {
-  (window as any).__resetCredits = resetCredits;
-  (window as any).__getCreditState = getCreditState;
-  (window as any).__getRemainingCredits = () => getRemainingCredits(getCreditState());
-  (window as any).__simulateStarterPurchase = () => {
-    addStarterPackCredits();
-    console.log('[Billing] Simulated Starter Pack purchase - added 3 credits');
-  };
-  (window as any).__simulateProSubscription = () => {
-    activateProSubscription();
-    console.log('[Billing] Simulated PRO subscription activation');
+  (window as any).__billingConstants = {
+    FREE_LIFETIME_BASE,
+    ACCOUNT_BONUS,
+    STARTER_PACK_CREDITS,
+    PRO_MONTHLY_LIMIT,
   };
 }
 
 export const billingService = {
-  getCreditState,
+  calculateCreditState,
   getRemainingCredits,
   canAudit,
-  consumeCredit,
-  grantAccountBonus,
-  addStarterPackCredits,
-  activateProSubscription,
-  activateUnlimitedPro,
-  startCheckoutPro,
-  startCheckoutStarter,
-  resetCredits,
+  calculateCreditConsumption,
+  FREE_LIFETIME_BASE,
+  ACCOUNT_BONUS,
+  STARTER_PACK_CREDITS,
+  PRO_MONTHLY_LIMIT,
 };
-

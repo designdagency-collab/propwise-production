@@ -9,7 +9,7 @@ import AccountSettings from './components/AccountSettings';
 import { geminiService } from './services/geminiService';
 import { stripeService } from './services/stripeService';
 import { supabaseService } from './services/supabaseService';
-import { billingService, getCreditState, getRemainingCredits, canAudit, consumeCredit, grantAccountBonus, addStarterPackCredits, activateProSubscription } from './services/billingService';
+import { billingService, calculateCreditState, getRemainingCredits, canAudit } from './services/billingService';
 import { fingerprintService, checkDeviceSearchLimit, recordDeviceSearch } from './services/fingerprintService';
 import { AppState, PropertyData, PlanType, CreditState } from './types';
 
@@ -19,21 +19,12 @@ const App: React.FC = () => {
   const [results, setResults] = useState<PropertyData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
-  // Load plan from localStorage - check if user has already paid
-  const [plan, setPlan] = useState<PlanType>(() => {
-    const savedPlan = localStorage.getItem('prop_plan');
-    if (savedPlan === 'PRO' || savedPlan === 'UNLIMITED_PRO') return savedPlan as PlanType;
-    // Migrate old plans
-    if (savedPlan === 'BUYER_PACK' || savedPlan === 'MONITOR') {
-      localStorage.setItem('prop_plan', 'PRO');
-      return 'PRO';
-    }
-    return 'FREE_TRIAL';
-  });
+  // Plan and credits - loaded from Supabase profile (no localStorage)
+  const [plan, setPlan] = useState<PlanType>('FREE_TRIAL');
   
-  // Credit state for new pricing model
-  const [creditState, setCreditState] = useState<CreditState>(getCreditState);
-  const [remainingCredits, setRemainingCredits] = useState(() => getRemainingCredits(getCreditState()));
+  // Credit state - calculated from Supabase profile
+  const [creditState, setCreditState] = useState<CreditState>(() => calculateCreditState(null));
+  const [remainingCredits, setRemainingCredits] = useState(0);
   
   // Device fingerprint state (for anonymous users)
   // Initialize from localStorage cache for instant display, then verify with Supabase
@@ -214,7 +205,7 @@ const App: React.FC = () => {
       // Load user data and then refresh credit state
       await loadUserData(session.user.id);
       refreshCreditState();
-      console.log('[Credits] After refreshCreditState - remaining:', getRemainingCredits(getCreditState()));
+      console.log('[Credits] After refreshCreditState - remaining:', remainingCredits);
       
       // Clean up OAuth hash from URL if present
       if (window.location.hash.includes('access_token')) {
@@ -277,7 +268,7 @@ const App: React.FC = () => {
               
               // CRITICAL: Refresh credit state to update React state from localStorage
               refreshCreditState();
-              console.log('[Credits] OAuth flow - After refresh, remaining:', getRemainingCredits(getCreditState()));
+              console.log('[Credits] OAuth flow - credits loaded from Supabase');
               
               return;
             } else {
@@ -320,7 +311,7 @@ const App: React.FC = () => {
         setUserEmail(localEmail);
         setIsSignedUp(true);
         refreshCreditState();
-        console.log('[Credits] From localStorage only - remaining:', getRemainingCredits(getCreditState()));
+        console.log('[Credits] Session restored - will load from Supabase');
       }
     };
     
@@ -377,17 +368,12 @@ const App: React.FC = () => {
           // Load user data from Supabase - this syncs credits properly
           await loadUserData(session.user?.id);
           
-          // Account bonus is now handled by loadUserData (sets prop_has_account if user exists)
-          // This ensures we don't reset credits for returning users
-          
-          // Refresh credit state after loading user data
-          const state = getCreditState();
-          setCreditState(state);
-          setRemainingCredits(getRemainingCredits(state));
+          // Credits are now loaded from Supabase in loadUserData
+          // The refreshCreditState will calculate from userProfile
           
           // Only return to idle if user has remaining credits
-          // Don't reset LIMIT_REACHED if they're actually out of credits
-          if (appState === AppState.LIMIT_REACHED && getRemainingCredits(state) > 0) {
+          // This will be handled when userProfile updates trigger refreshCreditState
+          if (appState === AppState.LIMIT_REACHED && remainingCredits > 0) {
             setAppState(AppState.IDLE);
           }
           
@@ -471,41 +457,31 @@ const App: React.FC = () => {
         // Give Supabase auth time to restore session
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Activate the purchased plan
-        if (purchasedPlan === 'STARTER_PACK') {
-          addStarterPackCredits();
-          setPlan('STARTER_PACK');
-          localStorage.setItem('prop_plan', 'STARTER_PACK');
-        } else {
-          activateProSubscription();
-          setPlan('PRO');
-          localStorage.setItem('prop_plan', 'PRO');
-        }
-        
-        refreshCreditState();
+        // Activate the purchased plan - Supabase is source of truth
+        setPlan(purchasedPlan as PlanType);
         setShowUpgradeSuccess(true);
         
-        // ALWAYS use Supabase session as source of truth
+        // Update Supabase with the new plan
         if (supabaseService.isConfigured()) {
           const user = await supabaseService.getCurrentUser();
           if (user) {
-            // Sync localStorage to match Supabase session
             setIsLoggedIn(true);
             setUserEmail(user.email || '');
-            localStorage.setItem('prop_is_logged_in', 'true');
-            localStorage.setItem('prop_user_email', user.email || '');
             
-            // Update subscription in Supabase for THIS user
+            // Update subscription in Supabase
             await supabaseService.updateSubscription(user.id, purchasedPlan as PlanType, sessionId);
             
-            // CRITICAL: Sync plan_type to profiles table for consistency
+            // Update plan_type in profiles table
             await supabaseService.updatePlanType(user.id, purchasedPlan as string);
             
-            // CRITICAL: Save credits/quota to Supabase for persistence
+            // Update credits in Supabase
             if (purchasedPlan === 'STARTER_PACK') {
-              const currentCredits = parseInt(localStorage.getItem('prop_credit_topups') || '0', 10);
-              console.log('[Payment] Saving credit topups to Supabase:', currentCredits);
-              await supabaseService.updateCreditTopups(user.id, currentCredits);
+              // Add 3 credits to existing topups
+              const currentProfile = await supabaseService.getCurrentProfile(user.id);
+              const currentCredits = currentProfile?.credit_topups || 0;
+              const newCredits = currentCredits + 3; // STARTER_PACK_CREDITS
+              console.log('[Payment] Adding 3 credits to Supabase. Before:', currentCredits, 'After:', newCredits);
+              await supabaseService.updateCreditTopups(user.id, newCredits);
             } else if (purchasedPlan === 'PRO') {
               // Initialize PRO quota in Supabase
               const now = new Date();
@@ -633,24 +609,37 @@ const App: React.FC = () => {
     }
   };
 
-  // Refresh credit state from localStorage
+  // Refresh credit state from userProfile (Supabase is source of truth)
   const refreshCreditState = useCallback(() => {
-    const state = getCreditState();
+    const state = calculateCreditState(userProfile);
     setCreditState(state);
     setRemainingCredits(getRemainingCredits(state));
-    // Also update plan if it changed
+    // Also update plan from profile
     if (state.plan !== plan) {
       setPlan(state.plan);
     }
-  }, [plan]);
+    console.log('[Credits] Refreshed:', { remaining: getRemainingCredits(state), plan: state.plan });
+  }, [userProfile, plan]);
+
+  // Auto-refresh credits when userProfile changes
+  useEffect(() => {
+    if (userProfile) {
+      const state = calculateCreditState(userProfile);
+      setCreditState(state);
+      setRemainingCredits(getRemainingCredits(state));
+      if (state.plan !== plan) {
+        setPlan(state.plan);
+      }
+    }
+  }, [userProfile]);
 
   const checkSearchLimit = () => {
     // API key users bypass limits
     if (hasKey) return true;
     
-    // Logged-in users use credit system
+    // Logged-in users use credit system (from Supabase profile)
     if (isLoggedIn) {
-      return canAudit();
+      return canAudit(creditState);
     }
     
     // Anonymous users: check device fingerprint
@@ -711,58 +700,52 @@ const App: React.FC = () => {
   const incrementSearchCount = async () => {
     console.log('[Search] incrementSearchCount called, isLoggedIn:', isLoggedIn, 'plan:', plan);
     
-    // Logged-in users: consume credit from credit system
+    // Logged-in users: consume credit via Supabase API
     if (isLoggedIn) {
-      // First consume the credit locally
-      consumeCredit();
-      
-      // Get the UPDATED credit state after consumption
-      const updatedState = getCreditState();
-      const updatedCredits = getRemainingCredits(updatedState);
-      
-      // Refresh UI
-      setCreditState(updatedState);
-      setRemainingCredits(updatedCredits);
-      
-      // Save search to Supabase using server API (bypasses RLS issues)
       const userId = userProfile?.id;
-      console.log('[Search] User profile ID:', userId, 'Address:', address, 'Updated creditTopups:', updatedState.creditTopups);
+      if (!userId || !address) {
+        console.warn('[Search] No userId or address - cannot save');
+        return;
+      }
       
-      if (userId && address) {
-        try {
-          console.log('[Search] Saving to Supabase via API...');
-          const response = await fetch('/api/save-search', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              userId, 
-              address,
-              creditTopups: updatedState.creditTopups // Sync purchased credits to Supabase
-            })
-          });
+      // Calculate what credit to consume based on current state
+      const currentState = calculateCreditState(userProfile);
+      const consumption = billingService.calculateCreditConsumption(currentState);
+      
+      if (!consumption) {
+        console.warn('[Search] No credits available to consume');
+        return;
+      }
+      
+      console.log('[Search] Consuming credit:', consumption);
+      
+      try {
+        // Save search and consume credit via server API (updates Supabase)
+        const response = await fetch('/api/save-search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            userId, 
+            address,
+            consumption // Tell server what to update
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('[Search] Save completed:', result);
           
-          if (response.ok) {
-            const result = await response.json();
-            console.log('[Search] Save completed successfully, new count:', result.searchCount, 'creditTopups:', result.creditTopups);
-            
-            if (result.historyError) {
-              console.warn('[Search] History save error:', result.historyError);
-            } else {
-              console.log('[Search] Search history saved to Supabase');
-            }
-            
-            // Update userProfile with new values
-            setUserProfile((prev: any) => prev ? {
-              ...prev,
-              search_count: result.searchCount,
-              credit_topups: result.creditTopups
-            } : prev);
-            
-            // CRITICAL: If PRO user, also sync PRO usage to Supabase
-            if (plan === 'PRO') {
-              console.log('[Search] PRO user - syncing usage via API');
-              await supabaseService.incrementProUsage(userId);
-            }
+          // Update userProfile with new values from Supabase
+          setUserProfile((prev: any) => prev ? {
+            ...prev,
+            search_count: result.searchCount,
+            credit_topups: result.creditTopups,
+            pro_used: result.proUsed,
+            pro_month: result.proMonth,
+            plan_type: result.planType
+          } : prev);
+          
+          // Credits will refresh when userProfile updates via useEffect
           } else {
             const errorData = await response.json();
             console.error('[Search] API error:', errorData.error);
@@ -770,8 +753,6 @@ const App: React.FC = () => {
         } catch (error) {
           console.error('[Search] Failed to save search:', error);
         }
-      } else {
-        console.warn('[Search] No user ID or address, cannot save to Supabase. userProfile:', userProfile);
       }
     } else {
       // Anonymous users: record device search via fingerprint
@@ -799,11 +780,10 @@ const App: React.FC = () => {
     setShowEmailAuth(true);
   };
 
-  // Handle "Create Account" CTA - grants +1 bonus audit
+  // Handle "Create Account" CTA - grants bonus audits via account creation
   const handleCreateAccount = () => {
-    // If already logged in, just grant the bonus
+    // If already logged in, credits are already in Supabase
     if (isLoggedIn) {
-      grantAccountBonus();
       refreshCreditState();
       setAppState(AppState.IDLE);
       return;
@@ -1046,29 +1026,15 @@ const App: React.FC = () => {
     setIsLoggedIn(true);
     setUserEmail(email);
     setIsSignedUp(true);
-    localStorage.setItem('prop_is_logged_in', 'true');
-    localStorage.setItem('prop_signed_up', 'true');
-    localStorage.setItem('prop_user_email', email);
+    // New users get 2 free credits automatically (handled by profile creation in Supabase)
+    // Returning users have their credits in Supabase profile
+    console.log(isNewUser ? 'New user signup' : 'Returning user login', '- loading from Supabase');
     
-    // Only grant account bonus for NEW signups (not returning users logging in)
-    // loadUserData will set prop_has_account for existing users
-    if (isNewUser) {
-      console.log('New user signup - granting account bonus for:', email);
-      grantAccountBonus();
-    } else {
-      console.log('Returning user login - credits will be loaded from Supabase');
-    }
-    
-    // Force refresh credit state
-    const state = getCreditState();
-    console.log('Credit state after signup:', state, 'Remaining:', getRemainingCredits(state));
-    setCreditState(state);
-    setRemainingCredits(getRemainingCredits(state));
-    
-    // Get current user and load their data + subscription
+    // Get current user and load their data from Supabase
     const user = await supabaseService.getCurrentUser();
     if (user?.id) {
       await loadUserData(user.id);
+      refreshCreditState();
     }
     
     setShowEmailAuth(false);
@@ -1585,4 +1551,5 @@ const App: React.FC = () => {
   );
 };
 
+export default App;
 export default App;
