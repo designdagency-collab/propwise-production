@@ -1177,6 +1177,7 @@ const App: React.FC = () => {
         userName={userProfile?.full_name}
         userEmail={userEmail}
         userPhone={userPhone}
+        phoneVerified={userProfile?.phone_verified}
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
       />

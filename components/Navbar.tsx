@@ -13,6 +13,7 @@ interface NavbarProps {
   userName?: string;
   userEmail?: string;
   userPhone?: string;
+  phoneVerified?: boolean;
   isDarkMode?: boolean;
   onToggleTheme?: () => void;
 }
@@ -29,6 +30,7 @@ const Navbar: React.FC<NavbarProps> = ({
   userName,
   userEmail,
   userPhone,
+  phoneVerified,
   isDarkMode = false,
   onToggleTheme
 }) => {
@@ -140,11 +142,17 @@ const Navbar: React.FC<NavbarProps> = ({
                 {/* Avatar circle with initial - clickable for account settings */}
                 <button
                   onClick={onAccountSettings}
-                  className="w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border hover:border-[#C9A961] transition-colors"
+                  className="relative w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border hover:border-[#C9A961] transition-colors"
                   style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}
                   title="Account Settings"
                 >
                   <span className="text-xs sm:text-sm font-bold text-[#C9A961]">{getInitials()}</span>
+                  {/* Notification indicator when phone not verified */}
+                  {isLoggedIn && !phoneVerified && (
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                      <span className="text-[8px] font-bold text-white">!</span>
+                    </span>
+                  )}
                 </button>
                 {/* Display name - hidden on mobile, clickable */}
                 <button
