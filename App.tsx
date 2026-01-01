@@ -261,6 +261,7 @@ const App: React.FC = () => {
             
             if (sessionData.session?.user) {
               console.log('[Auth] Session established for:', sessionData.session.user.email);
+              console.log('[Auth] OAuth flow - now calling loadUserData (session is ready)...');
               
               // Set login state
               setIsLoggedIn(true);
@@ -270,8 +271,9 @@ const App: React.FC = () => {
               localStorage.setItem('prop_user_email', sessionData.session.user.email || '');
               setShowEmailAuth(false);
               
-              // Load user data from Supabase (syncs credits to localStorage)
+              // Load user data from Supabase - session is now fully established
               await loadUserData(sessionData.session.user.id);
+              console.log('[Auth] OAuth flow - loadUserData completed');
               
               // CRITICAL: Refresh credit state to update React state from localStorage
               refreshCreditState();
@@ -324,10 +326,26 @@ const App: React.FC = () => {
     
     initAuth();
 
+    // Track if OAuth is being processed to avoid race condition
+    let oauthInProgress = window.location.hash.includes('access_token');
+    
     // Listen to auth changes
     const { data: { subscription } } = supabaseService.supabase!.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('[Auth] Event:', event, 'Has session:', !!session, 'Email:', session?.user?.email);
+        console.log('[Auth] Event:', event, 'Has session:', !!session, 'Email:', session?.user?.email, 'oauthInProgress:', oauthInProgress);
+        
+        // CRITICAL: Skip loadUserData if OAuth is in progress
+        // The OAuth code will call loadUserData AFTER setSession completes
+        if (oauthInProgress && event === 'SIGNED_IN') {
+          console.log('[Auth] Skipping loadUserData in event handler - OAuth flow will handle it');
+          // Just update UI state, don't load data
+          setIsLoggedIn(true);
+          setUserEmail(session?.user?.email || '');
+          setShowEmailAuth(false);
+          localStorage.setItem('prop_is_logged_in', 'true');
+          localStorage.setItem('prop_user_email', session?.user?.email || '');
+          return; // Let OAuth code handle the rest
+        }
         
         // Handle session restore on page load (INITIAL_SESSION) or sign in
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session) {
