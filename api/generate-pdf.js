@@ -1,13 +1,19 @@
-// Vercel serverless function for premium PDF generation using Puppeteer
-import chromium from '@sparticuz/chromium';
+// Premium PDF generation using Puppeteer + Chromium on Vercel
+// Uses @sparticuz/chromium-min for optimized serverless deployment
+import chromium from '@sparticuz/chromium-min';
 import puppeteer from 'puppeteer-core';
 
+// Vercel function configuration
 export const config = {
-  maxDuration: 60, // Allow up to 60 seconds for PDF generation
-  memory: 1024, // Increase memory for Chromium
+  maxDuration: 60,
 };
 
+// Remote Chromium executable URL (required for chromium-min)
+const CHROMIUM_EXECUTABLE = 
+  'https://github.com/nicholaschiang/chromium/releases/download/v132.0.0/chromium-v132.0.0-pack.tar';
+
 export default async function handler(req, res) {
+  // Only allow POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -21,98 +27,89 @@ export default async function handler(req, res) {
   let browser = null;
 
   try {
-    console.log('[PDF] Starting Puppeteer...');
+    console.log('[PDF] Initializing Chromium...');
     
-    // Ensure chromium binary is available (downloads if needed on Vercel)
-    const executablePath = await chromium.executablePath();
+    // Get executable path - downloads Chromium binary if needed
+    const executablePath = await chromium.executablePath(CHROMIUM_EXECUTABLE);
     console.log('[PDF] Chromium path:', executablePath);
-    
-    // Launch browser with Vercel-optimized settings
+
+    // Launch browser with optimized settings for Vercel
     browser = await puppeteer.launch({
-      args: [
-        ...chromium.args,
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--single-process',
-      ],
+      args: chromium.args,
+      executablePath,
+      headless: true,
       defaultViewport: {
         width: 1200,
         height: 800,
-        deviceScaleFactor: 2,
+        deviceScaleFactor: 2, // Retina quality
       },
-      executablePath,
-      headless: 'new', // Use new headless mode
     });
 
-    console.log('[PDF] Browser launched, creating page...');
+    console.log('[PDF] Browser launched');
     const page = await browser.newPage();
 
-    // Set the HTML content with increased timeout
+    // Set content with reasonable timeout
     console.log('[PDF] Setting page content...');
     await page.setContent(html, {
-      waitUntil: ['load', 'domcontentloaded'],
-      timeout: 45000,
+      waitUntil: ['load', 'domcontentloaded', 'networkidle2'],
+      timeout: 30000,
     });
 
-    // Wait for fonts and images to load
-    await page.evaluate(() => {
-      return Promise.all([
-        // Wait for fonts
-        document.fonts.ready,
-        // Wait for images
-        ...Array.from(document.images)
-          .filter(img => !img.complete)
-          .map(img => new Promise(resolve => {
+    // Wait for all images to load
+    await page.evaluate(async () => {
+      const images = Array.from(document.images);
+      await Promise.all(
+        images.map(img => {
+          if (img.complete) return Promise.resolve();
+          return new Promise(resolve => {
             img.onload = img.onerror = resolve;
-          }))
-      ]);
+          });
+        })
+      );
     });
 
-    // Small delay for final rendering
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Wait for fonts
+    await page.evaluate(() => document.fonts.ready);
+
+    // Brief pause for final rendering
+    await new Promise(r => setTimeout(r, 500));
 
     console.log('[PDF] Generating PDF...');
     
-    // Generate PDF with premium settings
-    const pdf = await page.pdf({
+    // Generate premium quality PDF
+    const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
       margin: {
         top: '12mm',
-        right: '12mm',
+        right: '12mm', 
         bottom: '12mm',
         left: '12mm',
       },
-      displayHeaderFooter: false,
       preferCSSPageSize: false,
     });
 
-    console.log('[PDF] PDF generated successfully, size:', pdf.length, 'bytes');
+    console.log('[PDF] Generated successfully, size:', pdfBuffer.length, 'bytes');
 
-    // Set response headers for PDF download
+    // Send PDF response
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.setHeader('Content-Length', pdf.length);
-
-    return res.send(Buffer.from(pdf));
+    res.setHeader('Content-Length', pdfBuffer.length);
+    
+    return res.send(Buffer.from(pdfBuffer));
 
   } catch (error) {
-    console.error('[PDF] Error generating PDF:', error);
-    return res.status(500).json({ 
-      error: 'Failed to generate PDF',
+    console.error('[PDF] Generation failed:', error.message);
+    console.error('[PDF] Stack:', error.stack);
+    
+    return res.status(500).json({
+      error: 'PDF generation failed',
       details: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   } finally {
     if (browser) {
-      try {
-        await browser.close();
-        console.log('[PDF] Browser closed');
-      } catch (closeError) {
-        console.error('[PDF] Error closing browser:', closeError);
-      }
+      await browser.close().catch(() => {});
+      console.log('[PDF] Browser closed');
     }
   }
 }

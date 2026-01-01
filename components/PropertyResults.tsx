@@ -466,91 +466,39 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
 
       const filename = `upblock-${data.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
 
-      // 4. Try Puppeteer API first, fallback to html2pdf.js
+      // 4. Generate PDF via Puppeteer API (premium server-side rendering)
       console.log('[PDF] Sending to Puppeteer API...');
-      let puppeteerSuccess = false;
       
-      try {
-        const response = await fetch('/api/generate-pdf', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ html: htmlContent, filename })
-        });
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html: htmlContent, filename })
+      });
 
-        if (response.ok) {
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/pdf')) {
-            const blob = await response.blob();
-            if (blob.size > 1000) { // Valid PDF should be > 1KB
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = filename;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              window.URL.revokeObjectURL(url);
-              puppeteerSuccess = true;
-              console.log('[PDF] Puppeteer export complete');
-            }
-          }
-        }
-      } catch (puppeteerError) {
-        console.warn('[PDF] Puppeteer failed, will use fallback:', puppeteerError);
+      // Check for errors
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.details || errorData.error || 'PDF generation failed');
       }
 
-      // 5. Fallback to html2pdf.js if Puppeteer failed
-      if (!puppeteerSuccess) {
-        console.log('[PDF] Using html2pdf.js fallback...');
-        const html2pdfModule = await import('html2pdf.js');
-        const html2pdf = html2pdfModule.default as any;
-        
-        const opt = {
-          margin: [10, 10, 10, 10],
-          filename: filename,
-          image: { type: 'jpeg', quality: 0.95 },
-          html2canvas: { 
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            letterRendering: true,
-            scrollY: 0,
-            logging: false,
-            backgroundColor: '#ffffff',
-            windowWidth: 1100,
-            onclone: (clonedDoc: Document) => {
-              const styleEl = clonedDoc.createElement('style');
-              styleEl.textContent = getPdfStyles();
-              clonedDoc.head.appendChild(styleEl);
-              clonedDoc.documentElement.classList.add('pdf-mode');
-              clonedDoc.body.classList.add('pdf-mode');
-              
-              const noPdf = clonedDoc.querySelectorAll('[data-no-pdf="true"]');
-              noPdf.forEach(el => el.remove());
-              const btns = clonedDoc.querySelectorAll('button:not([data-pdf-keep])');
-              btns.forEach(btn => btn.remove());
-              
-              // Replace maps with static images
-              const maps = clonedDoc.querySelectorAll('[data-map="true"]');
-              maps.forEach(container => {
-                const mapEl = container as HTMLElement;
-                mapEl.innerHTML = '';
-                if (mapDataUrl) {
-                  const img = clonedDoc.createElement('img');
-                  img.src = mapDataUrl;
-                  img.style.cssText = 'width:100%;height:auto;border-radius:12px;';
-                  mapEl.appendChild(img);
-                }
-              });
-            }
-          },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: { mode: ['css', 'legacy'], avoid: 'section' }
-        };
-        
-        await html2pdf(element, opt).save();
-        console.log('[PDF] html2pdf.js fallback complete');
+      // Verify we got a PDF
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/pdf')) {
+        throw new Error('Server did not return a valid PDF');
       }
+
+      // Download the PDF
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('[PDF] Premium PDF export complete, size:', blob.size, 'bytes');
       
     } catch (error: any) {
       console.error('PDF export error:', error);
