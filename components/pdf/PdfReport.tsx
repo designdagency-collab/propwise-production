@@ -216,7 +216,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
 
         {/* Local Snapshot - Amenities */}
         {data.proximity && data.proximity.length > 0 && (
-          <div className="pdf-section">
+          <div className="pdf-section pdf-section-after-map">
             <h2 className="pdf-section-title">
               <span className="pdf-icon">{Icons.mapPin}</span>
               Local Snapshot
@@ -674,7 +674,7 @@ export const getPdfDocumentStyles = () => `
     height: 180px;
     border-radius: 12px;
     overflow: hidden;
-    margin-bottom: 24px;
+    margin-bottom: 32px;
     background: #f5f5f5;
     position: relative;
     z-index: 1;
@@ -701,6 +701,9 @@ export const getPdfDocumentStyles = () => `
     margin-top: 20px;
     margin-bottom: 20px;
     clear: both;
+  }
+  .pdf-section-after-map {
+    margin-top: 28px;
   }
   .pdf-section-title {
     display: flex;
