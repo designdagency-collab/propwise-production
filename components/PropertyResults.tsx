@@ -282,9 +282,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     .pdf-mode [data-pdf-callout] [class*="rounded-[2"] { width: 40px !important; height: 40px !important; padding: 8px !important; }
     .pdf-mode [data-pdf-callout] i.fa-sack-dollar { font-size: 18px !important; }
     
-    /* Map Container - COMPACT */
+    /* Map Container - BIGGER */
     .pdf-mode [data-map="true"] {
-      height: 160px !important;
+      height: 220px !important;
       border-radius: 10px !important;
       overflow: hidden !important;
       break-inside: avoid !important;
@@ -292,14 +292,14 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     }
     .pdf-mode .pdf-map-image {
       width: 100% !important;
-      height: 160px !important;
+      height: 220px !important;
       object-fit: cover !important;
       display: block !important;
       border-radius: 10px !important;
     }
     .pdf-mode .pdf-map-placeholder {
       width: 100% !important;
-      height: 160px !important;
+      height: 220px !important;
       background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
       display: flex !important;
       align-items: center !important;
@@ -307,6 +307,27 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       border-radius: 10px !important;
       color: #6b7280 !important;
       font-size: 11px !important;
+    }
+    
+    /* Amenity Cards - SMALLER & COMPACT */
+    .pdf-mode [data-pdf-amenities] {
+      gap: 4px !important;
+    }
+    .pdf-mode [data-pdf-amenities] > div {
+      padding: 6px 8px !important;
+      border-radius: 8px !important;
+    }
+    .pdf-mode [data-pdf-amenities] p:first-child {
+      font-size: 6px !important;
+      margin-bottom: 1px !important;
+    }
+    .pdf-mode [data-pdf-amenities] p:nth-child(2) {
+      font-size: 9px !important;
+      font-weight: 600 !important;
+      margin-bottom: 0 !important;
+    }
+    .pdf-mode [data-pdf-amenities] p:last-child {
+      font-size: 8px !important;
     }
     
     /* Watch Outs - COMPACT */
