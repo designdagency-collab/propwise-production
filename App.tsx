@@ -199,7 +199,7 @@ const App: React.FC = () => {
     console.log('[Auth] Initializing - Supabase will auto-handle OAuth hash via detectSessionInUrl');
     
     // Helper function to handle successful session
-    const handleSessionLogin = (session: any) => {
+    const handleSessionLogin = async (session: any) => {
       if (!session?.user) return;
       
       console.log('[Auth] Login successful for:', session.user.email);
@@ -210,7 +210,10 @@ const App: React.FC = () => {
       localStorage.setItem('prop_is_logged_in', 'true');
       localStorage.setItem('prop_user_email', session.user.email || '');
       setShowEmailAuth(false);
-      loadUserData(session.user.id);
+      
+      // Load user data and then refresh credit state
+      await loadUserData(session.user.id);
+      refreshCreditState();
       
       // Clean up OAuth hash from URL if present
       if (window.location.hash.includes('access_token')) {
@@ -262,7 +265,13 @@ const App: React.FC = () => {
               localStorage.setItem('prop_is_logged_in', 'true');
               localStorage.setItem('prop_user_email', userData.user.email || '');
               setShowEmailAuth(false);
-              loadUserData(userData.user.id);
+              
+              // Load user data from Supabase (syncs credits to localStorage)
+              await loadUserData(userData.user.id);
+              
+              // CRITICAL: Refresh credit state to update React state from localStorage
+              refreshCreditState();
+              
               return;
             } else {
               console.error('[Auth] Token verification failed:', userError?.message);
