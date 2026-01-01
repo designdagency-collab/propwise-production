@@ -101,8 +101,10 @@ const App: React.FC = () => {
 
     setIsLoadingSuggestions(true);
     try {
+      console.log('[Autocomplete] Fetching for:', input);
       const response = await fetch(`/api/address-autocomplete?input=${encodeURIComponent(input)}`);
       const data = await response.json();
+      console.log('[Autocomplete] Response:', data);
       
       if (data.predictions && data.predictions.length > 0) {
         setSuggestions(data.predictions);
@@ -110,6 +112,10 @@ const App: React.FC = () => {
       } else {
         setSuggestions([]);
         setShowSuggestions(false);
+        // Log debug info if available
+        if (data.debug) {
+          console.warn('[Autocomplete] API Debug:', data.debug);
+        }
       }
     } catch (error) {
       console.error('Autocomplete error:', error);

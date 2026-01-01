@@ -39,13 +39,23 @@ export default async function handler(req, res) {
     url.searchParams.set('key', googleApiKey);
 
     console.log('[Autocomplete] Fetching suggestions for:', input);
+    console.log('[Autocomplete] API Key present:', !!googleApiKey, 'length:', googleApiKey?.length);
 
     const response = await fetch(url.toString());
     const data = await response.json();
 
+    console.log('[Autocomplete] Google response status:', data.status);
+    if (data.error_message) {
+      console.log('[Autocomplete] Error message:', data.error_message);
+    }
+
     if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
       console.error('[Autocomplete] API error:', data.status, data.error_message);
-      return res.status(200).json({ predictions: [] });
+      // Return the error for debugging
+      return res.status(200).json({ 
+        predictions: [], 
+        debug: { status: data.status, error: data.error_message }
+      });
     }
 
     // Extract and format predictions
