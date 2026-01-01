@@ -205,8 +205,8 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                 </h2>
                 {searchHistory.length > 0 && (
                   <span className="text-[9px] px-2 py-1 rounded-full bg-green-500/10 text-green-500 font-medium">
-                    <i className="fa-solid fa-gift mr-1"></i>
-                    Free within 7 days
+                    <i className="fa-solid fa-clock mr-1"></i>
+                    7-day access
                   </span>
                 )}
               </div>
@@ -252,9 +252,13 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                               <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
                                 {formattedDate}
                               </p>
-                              {isFreeResearch && (
+                              {isFreeResearch ? (
                                 <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-500 font-bold uppercase">
-                                  Free
+                                  Available
+                                </span>
+                              ) : (
+                                <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-[#C9A961]/10 text-[#C9A961] font-medium">
+                                  Data expired · 1 credit
                                 </span>
                               )}
                             </div>
