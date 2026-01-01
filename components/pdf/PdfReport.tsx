@@ -674,7 +674,7 @@ export const getPdfDocumentStyles = () => `
     height: 250px;
     border-radius: 12px;
     overflow: hidden;
-    margin-top: 20px;
+    margin-top: 50px;
     margin-bottom: 150px;
     background: #f5f5f5;
     position: relative;
