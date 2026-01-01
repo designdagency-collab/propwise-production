@@ -674,7 +674,7 @@ export const getPdfDocumentStyles = () => `
     height: 180px;
     border-radius: 12px;
     overflow: hidden;
-    margin-bottom: 32px;
+    margin-bottom: 150px;
     background: #f5f5f5;
     position: relative;
     z-index: 1;
@@ -703,7 +703,7 @@ export const getPdfDocumentStyles = () => `
     clear: both;
   }
   .pdf-section-after-map {
-    margin-top: 28px;
+    margin-top: 0;
   }
   .pdf-section-title {
     display: flex;
