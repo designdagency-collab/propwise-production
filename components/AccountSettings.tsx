@@ -84,8 +84,8 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
               {isLoggedIn && !phoneVerified && onSecureAccount && (
                 <button
                   onClick={onSecureAccount}
-                  className="px-3 h-10 rounded-xl border flex items-center gap-2 hover:border-[#C9A961] hover:text-[#C9A961] transition-all"
-                  style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
+                  className="px-3 h-10 rounded-xl border-2 flex items-center gap-2 hover:border-[#C9A961] hover:text-[#C9A961] transition-all"
+                  style={{ borderColor: 'rgba(239, 68, 68, 0.25)', color: 'var(--text-muted)' }}
                   title="Add phone number for account recovery"
                 >
                   <i className="fa-solid fa-shield-halved text-sm"></i>
