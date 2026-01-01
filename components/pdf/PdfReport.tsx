@@ -302,13 +302,20 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
                     : '—'}
                 </span>
               </div>
-              <div className="pdf-rental-metric">
-                <span className="pdf-rental-label">Gross Yield</span>
-                <span className="pdf-rental-value">
-                  {data.rentalPosition.grossYield || '—'}%
+              <div className="pdf-rental-metric pdf-cash-position">
+                <span className="pdf-rental-label">Weekly Cash Position</span>
+                <span className={`pdf-rental-value ${data.rentalPosition.estimatedCashPositionWeekly && data.rentalPosition.estimatedCashPositionWeekly < 0 ? 'pdf-negative' : 'pdf-positive'}`}>
+                  {data.rentalPosition.estimatedCashPositionWeekly !== undefined 
+                    ? `$${data.rentalPosition.estimatedCashPositionWeekly >= 0 ? '' : ''}${data.rentalPosition.estimatedCashPositionWeekly.toLocaleString()}/wk`
+                    : '—'}
                 </span>
               </div>
             </div>
+            {data.rentalPosition.repaymentAssumptionNotes && (
+              <p className="pdf-rental-assumptions">
+                {data.rentalPosition.repaymentAssumptionNotes}
+              </p>
+            )}
           </div>
         )}
       </PdfPage>
@@ -862,6 +869,35 @@ export const getPdfDocumentStyles = () => `
     font-size: 16px;
     font-weight: 800;
     color: #3A342D;
+  }
+  .pdf-rental-value.pdf-negative {
+    color: #C53030;
+  }
+  .pdf-rental-value.pdf-positive {
+    color: #276749;
+  }
+  .pdf-cash-position {
+    background: #3A342D;
+    border-color: #3A342D;
+  }
+  .pdf-cash-position .pdf-rental-label {
+    color: #A8A8A8;
+  }
+  .pdf-cash-position .pdf-rental-value {
+    color: white;
+  }
+  .pdf-cash-position .pdf-rental-value.pdf-negative {
+    color: #FC8181;
+  }
+  .pdf-cash-position .pdf-rental-value.pdf-positive {
+    color: #68D391;
+  }
+  .pdf-rental-assumptions {
+    font-size: 8px;
+    color: #78716c;
+    font-style: italic;
+    margin-top: 8px;
+    text-align: center;
   }
 
   /* ===== SCENARIOS ===== */
