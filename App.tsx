@@ -568,44 +568,15 @@ const App: React.FC = () => {
           calculatedCredits
         });
         
-        // DIRECTLY set React state - NO localStorage dependency
+        // Set React state from Supabase profile - NO localStorage
         setRemainingCredits(calculatedCredits);
-        
-        // Also update localStorage for compatibility with other code paths
-        localStorage.setItem('prop_free_used', searchesUsed.toString());
-        localStorage.setItem('prop_credit_topups', creditTopups.toString());
-        localStorage.setItem('prop_has_account', 'true');
-        
-        // ALWAYS set plan from profile.plan_type (Supabase is source of truth)
-        if (planType && planType !== 'FREE_TRIAL') {
-          setPlan(planType as PlanType);
-          localStorage.setItem('prop_plan', planType);
-          console.log('[loadUserData] Set plan from profile:', planType);
-        } else {
-          setPlan('FREE_TRIAL');
-          localStorage.removeItem('prop_plan');
-        }
+        setPlan(planType as PlanType);
+        console.log('[loadUserData] Loaded from Supabase:', { planType, calculatedCredits });
       } else {
         console.log('[loadUserData] No profile found - user may need to complete signup');
       }
-      
-      // Also check subscription status as backup (in case profile.plan_type wasn't updated)
-      if (userId) {
-        const subscription = await supabaseService.getActiveSubscription(userId);
-        if (subscription && subscription.plan_type && subscription.plan_type !== 'FREE' && subscription.plan_type !== 'FREE_TRIAL') {
-          // Map old plan types to new ones
-          let planToSet = subscription.plan_type;
-          if (planToSet === 'BUYER_PACK' || planToSet === 'MONITOR') {
-            planToSet = 'PRO';
-          }
-          setPlan(planToSet as PlanType);
-          localStorage.setItem('prop_plan', planToSet);
-          console.log('[loadUserData] Set plan from subscription:', planToSet);
-        }
-      }
     } catch (error) {
       console.error('[Credits] Error loading user data:', error);
-      // Fail silently - localStorage is the fallback
     }
   };
 
@@ -992,20 +963,21 @@ const App: React.FC = () => {
   // Handle subscription cancellation
   const handleCancelSubscription = async () => {
     // TODO: Call Stripe to cancel subscription when connected
-    // For now, just reset to FREE_TRIAL locally
-    localStorage.setItem('prop_plan', 'FREE_TRIAL');
-    localStorage.removeItem('prop_pro_month');
-    localStorage.removeItem('prop_pro_used');
-    setPlan('FREE_TRIAL');
-    refreshCreditState();
+    if (!userProfile?.id) return;
     
-    // If Supabase is configured, update subscription status
-    if (supabaseService.isConfigured() && userProfile?.id) {
-      try {
-        await supabaseService.updateSubscription(userProfile.id, 'FREE_TRIAL');
-      } catch (error) {
-        console.error('Failed to update subscription in Supabase:', error);
-      }
+    try {
+      // Update Supabase - this is the source of truth
+      await supabaseService.updateSubscription(userProfile.id, 'FREE_TRIAL');
+      await supabaseService.updatePlanType(userProfile.id, 'FREE_TRIAL');
+      
+      // Update React state
+      setPlan('FREE_TRIAL');
+      setUserProfile((prev: any) => prev ? { ...prev, plan_type: 'FREE_TRIAL' } : prev);
+      refreshCreditState();
+      
+      console.log('[Cancel] Subscription cancelled in Supabase');
+    } catch (error) {
+      console.error('Failed to cancel subscription:', error);
     }
   };
 
