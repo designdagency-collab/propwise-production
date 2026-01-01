@@ -518,8 +518,10 @@ const App: React.FC = () => {
 
   // Load user data from Supabase and sync credit state
   const loadUserData = async (userId?: string) => {
+    console.log('[loadUserData] Called with userId:', userId);
     try {
       const profile = await supabaseService.getCurrentProfile();
+      console.log('[loadUserData] Got profile:', profile ? { id: profile.id, search_count: profile.search_count, credit_topups: profile.credit_topups } : null);
       if (profile) {
         setUserProfile(profile);
         

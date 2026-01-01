@@ -59,19 +59,25 @@ export class SupabaseService {
 
   // Get current user profile (optional - doesn't break if fails)
   async getCurrentProfile(): Promise<any | null> {
-    if (!this.supabase) return null;
+    if (!this.supabase) {
+      console.log('[Supabase] getCurrentProfile - not configured');
+      return null;
+    }
     try {
-      const { data: { user } } = await this.supabase.auth.getUser();
+      const { data: { user }, error: userError } = await this.supabase.auth.getUser();
+      console.log('[Supabase] getCurrentProfile - getUser:', user ? { id: user.id, email: user.email } : null, 'error:', userError?.message);
       if (!user) return null;
 
-      const { data } = await this.supabase
+      const { data, error: profileError } = await this.supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
+      console.log('[Supabase] getCurrentProfile - profile query:', data ? { id: data.id, credit_topups: data.credit_topups, search_count: data.search_count } : null, 'error:', profileError?.message);
       return data;
-    } catch {
+    } catch (err: any) {
+      console.error('[Supabase] getCurrentProfile - exception:', err?.message);
       return null; // Fail silently - fallback to localStorage
     }
   }
