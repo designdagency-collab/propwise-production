@@ -258,7 +258,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                   Search History
                 </h2>
                 {searchHistory.length > 0 && (
-                  <span className="text-[9px] px-2 py-1 rounded-full bg-green-500/10 text-green-500 font-medium">
+                  <span className="text-[9px] px-2 py-1 rounded-full bg-[#C9A961]/10 text-[#C9A961] font-medium">
                     7-day access
                   </span>
                 )}
@@ -306,7 +306,7 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                                 {formattedDate}
                               </p>
                               {isFreeResearch ? (
-                                <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-500 font-bold uppercase">
+                                <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-[#C9A961]/10 text-[#C9A961] font-bold uppercase">
                                   Available
                                 </span>
                               ) : (
