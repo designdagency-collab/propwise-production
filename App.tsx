@@ -522,74 +522,64 @@ const App: React.FC = () => {
     try {
       // Pass userId directly to avoid getUser() hanging during OAuth
       const profile = await supabaseService.getCurrentProfile(userId);
-      console.log('[loadUserData] Got profile:', profile ? { id: profile.id, search_count: profile.search_count, credit_topups: profile.credit_topups } : null);
+      console.log('[loadUserData] Got profile:', profile ? { id: profile.id, search_count: profile.search_count, credit_topups: profile.credit_topups, plan_type: profile.plan_type } : null);
+      
       if (profile) {
         setUserProfile(profile);
         
-        // CRITICAL: Sync search count from Supabase to localStorage
-        // This ensures credits persist across devices/sessions
-        const supabaseSearchCount = profile.search_count || 0;
-        const localSearchCount = parseInt(localStorage.getItem('prop_free_used') || '0', 10);
+        // SUPABASE IS SOURCE OF TRUTH - Calculate credits directly from profile
+        const searchesUsed = profile.search_count || 0;
+        const creditTopups = profile.credit_topups || 0;
+        const planType = profile.plan_type || 'FREE_TRIAL';
         
-        // Use the HIGHER count (prevents abuse by clearing localStorage)
-        const actualSearchCount = Math.max(supabaseSearchCount, localSearchCount);
-        localStorage.setItem('prop_free_used', actualSearchCount.toString());
+        // Account bonus: 2 free searches for having an account
+        const ACCOUNT_BONUS = 2;
+        const freeCreditsRemaining = Math.max(0, ACCOUNT_BONUS - searchesUsed);
         
-        // CRITICAL: Sync credit topups from Supabase to localStorage
-        // This ensures purchased credits persist across devices/sessions
-        const supabaseCreditTopups = profile.credit_topups || 0;
-        const localCreditTopups = parseInt(localStorage.getItem('prop_credit_topups') || '0', 10);
-        
-        // Use the HIGHER count (prevents loss of purchased credits)
-        const actualCreditTopups = Math.max(supabaseCreditTopups, localCreditTopups);
-        localStorage.setItem('prop_credit_topups', actualCreditTopups.toString());
-        
-        // If localStorage had more credits than Supabase, sync back to Supabase
-        if (localCreditTopups > supabaseCreditTopups && userId) {
-          console.log('[Credits] Local has more credits - syncing to Supabase:', localCreditTopups);
-          await supabaseService.updateCreditTopups(userId, localCreditTopups);
-        }
-        
-        // CRITICAL: Sync PRO monthly quota from Supabase
-        // This prevents abuse by clearing browser/switching devices
+        // PRO subscription logic
         const now = new Date();
         const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-        const supabaseProMonth = profile.pro_month || currentMonth;
-        const supabaseProUsed = profile.pro_used || 0;
-        const localProMonth = localStorage.getItem('prop_pro_month') || currentMonth;
-        const localProUsed = parseInt(localStorage.getItem('prop_pro_used') || '0', 10);
+        const proMonth = profile.pro_month || '';
+        const proUsed = profile.pro_used || 0;
         
-        // If same month, use the HIGHER usage count (prevents abuse)
-        // If different month, Supabase is source of truth
-        if (supabaseProMonth === localProMonth) {
-          const actualProUsed = Math.max(supabaseProUsed, localProUsed);
-          localStorage.setItem('prop_pro_month', supabaseProMonth);
-          localStorage.setItem('prop_pro_used', actualProUsed.toString());
-          
-          // Sync back to Supabase if local had higher usage
-          if (localProUsed > supabaseProUsed && userId) {
-            console.log('[Credits] Local has higher PRO usage - syncing to Supabase:', localProUsed);
-            await supabaseService.updateProUsage(userId, localProMonth, localProUsed);
+        let calculatedCredits = 0;
+        
+        if (planType === 'PRO') {
+          // PRO gets 10/month
+          const PRO_MONTHLY = 10;
+          if (proMonth === currentMonth) {
+            calculatedCredits = Math.max(0, PRO_MONTHLY - proUsed);
+          } else {
+            // New month - reset to 10
+            calculatedCredits = PRO_MONTHLY;
           }
+        } else if (planType === 'UNLIMITED_PRO') {
+          calculatedCredits = 999;
         } else {
-          // Different months - use Supabase values (server is source of truth)
-          localStorage.setItem('prop_pro_month', supabaseProMonth);
-          localStorage.setItem('prop_pro_used', supabaseProUsed.toString());
+          // FREE_TRIAL or STARTER_PACK - use free credits + topups
+          calculatedCredits = freeCreditsRemaining + creditTopups;
         }
         
-        // User has an account (they're in the profiles table)
-        localStorage.setItem('prop_has_account', 'true');
-        
-        console.log('[Credits] Synced from Supabase:', { 
-          supabaseSearchCount, localSearchCount, actualSearchCount,
-          supabaseCreditTopups, localCreditTopups, actualCreditTopups
+        console.log('[Credits] Calculated from Supabase:', {
+          searchesUsed,
+          creditTopups,
+          planType,
+          freeCreditsRemaining,
+          calculatedCredits
         });
         
-        // Debug: Log what's now in localStorage and what getRemainingCredits will return
-        const debugState = getCreditState();
-        const debugRemaining = getRemainingCredits(debugState);
-        console.log('[Credits] After sync - localStorage state:', debugState);
-        console.log('[Credits] After sync - remaining credits:', debugRemaining);
+        // DIRECTLY set React state - NO localStorage dependency
+        setRemainingCredits(calculatedCredits);
+        
+        // Also update localStorage for compatibility with other code paths
+        localStorage.setItem('prop_free_used', searchesUsed.toString());
+        localStorage.setItem('prop_credit_topups', creditTopups.toString());
+        localStorage.setItem('prop_has_account', 'true');
+        if (planType !== 'FREE_TRIAL') {
+          localStorage.setItem('prop_plan', planType);
+        }
+      } else {
+        console.log('[loadUserData] No profile found - user may need to complete signup');
       }
       
       // Check subscription status

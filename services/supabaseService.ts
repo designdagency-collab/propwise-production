@@ -57,13 +57,17 @@ export class SupabaseService {
     return { user: data?.user, session: data?.session, error };
   }
 
-  // Get current user profile (optional - doesn't break if fails)
+  // Get current user profile with retry logic for OAuth timing issues
   // Can pass userId directly to avoid calling getUser() which may hang during OAuth
-  async getCurrentProfile(userId?: string): Promise<any | null> {
+  async getCurrentProfile(userId?: string, retryCount = 0): Promise<any | null> {
     if (!this.supabase) {
       console.log('[Supabase] getCurrentProfile - not configured');
       return null;
     }
+    
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 500; // ms
+    
     try {
       let targetUserId = userId;
       
@@ -76,18 +80,46 @@ export class SupabaseService {
         targetUserId = user.id;
       }
 
-      console.log('[Supabase] getCurrentProfile - querying profile for userId:', targetUserId);
-      const { data, error: profileError } = await this.supabase
+      console.log('[Supabase] getCurrentProfile - querying profile for userId:', targetUserId, 'attempt:', retryCount + 1);
+      
+      // Create a timeout promise to prevent hanging
+      const timeoutPromise = new Promise<{data: null, error: {message: string}}>((resolve) => {
+        setTimeout(() => {
+          resolve({ data: null, error: { message: 'Query timed out after 5s' } });
+        }, 5000);
+      });
+      
+      // Create the query promise
+      const queryPromise = this.supabase
         .from('profiles')
         .select('*')
         .eq('id', targetUserId)
         .single();
+      
+      // Race between query and timeout
+      const { data, error: profileError } = await Promise.race([queryPromise, timeoutPromise]);
 
-      console.log('[Supabase] getCurrentProfile - profile result:', data ? { id: data.id, credit_topups: data.credit_topups, search_count: data.search_count } : null, 'error:', profileError?.message);
+      console.log('[Supabase] getCurrentProfile - result:', data ? { id: data.id, credit_topups: data.credit_topups, search_count: data.search_count } : null, 'error:', profileError?.message);
+      
+      // If query timed out or failed due to RLS, retry after delay
+      if (!data && retryCount < MAX_RETRIES) {
+        console.log('[Supabase] getCurrentProfile - retrying in', RETRY_DELAY, 'ms...');
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+        return this.getCurrentProfile(targetUserId, retryCount + 1);
+      }
+      
       return data;
     } catch (err: any) {
       console.error('[Supabase] getCurrentProfile - exception:', err?.message);
-      return null; // Fail silently - fallback to localStorage
+      
+      // Retry on exception if we haven't exhausted retries
+      if (retryCount < MAX_RETRIES) {
+        console.log('[Supabase] getCurrentProfile - retrying after exception...');
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+        return this.getCurrentProfile(userId, retryCount + 1);
+      }
+      
+      return null;
     }
   }
 
