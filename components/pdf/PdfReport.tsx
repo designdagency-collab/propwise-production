@@ -419,9 +419,6 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
                   <th>Sale Date</th>
                   <th>Price</th>
                   <th>Distance</th>
-                  <th>Beds</th>
-                  <th>Baths</th>
-                  <th>Car</th>
                 </tr>
               </thead>
               <tbody>
@@ -431,9 +428,6 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
                     <td>{sale.date || '—'}</td>
                     <td className="pdf-comp-price">{formatCurrency(sale.price)}</td>
                     <td>{sale.distanceKm ? `${sale.distanceKm}km` : '—'}</td>
-                    <td>{sale.beds ?? '—'}</td>
-                    <td>{sale.baths ?? '—'}</td>
-                    <td>{sale.cars ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>
