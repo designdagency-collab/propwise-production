@@ -245,30 +245,33 @@ const App: React.FC = () => {
             // Clear hash immediately
             window.history.replaceState({}, document.title, window.location.pathname);
             
-            console.log('[Auth] Verifying user with token...');
+            console.log('[Auth] Setting session with tokens...');
             
-            // Use getUser directly - it's faster and more reliable
-            const { data: userData, error: userError } = await supabaseService.supabase!.auth.getUser(accessToken);
+            // Set the session FIRST - this is required for persistence
+            const { data: sessionData, error: sessionError } = await supabaseService.supabase!.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
             
-            if (userData.user) {
-              console.log('[Auth] User verified:', userData.user.email);
+            console.log('[Auth] setSession result:', { 
+              hasSession: !!sessionData.session, 
+              email: sessionData.session?.user?.email,
+              error: sessionError?.message 
+            });
+            
+            if (sessionData.session?.user) {
+              console.log('[Auth] Session established for:', sessionData.session.user.email);
               
-              // Now set the session properly for persistence
-              supabaseService.supabase!.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken
-              }).catch(() => {}); // Fire and forget - don't wait
-              
-              // Set login state immediately
+              // Set login state
               setIsLoggedIn(true);
-              setUserEmail(userData.user.email || '');
+              setUserEmail(sessionData.session.user.email || '');
               setIsSignedUp(true);
               localStorage.setItem('prop_is_logged_in', 'true');
-              localStorage.setItem('prop_user_email', userData.user.email || '');
+              localStorage.setItem('prop_user_email', sessionData.session.user.email || '');
               setShowEmailAuth(false);
               
               // Load user data from Supabase (syncs credits to localStorage)
-              await loadUserData(userData.user.id);
+              await loadUserData(sessionData.session.user.id);
               
               // CRITICAL: Refresh credit state to update React state from localStorage
               refreshCreditState();
@@ -276,7 +279,21 @@ const App: React.FC = () => {
               
               return;
             } else {
-              console.error('[Auth] Token verification failed:', userError?.message);
+              console.error('[Auth] setSession failed:', sessionError?.message);
+              
+              // Fallback: try getUser
+              console.log('[Auth] Trying getUser fallback...');
+              const { data: userData } = await supabaseService.supabase!.auth.getUser(accessToken);
+              if (userData.user) {
+                console.log('[Auth] User verified via fallback:', userData.user.email);
+                setIsLoggedIn(true);
+                setUserEmail(userData.user.email || '');
+                localStorage.setItem('prop_is_logged_in', 'true');
+                localStorage.setItem('prop_user_email', userData.user.email || '');
+                setShowEmailAuth(false);
+                await loadUserData(userData.user.id);
+                refreshCreditState();
+              }
             }
           }
         } catch (err: any) {
@@ -286,10 +303,22 @@ const App: React.FC = () => {
       
       // Normal session check (no OAuth hash or OAuth failed)
       const { data: { session }, error } = await supabaseService.supabase!.auth.getSession();
+      const localLoggedIn = localStorage.getItem('prop_is_logged_in') === 'true';
+      const localEmail = localStorage.getItem('prop_user_email');
       console.log('[Auth] getSession:', { hasSession: !!session, email: session?.user?.email, error: error?.message });
+      console.log('[Auth] localStorage fallback:', { localLoggedIn, localEmail });
       
       if (session?.user) {
         handleSessionLogin(session);
+      } else if (localLoggedIn && localEmail) {
+        // We have localStorage but no session - user may have been logged in before
+        console.log('[Auth] No Supabase session but localStorage says logged in - checking credits anyway');
+        // Still try to show credits from localStorage
+        setIsLoggedIn(true);
+        setUserEmail(localEmail);
+        setIsSignedUp(true);
+        refreshCreditState();
+        console.log('[Credits] From localStorage only - remaining:', getRemainingCredits(getCreditState()));
       }
     };
     
