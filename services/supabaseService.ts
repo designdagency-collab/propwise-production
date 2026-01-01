@@ -396,10 +396,9 @@ export class SupabaseService {
       password
     });
     
-    // Store email locally for session recovery
+    // Store email locally for session recovery (verified against Supabase on load)
     if (data?.user?.email) {
       localStorage.setItem('prop_user_email', data.user.email);
-      localStorage.setItem('prop_has_account', 'true');
     }
     
     return { user: data?.user, session: data?.session, error };
