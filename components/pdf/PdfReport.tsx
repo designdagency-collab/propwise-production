@@ -204,7 +204,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
               src={mapImageUrl} 
               alt={`Map of ${address}`} 
               className="pdf-map-image"
-              style={{ display: 'block', width: '100%', height: '180px', objectFit: 'cover', borderRadius: '12px' }}
+              style={{ display: 'block', width: '100%', height: '250px', objectFit: 'cover', borderRadius: '12px' }}
             />
           ) : (
             <div className="pdf-map-placeholder">
@@ -671,7 +671,7 @@ export const getPdfDocumentStyles = () => `
   /* ===== MAP ===== */
   .pdf-map-container {
     width: 100%;
-    height: 180px;
+    height: 250px;
     border-radius: 12px;
     overflow: hidden;
     margin-bottom: 150px;
