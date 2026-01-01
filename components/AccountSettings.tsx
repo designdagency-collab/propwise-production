@@ -199,9 +199,17 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
 
             {/* Search History */}
             <div className="p-6 rounded-2xl border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-              <h2 className="text-sm font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
-                Search History
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                  Search History
+                </h2>
+                {searchHistory.length > 0 && (
+                  <span className="text-[10px] px-2 py-1 rounded-full bg-[#C9A961]/10 text-[#C9A961] font-medium">
+                    <i className="fa-solid fa-bolt mr-1"></i>
+                    1 credit per search
+                  </span>
+                )}
+              </div>
               
               {searchHistory.length === 0 ? (
                 <div className="text-center py-8">
@@ -250,13 +258,6 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                     );
                   })}
                 </div>
-              )}
-              
-              {searchHistory.length > 0 && (
-                <p className="text-[10px] mt-4 text-center" style={{ color: 'var(--text-muted)' }}>
-                  <i className="fa-solid fa-info-circle mr-1"></i>
-                  Re-searching uses 1 audit credit
-                </p>
               )}
             </div>
 
