@@ -222,23 +222,33 @@ const App: React.FC = () => {
       return false;
     };
 
-    // If URL has access_token, we need to let Supabase process it first
+    // If URL has access_token, manually parse and set the session
     if (window.location.hash.includes('access_token')) {
-      console.log('[Auth] OAuth callback detected, waiting for Supabase to process...');
+      console.log('[Auth] OAuth callback detected, parsing hash...');
       
-      // Give Supabase time to process the hash
-      setTimeout(async () => {
-        const { data: { session }, error } = await supabaseService.supabase!.auth.getSession();
-        console.log('[Auth] After delay - getSession result:', { hasSession: !!session, error });
-        
-        if (!handleSession(session)) {
-          // If still no session, try refreshing
-          console.log('[Auth] No session after delay, trying to exchange token...');
-          const { data, error: refreshError } = await supabaseService.supabase!.auth.refreshSession();
-          console.log('[Auth] refreshSession result:', { hasSession: !!data.session, error: refreshError });
-          handleSession(data.session);
-        }
-      }, 500);
+      // Parse the hash to extract tokens
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      
+      console.log('[Auth] Parsed tokens:', { hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken });
+      
+      if (accessToken) {
+        // Set the session manually using the tokens
+        supabaseService.supabase!.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || ''
+        }).then(({ data, error }) => {
+          console.log('[Auth] setSession result:', { hasSession: !!data.session, error });
+          if (data.session) {
+            handleSession(data.session);
+          } else if (error) {
+            console.error('[Auth] setSession error:', error);
+            // Clear the hash and try getSession as fallback
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        });
+      }
     } else {
       // Normal page load - check for existing session
       supabaseService.supabase!.auth.getSession().then(({ data: { session }, error }) => {
