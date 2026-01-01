@@ -139,16 +139,16 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
 
               <ul className="space-y-4 mb-10 flex-grow">
                 <li className="flex items-start gap-3 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
+                  <i className="fa-solid fa-infinity mt-1 text-[#C9A961]"></i>
+                  Unlimited Property Audits
+                </li>
+                <li className="flex items-start gap-3 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
                   <i className="fa-solid fa-users mt-1 text-[#C9A961]"></i>
                   Qualified Buyer Leads
                 </li>
                 <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                   <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
                   Seller Interest Notifications
-                </li>
-                <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
-                  Unlimited Property Audits
                 </li>
                 <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                   <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
