@@ -54,12 +54,6 @@ const App: React.FC = () => {
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [showEmailAuth, setShowEmailAuth] = useState(false);
   const [emailAuthMode, setEmailAuthMode] = useState<'signup' | 'login' | 'reset'>('signup');
-  const [isAuthRedirect, setIsAuthRedirect] = useState(() => {
-    // Check if this is an OAuth redirect (has access_token or error in hash/search)
-    const hash = window.location.hash;
-    const search = window.location.search;
-    return hash.includes('access_token') || hash.includes('error') || search.includes('code=');
-  });
   const [showTerms, setShowTerms] = useState(false);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -218,16 +212,12 @@ const App: React.FC = () => {
         localStorage.setItem('prop_is_logged_in', 'true');
         localStorage.setItem('prop_user_email', session.user.email || '');
         setShowEmailAuth(false); // Close modal if open
-        setIsAuthRedirect(false); // Clear redirect flag
         loadUserData(session.user.id);
         
         // Clear OAuth fragments from URL for cleaner display
         if (window.location.hash.includes('access_token')) {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
-      } else {
-        // No session found - clear redirect flag so login modal can show
-        setIsAuthRedirect(false);
       }
     });
 
@@ -1313,8 +1303,8 @@ const App: React.FC = () => {
         </main>
       )}
 
-      {/* Email Auth Modal - Don't show during OAuth redirect */}
-      {showEmailAuth && !isAuthRedirect && (
+      {/* Email Auth Modal */}
+      {showEmailAuth && (
         <EmailAuth
           initialMode={emailAuthMode}
           onSuccess={handleEmailAuthSuccess}
