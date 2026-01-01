@@ -50,7 +50,7 @@ export default async function handler(req, res) {
   }
 
   // Hardcoded production URL - don't use env var to avoid misconfiguration
-  const baseUrl = 'https://propwise-production.vercel.app';
+  const baseUrl = 'https://upblock.ai';
 
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', baseUrl);

@@ -334,7 +334,7 @@ export class SupabaseService {
           full_name: fullName || ''
         },
         // Skip email confirmation redirect - we handle this in Supabase settings
-        emailRedirectTo: 'https://propwise-production.vercel.app'
+        emailRedirectTo: 'https://upblock.ai'
       }
     });
     
@@ -379,7 +379,7 @@ export class SupabaseService {
       options: {
         redirectTo: window.location.hostname === 'localhost' 
           ? window.location.origin
-          : 'https://propwise-production.vercel.app'
+          : 'https://upblock.ai'
       }
     });
     return { error };
@@ -392,7 +392,7 @@ export class SupabaseService {
     }
     // Use production URL explicitly to avoid localhost issues
     const redirectUrl = window.location.hostname === 'localhost' 
-      ? 'https://propwise-production.vercel.app?reset=true'
+      ? 'https://upblock.ai?reset=true'
       : `${window.location.origin}?reset=true`;
     
     const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
