@@ -461,23 +461,46 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     setIsExporting(true);
     
     try {
-      // 1. Pre-fetch static map image
+      // 1. Pre-fetch static map image (with retries)
       let mapDataUrl: string | null = null;
-      try {
-        const staticMapUrl = `/api/static-map?address=${encodeURIComponent(data.address)}&width=800&height=400&zoom=17`;
-        const mapResponse = await fetch(staticMapUrl);
-        
-        if (mapResponse.ok && mapResponse.headers.get('content-type')?.includes('image')) {
-          const blob = await mapResponse.blob();
-          mapDataUrl = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          });
+      console.log('[PDF] Fetching static map for:', data.address);
+      
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const staticMapUrl = `/api/static-map?address=${encodeURIComponent(data.address)}&width=800&height=440&zoom=18`;
+          console.log('[PDF] Map fetch attempt', attempt);
+          
+          const mapResponse = await fetch(staticMapUrl);
+          const contentType = mapResponse.headers.get('content-type') || '';
+          
+          console.log('[PDF] Map response:', mapResponse.status, contentType);
+          
+          // Accept PNG, JPEG images (not SVG placeholder)
+          if (mapResponse.ok && (contentType.includes('image/png') || contentType.includes('image/jpeg'))) {
+            const blob = await mapResponse.blob();
+            console.log('[PDF] Map blob size:', blob.size);
+            
+            if (blob.size > 5000) { // Real map should be > 5KB
+              mapDataUrl = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+              });
+              console.log('[PDF] Map loaded successfully');
+              break;
+            }
+          }
+          
+          // Wait before retry
+          if (attempt < 2) await new Promise(r => setTimeout(r, 1000));
+        } catch (mapError) {
+          console.warn('[PDF] Map fetch error:', mapError);
         }
-      } catch (mapError) {
-        console.warn('Could not pre-fetch static map:', mapError);
+      }
+      
+      if (!mapDataUrl) {
+        console.warn('[PDF] Could not load map - using placeholder');
       }
 
       // 2. Clone and prepare HTML for PDF
