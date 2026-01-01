@@ -357,7 +357,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
                 </li>
                 <li className="flex items-start gap-3 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
                   <i className="fa-solid fa-tags mt-1 text-[#C9A961]"></i>
-                  Bulk credits at discounted prices
+                  Bulk credit packs – 22% off
                 </li>
               </ul>
 
