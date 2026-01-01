@@ -56,7 +56,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 items-stretch">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 items-stretch">
           {/* Free Trial - Sign up */}
           <div className="p-8 rounded-[3rem] border-2 flex flex-col hover:border-[#C9A961]/50 transition-all" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
             <div className="mb-8">
@@ -103,10 +103,17 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
             </button>
           </div>
 
-          {/* Starter Pack - One-time purchase */}
-          <div className="p-8 rounded-[3rem] border-2 flex flex-col hover:border-[#C9A961]/50 transition-all" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+          {/* Starter Pack - One-time purchase (highlighted for PRO users topping up) */}
+          <div className={`p-8 rounded-[3rem] border-2 flex flex-col transition-all relative ${isPro ? 'border-[#C9A961] shadow-xl' : 'hover:border-[#C9A961]/50'}`} style={{ backgroundColor: 'var(--bg-card)', borderColor: isPro ? undefined : 'var(--border-color)' }}>
+            {isPro && (
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <span className="bg-[#C9A961] text-white px-3 sm:px-4 py-1 rounded-full text-[11px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                  Top Up Credits
+                </span>
+              </div>
+            )}
             <div className="mb-8">
-              <h3 className="text-lg sm:text-xl font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Starter Pack</h3>
+              <h3 className="text-lg sm:text-xl font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>{isPro ? 'Credit Pack' : 'Starter Pack'}</h3>
               <div className="flex items-baseline gap-1">
                 <span className="text-3xl sm:text-4xl font-black" style={{ color: 'var(--text-primary)' }}>$19</span>
                 <span className="text-xs sm:text-sm font-bold" style={{ color: 'var(--text-muted)' }}>AUD one-time</span>
@@ -134,7 +141,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
             <button
               onClick={handleSelectStarter}
               disabled={isProcessing !== null}
-              className="w-full py-3 sm:py-4 rounded-2xl font-bold uppercase tracking-widest text-[12px] sm:text-[11px] border-2 border-[#C9A961] text-[#C9A961] hover:bg-[#C9A961] hover:text-white transition-all flex items-center justify-center gap-2"
+              className={`w-full py-3 sm:py-4 rounded-2xl font-bold uppercase tracking-widest text-[12px] sm:text-[11px] transition-all flex items-center justify-center gap-2 ${isPro ? 'bg-[#C9A961] text-white hover:bg-[#3A342D] shadow-lg' : 'border-2 border-[#C9A961] text-[#C9A961] hover:bg-[#C9A961] hover:text-white'}`}
             >
               {isProcessing === 'STARTER_PACK' ? (
                 <>
@@ -144,7 +151,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
               ) : (
                 <>
                   <i className="fa-solid fa-bolt"></i>
-                  Buy 3 Audits
+                  {isPro ? 'Add 3 Credits' : 'Buy 3 Audits'}
                 </>
               )}
             </button>
@@ -218,6 +225,59 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
               <i className="fa-brands fa-cc-mastercard"></i>
               <i className="fa-solid fa-lock text-[10px]"></i>
             </div>
+          </div>
+
+          {/* Enterprise - Coming Soon */}
+          <div className="p-8 rounded-[3rem] border-2 flex flex-col relative opacity-80" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+              <span className="bg-gradient-to-r from-[#3A342D] to-[#4A4137] text-white px-3 sm:px-4 py-1 rounded-full text-[11px] sm:text-[10px] font-black uppercase tracking-widest whitespace-nowrap">
+                Coming Soon
+              </span>
+            </div>
+            
+            <div className="mb-8">
+              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-primary)' }}>Enterprise</h3>
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl sm:text-5xl font-black" style={{ color: 'var(--text-primary)' }}>$900</span>
+                <span className="text-xs sm:text-sm font-bold" style={{ color: 'var(--text-muted)' }}>AUD / month</span>
+              </div>
+              <p className="text-[11px] sm:text-xs font-bold mt-2" style={{ color: 'var(--text-muted)' }}>For Buyers Agents & Real Estate Professionals</p>
+            </div>
+
+            <ul className="space-y-4 mb-10 flex-grow">
+              <li className="flex items-start gap-3 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
+                <i className="fa-solid fa-users mt-1 text-[#C9A961]"></i>
+                Qualified Buyer Leads
+              </li>
+              <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
+                Seller Interest Notifications
+              </li>
+              <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
+                Unlimited Property Audits
+              </li>
+              <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
+                White-label Reports
+              </li>
+              <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
+                <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
+                Priority Support
+              </li>
+            </ul>
+
+            <button
+              disabled
+              className="w-full py-4 sm:py-5 rounded-2xl font-bold uppercase tracking-widest text-[13px] sm:text-[12px] border-2 transition-all flex items-center justify-center gap-3 cursor-not-allowed"
+              style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
+            >
+              <i className="fa-solid fa-building"></i>
+              Join Waitlist
+            </button>
+            <p className="mt-4 text-center text-[10px]" style={{ color: 'var(--text-muted)' }}>
+              Be first to access when we launch
+            </p>
           </div>
         </div>
 
