@@ -2,12 +2,16 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { PropertyData } from "../types";
 
 // Detect if address indicates combined/amalgamated lots
-// Only for small ranges (<=6 difference) - large ranges like "1-71" are unit numbers
+// Only for small ranges (<=6 difference) - excludes unit numbers
 function detectCombinedLots(address: string): boolean {
-  const addr = address.trim();
+  const trimmed = address.trim().toLowerCase();
+  
+  // Exclude unit-style addresses (Unit 1-3, Apt 2-4, Suite 1-2, 1/45, etc.)
+  if (/^(unit|u|apt|apartment|suite|level|shop|office)\s*\d/i.test(trimmed)) return false;
+  if (/^\d+\s*\/\s*\d+/.test(trimmed)) return false; // "1/45 Smith St" format
   
   // Check for hyphen range pattern (e.g., "2-6 Smith St")
-  const hyphenMatch = addr.match(/^(\d+)\s*-\s*(\d+)\s+/);
+  const hyphenMatch = address.trim().match(/^(\d+)\s*-\s*(\d+)\s+/);
   if (hyphenMatch) {
     const start = parseInt(hyphenMatch[1]);
     const end = parseInt(hyphenMatch[2]);
@@ -16,10 +20,10 @@ function detectCombinedLots(address: string): boolean {
   }
   
   // Check for ampersand pattern (e.g., "2 & 4 Smith St")
-  if (/^\d+\s*&\s*\d+\s+/.test(addr)) return true;
+  if (/^\d+\s*&\s*\d+\s+/.test(address.trim())) return true;
   
-  // Check for "Lot 1 & 2" style
-  if (/lots?\s*\d+\s*(&|,)\s*\d+/i.test(addr)) return true;
+  // Check for "Lot 1 & 2" style (explicit lot reference)
+  if (/lots?\s*\d+\s*(&|,)\s*\d+/i.test(address.trim())) return true;
   
   return false;
 }

@@ -120,8 +120,14 @@ const App: React.FC = () => {
   }, []);
 
   // Detect combined/amalgamated lot patterns (e.g., "2-4", "1 & 3")
-  // Only for small ranges (<=6 difference) - large ranges like "1-71" are unit numbers
+  // Only for small ranges (<=6 difference) - excludes unit numbers
   const isCombinedLotAddress = useCallback((addr: string): boolean => {
+    const trimmed = addr.trim().toLowerCase();
+    
+    // Exclude unit-style addresses (Unit 1-3, Apt 2-4, Suite 1-2, 1/45, etc.)
+    if (/^(unit|u|apt|apartment|suite|level|shop|office)\s*\d/i.test(trimmed)) return false;
+    if (/^\d+\s*\/\s*\d+/.test(trimmed)) return false; // "1/45 Smith St" format
+    
     // Check for hyphen range pattern (e.g., "2-6 Smith St")
     const hyphenMatch = addr.trim().match(/^(\d+)\s*-\s*(\d+)\s+/);
     if (hyphenMatch) {
@@ -134,7 +140,7 @@ const App: React.FC = () => {
     // Check for ampersand pattern (e.g., "2 & 4 Smith St")
     if (/^\d+\s*&\s*\d+\s+/.test(addr.trim())) return true;
     
-    // Check for "Lot 1 & 2" style
+    // Check for "Lot 1 & 2" style (explicit lot reference)
     if (/lots?\s*\d+\s*(&|,)\s*\d+/i.test(addr.trim())) return true;
     
     return false;
