@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import PropertyResults from './components/PropertyResults';
 import Pricing from './components/Pricing';
 import PhoneVerification from './components/PhoneVerification';
+import PhoneRecoveryModal from './components/PhoneRecoveryModal';
 import EmailAuth from './components/EmailAuth';
 import TermsAndConditions from './components/TermsAndConditions';
 import AccountSettings from './components/AccountSettings';
@@ -55,6 +56,7 @@ const App: React.FC = () => {
   const [emailAuthMode, setEmailAuthMode] = useState<'signup' | 'login' | 'reset'>('signup');
   const [showTerms, setShowTerms] = useState(false);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
+  const [showPhoneRecovery, setShowPhoneRecovery] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [searchHistory, setSearchHistory] = useState<{ address: string; created_at: string }[]>([]);
   
@@ -482,11 +484,22 @@ const App: React.FC = () => {
           
           // Reload profile to get updated state
           await loadUserData(user.id);
+          
+          // Show phone recovery modal if not already prompted (first purchase)
+          const updatedProfile = await supabaseService.getCurrentProfile(user.id);
+          if (updatedProfile && !updatedProfile.phone_recovery_prompted && !updatedProfile.phone_verified) {
+            console.log('[Payment] Showing phone recovery modal (first purchase)');
+            setTimeout(() => {
+              setShowUpgradeSuccess(false);
+              setShowPhoneRecovery(true);
+            }, 3000); // Show after upgrade success message
+          } else {
+            setTimeout(() => setShowUpgradeSuccess(false), 5000);
+          }
         } else {
           setIsLoggedIn(false);
+          setTimeout(() => setShowUpgradeSuccess(false), 5000);
         }
-        
-        setTimeout(() => setShowUpgradeSuccess(false), 5000);
       };
       
       processPaymentSuccess();
@@ -1215,12 +1228,15 @@ const App: React.FC = () => {
           creditState={creditState}
           remainingCredits={remainingCredits}
           userEmail={userEmail}
+          userPhone={userProfile?.phone}
+          phoneVerified={userProfile?.phone_verified}
           isLoggedIn={isLoggedIn}
           searchHistory={searchHistory}
           onBack={() => setShowAccountSettings(false)}
           onCancelSubscription={handleCancelSubscription}
           onLogout={handleLogout}
           onSearchAddress={handleSearchFromHistory}
+          onSecureAccount={() => setShowPhoneRecovery(true)}
         />
       ) : showTerms ? (
         <TermsAndConditions onBack={() => setShowTerms(false)} />
@@ -1476,6 +1492,24 @@ const App: React.FC = () => {
               }, 500);
             }
           }}
+        />
+      )}
+
+      {/* Phone Recovery Modal (after first purchase) */}
+      {showPhoneRecovery && userProfile?.id && (
+        <PhoneRecoveryModal
+          isOpen={showPhoneRecovery}
+          onClose={() => setShowPhoneRecovery(false)}
+          onSkip={() => setShowPhoneRecovery(false)}
+          onVerified={async (phone) => {
+            console.log('[PhoneRecovery] Phone verified:', phone);
+            setShowPhoneRecovery(false);
+            // Refresh profile to get updated phone_verified status
+            if (userProfile?.id) {
+              await loadUserData(userProfile.id);
+            }
+          }}
+          userId={userProfile.id}
         />
       )}
 

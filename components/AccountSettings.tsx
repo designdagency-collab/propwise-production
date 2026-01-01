@@ -11,12 +11,15 @@ interface AccountSettingsProps {
   creditState: CreditState;
   remainingCredits: number;
   userEmail?: string;
+  userPhone?: string;
+  phoneVerified?: boolean;
   isLoggedIn: boolean;
   searchHistory: SearchHistoryItem[];
   onBack: () => void;
   onCancelSubscription: () => Promise<void>;
   onLogout: () => void | Promise<void>;
   onSearchAddress: (address: string) => void;
+  onSecureAccount?: () => void;
 }
 
 const AccountSettings: React.FC<AccountSettingsProps> = ({
@@ -24,12 +27,15 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
   creditState,
   remainingCredits,
   userEmail,
+  userPhone,
+  phoneVerified,
   isLoggedIn,
   searchHistory,
   onBack,
   onCancelSubscription,
   onLogout,
-  onSearchAddress
+  onSearchAddress,
+  onSecureAccount
 }) => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -73,15 +79,30 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
               Back to Home
             </button>
             
-            <a
-              href="mailto:support@upblock.ai"
-              className="px-3 h-10 rounded-xl border flex items-center gap-2 hover:border-[#C9A961] hover:text-[#C9A961] transition-all"
-              style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
-              title="Contact Support"
-            >
-              <i className="fa-solid fa-envelope text-sm"></i>
-              <span className="text-xs font-medium">Support</span>
-            </a>
+            <div className="flex items-center gap-2">
+              {/* Secure Account button - show if phone not verified */}
+              {isLoggedIn && !phoneVerified && onSecureAccount && (
+                <button
+                  onClick={onSecureAccount}
+                  className="px-3 h-10 rounded-xl border flex items-center gap-2 hover:border-amber-500 hover:text-amber-500 transition-all"
+                  style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
+                  title="Add phone number for account recovery"
+                >
+                  <i className="fa-solid fa-shield-halved text-sm text-amber-500"></i>
+                  <span className="text-xs font-medium">Secure Account</span>
+                </button>
+              )}
+              
+              <a
+                href="mailto:support@upblock.ai"
+                className="px-3 h-10 rounded-xl border flex items-center gap-2 hover:border-[#C9A961] hover:text-[#C9A961] transition-all"
+                style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
+                title="Contact Support"
+              >
+                <i className="fa-solid fa-envelope text-sm"></i>
+                <span className="text-xs font-medium">Support</span>
+              </a>
+            </div>
           </div>
           
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tighter" style={{ color: 'var(--text-primary)' }}>
@@ -105,6 +126,23 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                 <div className="flex justify-between items-center">
                   <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Email</span>
                   <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{userEmail || 'Not set'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>Recovery Phone</span>
+                  {phoneVerified && userPhone ? (
+                    <span className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                      {userPhone.slice(0, -4)}****
+                      <i className="fa-solid fa-check-circle text-green-500 text-xs"></i>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={onSecureAccount}
+                      className="text-sm font-medium text-amber-500 hover:text-amber-600 transition-colors flex items-center gap-1"
+                    >
+                      <i className="fa-solid fa-plus text-xs"></i>
+                      Add
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
