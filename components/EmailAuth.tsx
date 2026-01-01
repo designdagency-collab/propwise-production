@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabaseService } from '../services/supabaseService';
 
-type AuthMode = 'signup' | 'login' | 'forgot' | 'reset';
+type AuthMode = 'signup' | 'login' | 'forgot' | 'reset' | 'phone-recovery' | 'phone-verify';
 
 interface EmailAuthProps {
   onSuccess: (email: string, isNewUser: boolean) => void;
@@ -20,6 +20,14 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  
+  // Phone recovery state
+  const [recoveryPhone, setRecoveryPhone] = useState('');
+  const [recoveryCode, setRecoveryCode] = useState('');
+  const [maskedEmail, setMaskedEmail] = useState('');
+  const [testCode, setTestCode] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(0);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Clear loading states on mount and when window regains focus (handles browser back from Google OAuth)
   useEffect(() => {
@@ -42,6 +50,52 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  // Phone formatting
+  const formatPhone = (value: string): string => {
+    const digits = value.replace(/\D/g, '');
+    if (digits.startsWith('0')) {
+      return digits.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
+    }
+    return digits;
+  };
+
+  const normalizePhone = (phone: string): string => {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.startsWith('0')) {
+      return `+61${digits.substring(1)}`;
+    } else if (digits.startsWith('61')) {
+      return `+${digits}`;
+    }
+    return `+61${digits}`;
+  };
+
+  // Handle individual digit input for OTP
+  const handleDigitChange = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, '').slice(-1);
+    const newCode = recoveryCode.split('');
+    newCode[index] = digit;
+    const updatedCode = newCode.join('').slice(0, 6);
+    setRecoveryCode(updatedCode);
+    
+    if (digit && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !recoveryCode[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    setRecoveryCode(pastedData);
+    const focusIndex = Math.min(pastedData.length, 5);
+    inputRefs.current[focusIndex]?.focus();
   };
 
   const handleGoogleSignIn = async () => {
@@ -193,12 +247,124 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
     }
   };
 
+  const handlePhoneRecovery = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setTestCode(null);
+
+    const normalizedPhone = normalizePhone(recoveryPhone);
+    if (normalizedPhone.length < 12) {
+      setError('Please enter a valid Australian phone number');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/recover-by-phone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: normalizedPhone })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send recovery code');
+      }
+
+      if (data.testCode) {
+        setTestCode(data.testCode);
+      }
+      if (data.email) {
+        setMaskedEmail(data.email);
+      }
+
+      setMode('phone-verify');
+      setCountdown(60);
+      const interval = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to send recovery code');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyRecoveryCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (recoveryCode.length !== 6) {
+      setError('Please enter the 6-digit verification code');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/verify-recovery-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          phone: normalizePhone(recoveryPhone), 
+          code: recoveryCode 
+        })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Invalid code');
+      }
+
+      // If we got a reset link, redirect to it
+      if (data.resetLink) {
+        window.location.href = data.resetLink;
+        return;
+      }
+
+      // Otherwise, show success and instruct to check email
+      setSuccessMessage(`Phone verified! A password reset link has been sent to ${data.email || maskedEmail}`);
+      
+      // Send password reset email as fallback
+      if (data.email) {
+        await supabaseService.sendPasswordResetEmail(data.email);
+      }
+
+    } catch (err: any) {
+      setError(err.message || 'Invalid verification code');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendRecoveryCode = async () => {
+    if (countdown > 0) return;
+    setRecoveryCode('');
+    setError(null);
+    setTestCode(null);
+    
+    // Re-trigger the phone recovery
+    const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+    await handlePhoneRecovery(fakeEvent);
+  };
+
   const getTitle = () => {
     switch (mode) {
       case 'signup': return 'Create Account';
       case 'login': return 'Welcome Back';
       case 'forgot': return 'Reset Password';
       case 'reset': return 'Set New Password';
+      case 'phone-recovery': return 'Recover via Phone';
+      case 'phone-verify': return 'Enter Code';
     }
   };
 
@@ -208,6 +374,8 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
       case 'login': return 'Log in to access your account and saved audits.';
       case 'forgot': return "Enter your email and we'll send you a reset link.";
       case 'reset': return 'Choose a new password for your account.';
+      case 'phone-recovery': return 'Enter the phone number linked to your account.';
+      case 'phone-verify': return `We sent a code to ${normalizePhone(recoveryPhone)}`;
     }
   };
 
@@ -217,6 +385,8 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
       case 'login': return 'fa-right-to-bracket';
       case 'forgot': return 'fa-envelope';
       case 'reset': return 'fa-key';
+      case 'phone-recovery': return 'fa-mobile-screen-button';
+      case 'phone-verify': return 'fa-sms';
     }
   };
 
@@ -510,6 +680,22 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
                     'Send Reset Link'
                   )}
                 </button>
+
+                <div className="flex items-center gap-3 my-1">
+                  <div className="flex-1 h-px bg-[#3A342D]/10"></div>
+                  <span className="text-[9px] sm:text-[10px] font-bold text-[#3A342D]/30 uppercase tracking-widest">or</span>
+                  <div className="flex-1 h-px bg-[#3A342D]/10"></div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => { setMode('phone-recovery'); setError(null); setSuccessMessage(null); }}
+                  disabled={isLoading}
+                  className="w-full py-3 sm:py-3.5 bg-white border-2 border-[#3A342D]/10 text-[#3A342D] rounded-xl font-semibold hover:border-[#3A342D]/30 hover:bg-gray-50 transition-all text-xs sm:text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <i className="fa-solid fa-mobile-screen-button text-[#C9A961]"></i>
+                  Recover via Phone
+                </button>
                 
                 <button
                   type="button"
@@ -518,6 +704,158 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
                   className="text-[#3A342D]/60 hover:text-[#C9A961] font-medium text-xs sm:text-sm transition-colors"
                 >
                   Back to login
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  disabled={isLoading}
+                  className="text-[#3A342D]/40 hover:text-[#3A342D] font-medium text-xs sm:text-sm transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Phone Recovery Form */}
+          {mode === 'phone-recovery' && (
+            <form onSubmit={handlePhoneRecovery} className="space-y-4">
+              <div>
+                <div className="relative">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3A342D]/40 font-medium">
+                    +61
+                  </div>
+                  <input
+                    type="tel"
+                    value={recoveryPhone}
+                    onChange={(e) => setRecoveryPhone(formatPhone(e.target.value))}
+                    placeholder="4XX XXX XXX"
+                    className="w-full pl-14 pr-4 py-3 sm:py-3.5 rounded-xl border-2 border-[#C9A961]/20 focus:border-[#C9A961] focus:outline-none text-[#3A342D] font-medium text-sm sm:text-base transition-all bg-white"
+                    style={{ WebkitAppearance: 'none' }}
+                    autoComplete="off"
+                    disabled={isLoading}
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <p className="text-red-500 text-xs sm:text-sm text-left">{error}</p>
+              )}
+
+              <div className="flex flex-col gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-3 sm:py-4 bg-[#C9A961] text-white rounded-xl font-bold hover:bg-[#3A342D] transition-all uppercase tracking-widest text-[11px] sm:text-[12px] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <i className="fa-solid fa-spinner fa-spin"></i>
+                      Sending Code...
+                    </>
+                  ) : (
+                    'Send Recovery Code'
+                  )}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => { setMode('forgot'); setError(null); }}
+                  disabled={isLoading}
+                  className="text-[#3A342D]/60 hover:text-[#C9A961] font-medium text-xs sm:text-sm transition-colors"
+                >
+                  Use email instead
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  disabled={isLoading}
+                  className="text-[#3A342D]/40 hover:text-[#3A342D] font-medium text-xs sm:text-sm transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Phone Verify Form */}
+          {mode === 'phone-verify' && (
+            <form onSubmit={handleVerifyRecoveryCode} className="space-y-4">
+              {/* Test mode indicator */}
+              {testCode && (
+                <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
+                  <p className="text-xs text-amber-700 font-medium">
+                    <i className="fa-solid fa-flask mr-1"></i>
+                    Test Mode - Code: <span className="font-bold text-lg">{testCode}</span>
+                  </p>
+                </div>
+              )}
+
+              {maskedEmail && (
+                <p className="text-xs text-[#3A342D]/60 text-center">
+                  Account: <span className="font-medium">{maskedEmail}</span>
+                </p>
+              )}
+
+              <div>
+                <div className="flex justify-center gap-2 sm:gap-3" onPaste={handlePaste}>
+                  {[0, 1, 2, 3, 4, 5].map((index) => (
+                    <input
+                      key={index}
+                      ref={(el) => (inputRefs.current[index] = el)}
+                      type="text"
+                      inputMode="numeric"
+                      value={recoveryCode[index] || ''}
+                      onChange={(e) => handleDigitChange(index, e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(index, e)}
+                      className="w-10 h-12 sm:w-12 sm:h-14 rounded-xl border-2 border-[#C9A961]/20 focus:border-[#C9A961] focus:outline-none text-[#3A342D] font-bold text-xl sm:text-2xl text-center transition-all bg-white caret-transparent"
+                      disabled={isLoading}
+                      autoFocus={index === 0}
+                      maxLength={1}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {error && (
+                <p className="text-red-500 text-xs sm:text-sm text-center">{error}</p>
+              )}
+
+              <div className="flex flex-col gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={isLoading || recoveryCode.length !== 6}
+                  className="w-full py-3 sm:py-4 bg-[#C9A961] text-white rounded-xl font-bold hover:bg-[#3A342D] transition-all uppercase tracking-widest text-[11px] sm:text-[12px] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <i className="fa-solid fa-spinner fa-spin"></i>
+                      Verifying...
+                    </>
+                  ) : (
+                    'Verify & Reset Password'
+                  )}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={handleResendRecoveryCode}
+                  disabled={countdown > 0 || isLoading}
+                  className="text-[#3A342D]/60 hover:text-[#C9A961] font-medium text-xs sm:text-sm transition-colors disabled:opacity-50"
+                >
+                  {countdown > 0 ? `Resend code in ${countdown}s` : 'Resend Code'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setMode('phone-recovery'); setError(null); setRecoveryCode(''); }}
+                  disabled={isLoading}
+                  className="text-[#3A342D]/60 hover:text-[#C9A961] font-medium text-xs sm:text-sm transition-colors"
+                >
+                  Change phone number
                 </button>
 
                 <button
