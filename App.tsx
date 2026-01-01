@@ -592,15 +592,13 @@ const App: React.FC = () => {
             pro_month: result.proMonth,
             plan_type: result.planType
           } : prev);
-          
           // Credits will refresh when userProfile updates via useEffect
-          } else {
-            const errorData = await response.json();
-            console.error('[Search] API error:', errorData.error);
-          }
-        } catch (error) {
-          console.error('[Search] Failed to save search:', error);
+        } else {
+          const errorData = await response.json();
+          console.error('[Search] API error:', errorData.error);
         }
+      } catch (error) {
+        console.error('[Search] Failed to save search:', error);
       }
     } else {
       // Anonymous users: record device search via fingerprint
