@@ -665,8 +665,10 @@ export const getPdfDocumentStyles = () => `
     height: 180px;
     border-radius: 12px;
     overflow: hidden;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
     background: #f5f5f5;
+    position: relative;
+    z-index: 1;
   }
   .pdf-map-image {
     width: 100%;
@@ -687,7 +689,9 @@ export const getPdfDocumentStyles = () => `
 
   /* ===== SECTIONS ===== */
   .pdf-section {
+    margin-top: 20px;
     margin-bottom: 20px;
+    clear: both;
   }
   .pdf-section-title {
     display: flex;
