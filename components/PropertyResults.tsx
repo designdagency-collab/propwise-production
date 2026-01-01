@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { PropertyData, PlanType, DevEligibility, Amenity } from '../types';
 import PdfReport, { getPdfDocumentStyles } from './pdf/PdfReport';
@@ -14,7 +14,27 @@ interface PropertyResultsProps {
 const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade, onHome }) => {
   const [selectedStrategies, setSelectedStrategies] = useState<Set<number>>(new Set());
   const [isExporting, setIsExporting] = useState(false);
+  const [pdfCountdown, setPdfCountdown] = useState<number>(3);
+  const [pdfReady, setPdfReady] = useState<boolean>(false);
   const reportRef = useRef<HTMLDivElement>(null);
+
+  // PDF countdown timer - gives page time to fully render before allowing export
+  useEffect(() => {
+    if (data && !pdfReady) {
+      setPdfCountdown(3);
+      const timer = setInterval(() => {
+        setPdfCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setPdfReady(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [data]);
 
   const isPaidUser = plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK';
 
@@ -339,13 +359,27 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
               {isPaidUser ? (
                 <button 
                   onClick={exportToPDF}
-                  disabled={isExporting}
+                  disabled={isExporting || !pdfReady}
                   data-no-pdf="true"
-                  className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:text-[#D6A270] transition-colors flex items-center gap-1 disabled:opacity-50" 
+                  className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-colors flex items-center gap-1 ${!pdfReady ? 'opacity-60 cursor-wait' : 'hover:text-[#D6A270]'} disabled:opacity-50`}
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  <i className={`fa-solid ${isExporting ? 'fa-spinner fa-spin' : 'fa-file-pdf'}`}></i>
-                  {isExporting ? 'Exporting...' : 'Export PDF'}
+                  {isExporting ? (
+                    <>
+                      <i className="fa-solid fa-spinner fa-spin"></i>
+                      Exporting...
+                    </>
+                  ) : !pdfReady ? (
+                    <>
+                      <i className="fa-solid fa-hourglass-half"></i>
+                      PDF Ready in {pdfCountdown}...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-file-pdf"></i>
+                      Export PDF
+                    </>
+                  )}
                 </button>
               ) : (
                 <button 
