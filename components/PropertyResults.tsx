@@ -63,30 +63,42 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     }
   };
 
+  // Consistent pathway labels - always show "(indicative)" to be legally safe
   const getPathwayBadgeColor = (pathway: string) => {
     if (isStrata && pathway === 'Exempt') return 'bg-indigo-600 text-white';
     switch (pathway) {
-      case 'Exempt': return 'bg-emerald-500 text-white';
+      case 'Exempt': return 'bg-slate-500 text-white'; // Changed from green - less definitive
       case 'CDC': return 'bg-blue-500 text-white';
       case 'DA': return 'bg-amber-500 text-white';
       default: return 'bg-slate-500 text-white';
     }
   };
 
+  // Get display label - always "(indicative)" for legal safety
+  const getPathwayLabel = (pathway: string): string => {
+    if (isStrata && pathway === 'Exempt') return 'Strata Approval';
+    switch (pathway) {
+      case 'Exempt': return 'Minor Works';
+      case 'CDC': return 'CDC (indicative)';
+      case 'DA': return 'DA (indicative)';
+      default: return 'Requires Review';
+    }
+  };
+
   const getPathwayDescription = (pathway: string) => {
     if (isStrata && pathway === 'Exempt') {
-      return "Strata Permission: Works are exempt from local council approval but require formal permission from the Owners Corporation / Body Corporate.";
+      return "Strata properties require Owner's Corporation approval. Council approval may also be needed depending on scope.";
     }
     switch (pathway) {
-      case 'Exempt': return "Exempt Development: Minor works that don't require formal planning or building approval from council.";
-      case 'CDC': return "Complying Development Certificate: Fast-track approval process for projects meeting pre-set standards.";
-      case 'DA': return "Development Application: Merits-based council assessment for custom or complex projects.";
-      default: return "Specific approval requirements vary by local council and project scope.";
+      case 'Exempt': return "Minor works that typically don't require formal council approval. Verify with your local council.";
+      case 'CDC': return "Complying Development Certificate: Fast-track approval for projects meeting pre-set standards. Subject to site-specific assessment.";
+      case 'DA': return "Development Application: Council assessment required. Timeframes and outcomes vary by project and council.";
+      default: return "Approval requirements vary. Consult a town planner or your local council for site-specific advice.";
     }
   };
 
   const PathwayBadgeWithTooltip = ({ pathway }: { pathway: string }) => {
-    const displayText = (isStrata && pathway === 'Exempt') ? 'Strata Permission' : pathway;
+    const displayText = getPathwayLabel(pathway);
     return (
       <div className="group relative inline-block">
         <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest cursor-help transition-opacity hover:opacity-90 ${getPathwayBadgeColor(pathway)}`}>
@@ -701,14 +713,16 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         </head>
         <body class="pdf-mode">
           ${clonedElement.outerHTML}
-          <footer style="margin-top: 30px; padding: 20px; border-top: 2px solid #C9A961; text-align: center; background: #fafaf8;">
-            <div style="margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-              <img src="https://upblock.ai/upblock.ai-logo.png" alt="upblock.ai" style="height: 28px;" onerror="this.style.display='none'">
-              <span style="font-size: 18px; font-weight: 800; color: #3A342D; letter-spacing: -0.5px;">upblock.ai</span>
+          <footer style="margin-top: 20px; padding: 12px 16px; border-top: 1px solid #C9A961; background: #fafaf8;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <img src="https://upblock.ai/upblock.ai-logo.png" alt="upblock.ai" style="height: 20px;" onerror="this.style.display='none'">
+                <span style="font-size: 14px; font-weight: 800; color: #3A342D; letter-spacing: -0.5px;">upblock.ai</span>
+              </div>
+              <p style="font-size: 8px; color: #888; line-height: 1.4; max-width: 400px; text-align: right; margin: 0;">
+                AI-assisted property insights using public data. Not financial advice, valuation, or planning approval. Consult qualified professionals.
+              </p>
             </div>
-            <p style="font-size: 9px; color: #888; line-height: 1.5; max-width: 450px; margin: 0 auto;">
-              This report provides AI-assisted, scenario-based property insights using publicly available data. It does not constitute financial advice, a property valuation, or planning approval. Always consult qualified professionals before making property decisions.
-            </p>
           </footer>
         </body>
         </html>
@@ -892,15 +906,24 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                 </p>
              </div>
              <div className="space-y-1" data-pdf-kpi>
-                <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Growth Trend</p>
+                <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Growth Trend (5yr)</p>
                 <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{data?.valueSnapshot?.growth || 'TBA'}</p>
              </div>
-             <div className="space-y-1" data-pdf-kpi>
-                <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Data Confidence</p>
+             <div className="space-y-1 group relative" data-pdf-kpi>
+                <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest cursor-help" style={{ color: 'var(--text-muted)' }}>Data Confidence</p>
                 <p className="text-xl sm:text-2xl font-black flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                    {data?.valueSnapshot?.confidenceLevel || 'Low'}
-                   <i className={`fa-solid fa-circle-check text-xs ${data?.valueSnapshot?.confidenceLevel === 'High' ? 'text-emerald-500' : 'text-amber-500'}`}></i>
+                   <i className={`fa-solid fa-circle-info text-xs cursor-help ${data?.valueSnapshot?.confidenceLevel === 'High' ? 'text-emerald-500' : 'text-amber-500'}`}></i>
                 </p>
+                {/* Confidence tooltip */}
+                <div className="invisible group-hover:visible absolute bottom-full left-0 mb-2 w-56 p-3 bg-[#4A4137] text-white text-[9px] font-medium rounded-lg shadow-xl z-50 opacity-0 group-hover:opacity-100 pointer-events-none leading-relaxed">
+                   <p className="font-bold mb-1">Confidence based on:</p>
+                   <ul className="space-y-0.5 text-white/80">
+                     <li>• Recent comparable sales (12mo)</li>
+                     <li>• Property data completeness</li>
+                     <li>• Market activity in suburb</li>
+                   </ul>
+                </div>
              </div>
           </div>
         </div>
@@ -1185,7 +1208,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
           </div>
         </div>
         <p className="text-[10px] text-[#3A342D]/30 italic px-4 leading-relaxed">
-          Indicative weekly figures based on predicted property condition after improvements. Includes simulated debt servicing. Does not account for taxes, vacancy, or strata.
+          <strong>Assumptions:</strong> 80% LVR, 6.3% interest (P&I), 30yr term. Excludes stamp duty, fees, vacancy, rates, insurance & strata. Indicative only—verify with your lender.
         </p>
       </section>
 
@@ -1197,104 +1220,128 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
                  <div className="w-10 h-10 bg-[#4A4137] text-white rounded-xl flex items-center justify-center shadow-sm"><i className="fa-solid fa-city"></i></div>
                  <div>
                     <h2 className="text-xl sm:text-2xl font-bold text-[#4A4137] tracking-tight">Development Scenarios</h2>
-                    <p className="text-[11px] sm:text-[10px] font-bold text-[#4A4137]/40 uppercase tracking-widest mt-0.5">Knockdown / Duplex / Townhouse Potential</p>
+                    <p className="text-[11px] sm:text-[10px] font-bold text-[#4A4137]/40 uppercase tracking-widest mt-0.5">Indicative Feasibility Analysis</p>
                  </div>
               </div>
            </div>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {data.developmentScenarios.map((scenario, i) => (
-                <div key={i} className="p-8 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col hover:shadow-md" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                   <div className="flex justify-between items-start mb-4">
+                <div key={i} className="p-6 rounded-[2.5rem] border shadow-sm transition-all group border-b-4 flex flex-col hover:shadow-md" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+                   <div className="flex justify-between items-start mb-3">
                       <div className="space-y-1">
-                         <h3 className="text-lg font-bold text-[#4A4137]">{scenario.title}</h3>
+                         <h3 className="text-base font-bold text-[#4A4137]">{scenario.title}</h3>
                          <div className="flex flex-wrap gap-2">
-                            <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${getEligibilityBadgeColor(scenario.eligibility)}`}>{scenario.eligibility}</span>
                             <PathwayBadgeWithTooltip pathway={scenario.planningPathway} />
                          </div>
                       </div>
                    </div>
-                   <p className="text-sm text-[#4A4137]/60 leading-relaxed mb-4">{scenario.description}</p>
-                   <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-6">
-                      <p className="text-[10px] font-bold text-[#4A4137]/50 uppercase tracking-widest mb-1">Rationale</p>
+                   <p className="text-sm text-[#4A4137]/60 leading-relaxed mb-3">{scenario.description}</p>
+                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 mb-4">
+                      <p className="text-[9px] font-bold text-[#4A4137]/50 uppercase tracking-widest mb-1">Assessment Notes</p>
                       <p className="text-xs text-[#4A4137]/70 italic leading-relaxed">{scenario.whyAllowedOrNot}</p>
                    </div>
-                   <div className="grid grid-cols-1 gap-4 mb-4">
-                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                         <p className="text-[10px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Est. Build Cost</p>
-                         <p className="text-lg font-bold text-[#4A4137]">{formatValue(scenario.estimatedCost?.low)} – {formatValue(scenario.estimatedCost?.high)}</p>
+                   <div className="grid grid-cols-1 gap-3 mb-3">
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                         <p className="text-[9px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Est. Build Cost</p>
+                         <p className="text-base font-bold text-[#4A4137]">{formatValue(scenario.estimatedCost?.low)} – {formatValue(scenario.estimatedCost?.high)}</p>
                       </div>
                    </div>
                    {scenario.estimatedNetProfit && (
-                     <div className="p-5 bg-emerald-50 rounded-[2rem] border border-emerald-100 mb-2 mt-auto">
-                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2 text-center text-emerald-700">INDICATIVE DEVELOPMENT MARGIN</p>
-                        <p className="text-2xl font-black text-emerald-700 text-center">{formatValue(scenario.estimatedNetProfit.low)} – {formatValue(scenario.estimatedNetProfit.high)}</p>
+                     <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 mt-auto">
+                        <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1 text-center">INDICATIVE MARGIN</p>
+                        <p className="text-xl font-black text-emerald-700 text-center">{formatValue(scenario.estimatedNetProfit.low)} – {formatValue(scenario.estimatedNetProfit.high)}</p>
                      </div>
                    )}
                 </div>
               ))}
            </div>
+           <p className="text-[9px] text-[#4A4137]/30 italic px-4 leading-relaxed">
+             Scenarios are indicative only. Minimum lot sizes, setbacks, and controls vary by council LEP/DCP. Requires site-specific feasibility assessment.
+           </p>
         </section>
       )}
 
-      {/* APPROVAL PATHWAY & ZONING INTEL */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 pdf-no-break" data-pdf-page-break>
-        {data.approvalPathway && (
-          <div className="p-10 rounded-[3rem] border shadow-sm space-y-8" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-             <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-blue-500 text-white rounded-xl flex items-center justify-center shadow-md"><i className="fa-solid fa-file-shield"></i></div>
-                <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Approval Pathway</h2>
-             </div>
-             <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                <div className="mb-4"><PathwayBadgeWithTooltip pathway={data.approvalPathway.likelyPathway} /></div>
-                <p className="text-sm text-[#4A4137]/60 leading-relaxed">{data.approvalPathway.explanation}</p>
-             </div>
-          </div>
-        )}
-        {data.zoningIntel && (
-          <div className="bg-[#D3D9B5]/10 p-10 rounded-[3rem] border border-[#D3D9B5]/20 space-y-8">
-             <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-[#D3D9B5] text-white rounded-xl flex items-center justify-center shadow-md"><i className="fa-solid fa-map-location-dot"></i></div>
-                <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Zoning Intel</h2>
-             </div>
-             <div className="px-6 py-4 bg-white rounded-3xl border border-[#D3D9B5]/20 text-center space-y-2 shadow-sm">
-                <p className="text-[10px] font-black text-[#4A4137]/40 uppercase tracking-widest">Zone Code</p>
-                <p className="text-2xl font-black text-[#4A4137] tracking-widest">{data.zoningIntel.currentZoneCode}</p>
-                <p className="text-xs font-bold text-[#D3D9B5] uppercase">{data.zoningIntel.currentZoneTitle}</p>
-             </div>
-             <p className="text-sm text-[#4A4137]/70 font-medium leading-relaxed">{data.zoningIntel.whatItMeans}</p>
-          </div>
-        )}
-      </section>
+      {/* APPROVAL PATHWAY & ZONING INTEL - Only render if at least one has content */}
+      {(data.approvalPathway || data.zoningIntel) && (
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 pdf-no-break" data-pdf-page-break>
+          {data.approvalPathway && data.approvalPathway.likelyPathway && (
+            <div className="p-10 rounded-[3rem] border shadow-sm space-y-6" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+               <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-blue-500 text-white rounded-xl flex items-center justify-center shadow-md"><i className="fa-solid fa-file-shield"></i></div>
+                  <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Likely Approval Pathway</h2>
+               </div>
+               <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
+                  <div className="mb-4"><PathwayBadgeWithTooltip pathway={data.approvalPathway.likelyPathway} /></div>
+                  <p className="text-sm text-[#4A4137]/60 leading-relaxed">{data.approvalPathway.explanation}</p>
+               </div>
+               <p className="text-[9px] text-[#4A4137]/40 italic leading-relaxed">
+                  Indicative pathway only. Actual requirements depend on site-specific factors. Consult a town planner or your local council.
+               </p>
+            </div>
+          )}
+          {data.zoningIntel && data.zoningIntel.currentZoneCode && (
+            <div className="bg-[#D3D9B5]/10 p-10 rounded-[3rem] border border-[#D3D9B5]/20 space-y-6">
+               <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-[#D3D9B5] text-white rounded-xl flex items-center justify-center shadow-md"><i className="fa-solid fa-map-location-dot"></i></div>
+                  <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Zoning Summary</h2>
+               </div>
+               <div className="px-6 py-4 bg-white rounded-3xl border border-[#D3D9B5]/20 text-center space-y-2 shadow-sm">
+                  <p className="text-[10px] font-black text-[#4A4137]/40 uppercase tracking-widest">Zone Code</p>
+                  <p className="text-2xl font-black text-[#4A4137] tracking-widest">{data.zoningIntel.currentZoneCode || '—'}</p>
+                  <p className="text-xs font-bold text-[#D3D9B5] uppercase">{data.zoningIntel.currentZoneTitle || '—'}</p>
+               </div>
+               <p className="text-sm text-[#4A4137]/70 font-medium leading-relaxed">{data.zoningIntel.whatItMeans}</p>
+               <p className="text-[9px] text-[#4A4137]/40 italic leading-relaxed">
+                  Verify current zoning and controls via the local LEP/DCP or council planning portal.
+               </p>
+            </div>
+          )}
+        </section>
+      )}
 
-      {/* COMPARABLE SALES */}
-      {data.comparableSales && (
-        <section className="space-y-8 pdf-no-break">
+      {/* COMPARABLE SALES - Only render if there's actual data */}
+      {data.comparableSales && data.comparableSales.nearbySales && data.comparableSales.nearbySales.length > 0 && (
+        <section className="space-y-6 pdf-no-break">
            <div className="flex items-center gap-4 px-4">
               <div className="w-10 h-10 bg-slate-800 text-white rounded-xl flex items-center justify-center shadow-sm"><i className="fa-solid fa-tags"></i></div>
-              <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Comparable Market Sales</h2>
+              <div>
+                <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Comparable Market Sales</h2>
+                <p className="text-[10px] text-[#4A4137]/40 uppercase tracking-widest">Recent sales within 2km (12 months)</p>
+              </div>
            </div>
-           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8" data-pdf-sales-grid>
-              <div className="lg:col-span-2 space-y-6">
-                 {data.comparableSales.nearbySales && data.comparableSales.nearbySales.length > 0 && (
-                   <div className="p-8 rounded-[3rem] border shadow-sm space-y-4" data-pdf-no-break style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                      {data.comparableSales.nearbySales.map((sale, i) => (
-                         <div key={i} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-slate-100 group transition-all hover:border-[#D6A270]/20">
-                            <div className="flex gap-4 items-center">
-                               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-[10px] font-bold text-[#4A4137]/40 shadow-sm">{sale.distanceKm ? `${sale.distanceKm}km` : '–'}</div>
-                               <div className="space-y-0.5">
-                                  <p className="text-sm font-bold text-[#4A4137]">{sale.addressShort}</p>
-                                  <p className="text-[10px] text-[#4A4137]/40">{sale.date}</p>
-                               </div>
-                            </div>
-                            <p className="text-sm font-black text-[#D6A270]">{formatValue(sale.price)}</p>
-                         </div>
-                      ))}
-                   </div>
-                 )}
+           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" data-pdf-sales-grid>
+              <div className="lg:col-span-2 space-y-4">
+                 <div className="p-6 rounded-[2.5rem] border shadow-sm space-y-3" data-pdf-no-break style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+                    {data.comparableSales.nearbySales.map((sale, i) => (
+                       <div key={i} className="flex items-center justify-between p-3 bg-slate-50/50 rounded-xl border border-slate-100 group transition-all hover:border-[#D6A270]/20">
+                          <div className="flex gap-3 items-center flex-1 min-w-0">
+                             <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-[9px] font-bold text-[#4A4137]/40 shadow-sm flex-shrink-0">
+                               {sale.distanceKm ? `${sale.distanceKm}km` : '–'}
+                             </div>
+                             <div className="space-y-0.5 min-w-0 flex-1">
+                                <p className="text-sm font-bold text-[#4A4137] truncate">{sale.addressShort || '—'}</p>
+                                <div className="flex items-center gap-2 text-[9px] text-[#4A4137]/40">
+                                  <span>{sale.date || '—'}</span>
+                                  {sale.beds && <span>• {sale.beds}bd</span>}
+                                  {sale.baths && <span>{sale.baths}ba</span>}
+                                  {sale.landSize && <span>• {sale.landSize}m²</span>}
+                                </div>
+                             </div>
+                          </div>
+                          <p className="text-sm font-black text-[#D6A270] flex-shrink-0 ml-2">{formatValue(sale.price)}</p>
+                       </div>
+                    ))}
+                 </div>
+                 <p className="text-[9px] text-[#4A4137]/30 italic px-2">
+                   Sales shown are indicative comparables. Actual property condition, features, and timing affect relevance.
+                 </p>
               </div>
-              <div className="bg-[#4A4137] p-8 rounded-[3rem] text-white space-y-6 relative overflow-hidden h-fit" data-pdf-no-break>
-                 <p className="text-sm font-medium leading-relaxed text-white/80">{data.comparableSales.pricingContextSummary}</p>
-              </div>
+              {data.comparableSales.pricingContextSummary && (
+                <div className="bg-[#4A4137] p-6 rounded-[2.5rem] text-white space-y-4 relative overflow-hidden h-fit" data-pdf-no-break>
+                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Market Context</p>
+                   <p className="text-sm font-medium leading-relaxed text-white/80">{data.comparableSales.pricingContextSummary}</p>
+                </div>
+              )}
            </div>
         </section>
       )}
