@@ -78,15 +78,15 @@ export default async function handler(req, res) {
 
     console.log('[PDF] Generating PDF...');
     
-    // Generate PDF
+    // Generate PDF - COMPACT margins
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
       margin: {
-        top: '12mm',
-        right: '12mm', 
-        bottom: '12mm',
-        left: '12mm',
+        top: '8mm',
+        right: '8mm', 
+        bottom: '8mm',
+        left: '8mm',
       },
     });
 

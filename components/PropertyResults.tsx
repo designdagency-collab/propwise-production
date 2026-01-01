@@ -108,8 +108,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
   };
 
   /**
-   * PDF Export Styles - Injected directly into cloned document for reliable rendering
-   * TIGHT spacing for better UX, proper badge rendering
+   * PDF Export Styles - ULTRA COMPACT for premium output
    */
   const getPdfStyles = () => `
     /* Base PDF Reset */
@@ -117,8 +116,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       background-color: #ffffff !important;
       color: #3A342D !important;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-      font-size: 11px !important;
-      line-height: 1.4 !important;
+      font-size: 10px !important;
+      line-height: 1.35 !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
@@ -136,151 +135,170 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
       display: none !important; 
     }
     
-    /* Container - TIGHT */
+    /* Container - ULTRA TIGHT */
     .pdf-mode [data-pdf-root="true"] {
       max-width: 100% !important;
       padding: 0 !important;
       margin: 0 !important;
     }
-    .pdf-mode .space-y-12 > * + * { margin-top: 16px !important; }
-    .pdf-mode .space-y-8 > * + * { margin-top: 12px !important; }
-    .pdf-mode .space-y-6 > * + * { margin-top: 10px !important; }
-    .pdf-mode .space-y-4 > * + * { margin-top: 6px !important; }
+    .pdf-mode .space-y-12 > * + * { margin-top: 10px !important; }
+    .pdf-mode .space-y-8 > * + * { margin-top: 8px !important; }
+    .pdf-mode .space-y-6 > * + * { margin-top: 6px !important; }
+    .pdf-mode .space-y-4 > * + * { margin-top: 4px !important; }
+    .pdf-mode .space-y-3 > * + * { margin-top: 3px !important; }
+    .pdf-mode .space-y-2 > * + * { margin-top: 2px !important; }
     
-    /* Cards - TIGHT padding */
+    /* Cards - COMPACT padding */
     .pdf-mode [class*="rounded-[2"],
     .pdf-mode [class*="rounded-[3"],
     .pdf-mode [class*="rounded-[4"] {
-      border-radius: 12px !important;
+      border-radius: 10px !important;
       border: 1px solid rgba(201, 169, 97, 0.2) !important;
       background-color: #ffffff !important;
-      padding: 16px !important;
-      margin-bottom: 10px !important;
+      padding: 10px !important;
+      margin-bottom: 6px !important;
       overflow: visible !important;
       break-inside: avoid !important;
       page-break-inside: avoid !important;
     }
-    .pdf-mode .p-5, .pdf-mode .p-6, .pdf-mode .p-8, .pdf-mode .p-10, .pdf-mode .p-12 {
-      padding: 14px !important;
+    .pdf-mode .p-4, .pdf-mode .p-5, .pdf-mode .p-6, .pdf-mode .p-8, .pdf-mode .p-10, .pdf-mode .p-12 {
+      padding: 10px !important;
     }
-    .pdf-mode .md\\:p-12, .pdf-mode .md\\:p-14 {
-      padding: 16px !important;
+    .pdf-mode .md\\:p-8, .pdf-mode .md\\:p-10, .pdf-mode .md\\:p-12, .pdf-mode .md\\:p-14 {
+      padding: 12px !important;
+    }
+    .pdf-mode .py-3, .pdf-mode .py-4, .pdf-mode .py-5, .pdf-mode .py-6 {
+      padding-top: 6px !important;
+      padding-bottom: 6px !important;
+    }
+    .pdf-mode .px-4, .pdf-mode .px-5, .pdf-mode .px-6 {
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+    }
+    .pdf-mode .mb-3, .pdf-mode .mb-4, .pdf-mode .mb-5, .pdf-mode .mb-6, .pdf-mode .mb-8 {
+      margin-bottom: 4px !important;
+    }
+    .pdf-mode .mt-3, .pdf-mode .mt-4, .pdf-mode .mt-5, .pdf-mode .mt-6, .pdf-mode .mt-8 {
+      margin-top: 4px !important;
     }
     
-    /* KPI Row - Grid Layout TIGHT */
+    /* KPI Row - Grid Layout COMPACT */
     .pdf-mode [data-pdf-kpi-row] {
       display: grid !important;
       grid-template-columns: repeat(4, 1fr) !important;
-      gap: 12px !important;
-      padding-top: 12px !important;
-      margin-top: 12px !important;
+      gap: 8px !important;
+      padding-top: 8px !important;
+      margin-top: 8px !important;
     }
     .pdf-mode [data-pdf-kpi] {
       min-width: 0 !important;
     }
     .pdf-mode [data-pdf-kpi] p:first-child {
-      font-size: 8px !important;
+      font-size: 7px !important;
       color: #777 !important;
-      margin-bottom: 2px !important;
+      margin-bottom: 1px !important;
       text-transform: uppercase !important;
-      letter-spacing: 0.5px !important;
+      letter-spacing: 0.4px !important;
     }
     .pdf-mode [data-pdf-kpi] p:last-child {
-      font-size: 14px !important;
+      font-size: 13px !important;
       font-weight: 800 !important;
       font-variant-numeric: tabular-nums !important;
     }
     
-    /* Typography - TIGHTER */
-    .pdf-mode h1 { font-size: 22px !important; line-height: 1.15 !important; color: #3A342D !important; margin-bottom: 4px !important; }
-    .pdf-mode h2 { font-size: 14px !important; line-height: 1.2 !important; color: #3A342D !important; margin-bottom: 6px !important; }
-    .pdf-mode h3 { font-size: 12px !important; line-height: 1.3 !important; color: #3A342D !important; }
-    .pdf-mode p { font-size: 10px !important; line-height: 1.4 !important; margin: 0 !important; }
+    /* Typography - COMPACT */
+    .pdf-mode h1 { font-size: 20px !important; line-height: 1.1 !important; color: #3A342D !important; margin-bottom: 2px !important; }
+    .pdf-mode h2 { font-size: 13px !important; line-height: 1.15 !important; color: #3A342D !important; margin-bottom: 4px !important; }
+    .pdf-mode h3 { font-size: 11px !important; line-height: 1.2 !important; color: #3A342D !important; margin-bottom: 2px !important; }
+    .pdf-mode p { font-size: 9px !important; line-height: 1.35 !important; margin: 0 !important; }
     
-    /* Section spacing - TIGHT */
-    .pdf-mode section { margin-bottom: 14px !important; break-inside: avoid !important; }
-    .pdf-mode .gap-4 { gap: 8px !important; }
-    .pdf-mode .gap-6 { gap: 10px !important; }
-    .pdf-mode .gap-8 { gap: 12px !important; }
+    /* Section spacing - COMPACT */
+    .pdf-mode section { margin-bottom: 8px !important; break-inside: avoid !important; }
+    .pdf-mode .gap-2 { gap: 4px !important; }
+    .pdf-mode .gap-3 { gap: 5px !important; }
+    .pdf-mode .gap-4 { gap: 6px !important; }
+    .pdf-mode .gap-5, .pdf-mode .gap-6 { gap: 6px !important; }
+    .pdf-mode .gap-8 { gap: 8px !important; }
     
-    /* Strategy Grid - TIGHT */
+    /* Strategy Grid - COMPACT */
     .pdf-mode [data-pdf-strategy-grid] {
       display: grid !important;
       grid-template-columns: repeat(2, 1fr) !important;
-      gap: 10px !important;
+      gap: 6px !important;
     }
     .pdf-mode [data-pdf-strategy-card] {
       break-inside: avoid !important;
       page-break-inside: avoid !important;
-      padding: 12px !important;
+      padding: 8px !important;
     }
     
-    /* BADGES - CRITICAL FIX for text cutoff */
+    /* BADGES - COMPACT */
     .pdf-mode span[class*="rounded"] {
       display: inline-block !important;
       white-space: nowrap !important;
       overflow: visible !important;
       text-overflow: clip !important;
-      padding: 3px 8px !important;
-      font-size: 8px !important;
+      padding: 2px 6px !important;
+      font-size: 7px !important;
       font-weight: 700 !important;
-      letter-spacing: 0.5px !important;
+      letter-spacing: 0.4px !important;
       line-height: 1.2 !important;
     }
     .pdf-mode .text-\\[8px\\], .pdf-mode .text-\\[9px\\], .pdf-mode .text-\\[10px\\] {
-      font-size: 8px !important;
+      font-size: 7px !important;
       white-space: nowrap !important;
       overflow: visible !important;
     }
     .pdf-mode .tracking-widest, .pdf-mode .tracking-wider {
-      letter-spacing: 0.3px !important;
+      letter-spacing: 0.2px !important;
     }
     
-    /* Callout Banner - TIGHT */
+    /* Callout Banner - COMPACT */
     .pdf-mode [data-pdf-callout] {
       background-color: #4A4137 !important;
       color: #ffffff !important;
-      border-radius: 14px !important;
-      padding: 18px !important;
+      border-radius: 10px !important;
+      padding: 12px !important;
       break-inside: avoid !important;
+      margin-bottom: 8px !important;
     }
     .pdf-mode [data-pdf-callout] * { color: inherit !important; }
     .pdf-mode [data-pdf-callout] .text-\\[\\#D6A270\\] { color: #D6A270 !important; }
-    .pdf-mode [data-pdf-callout] h3 { font-size: 14px !important; }
-    .pdf-mode [data-pdf-callout] p { font-size: 10px !important; }
+    .pdf-mode [data-pdf-callout] h3 { font-size: 12px !important; margin-bottom: 2px !important; }
+    .pdf-mode [data-pdf-callout] p { font-size: 9px !important; }
     
-    /* Map Container - SMALLER */
+    /* Map Container - COMPACT */
     .pdf-mode [data-map="true"] {
-      height: 200px !important;
-      border-radius: 12px !important;
+      height: 160px !important;
+      border-radius: 10px !important;
       overflow: hidden !important;
       break-inside: avoid !important;
-      margin-bottom: 12px !important;
+      margin-bottom: 8px !important;
     }
     .pdf-mode .pdf-map-image {
       width: 100% !important;
-      height: 200px !important;
+      height: 160px !important;
       object-fit: cover !important;
       display: block !important;
-      border-radius: 12px !important;
+      border-radius: 10px !important;
     }
     .pdf-mode .pdf-map-placeholder {
       width: 100% !important;
-      height: 200px !important;
+      height: 160px !important;
       background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
-      border-radius: 12px !important;
+      border-radius: 10px !important;
       color: #6b7280 !important;
-      font-size: 12px !important;
+      font-size: 11px !important;
     }
     
-    /* Watch Outs - TIGHT */
+    /* Watch Outs - COMPACT */
     .pdf-mode [data-pdf-watchouts] {
       background-color: #fff5f5 !important;
       border: 1px solid #fecaca !important;
-      padding: 14px !important;
+      padding: 10px !important;
     }
     
     /* Badge Colors - ensure visibility */
@@ -305,40 +323,49 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     .pdf-mode .bg-emerald-50 { background-color: #ecfdf5 !important; }
     .pdf-mode .bg-amber-50 { background-color: #fffbeb !important; }
     
-    /* Grid layouts - ensure 2 columns */
+    /* Grid layouts - COMPACT gaps */
     .pdf-mode .grid-cols-1.md\\:grid-cols-2 { 
       display: grid !important; 
       grid-template-columns: repeat(2, 1fr) !important; 
-      gap: 10px !important; 
+      gap: 6px !important; 
     }
     .pdf-mode .grid-cols-1.md\\:grid-cols-3 { 
       display: grid !important; 
       grid-template-columns: repeat(3, 1fr) !important; 
-      gap: 10px !important; 
+      gap: 6px !important; 
     }
     .pdf-mode .grid-cols-1.lg\\:grid-cols-3 { 
       display: grid !important; 
       grid-template-columns: 2fr 1fr !important; 
-      gap: 10px !important; 
+      gap: 6px !important; 
     }
     .pdf-mode .grid-cols-1.lg\\:grid-cols-4 { 
       display: grid !important; 
       grid-template-columns: repeat(2, 1fr) !important; 
-      gap: 8px !important; 
+      gap: 6px !important; 
     }
     
     /* Decorative - Hide */
     .pdf-mode [class*="blur-"], .pdf-mode [class*="-mr-32"], .pdf-mode [class*="-mt-32"] { display: none !important; }
     .pdf-mode .absolute { position: relative !important; }
     
-    /* Footer - TIGHT */
-    .pdf-mode footer { margin-top: 16px !important; padding-top: 10px !important; border-top: 1px solid #eee !important; }
-    .pdf-mode footer p { font-size: 8px !important; color: #999 !important; }
+    /* Border spacing */
+    .pdf-mode .border-t { border-top-width: 1px !important; padding-top: 6px !important; margin-top: 6px !important; }
+    .pdf-mode .border-b { border-bottom-width: 1px !important; padding-bottom: 6px !important; margin-bottom: 6px !important; }
+    
+    /* Footer - COMPACT */
+    .pdf-mode footer { margin-top: 10px !important; padding-top: 8px !important; border-top: 1px solid #eee !important; }
+    .pdf-mode footer p { font-size: 7px !important; color: #999 !important; }
     
     /* Fix icon sizing */
-    .pdf-mode .w-10.h-10 { width: 28px !important; height: 28px !important; }
-    .pdf-mode .w-6.h-6 { width: 18px !important; height: 18px !important; }
+    .pdf-mode .w-10.h-10 { width: 24px !important; height: 24px !important; }
+    .pdf-mode .w-8.h-8 { width: 20px !important; height: 20px !important; }
+    .pdf-mode .w-6.h-6 { width: 16px !important; height: 16px !important; }
     .pdf-mode i { font-size: inherit !important; }
+    
+    /* Tables - COMPACT */
+    .pdf-mode table { margin: 4px 0 !important; }
+    .pdf-mode th, .pdf-mode td { padding: 4px 6px !important; font-size: 9px !important; }
   `;
 
   /**
@@ -429,7 +456,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
               background: #ffffff;
               color: #3A342D;
               margin: 0;
-              padding: 20px;
+              padding: 10px;
               line-height: 1.5;
             }
             ${getPdfStyles()}
