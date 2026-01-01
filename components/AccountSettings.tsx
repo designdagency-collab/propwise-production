@@ -75,11 +75,12 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
             
             <a
               href="mailto:support@upblock.ai"
-              className="w-10 h-10 rounded-xl border flex items-center justify-center hover:border-[#C9A961] hover:text-[#C9A961] transition-all"
+              className="px-3 h-10 rounded-xl border flex items-center gap-2 hover:border-[#C9A961] hover:text-[#C9A961] transition-all"
               style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
               title="Contact Support"
             >
               <i className="fa-solid fa-envelope text-sm"></i>
+              <span className="text-xs font-medium">Support</span>
             </a>
           </div>
           
