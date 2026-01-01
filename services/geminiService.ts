@@ -1,12 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { PropertyData } from "../types";
 
-// Detect if address indicates combined/amalgamated lots
-// Only for small ranges (<=6 difference) - excludes unit numbers
-function detectCombinedLots(address: string): boolean {
+// Check if address has a range pattern that COULD indicate combined lots
+// Final determination requires checking property type (only houses/land, not apartments)
+function hasRangePattern(address: string): boolean {
   const trimmed = address.trim().toLowerCase();
   
-  // Exclude unit-style addresses (Unit 1-3, Apt 2-4, Suite 1-2, 1/45, etc.)
+  // Exclude obvious unit-style addresses
   if (/^(unit|u|apt|apartment|suite|level|shop|office)\s*\d/i.test(trimmed)) return false;
   if (/^\d+\s*\/\s*\d+/.test(trimmed)) return false; // "1/45 Smith St" format
   
@@ -15,7 +15,7 @@ function detectCombinedLots(address: string): boolean {
   if (hyphenMatch) {
     const start = parseInt(hyphenMatch[1]);
     const end = parseInt(hyphenMatch[2]);
-    // Only combined lots if difference is small (2-3 adjacent lots, max 6)
+    // Only potential combined lots if difference is small (max 6)
     if (end - start <= 6 && end > start) return true;
   }
   
@@ -28,20 +28,38 @@ function detectCombinedLots(address: string): boolean {
   return false;
 }
 
+// Determine if property is combined lots based on address pattern AND property type
+function isCombinedLots(address: string, propertyType: string): boolean {
+  // Must have a range pattern in the address
+  if (!hasRangePattern(address)) return false;
+  
+  // Only mark as combined lots for houses/land, NOT apartments/units
+  const nonCombinedTypes = ['apartment', 'unit', 'townhouse', 'villa', 'flat', 'strata'];
+  const propTypeLower = (propertyType || '').toLowerCase();
+  
+  // If it's an apartment/unit type, it's NOT combined lots
+  if (nonCombinedTypes.some(t => propTypeLower.includes(t))) return false;
+  
+  // It's a house/land with a range pattern - likely combined lots
+  return true;
+}
+
 export class GeminiService {
   async fetchPropertyInsights(address: string): Promise<PropertyData> {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const isCombinedLots = detectCombinedLots(address);
+    const addressHasRange = hasRangePattern(address);
     
-    // Build combined lots context if detected
-    const combinedLotsContext = isCombinedLots ? `
-⚠️ COMBINED/AMALGAMATED LOTS DETECTED:
-This address appears to represent multiple adjoining lots being analysed together (e.g., "${address}").
-- Calculate the COMBINED total land area for all lots
-- Analyse development potential based on the amalgamated site
-- Consider that combining lots often unlocks greater development opportunities
-- Factor in that the buyer is likely considering development/subdivision
-- Note any benefits of the combined site (larger frontage, better access, etc.)
+    // Build combined lots context if address has range pattern
+    // AI will verify based on property type (only houses/land, not apartments)
+    const combinedLotsContext = addressHasRange ? `
+⚠️ POTENTIAL COMBINED/AMALGAMATED LOTS:
+This address has a range pattern (e.g., "${address}") which MAY indicate multiple adjoining lots.
+- FIRST determine the property type (House, Apartment, etc.)
+- If it's an APARTMENT/UNIT building, this is just a unit range - treat normally
+- If it's HOUSES or LAND, this likely represents combined lots being sold together:
+  - Calculate the COMBINED total land area for all lots
+  - Analyse development potential based on the amalgamated site
+  - Consider that combining lots often unlocks greater development opportunities
 ` : '';
 
     const prompt = `You are a professional Australian property planning analyst and prop-tech engineer for upblock.ai.
@@ -341,7 +359,8 @@ RULES:
         });
       }
       data.sources = sources;
-      data.isCombinedLots = isCombinedLots;
+      // Determine combined lots based on address pattern AND property type from AI
+      data.isCombinedLots = isCombinedLots(address, data.propertyType || '');
       return data;
     } catch (error: any) {
       console.error("Strategy Compilation Error:", error);

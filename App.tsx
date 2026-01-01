@@ -119,43 +119,10 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Detect combined/amalgamated lot patterns (e.g., "2-4", "1 & 3")
-  // Only for small ranges (<=6 difference) - excludes unit numbers
-  const isCombinedLotAddress = useCallback((addr: string): boolean => {
-    const trimmed = addr.trim().toLowerCase();
-    
-    // Exclude unit-style addresses (Unit 1-3, Apt 2-4, Suite 1-2, 1/45, etc.)
-    if (/^(unit|u|apt|apartment|suite|level|shop|office)\s*\d/i.test(trimmed)) return false;
-    if (/^\d+\s*\/\s*\d+/.test(trimmed)) return false; // "1/45 Smith St" format
-    
-    // Check for hyphen range pattern (e.g., "2-6 Smith St")
-    const hyphenMatch = addr.trim().match(/^(\d+)\s*-\s*(\d+)\s+/);
-    if (hyphenMatch) {
-      const start = parseInt(hyphenMatch[1]);
-      const end = parseInt(hyphenMatch[2]);
-      // Only combined lots if difference is small (2-3 adjacent lots, max 6)
-      if (end - start <= 6 && end > start) return true;
-    }
-    
-    // Check for ampersand pattern (e.g., "2 & 4 Smith St")
-    if (/^\d+\s*&\s*\d+\s+/.test(addr.trim())) return true;
-    
-    // Check for "Lot 1 & 2" style (explicit lot reference)
-    if (/lots?\s*\d+\s*(&|,)\s*\d+/i.test(addr.trim())) return true;
-    
-    return false;
-  }, []);
-
   // Debounced address input handler
   const handleAddressChange = useCallback((value: string) => {
     setAddress(value);
-    
-    // Allow combined lot addresses without autocomplete selection
-    if (isCombinedLotAddress(value) && value.length > 15) {
-      setIsValidAddress(true); // Combined lot address is valid
-    } else {
-      setIsValidAddress(false); // Reset - must select from autocomplete
-    }
+    setIsValidAddress(false); // Must select from autocomplete
     
     // Clear existing timer
     if (debounceTimerRef.current) {
@@ -166,7 +133,7 @@ const App: React.FC = () => {
     debounceTimerRef.current = setTimeout(() => {
       fetchSuggestions(value);
     }, 300);
-  }, [fetchSuggestions, isCombinedLotAddress]);
+  }, [fetchSuggestions]);
 
   // Handle suggestion selection
   const handleSelectSuggestion = useCallback((suggestion: { description: string }) => {
