@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { supabaseService } from '../services/supabaseService';
 
 interface PhoneRecoveryModalProps {
@@ -23,6 +23,38 @@ const PhoneRecoveryModal: React.FC<PhoneRecoveryModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
   const [testCode, setTestCode] = useState<string | null>(null); // For testing without Twilio
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Handle individual digit input
+  const handleDigitChange = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, '').slice(-1); // Get only last digit
+    const newOtp = otp.split('');
+    newOtp[index] = digit;
+    const updatedOtp = newOtp.join('').slice(0, 6);
+    setOtp(updatedOtp);
+    
+    // Auto-focus next input
+    if (digit && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  // Handle backspace
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  // Handle paste
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    setOtp(pastedData);
+    // Focus last filled input or first empty
+    const focusIndex = Math.min(pastedData.length, 5);
+    inputRefs.current[focusIndex]?.focus();
+  };
 
   if (!isOpen) return null;
 
@@ -246,7 +278,9 @@ const PhoneRecoveryModal: React.FC<PhoneRecoveryModalProps> = ({
                       value={phone}
                       onChange={(e) => setPhone(formatPhone(e.target.value))}
                       placeholder="4XX XXX XXX"
-                      className="w-full pl-16 pr-6 py-3 sm:py-4 rounded-xl border-2 border-[#C9A961]/20 focus:border-[#C9A961] focus:outline-none text-[#3A342D] font-medium text-sm sm:text-base transition-all"
+                      className="w-full pl-16 pr-6 py-3 sm:py-4 rounded-xl border-2 border-[#C9A961]/20 focus:border-[#C9A961] focus:outline-none text-[#3A342D] font-medium text-sm sm:text-base transition-all bg-white"
+                      style={{ WebkitAppearance: 'none', MozAppearance: 'textfield', colorScheme: 'light' }}
+                      autoComplete="off"
                       disabled={isLoading}
                       autoFocus
                     />
@@ -311,18 +345,26 @@ const PhoneRecoveryModal: React.FC<PhoneRecoveryModalProps> = ({
 
               <form onSubmit={handleVerifyOTP} className="space-y-4">
                 <div>
-                  <input
-                    type="text"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="000000"
-                    className="w-full px-6 py-3 sm:py-4 rounded-xl border-2 border-[#C9A961]/20 focus:border-[#C9A961] focus:outline-none text-[#3A342D] font-bold text-xl sm:text-2xl text-center tracking-widest transition-all"
-                    disabled={isLoading}
-                    autoFocus
-                    maxLength={6}
-                  />
+                  <div className="flex justify-center gap-2 sm:gap-3" onPaste={handlePaste}>
+                    {[0, 1, 2, 3, 4, 5].map((index) => (
+                      <input
+                        key={index}
+                        ref={(el) => (inputRefs.current[index] = el)}
+                        type="text"
+                        inputMode="numeric"
+                        value={otp[index] || ''}
+                        onChange={(e) => handleDigitChange(index, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(index, e)}
+                        className="w-10 h-12 sm:w-12 sm:h-14 rounded-xl border-2 border-[#C9A961]/20 focus:border-[#C9A961] focus:outline-none text-[#3A342D] font-bold text-xl sm:text-2xl text-center transition-all bg-white caret-transparent"
+                        style={{ WebkitAppearance: 'none', MozAppearance: 'textfield' }}
+                        disabled={isLoading}
+                        autoFocus={index === 0}
+                        maxLength={1}
+                      />
+                    ))}
+                  </div>
                   {error && (
-                    <p className="text-red-500 text-xs mt-2 text-left">{error}</p>
+                    <p className="text-red-500 text-xs mt-3 text-center">{error}</p>
                   )}
                 </div>
 
