@@ -1,70 +1,12 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { PropertyData } from "../types";
 
-// Check if address has a range pattern that COULD indicate combined lots
-// Final determination requires checking property type (only houses/land, not apartments)
-function hasRangePattern(address: string): boolean {
-  const trimmed = address.trim().toLowerCase();
-  
-  // Exclude obvious unit-style addresses
-  if (/^(unit|u|apt|apartment|suite|level|shop|office)\s*\d/i.test(trimmed)) return false;
-  if (/^\d+\s*\/\s*\d+/.test(trimmed)) return false; // "1/45 Smith St" format
-  
-  // Check for hyphen range pattern (e.g., "2-6 Smith St")
-  const hyphenMatch = address.trim().match(/^(\d+)\s*-\s*(\d+)\s+/);
-  if (hyphenMatch) {
-    const start = parseInt(hyphenMatch[1]);
-    const end = parseInt(hyphenMatch[2]);
-    // Only potential combined lots if difference is small (max 6)
-    if (end - start <= 6 && end > start) return true;
-  }
-  
-  // Check for ampersand pattern (e.g., "2 & 4 Smith St")
-  if (/^\d+\s*&\s*\d+\s+/.test(address.trim())) return true;
-  
-  // Check for "Lot 1 & 2" style (explicit lot reference)
-  if (/lots?\s*\d+\s*(&|,)\s*\d+/i.test(address.trim())) return true;
-  
-  return false;
-}
-
-// Determine if property is combined lots based on address pattern AND property type
-function isCombinedLots(address: string, propertyType: string): boolean {
-  // Must have a range pattern in the address
-  if (!hasRangePattern(address)) return false;
-  
-  // Only mark as combined lots for houses/land, NOT apartments/units
-  const nonCombinedTypes = ['apartment', 'unit', 'townhouse', 'villa', 'flat', 'strata'];
-  const propTypeLower = (propertyType || '').toLowerCase();
-  
-  // If it's an apartment/unit type, it's NOT combined lots
-  if (nonCombinedTypes.some(t => propTypeLower.includes(t))) return false;
-  
-  // It's a house/land with a range pattern - likely combined lots
-  return true;
-}
-
 export class GeminiService {
   async fetchPropertyInsights(address: string): Promise<PropertyData> {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const addressHasRange = hasRangePattern(address);
-    
-    // Build combined lots context if address has range pattern
-    // AI will verify based on property type (only houses/land, not apartments)
-    const combinedLotsContext = addressHasRange ? `
-⚠️ POTENTIAL COMBINED/AMALGAMATED LOTS:
-This address has a range pattern (e.g., "${address}") which MAY indicate multiple adjoining lots.
-- FIRST determine the property type (House, Apartment, etc.)
-- If it's an APARTMENT/UNIT building, this is just a unit range - treat normally
-- If it's HOUSES or LAND, this likely represents combined lots being sold together:
-  - Calculate the COMBINED total land area for all lots
-  - Analyse development potential based on the amalgamated site
-  - Consider that combining lots often unlocks greater development opportunities
-` : '';
 
     const prompt = `You are a professional Australian property planning analyst and prop-tech engineer for upblock.ai.
 Your task is to generate a structured Property DNA report for: "${address}".
-${combinedLotsContext}
 
 ⚠️ MANDATORY FIRST STEP - ZONING & PROPERTY TYPE VERIFICATION:
 Before generating ANY data, you MUST search and verify:
@@ -95,6 +37,18 @@ Before generating ANY data, you MUST search and verify:
    - Use "Commercial" if in business/industrial zone OR if property appears commercial
    - Use "Unknown" if you cannot verify residential property type
    - NEVER default to "House" without verification
+
+5. COMBINED/AMALGAMATED LOTS DETECTION:
+   Search real estate listings (realestate.com.au, Domain) for this property and check:
+   - Is the listing described as "combined lots", "amalgamated", "dual blocks", or "multiple lots"?
+   - Does the listing mention adjacent street numbers being sold together (e.g., "2 & 4" or "2-4")?
+   - Is the land size unusually large for a single house in that suburb (e.g., 1000sqm+ in suburban area)?
+   - Does the listing specifically mention development potential due to combined land?
+   
+   If ANY of the above are true AND property type is House/Land (NOT apartment):
+   - Set isCombinedLots = true
+   - Use the COMBINED land area for all calculations
+   - Emphasise development potential in your analysis
 
 FOCUS: Value Uplift, Renovation Feasibility, Development Potential, Comparable Sales, Rental Yield, and Local Amenities.
 MANDATORY MODULES:
@@ -133,6 +87,7 @@ RULES:
               address: { type: Type.STRING },
               propertyType: { type: Type.STRING, enum: ['House', 'Apartment / Unit', 'Townhouse', 'Villa', 'Duplex', 'Land', 'Rural', 'Commercial', 'Unknown'] },
               landSize: { type: Type.STRING },
+              isCombinedLots: { type: Type.BOOLEAN },
               attributes: {
                 type: Type.OBJECT,
                 properties: {
@@ -359,8 +314,7 @@ RULES:
         });
       }
       data.sources = sources;
-      // Determine combined lots based on address pattern AND property type from AI
-      data.isCombinedLots = isCombinedLots(address, data.propertyType || '');
+      // isCombinedLots is now set directly by the AI based on listing research
       return data;
     } catch (error: any) {
       console.error("Strategy Compilation Error:", error);
