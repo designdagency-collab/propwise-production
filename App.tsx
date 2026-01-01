@@ -119,10 +119,27 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Detect combined/amalgamated lot patterns (e.g., "2-4", "1 & 3")
+  const isCombinedLotAddress = useCallback((addr: string): boolean => {
+    const patterns = [
+      /^\d+\s*-\s*\d+\s+/,           // "2-6 Smith St"
+      /^\d+\s*&\s*\d+\s+/,           // "2 & 4 Smith St"
+      /^\d+\s*,\s*\d+/,              // "2, 4 Smith St"
+      /lots?\s*\d+\s*(&|,|-)\s*\d+/i // "Lot 1 & 2"
+    ];
+    return patterns.some(pattern => pattern.test(addr.trim()));
+  }, []);
+
   // Debounced address input handler
   const handleAddressChange = useCallback((value: string) => {
     setAddress(value);
-    setIsValidAddress(false); // Reset - must select from autocomplete
+    
+    // Allow combined lot addresses without autocomplete selection
+    if (isCombinedLotAddress(value) && value.length > 15) {
+      setIsValidAddress(true); // Combined lot address is valid
+    } else {
+      setIsValidAddress(false); // Reset - must select from autocomplete
+    }
     
     // Clear existing timer
     if (debounceTimerRef.current) {
@@ -133,7 +150,7 @@ const App: React.FC = () => {
     debounceTimerRef.current = setTimeout(() => {
       fetchSuggestions(value);
     }, 300);
-  }, [fetchSuggestions]);
+  }, [fetchSuggestions, isCombinedLotAddress]);
 
   // Handle suggestion selection
   const handleSelectSuggestion = useCallback((suggestion: { description: string }) => {
