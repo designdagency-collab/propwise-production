@@ -887,14 +887,15 @@ const App: React.FC = () => {
 
   // Handle searching an address from history
   const handleSearchFromHistory = (historyAddress: string) => {
+    // Clear existing results and reset to home view
+    setResults(null);
+    setAppState(AppState.IDLE);
+    setError(null);
+    // Set the address from history
     setAddress(historyAddress);
     setIsValidAddress(true); // History addresses are valid
+    // Close account settings to show home with preloaded address
     setShowAccountSettings(false);
-    // Trigger search after state updates
-    setTimeout(() => {
-      const searchEvent = new Event('submit');
-      document.querySelector('form')?.dispatchEvent(searchEvent);
-    }, 100);
   };
 
   // Handle subscription cancellation
