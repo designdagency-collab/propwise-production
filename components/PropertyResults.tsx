@@ -381,6 +381,49 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     /* Tables - COMPACT */
     .pdf-mode table { margin: 4px 0 !important; }
     .pdf-mode th, .pdf-mode td { padding: 4px 6px !important; font-size: 9px !important; }
+    
+    /* PRICES - BIGGER fonts for costs/values */
+    .pdf-mode .text-2xl, .pdf-mode .text-3xl, .pdf-mode .text-4xl {
+      font-size: 18px !important;
+      font-weight: 800 !important;
+    }
+    .pdf-mode .text-xl {
+      font-size: 16px !important;
+      font-weight: 700 !important;
+    }
+    .pdf-mode .text-lg {
+      font-size: 14px !important;
+      font-weight: 700 !important;
+    }
+    /* Estimated cost labels */
+    .pdf-mode [class*="ESTIMATED"], .pdf-mode p:contains("ESTIMATED") {
+      font-size: 8px !important;
+    }
+    /* Price values - make them stand out */
+    .pdf-mode .font-black, .pdf-mode .font-extrabold, .pdf-mode .font-bold {
+      font-weight: 800 !important;
+    }
+    /* Strategy card costs */
+    .pdf-mode [data-pdf-strategy-card] .text-emerald-700,
+    .pdf-mode [data-pdf-strategy-card] .text-\\[\\#8A9A6D\\] {
+      font-size: 16px !important;
+      font-weight: 800 !important;
+    }
+    /* Development scenario costs/margins */
+    .pdf-mode .text-emerald-600 {
+      font-size: 14px !important;
+      font-weight: 700 !important;
+    }
+    /* KPI values - bigger */
+    .pdf-mode [data-pdf-kpi] p:last-child {
+      font-size: 16px !important;
+      font-weight: 800 !important;
+    }
+    /* Callout profit numbers */
+    .pdf-mode [data-pdf-callout] .text-\\[\\#D6A270\\] {
+      font-size: 20px !important;
+      font-weight: 800 !important;
+    }
   `;
 
   /**
