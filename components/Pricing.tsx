@@ -340,8 +340,8 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
                   10 Audits Per Month
                 </li>
                 <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
-                  Deep Intelligence Analysis
+                  <i className="fa-solid fa-file-pdf mt-1 text-[#C9A961]"></i>
+                  Premium PDF Export
                 </li>
                 <li className="flex items-start gap-3 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                   <i className="fa-solid fa-check mt-1 text-[#C9A961]"></i>
