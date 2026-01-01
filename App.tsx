@@ -54,6 +54,12 @@ const App: React.FC = () => {
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [showEmailAuth, setShowEmailAuth] = useState(false);
   const [emailAuthMode, setEmailAuthMode] = useState<'signup' | 'login' | 'reset'>('signup');
+  const [isAuthRedirect, setIsAuthRedirect] = useState(() => {
+    // Check if this is an OAuth redirect (has access_token or error in hash/search)
+    const hash = window.location.hash;
+    const search = window.location.search;
+    return hash.includes('access_token') || hash.includes('error') || search.includes('code=');
+  });
   const [showTerms, setShowTerms] = useState(false);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
@@ -191,23 +197,44 @@ const App: React.FC = () => {
   // Check auth state on mount and listen to changes
   useEffect(() => {
     // Skip if Supabase not configured
-    if (!supabaseService.isConfigured()) return;
+    if (!supabaseService.isConfigured()) {
+      console.log('[Auth] Supabase not configured, skipping auth check');
+      return;
+    }
+
+    console.log('[Auth] Checking for existing session on mount...');
+    console.log('[Auth] URL hash:', window.location.hash);
+    console.log('[Auth] URL search:', window.location.search);
 
     // Check for existing session on mount
-    supabaseService.supabase!.auth.getSession().then(({ data: { session } }) => {
+    supabaseService.supabase!.auth.getSession().then(({ data: { session }, error }) => {
+        console.log('[Auth] getSession result:', { hasSession: !!session, error, email: session?.user?.email });
       if (session?.user) {
+        console.log('[Auth] Found existing session, setting logged in state');
         setIsLoggedIn(true);
         setUserEmail(session.user.email || '');
         setUserPhone(session.user.phone || '');
         setIsSignedUp(true);
+        localStorage.setItem('prop_is_logged_in', 'true');
+        localStorage.setItem('prop_user_email', session.user.email || '');
+        setShowEmailAuth(false); // Close modal if open
+        setIsAuthRedirect(false); // Clear redirect flag
         loadUserData(session.user.id);
+        
+        // Clear OAuth fragments from URL for cleaner display
+        if (window.location.hash.includes('access_token')) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } else {
+        // No session found - clear redirect flag so login modal can show
+        setIsAuthRedirect(false);
       }
     });
 
     // Listen to auth changes
     const { data: { subscription } } = supabaseService.supabase!.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth event:', event, 'Session:', !!session);
+        console.log('[Auth] Event:', event, 'Has session:', !!session, 'Email:', session?.user?.email);
         
         // Handle session restore on page load (INITIAL_SESSION) or sign in
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session) {
@@ -1286,8 +1313,8 @@ const App: React.FC = () => {
         </main>
       )}
 
-      {/* Email Auth Modal */}
-      {showEmailAuth && (
+      {/* Email Auth Modal - Don't show during OAuth redirect */}
+      {showEmailAuth && !isAuthRedirect && (
         <EmailAuth
           initialMode={emailAuthMode}
           onSuccess={handleEmailAuthSuccess}
