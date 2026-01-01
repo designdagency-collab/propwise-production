@@ -225,39 +225,47 @@ const App: React.FC = () => {
         console.log('[Auth] OAuth callback detected - extracting tokens from hash');
         
         try {
-          // Parse hash manually
+          // Parse hash manually - save it before any potential modification
           const hash = window.location.hash.substring(1);
           const params = new URLSearchParams(hash);
           const accessToken = params.get('access_token');
           const refreshToken = params.get('refresh_token') || '';
           
+          console.log('[Auth] Tokens extracted:', { 
+            hasAccessToken: !!accessToken, 
+            accessTokenLength: accessToken?.length,
+            hasRefreshToken: !!refreshToken 
+          });
+          
           if (accessToken) {
-            console.log('[Auth] Setting session with extracted tokens...');
+            console.log('[Auth] Calling setSession...');
             
-            // Clear hash FIRST to prevent loops
-            window.history.replaceState({}, document.title, window.location.pathname);
-            
-            // Set the session
-            const { data, error } = await supabaseService.supabase!.auth.setSession({
+            // Set the session FIRST, then clear hash
+            const result = await supabaseService.supabase!.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken
             });
             
-            console.log('[Auth] setSession result:', { 
-              hasSession: !!data.session, 
-              email: data.session?.user?.email,
-              error: error?.message 
+            console.log('[Auth] setSession completed:', { 
+              hasData: !!result.data,
+              hasSession: !!result.data?.session, 
+              email: result.data?.session?.user?.email,
+              errorMessage: result.error?.message,
+              errorStatus: result.error?.status
             });
             
-            if (data.session?.user) {
-              handleSessionLogin(data.session);
+            // Clear hash AFTER successful session set
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            if (result.data?.session?.user) {
+              handleSessionLogin(result.data.session);
               return;
-            } else if (error) {
-              console.error('[Auth] setSession failed:', error);
+            } else if (result.error) {
+              console.error('[Auth] setSession error details:', result.error);
             }
           }
-        } catch (err) {
-          console.error('[Auth] Error processing OAuth callback:', err);
+        } catch (err: any) {
+          console.error('[Auth] Error processing OAuth callback:', err?.message || err);
         }
       }
       
