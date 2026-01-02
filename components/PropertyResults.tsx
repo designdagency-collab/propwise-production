@@ -6,6 +6,7 @@ import {
   extractStateFromAddress, 
   getStateAwarePathwayLabel, 
   getStateAwarePathwayTooltip,
+  replaceStateTerminology,
   AusState 
 } from '../services/approvalPathways';
 import {
@@ -799,7 +800,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
                </div>
                <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
                   <div className="mb-4"><PathwayBadgeWithTooltip pathway={data.approvalPathway.likelyPathway} /></div>
-                  <p className="text-sm text-[#4A4137]/60 leading-relaxed">{data.approvalPathway.explanation}</p>
+                  <p className="text-sm text-[#4A4137]/60 leading-relaxed">{replaceStateTerminology(data.approvalPathway.explanation, propertyState)}</p>
                </div>
                <p className="text-[9px] text-[#4A4137]/40 italic leading-relaxed">
                   Indicative pathway only. Actual requirements depend on site-specific factors. Consult a town planner or your local council.

@@ -18,6 +18,7 @@ import { PropertyData } from '../../types';
 import { 
   extractStateFromAddress, 
   getStateAwarePathwayLabel,
+  replaceStateTerminology,
   AusState 
 } from '../../services/approvalPathways';
 import {
@@ -443,7 +444,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
                 propertyState={propertyState}
                 isStrata={isStrata}
               />
-              <p className="pdf-approval-explanation">{data.approvalPathway.explanation}</p>
+              <p className="pdf-approval-explanation">{replaceStateTerminology(data.approvalPathway.explanation, propertyState)}</p>
               <p className="pdf-approval-note">
                 Indicative pathway only. Consult a qualified town planner for site-specific advice.
               </p>

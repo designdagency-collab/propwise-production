@@ -177,3 +177,73 @@ export function getStateAwarePathwayTooltip(
   return "Approval requirements vary. Consult a town planner or your local council for site-specific advice.";
 }
 
+// ============================================================================
+// STATE-SPECIFIC TERMINOLOGY REPLACEMENTS FOR EXPLANATION TEXT
+// ============================================================================
+
+/**
+ * State-specific terminology replacements
+ * Maps NSW-centric terms to state-appropriate equivalents
+ */
+const STATE_TERMINOLOGY_REPLACEMENTS: Record<AusState, { find: RegExp; replace: string }[]> = {
+  NSW: [], // NSW uses CDC/DA natively, no replacements needed
+  VIC: [
+    { find: /\bCDC\b/g, replace: 'VicSmart' },
+    { find: /\bComplying Development Certificate\b/gi, replace: 'VicSmart application' },
+    { find: /\bComplying Development\b/gi, replace: 'VicSmart' },
+  ],
+  QLD: [
+    { find: /\bCDC\b/g, replace: 'Code Assessment' },
+    { find: /\bComplying Development Certificate\b/gi, replace: 'Code Assessable development' },
+    { find: /\bComplying Development\b/gi, replace: 'Code Assessable development' },
+    { find: /\bDA\b(?!\s*\()/g, replace: 'Impact Assessment' }, // Don't replace "DA (" patterns
+  ],
+  SA: [
+    { find: /\bCDC\b/g, replace: 'DTS (Deemed-to-Satisfy)' },
+    { find: /\bComplying Development Certificate\b/gi, replace: 'Deemed-to-Satisfy (DTS) pathway' },
+    { find: /\bComplying Development\b/gi, replace: 'Deemed-to-Satisfy (DTS)' },
+  ],
+  WA: [
+    { find: /\bCDC\b/g, replace: 'Deemed-to-Comply (Clause 61A)' },
+    { find: /\bComplying Development Certificate\b/gi, replace: 'Deemed-to-Comply pathway (Clause 61A)' },
+    { find: /\bComplying Development\b/gi, replace: 'Deemed-to-Comply' },
+  ],
+  TAS: [
+    { find: /\bCDC\b/g, replace: 'Permitted pathway' },
+    { find: /\bComplying Development Certificate\b/gi, replace: 'Permitted development pathway' },
+    { find: /\bComplying Development\b/gi, replace: 'Permitted development' },
+  ],
+  ACT: [
+    { find: /\bCDC\b/g, replace: 'Exempt/DA pathway' },
+    { find: /\bComplying Development Certificate\b/gi, replace: 'Development Application' },
+    { find: /\bComplying Development\b/gi, replace: 'exempt or DA pathway' },
+  ],
+  NT: [
+    { find: /\bCDC\b/g, replace: 'Permitted development' },
+    { find: /\bComplying Development Certificate\b/gi, replace: 'Development Permit' },
+    { find: /\bComplying Development\b/gi, replace: 'Permitted development' },
+  ],
+};
+
+/**
+ * Replace NSW-centric planning terminology with state-appropriate terms
+ * 
+ * @param text - The explanation text to process
+ * @param state - The Australian state/territory
+ * @returns Text with state-appropriate terminology
+ */
+export function replaceStateTerminology(text: string | null | undefined, state: AusState | null): string {
+  if (!text) return '';
+  if (!state) return text;
+  
+  const replacements = STATE_TERMINOLOGY_REPLACEMENTS[state];
+  if (!replacements || replacements.length === 0) return text;
+  
+  let result = text;
+  for (const { find, replace } of replacements) {
+    result = result.replace(find, replace);
+  }
+  
+  return result;
+}
+
