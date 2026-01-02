@@ -57,7 +57,12 @@ export default async function handler(req, res) {
     const userId = session.metadata?.userId; // Primary lookup method
     const planType = session.metadata?.plan || 'STARTER_PACK';
     
-    console.log('[Webhook] Processing payment:', { userId, customerEmail, planType, sessionId: session.id });
+    console.log('[Webhook] ======= PAYMENT RECEIVED =======');
+    console.log('[Webhook] Session ID:', session.id);
+    console.log('[Webhook] Plan:', planType);
+    console.log('[Webhook] User ID from metadata:', userId || 'NOT PROVIDED');
+    console.log('[Webhook] Customer email:', customerEmail || 'NOT PROVIDED');
+    console.log('[Webhook] Full metadata:', JSON.stringify(session.metadata));
     
     // Update subscription and credits in Supabase if configured
     if (supabase && (userId || customerEmail)) {
@@ -160,17 +165,20 @@ export default async function handler(req, res) {
             console.log('[Webhook] Profile updated successfully');
           }
         } else {
-          console.error('[Webhook] No profile found:', { userId, customerEmail });
+          console.error('[Webhook] ======= PROFILE NOT FOUND =======');
+          console.error('[Webhook] Searched with userId:', userId);
+          console.error('[Webhook] Searched with email:', customerEmail);
+          console.error('[Webhook] This payment was NOT processed - user needs manual credit addition');
         }
       } catch (error) {
-        console.error('[Webhook] Supabase error:', error.message || error);
+        console.error('[Webhook] ======= SUPABASE ERROR =======');
+        console.error('[Webhook] Error:', error.message || error);
       }
     } else {
-      console.error('[Webhook] Cannot process - Supabase not configured or no user identifier:', { 
-        supabaseConfigured: !!supabase, 
-        userId, 
-        customerEmail 
-      });
+      console.error('[Webhook] ======= CANNOT PROCESS =======');
+      console.error('[Webhook] Supabase configured:', !!supabase);
+      console.error('[Webhook] User ID:', userId);
+      console.error('[Webhook] Customer email:', customerEmail);
     }
   }
 

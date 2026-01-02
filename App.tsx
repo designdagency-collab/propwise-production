@@ -399,8 +399,38 @@ const App: React.FC = () => {
         if (user) {
           setIsLoggedIn(true);
           
-          // Load latest profile data (webhook should have already added credits)
+          // Wait a bit for webhook to process, then load profile
+          console.log('[Payment] Waiting for webhook to process...');
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          // Load latest profile data (webhook should have added credits)
           await loadUserData(user.id);
+          
+          // Verify credits were added - retry if not
+          let retryCount = 0;
+          const maxRetries = 5;
+          while (retryCount < maxRetries) {
+            const profile = await supabaseService.getCurrentProfile(user.id);
+            console.log('[Payment] Checking profile after webhook, attempt:', retryCount + 1, 'credits:', profile?.credit_topups, 'plan:', profile?.plan_type);
+            
+            // If plan changed to STARTER_PACK or credits increased, we're good
+            if (profile?.plan_type === 'STARTER_PACK' || profile?.plan_type === 'PRO' || (profile?.credit_topups && profile.credit_topups > 0)) {
+              console.log('[Payment] Credits/plan updated successfully');
+              // Update local state with fresh data
+              await loadUserData(user.id);
+              break;
+            }
+            
+            retryCount++;
+            if (retryCount < maxRetries) {
+              console.log('[Payment] Credits not yet updated, retrying in 2 seconds...');
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+          }
+          
+          if (retryCount === maxRetries) {
+            console.warn('[Payment] Credits may not have been applied yet. Please refresh if credits are missing.');
+          }
           
           // Show phone recovery modal if not already prompted (first purchase)
           const updatedProfile = await supabaseService.getCurrentProfile(user.id);
