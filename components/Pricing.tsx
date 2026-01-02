@@ -8,10 +8,13 @@ interface PricingProps {
   onShowTerms?: () => void;
   onSignUp?: () => void;
   isLoggedIn?: boolean;
+  userId?: string;
 }
 
-const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade, onBack, onShowTerms, onSignUp, isLoggedIn = false }) => {
+const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade, onBack, onShowTerms, onSignUp, isLoggedIn = false, userId }) => {
   const [isProcessing, setIsProcessing] = React.useState<PlanType | null>(null);
+  const [waitlistJoined, setWaitlistJoined] = React.useState(false);
+  const [isJoiningWaitlist, setIsJoiningWaitlist] = React.useState(false);
 
   const handleSelectStarter = async () => {
     setIsProcessing('STARTER_PACK');
@@ -38,6 +41,25 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
       await onUpgrade('PRO');
     } finally {
       setIsProcessing(null);
+    }
+  };
+
+  const handleJoinWaitlist = async () => {
+    if (!userId || waitlistJoined) return;
+    setIsJoiningWaitlist(true);
+    try {
+      const response = await fetch('/api/join-enterprise-waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+      if (response.ok) {
+        setWaitlistJoined(true);
+      }
+    } catch (err) {
+      console.error('Failed to join waitlist:', err);
+    } finally {
+      setIsJoiningWaitlist(false);
     }
   };
 
@@ -209,15 +231,36 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
               </ul>
 
               <button
-                disabled
-                className="w-full py-4 sm:py-5 rounded-2xl font-bold uppercase tracking-widest text-[13px] sm:text-[12px] border-2 transition-all flex items-center justify-center gap-3 cursor-not-allowed opacity-60"
-                style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
+                onClick={handleJoinWaitlist}
+                disabled={!userId || waitlistJoined || isJoiningWaitlist}
+                className={`w-full py-4 sm:py-5 rounded-2xl font-bold uppercase tracking-widest text-[13px] sm:text-[12px] border-2 transition-all flex items-center justify-center gap-3 ${
+                  waitlistJoined 
+                    ? 'bg-green-500 text-white border-green-500' 
+                    : !userId 
+                      ? 'cursor-not-allowed opacity-60' 
+                      : 'hover:border-[#C9A961] hover:text-[#C9A961]'
+                }`}
+                style={waitlistJoined ? {} : { borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
               >
-                <i className="fa-solid fa-building"></i>
-                Join Waitlist
+                {isJoiningWaitlist ? (
+                  <>
+                    <i className="fa-solid fa-spinner fa-spin"></i>
+                    Joining...
+                  </>
+                ) : waitlistJoined ? (
+                  <>
+                    <i className="fa-solid fa-check"></i>
+                    You're on the list!
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-building"></i>
+                    Join Waitlist
+                  </>
+                )}
               </button>
               <p className="mt-4 text-center text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                Be first to access when we launch
+                {waitlistJoined ? "We'll notify you when Enterprise launches" : "Be first to access when we launch"}
               </p>
             </div>
           </div>
