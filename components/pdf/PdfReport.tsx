@@ -71,6 +71,25 @@ const formatRange = (low: number | undefined, high: number | undefined): string 
   return `${formatCurrency(low)} – ${formatCurrency(high)}`;
 };
 
+// Helper to check if a value is negative
+const isNegative = (value: number | undefined): boolean => {
+  return value !== undefined && value !== null && value < 0;
+};
+
+// Render a range with conditional coloring (red for negative, green for positive)
+const ColoredRange: React.FC<{ low?: number; high?: number }> = ({ low, high }) => {
+  if (!low && !high) return <span>—</span>;
+  const lowColor = isNegative(low) ? '#DC2626' : '#065F46'; // red-600 : emerald-800
+  const highColor = isNegative(high) ? '#DC2626' : '#065F46';
+  return (
+    <span>
+      <span style={{ color: lowColor }}>{formatCurrency(low)}</span>
+      <span style={{ color: '#6B7280' }}> – </span>
+      <span style={{ color: highColor }}>{formatCurrency(high)}</span>
+    </span>
+  );
+};
+
 // ============================================================================
 // APPROVAL BADGE - SINGLE SOURCE OF TRUTH (STATE-AWARE)
 // ============================================================================
@@ -420,7 +439,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
                     <div className="pdf-scenario-metric pdf-scenario-profit">
                       <span className="pdf-scenario-label">Potential Uplift</span>
                       <span className="pdf-scenario-value">
-                        {formatRange(scenario.estimatedNetProfit?.low, scenario.estimatedNetProfit?.high)}
+                        <ColoredRange low={scenario.estimatedNetProfit?.low} high={scenario.estimatedNetProfit?.high} />
                       </span>
                     </div>
                   </div>

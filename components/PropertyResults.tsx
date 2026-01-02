@@ -64,6 +64,14 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
     return 'TBA';
   };
 
+  // Helper to determine color based on value (red for negative, green for positive)
+  const getValueColor = (val: any): string => {
+    if (val === undefined || val === null) return 'text-emerald-700';
+    const num = typeof val === 'number' ? val : parseFloat(String(val).replace(/[^0-9.-]+/g, ""));
+    if (isNaN(num)) return 'text-emerald-700';
+    return num < 0 ? 'text-red-600' : 'text-emerald-700';
+  };
+
   const safeNum = (val: any): number => {
     if (typeof val === 'number') return val;
     if (typeof val === 'string') {
@@ -777,7 +785,11 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
                    {scenario.estimatedNetProfit && (
                      <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 mt-auto">
                         <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1 text-center">INDICATIVE MARGIN</p>
-                        <p className="text-xl font-black text-emerald-700 text-center">{formatValue(scenario.estimatedNetProfit.low)} – {formatValue(scenario.estimatedNetProfit.high)}</p>
+                        <p className="text-xl font-black text-center">
+                          <span className={getValueColor(scenario.estimatedNetProfit.low)}>{formatValue(scenario.estimatedNetProfit.low)}</span>
+                          <span className="text-[#4A4137]/50"> – </span>
+                          <span className={getValueColor(scenario.estimatedNetProfit.high)}>{formatValue(scenario.estimatedNetProfit.high)}</span>
+                        </p>
                      </div>
                    )}
                 </div>
