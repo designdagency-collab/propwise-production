@@ -171,20 +171,20 @@ const PhoneRecoveryModal: React.FC<PhoneRecoveryModalProps> = ({
     await handleSendOTP();
   };
 
-  const handleSkip = async () => {
-    // Mark that we've prompted them
-    try {
-      await supabaseService.authenticatedFetch('/api/update-profile', {
-        method: 'POST',
-        body: JSON.stringify({ 
-          userId, 
-          updates: { phone_recovery_prompted: true } 
-        })
-      });
-    } catch (err) {
-      console.error('Failed to update profile:', err);
-    }
+  const handleSkip = () => {
+    // Close modal immediately - don't block on API call
     onSkip();
+    
+    // Mark that we've prompted them (fire and forget)
+    supabaseService.authenticatedFetch('/api/update-profile', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        userId, 
+        updates: { phone_recovery_prompted: true } 
+      })
+    }).catch(err => {
+      console.error('Failed to update profile:', err);
+    });
   };
 
   return (
