@@ -78,8 +78,8 @@ const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('prop_theme');
     if (saved) return saved === 'dark';
-    // Default to system preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Default to light mode for new/incognito users
+    return false;
   });
   
   // Apply theme to document
