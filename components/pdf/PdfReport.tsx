@@ -440,6 +440,17 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
                       const low = scenario.estimatedNetProfit?.low || 0;
                       const high = scenario.estimatedNetProfit?.high || 0;
                       const isOverallNegative = (low + high) < 0;
+                      
+                      // Color logic: dominant sentiment gets theme color, opposite gets cream/amber
+                      const getLowColor = () => {
+                        if (low < 0) return isOverallNegative ? '#B91C1C' : '#92400E'; // red or amber
+                        return isOverallNegative ? '#92400E' : '#065F46'; // amber or green
+                      };
+                      const getHighColor = () => {
+                        if (high < 0) return isOverallNegative ? '#B91C1C' : '#92400E';
+                        return isOverallNegative ? '#92400E' : '#065F46';
+                      };
+                      
                       return (
                         <div 
                           className="pdf-scenario-metric"
@@ -452,7 +463,9 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
                             Potential Uplift
                           </span>
                           <span className="pdf-scenario-value">
-                            <ColoredRange low={scenario.estimatedNetProfit?.low} high={scenario.estimatedNetProfit?.high} />
+                            <span style={{ color: getLowColor() }}>{formatCurrency(scenario.estimatedNetProfit?.low)}</span>
+                            <span style={{ color: '#6B7280' }}> – </span>
+                            <span style={{ color: getHighColor() }}>{formatCurrency(scenario.estimatedNetProfit?.high)}</span>
                           </span>
                         </div>
                       );

@@ -788,6 +788,18 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
                      const high = scenario.estimatedNetProfit.high || 0;
                      const isOverallNegative = (low + high) < 0;
                      
+                     // Color logic: dominant sentiment gets theme color, opposite gets cream
+                     // RED container: negative=red, positive=cream
+                     // GREEN container: positive=green, negative=cream
+                     const getLowColor = () => {
+                       if (low < 0) return isOverallNegative ? 'text-red-700' : 'text-amber-700'; // negative value
+                       return isOverallNegative ? 'text-amber-700' : 'text-emerald-700'; // positive value
+                     };
+                     const getHighColor = () => {
+                       if (high < 0) return isOverallNegative ? 'text-red-700' : 'text-amber-700'; // negative value
+                       return isOverallNegative ? 'text-amber-700' : 'text-emerald-700'; // positive value
+                     };
+                     
                      return (
                        <div className={`p-4 rounded-xl border mt-auto ${
                          isOverallNegative 
@@ -798,9 +810,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
                             isOverallNegative ? 'text-red-600' : 'text-emerald-600'
                           }`}>INDICATIVE MARGIN</p>
                           <p className="text-xl font-black text-center">
-                            <span className={getValueColor(scenario.estimatedNetProfit.low)}>{formatValue(scenario.estimatedNetProfit.low)}</span>
-                            <span className="text-[#4A4137]/50"> – </span>
-                            <span className={getValueColor(scenario.estimatedNetProfit.high)}>{formatValue(scenario.estimatedNetProfit.high)}</span>
+                            <span className={getLowColor()}>{formatValue(scenario.estimatedNetProfit.low)}</span>
+                            <span className="text-[#4A4137]/40"> – </span>
+                            <span className={getHighColor()}>{formatValue(scenario.estimatedNetProfit.high)}</span>
                           </p>
                        </div>
                      );
