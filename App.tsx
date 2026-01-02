@@ -378,50 +378,28 @@ const App: React.FC = () => {
       // Clear URL params to prevent re-processing on refresh
       window.history.replaceState({}, document.title, window.location.pathname);
       
-      // Payment was successful - process via Supabase
+      // Payment was successful - the webhook handles adding credits reliably
+      // This client-side code is for UI feedback and fallback
       const processPaymentSuccess = async () => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        console.log('[Payment] Processing success redirect for plan:', purchasedPlan);
         setShowUpgradeSuccess(true);
         
-        const user = await supabaseService.getCurrentUser();
+        // Wait for session to be restored (retry a few times)
+        let user = null;
+        for (let attempt = 1; attempt <= 5; attempt++) {
+          console.log('[Payment] Checking for user session, attempt:', attempt);
+          await new Promise(resolve => setTimeout(resolve, 500 * attempt));
+          user = await supabaseService.getCurrentUser();
+          if (user) {
+            console.log('[Payment] User found:', user.email);
+            break;
+          }
+        }
+        
         if (user) {
           setIsLoggedIn(true);
           
-          // Check if this session was already processed (prevent duplicates)
-          const existingSub = await supabaseService.getActiveSubscription(user.id);
-          if (existingSub?.stripe_session_id === sessionId) {
-            console.log('[Payment] Session already processed');
-            await loadUserData(user.id);
-            setTimeout(() => setShowUpgradeSuccess(false), 5000);
-            return;
-          }
-          
-          // Update subscription in Supabase
-          await supabaseService.updateSubscription(user.id, purchasedPlan as PlanType, sessionId);
-          await supabaseService.updatePlanType(user.id, purchasedPlan as string);
-          
-          // Update credits in Supabase
-          if (purchasedPlan === 'STARTER_PACK') {
-            const currentProfile = await supabaseService.getCurrentProfile(user.id);
-            const currentCredits = currentProfile?.credit_topups || 0;
-            const newCredits = currentCredits + 3;
-            console.log('[Payment] Adding 3 credits:', currentCredits, '->', newCredits);
-            await supabaseService.updateCreditTopups(user.id, newCredits);
-          } else if (purchasedPlan === 'BULK_PACK') {
-            const currentProfile = await supabaseService.getCurrentProfile(user.id);
-            const currentCredits = currentProfile?.credit_topups || 0;
-            const newCredits = currentCredits + 20;
-            console.log('[Payment] Adding 20 credits:', currentCredits, '->', newCredits);
-            await supabaseService.updateCreditTopups(user.id, newCredits);
-          } else if (purchasedPlan === 'PRO') {
-            const now = new Date();
-            const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            console.log('[Payment] Initializing PRO quota:', currentMonth);
-            await supabaseService.updateProUsage(user.id, currentMonth, 0);
-          }
-          
-          // Reload profile to get updated state
+          // Load latest profile data (webhook should have already added credits)
           await loadUserData(user.id);
           
           // Show phone recovery modal if not already prompted (first purchase)
@@ -431,12 +409,15 @@ const App: React.FC = () => {
             setTimeout(() => {
               setShowUpgradeSuccess(false);
               setShowPhoneRecovery(true);
-            }, 3000); // Show after upgrade success message
+            }, 3000);
           } else {
             setTimeout(() => setShowUpgradeSuccess(false), 5000);
           }
         } else {
-          setIsLoggedIn(false);
+          // User not found after retries - DON'T log them out!
+          // The webhook will have added the credits, they just need to refresh/re-login
+          console.log('[Payment] Could not restore session, but webhook should have processed credits');
+          // Show success anyway - credits were added by webhook
           setTimeout(() => setShowUpgradeSuccess(false), 5000);
         }
       };
