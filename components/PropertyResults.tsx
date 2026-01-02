@@ -782,16 +782,29 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
                          <p className="text-base font-bold text-[#4A4137]">{formatValue(scenario.estimatedCost?.low)} – {formatValue(scenario.estimatedCost?.high)}</p>
                       </div>
                    </div>
-                   {scenario.estimatedNetProfit && (
-                     <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 mt-auto">
-                        <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1 text-center">INDICATIVE MARGIN</p>
-                        <p className="text-xl font-black text-center">
-                          <span className={getValueColor(scenario.estimatedNetProfit.low)}>{formatValue(scenario.estimatedNetProfit.low)}</span>
-                          <span className="text-[#4A4137]/50"> – </span>
-                          <span className={getValueColor(scenario.estimatedNetProfit.high)}>{formatValue(scenario.estimatedNetProfit.high)}</span>
-                        </p>
-                     </div>
-                   )}
+                   {scenario.estimatedNetProfit && (() => {
+                     // Determine if overall outlook is positive or negative
+                     const low = scenario.estimatedNetProfit.low || 0;
+                     const high = scenario.estimatedNetProfit.high || 0;
+                     const isOverallNegative = (low + high) < 0;
+                     
+                     return (
+                       <div className={`p-4 rounded-xl border mt-auto ${
+                         isOverallNegative 
+                           ? 'bg-red-50 border-red-100' 
+                           : 'bg-emerald-50 border-emerald-100'
+                       }`}>
+                          <p className={`text-[9px] font-black uppercase tracking-widest mb-1 text-center ${
+                            isOverallNegative ? 'text-red-600' : 'text-emerald-600'
+                          }`}>INDICATIVE MARGIN</p>
+                          <p className="text-xl font-black text-center">
+                            <span className={getValueColor(scenario.estimatedNetProfit.low)}>{formatValue(scenario.estimatedNetProfit.low)}</span>
+                            <span className="text-[#4A4137]/50"> – </span>
+                            <span className={getValueColor(scenario.estimatedNetProfit.high)}>{formatValue(scenario.estimatedNetProfit.high)}</span>
+                          </p>
+                       </div>
+                     );
+                   })()}
                 </div>
               ))}
            </div>

@@ -436,12 +436,27 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
                         {formatRange(scenario.estimatedCost?.low, scenario.estimatedCost?.high)}
                       </span>
                     </div>
-                    <div className="pdf-scenario-metric pdf-scenario-profit">
-                      <span className="pdf-scenario-label">Potential Uplift</span>
-                      <span className="pdf-scenario-value">
-                        <ColoredRange low={scenario.estimatedNetProfit?.low} high={scenario.estimatedNetProfit?.high} />
-                      </span>
-                    </div>
+                    {(() => {
+                      const low = scenario.estimatedNetProfit?.low || 0;
+                      const high = scenario.estimatedNetProfit?.high || 0;
+                      const isOverallNegative = (low + high) < 0;
+                      return (
+                        <div 
+                          className="pdf-scenario-metric"
+                          style={{
+                            background: isOverallNegative ? '#FEF2F2' : '#ECFDF5',
+                            border: isOverallNegative ? '1px solid #FECACA' : '1px solid #A7F3D0'
+                          }}
+                        >
+                          <span className="pdf-scenario-label" style={{ color: isOverallNegative ? '#DC2626' : '#047857' }}>
+                            Potential Uplift
+                          </span>
+                          <span className="pdf-scenario-value">
+                            <ColoredRange low={scenario.estimatedNetProfit?.low} high={scenario.estimatedNetProfit?.high} />
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               ))}
