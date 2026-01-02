@@ -307,14 +307,16 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
               <div className="pdf-rental-metric">
                 <span className="pdf-rental-label">Weekly Rent</span>
                 <span className="pdf-rental-value">
-                  ${data.rentalPosition.estimatedWeeklyRent || '—'}/wk
+                  ${data.rentalPosition.estimatedWeeklyRent 
+                    ? Math.round(data.rentalPosition.estimatedWeeklyRent).toLocaleString() 
+                    : '—'}/wk
                 </span>
               </div>
               <div className="pdf-rental-metric">
                 <span className="pdf-rental-label">Annual Rent</span>
                 <span className="pdf-rental-value">
                   {data.rentalPosition.estimatedWeeklyRent 
-                    ? formatCurrency(data.rentalPosition.estimatedWeeklyRent * 52) 
+                    ? formatCurrency(Math.round(data.rentalPosition.estimatedWeeklyRent * 52)) 
                     : '—'}
                 </span>
               </div>
@@ -322,7 +324,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
                 <span className="pdf-rental-label">Weekly Cash Position</span>
                 <span className={`pdf-rental-value ${data.rentalPosition.estimatedCashPositionWeekly && data.rentalPosition.estimatedCashPositionWeekly < 0 ? 'pdf-negative' : 'pdf-positive'}`}>
                   {data.rentalPosition.estimatedCashPositionWeekly !== undefined 
-                    ? `$${data.rentalPosition.estimatedCashPositionWeekly >= 0 ? '' : ''}${data.rentalPosition.estimatedCashPositionWeekly.toLocaleString()}/wk`
+                    ? `$${Math.round(data.rentalPosition.estimatedCashPositionWeekly).toLocaleString()}/wk`
                     : '—'}
                 </span>
               </div>
