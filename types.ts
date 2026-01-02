@@ -151,6 +151,8 @@ export interface ComparableSale {
   distanceKm?: number;
   notes: string;
   sourceUrl: string;
+  /** Status indicating if this is a sold property (SOLD, SETTLED) vs active listing */
+  status?: 'SOLD' | 'SETTLED' | 'FOR_SALE' | 'LISTED' | 'UNDER_OFFER' | 'UNKNOWN';
 }
 
 export interface ComparableSales {

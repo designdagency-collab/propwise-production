@@ -82,6 +82,22 @@ MANDATORY MODULES:
 4. LOCAL AREA INTEL, APPROVAL PATHWAY & ZONING INTEL.
 - Include schools and key public transport (trains/buses).
 
+5. COMPARABLE SALES (CRITICAL - SOLD ONLY)
+⚠️ ONLY return RECENTLY SOLD properties as comparables. Do NOT include:
+- Active listings (for sale, coming soon, expressions of interest)
+- Under offer / under contract properties
+- Price guide / auction listings without a sold result
+- Withdrawn or expired listings
+
+For each comparable sale:
+- Must have an actual SOLD DATE (when it settled/sold)
+- Must have an actual SALE PRICE (what it sold for, not asking price)
+- Should be within 18 months of today's date
+- Should be within 2km of the subject property
+- Prefer similar property types (houses with houses, units with units)
+
+If you cannot find verified sold comparables, return an empty array rather than including active listings.
+
 RULES:
 - LISTING ADDRESS is king: If user searches "2 Grace Ave" but listing is "2-4 Grace Ave", use "2-4 Grace Ave" and treat as combined lots.
 - Always use data from the ACTUAL listing found, not assumptions based on search input.
@@ -190,7 +206,9 @@ RULES:
                         addressShort: { type: Type.STRING },
                         date: { type: Type.STRING },
                         price: { type: Type.NUMBER },
-                        distanceKm: { type: Type.NUMBER }
+                        distanceKm: { type: Type.NUMBER },
+                        status: { type: Type.STRING, enum: ['SOLD', 'SETTLED'] },
+                        notes: { type: Type.STRING }
                       }
                     }
                   },

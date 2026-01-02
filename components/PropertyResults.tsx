@@ -1,7 +1,18 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { PropertyData, PlanType, DevEligibility, Amenity } from '../types';
 import PdfReport, { getPdfDocumentStyles } from './pdf/PdfReport';
+import { 
+  extractStateFromAddress, 
+  getStateAwarePathwayLabel, 
+  getStateAwarePathwayTooltip,
+  AusState 
+} from '../services/approvalPathways';
+import {
+  getPrimaryAreaDisplay,
+  filterSoldComparables,
+  getComparablesFallbackMessage
+} from '../services/propertyUtils';
 
 interface PropertyResultsProps {
   data: PropertyData;
@@ -11,12 +22,15 @@ interface PropertyResultsProps {
   onHome: () => void;
 }
 
-const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade, onHome }) => {
+const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, onUpgrade, onHome }) => {
   const [selectedStrategies, setSelectedStrategies] = useState<Set<number>>(new Set());
   const [isExporting, setIsExporting] = useState(false);
   const [pdfCountdown, setPdfCountdown] = useState<number>(3);
   const [pdfReady, setPdfReady] = useState<boolean>(false);
   const reportRef = useRef<HTMLDivElement>(null);
+  
+  // Extract Australian state from address for state-aware approval badges
+  const propertyState = useMemo(() => extractStateFromAddress(address), [address]);
 
   // PDF countdown timer - gives page time to fully render before allowing export
   useEffect(() => {
@@ -86,6 +100,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
   };
 
   // Consistent pathway labels - always show "(indicative)" to be legally safe
+  // Now state-aware for Australian jurisdictions
   const getPathwayBadgeColor = (pathway: string) => {
     if (isStrata && pathway === 'Exempt') return 'bg-indigo-600 text-white';
     switch (pathway) {
@@ -96,27 +111,14 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
     }
   };
 
-  // Get display label - always "(indicative)" for legal safety
+  // Get display label - state-aware for Australian jurisdictions
   const getPathwayLabel = (pathway: string): string => {
-    if (isStrata && pathway === 'Exempt') return 'Strata Approval';
-    switch (pathway) {
-      case 'Exempt': return 'Minor Works';
-      case 'CDC': return 'CDC (indicative)';
-      case 'DA': return 'DA (indicative)';
-      default: return 'Requires Review';
-    }
+    return getStateAwarePathwayLabel(pathway, propertyState, isStrata);
   };
 
+  // Get tooltip description - state-aware for Australian jurisdictions
   const getPathwayDescription = (pathway: string) => {
-    if (isStrata && pathway === 'Exempt') {
-      return "Strata properties require Owner's Corporation approval. Council approval may also be needed depending on scope.";
-    }
-    switch (pathway) {
-      case 'Exempt': return "Minor works that typically don't require formal council approval. Verify with your local council.";
-      case 'CDC': return "Complying Development Certificate: Fast-track approval for projects meeting pre-set standards. Subject to site-specific assessment.";
-      case 'DA': return "Development Application: Council assessment required. Timeframes and outcomes vary by project and council.";
-      default: return "Approval requirements vary. Consult a town planner or your local council for site-specific advice.";
-    }
+    return getStateAwarePathwayTooltip(pathway, propertyState, isStrata);
   };
 
   const PathwayBadgeWithTooltip = ({ pathway }: { pathway: string }) => {
@@ -408,7 +410,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
           <div>
             <h1 className="text-[2rem] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter font-address leading-tight" style={{ color: 'var(--text-primary)' }}>{data.address}</h1>
             <div className="flex items-center gap-3 mt-2">
-              <p className="font-medium text-sm sm:text-base" style={{ color: 'var(--text-muted)' }}>{data.propertyType} • {data.landSize || 'Unknown Land Size'}</p>
+              <p className="font-medium text-sm sm:text-base" style={{ color: 'var(--text-muted)' }}>
+                {data.propertyType} • {getPrimaryAreaDisplay(data.landSize, data.propertyType).label} • {getPrimaryAreaDisplay(data.landSize, data.propertyType).value}
+              </p>
               {data.isCombinedLots && (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-500/10 text-purple-600 rounded-full text-[10px] font-bold uppercase tracking-wider">
                   <i className="fa-solid fa-layer-group text-[8px]"></i>
@@ -822,52 +826,62 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, plan, onUpgrade
         </section>
       )}
 
-      {/* COMPARABLE SALES - Only render if there's actual data */}
-      {data.comparableSales && data.comparableSales.nearbySales && data.comparableSales.nearbySales.length > 0 && (
-        <section className="space-y-6 pdf-no-break">
-           <div className="flex items-center gap-4 px-4">
-              <div className="w-10 h-10 bg-slate-800 text-white rounded-xl flex items-center justify-center shadow-sm"><i className="fa-solid fa-tags"></i></div>
-              <div>
-                <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Comparable Market Sales</h2>
-                <p className="text-[10px] text-[#4A4137]/40 uppercase tracking-widest">Recent sales within 2km (12 months)</p>
-              </div>
-           </div>
-           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" data-pdf-sales-grid>
-              <div className="lg:col-span-2 space-y-4">
-                 <div className="p-6 rounded-[2.5rem] border shadow-sm space-y-3" data-pdf-no-break style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                    {data.comparableSales.nearbySales.map((sale, i) => (
-                       <div key={i} className="flex items-center justify-between p-3 bg-slate-50/50 rounded-xl border border-slate-100 group transition-all hover:border-[#D6A270]/20">
-                          <div className="flex gap-3 items-center flex-1 min-w-0">
-                             <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-[9px] font-bold text-[#4A4137]/40 shadow-sm flex-shrink-0">
-                               {sale.distanceKm ? `${sale.distanceKm}km` : '–'}
-                             </div>
-                             <div className="space-y-0.5 min-w-0 flex-1">
-                                <p className="text-sm font-bold text-[#4A4137] truncate">{sale.addressShort || '—'}</p>
-                                <div className="flex items-center gap-2 text-[9px] text-[#4A4137]/40">
-                                  <span>{sale.date || '—'}</span>
-                                  {sale.beds && <span>• {sale.beds}bd</span>}
-                                  {sale.baths && <span>{sale.baths}ba</span>}
-                                  {sale.landSize && <span>• {sale.landSize}m²</span>}
-                                </div>
-                             </div>
-                          </div>
-                          <p className="text-sm font-black text-[#D6A270] flex-shrink-0 ml-2">{formatValue(sale.price)}</p>
-                       </div>
-                    ))}
-                 </div>
-                 <p className="text-[9px] text-[#4A4137]/30 italic px-2">
-                   Sales shown are indicative comparables. Actual property condition, features, and timing affect relevance.
-                 </p>
-              </div>
-              {data.comparableSales.pricingContextSummary && (
-                <div className="bg-[#4A4137] p-6 rounded-[2.5rem] text-white space-y-4 relative overflow-hidden h-fit" data-pdf-no-break>
-                   <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Market Context</p>
-                   <p className="text-sm font-medium leading-relaxed text-white/80">{data.comparableSales.pricingContextSummary}</p>
+      {/* COMPARABLE SALES - Only sold properties, filtered for validity */}
+      {(() => {
+        const filteredSales = filterSoldComparables(data.comparableSales?.nearbySales);
+        const fallbackMessage = getComparablesFallbackMessage(filteredSales.length);
+        
+        return (data.comparableSales && (filteredSales.length > 0 || fallbackMessage)) && (
+          <section className="space-y-6 pdf-no-break">
+             <div className="flex items-center gap-4 px-4">
+                <div className="w-10 h-10 bg-slate-800 text-white rounded-xl flex items-center justify-center shadow-sm"><i className="fa-solid fa-tags"></i></div>
+                <div>
+                  <h2 className="text-2xl font-bold text-[#4A4137] tracking-tight">Comparable Market Sales</h2>
+                  <p className="text-[10px] text-[#4A4137]/40 uppercase tracking-widest">Recently sold within 2km (18 months)</p>
                 </div>
-              )}
-           </div>
-        </section>
-      )}
+             </div>
+             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" data-pdf-sales-grid>
+                <div className="lg:col-span-2 space-y-4">
+                   {filteredSales.length > 0 ? (
+                     <div className="p-6 rounded-[2.5rem] border shadow-sm space-y-3" data-pdf-no-break style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+                        {filteredSales.map((sale, i) => (
+                           <div key={i} className="flex items-center justify-between p-3 bg-slate-50/50 rounded-xl border border-slate-100 group transition-all hover:border-[#D6A270]/20">
+                              <div className="flex gap-3 items-center flex-1 min-w-0">
+                                 <div className="w-9 h-9 bg-white rounded-lg flex items-center justify-center text-[9px] font-bold text-[#4A4137]/40 shadow-sm flex-shrink-0">
+                                   {sale.distanceKm ? `${sale.distanceKm}km` : '–'}
+                                 </div>
+                                 <div className="space-y-0.5 min-w-0 flex-1">
+                                    <p className="text-sm font-bold text-[#4A4137] truncate">{sale.addressShort || '—'}</p>
+                                    <div className="flex items-center gap-2 text-[9px] text-[#4A4137]/40">
+                                      <span className="font-semibold text-emerald-600">Sold {sale.date || '—'}</span>
+                                      {sale.beds && <span>• {sale.beds}bd</span>}
+                                      {sale.baths && <span>{sale.baths}ba</span>}
+                                    </div>
+                                 </div>
+                              </div>
+                              <p className="text-sm font-black text-[#D6A270] flex-shrink-0 ml-2">{formatValue(sale.price)}</p>
+                           </div>
+                        ))}
+                     </div>
+                   ) : (
+                     <div className="p-6 rounded-[2.5rem] border shadow-sm" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+                        <p className="text-sm text-[#4A4137]/60 italic">{fallbackMessage}</p>
+                     </div>
+                   )}
+                   <p className="text-[9px] text-[#4A4137]/30 italic px-2">
+                     Sales shown are verified sold comparables only. Actual property condition, features, and timing affect relevance.
+                   </p>
+                </div>
+                {data.comparableSales.pricingContextSummary && (
+                  <div className="bg-[#4A4137] p-6 rounded-[2.5rem] text-white space-y-4 relative overflow-hidden h-fit" data-pdf-no-break>
+                     <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Market Context</p>
+                     <p className="text-sm font-medium leading-relaxed text-white/80">{data.comparableSales.pricingContextSummary}</p>
+                  </div>
+                )}
+             </div>
+          </section>
+        );
+      })()}
 
       {/* WATCH OUTS */}
       {data.watchOuts && data.watchOuts.length > 0 && (

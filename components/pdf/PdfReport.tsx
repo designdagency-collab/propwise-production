@@ -15,6 +15,16 @@
 
 import React from 'react';
 import { PropertyData } from '../../types';
+import { 
+  extractStateFromAddress, 
+  getStateAwarePathwayLabel,
+  AusState 
+} from '../../services/approvalPathways';
+import {
+  getPrimaryAreaDisplay,
+  filterSoldComparables,
+  getComparablesFallbackMessage
+} from '../../services/propertyUtils';
 
 // ============================================================================
 // INLINE SVG ICONS (no CDN dependency)
@@ -61,29 +71,49 @@ const formatRange = (low: number | undefined, high: number | undefined): string 
 };
 
 // ============================================================================
-// APPROVAL BADGE - SINGLE SOURCE OF TRUTH
+// APPROVAL BADGE - SINGLE SOURCE OF TRUTH (STATE-AWARE)
 // ============================================================================
 type ApprovalType = 'EXEMPT' | 'CDC' | 'DA' | 'STRATA' | 'UNKNOWN';
 
-const ApprovalBadge: React.FC<{ type: string; className?: string }> = ({ type, className = '' }) => {
+interface ApprovalBadgeProps {
+  type: string;
+  className?: string;
+  propertyState?: AusState | null;
+  isStrata?: boolean;
+}
+
+const ApprovalBadge: React.FC<ApprovalBadgeProps> = ({ 
+  type, 
+  className = '', 
+  propertyState = null,
+  isStrata = false 
+}) => {
   const normalizedType = type?.toUpperCase() || 'UNKNOWN';
   
-  const getConfig = () => {
+  // Use state-aware labels for CDC pathway
+  const getLabel = (): string => {
+    // For CDC, use state-aware label
+    if (normalizedType === 'CDC') {
+      return getStateAwarePathwayLabel('CDC', propertyState, isStrata);
+    }
+    // For other pathways, use standard labels
+    return getStateAwarePathwayLabel(type, propertyState, isStrata);
+  };
+  
+  const getBackgroundColor = (): string => {
     switch (normalizedType) {
       case 'EXEMPT':
-        return { label: 'Minor Works', bg: '#64748b', color: '#fff' };
+        return '#64748b';
       case 'CDC':
-        return { label: 'CDC (indicative)', bg: '#3b82f6', color: '#fff' };
+        return '#3b82f6';
       case 'DA':
-        return { label: 'DA (indicative)', bg: '#f59e0b', color: '#fff' };
+        return '#f59e0b';
       case 'STRATA':
-        return { label: 'Strata Approval', bg: '#8b5cf6', color: '#fff' };
+        return '#8b5cf6';
       default:
-        return { label: 'Requires Review', bg: '#6b7280', color: '#fff' };
+        return '#6b7280';
     }
   };
-
-  const config = getConfig();
   
   return (
     <span
@@ -96,12 +126,12 @@ const ApprovalBadge: React.FC<{ type: string; className?: string }> = ({ type, c
         fontWeight: 700,
         textTransform: 'uppercase',
         letterSpacing: '0.5px',
-        backgroundColor: config.bg,
-        color: config.color,
+        backgroundColor: getBackgroundColor(),
+        color: '#fff',
         whiteSpace: 'nowrap',
       }}
     >
-      {config.label}
+      {getLabel()}
     </span>
   );
 };
@@ -143,10 +173,23 @@ const PdfPage: React.FC<{ children: React.ReactNode; pageNum: number; totalPages
 // MAIN PDF REPORT COMPONENT
 // ============================================================================
 const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => {
+  // Extract Australian state from address for state-aware approval badges
+  const propertyState = extractStateFromAddress(address);
+  
+  // Check if property is strata (affects approval pathway labels)
+  const isStrata = data.propertyType?.toLowerCase().includes('unit') || 
+                   data.propertyType?.toLowerCase().includes('apartment') ||
+                   data.propertyType?.toLowerCase().includes('strata');
+
   // Calculate total pages based on content
   const hasStrategies = data.valueAddStrategies && data.valueAddStrategies.length > 0;
   const hasScenarios = data.developmentScenarios && data.developmentScenarios.length > 0;
-  const hasComparables = data.comparableSales?.nearbySales && data.comparableSales.nearbySales.length > 0;
+  
+  // Filter comparable sales to only include verified sold properties
+  const filteredComparables = filterSoldComparables(data.comparableSales?.nearbySales);
+  const comparablesFallback = getComparablesFallbackMessage(filteredComparables.length);
+  const hasComparables = filteredComparables.length > 0;
+  
   const hasWatchOuts = data.watchOuts && data.watchOuts.length > 0;
   
   const totalPages = 4; // Fixed layout for consistency
@@ -172,7 +215,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
           <h1 className="pdf-property-address">{address}</h1>
           <div className="pdf-property-meta-row">
             <p className="pdf-property-meta">
-              {data.propertyType || 'Residential'} • {data.landSize || 'Land size TBC'}
+              {data.propertyType || 'Residential'} • {getPrimaryAreaDisplay(data.landSize, data.propertyType).label} • {getPrimaryAreaDisplay(data.landSize, data.propertyType).value}
             </p>
             {data.isCombinedLots && (
               <span className="pdf-combined-lots-badge">
@@ -265,8 +308,12 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
                 <div key={i} className="pdf-strategy-card">
                   <div className="pdf-strategy-header">
                     <h3 className="pdf-strategy-title">{strategy.title}</h3>
-                    {/* SINGLE badge per card - no duplicates */}
-                    <ApprovalBadge type={strategy.planningPathway} />
+                    {/* SINGLE badge per card - state-aware */}
+                    <ApprovalBadge 
+                      type={strategy.planningPathway} 
+                      propertyState={propertyState}
+                      isStrata={isStrata}
+                    />
                   </div>
                   <p className="pdf-strategy-desc">{strategy.description}</p>
                   <div className="pdf-strategy-metrics">
@@ -354,8 +401,12 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
                 <div key={i} className="pdf-scenario-card">
                   <div className="pdf-scenario-header">
                     <h3 className="pdf-scenario-title">{scenario.title}</h3>
-                    {/* SINGLE badge - no duplicates */}
-                    <ApprovalBadge type={scenario.planningPathway} />
+                    {/* SINGLE badge - state-aware */}
+                    <ApprovalBadge 
+                      type={scenario.planningPathway}
+                      propertyState={propertyState}
+                      isStrata={isStrata}
+                    />
                   </div>
                   <p className="pdf-scenario-desc">{scenario.description}</p>
                   <div className="pdf-scenario-metrics">
@@ -386,7 +437,12 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
               Likely Approval Pathway
             </h2>
             <div className="pdf-approval-card">
-              <ApprovalBadge type={data.approvalPathway.likelyPathway} className="pdf-approval-badge-large" />
+              <ApprovalBadge 
+                type={data.approvalPathway.likelyPathway} 
+                className="pdf-approval-badge-large"
+                propertyState={propertyState}
+                isStrata={isStrata}
+              />
               <p className="pdf-approval-explanation">{data.approvalPathway.explanation}</p>
               <p className="pdf-approval-note">
                 Indicative pathway only. Consult a qualified town planner for site-specific advice.
@@ -421,40 +477,46 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
           PAGE 4: COMPARABLES TABLE + WATCH-OUTS
           ================================================================ */}
       <PdfPage pageNum={4} totalPages={totalPages}>
-        {/* Comparable Sales Table */}
-        {hasComparables && (
-          <div className="pdf-section">
-            <h2 className="pdf-section-title">
-              <span className="pdf-icon">{Icons.tag}</span>
-              Comparable Market Sales
-            </h2>
-            <p className="pdf-section-subtitle">Recent sales within 2km (12 months)</p>
-            
-            <table className="pdf-comparables-table">
-              <thead>
-                <tr>
-                  <th>Address</th>
-                  <th>Sale Date</th>
-                  <th>Price</th>
-                  <th>Distance</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.comparableSales!.nearbySales!.map((sale, i) => (
-                  <tr key={i}>
-                    <td className="pdf-comp-address">{sale.addressShort || '—'}</td>
-                    <td>{sale.date || '—'}</td>
-                    <td className="pdf-comp-price">{formatCurrency(sale.price)}</td>
-                    <td>{sale.distanceKm ? `${sale.distanceKm}km` : '—'}</td>
+        {/* Comparable Sales Table - Only verified sold properties */}
+        <div className="pdf-section">
+          <h2 className="pdf-section-title">
+            <span className="pdf-icon">{Icons.tag}</span>
+            Comparable Market Sales
+          </h2>
+          <p className="pdf-section-subtitle">Recently sold within 2km (18 months)</p>
+          
+          {hasComparables ? (
+            <>
+              <table className="pdf-comparables-table">
+                <thead>
+                  <tr>
+                    <th>Address</th>
+                    <th>Sold Date</th>
+                    <th>Sale Price</th>
+                    <th>Distance</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="pdf-table-note">
-              Indicative comparables for context. Condition, aspect and land size affect relevance.
+                </thead>
+                <tbody>
+                  {filteredComparables.map((sale, i) => (
+                    <tr key={i}>
+                      <td className="pdf-comp-address">{sale.addressShort || '—'}</td>
+                      <td>{sale.date || '—'}</td>
+                      <td className="pdf-comp-price">{formatCurrency(sale.price)}</td>
+                      <td>{sale.distanceKm ? `${sale.distanceKm}km` : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="pdf-table-note">
+                Verified sold comparables only. Condition, aspect and land size affect relevance.
+              </p>
+            </>
+          ) : (
+            <p className="pdf-table-note" style={{ fontStyle: 'italic', color: '#6b7280' }}>
+              {comparablesFallback || 'Not enough recent sold comparables found for this area.'}
             </p>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Watch Outs */}
         {hasWatchOuts && (
