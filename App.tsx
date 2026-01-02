@@ -170,20 +170,19 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [checkKeySelection]);
 
-  // Clear processing overlay on page load (handles browser back from Stripe)
+  // Clear processing overlay when page is restored from bfcache (browser back button)
   useEffect(() => {
-    // Small delay to allow payment success check to run first
-    const timeout = setTimeout(() => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const isPaymentRedirect = urlParams.get('payment') === 'success';
-      // Only clear if NOT a payment success redirect
-      if (!isPaymentRedirect && isProcessingUpgrade) {
-        console.log('[Stripe] Clearing stale processing state (browser back detected)');
+    const handlePageShow = (event: PageTransitionEvent) => {
+      // event.persisted = true means page was restored from bfcache (back button)
+      if (event.persisted && isProcessingUpgrade) {
+        console.log('[Stripe] Page restored from bfcache, clearing processing state');
         setIsProcessingUpgrade(false);
       }
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, []);
+    };
+    
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, [isProcessingUpgrade]);
 
   // Check device fingerprint for anonymous users on page load
   useEffect(() => {
