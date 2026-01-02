@@ -50,6 +50,7 @@ const App: React.FC = () => {
   const [hasKey, setHasKey] = useState(false);
   const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
   const [showUpgradeSuccess, setShowUpgradeSuccess] = useState(false);
+  const [lastPurchasedPlan, setLastPurchasedPlan] = useState<string | null>(null); // Track what was just bought
   const [showPricing, setShowPricing] = useState(false);
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [showEmailAuth, setShowEmailAuth] = useState(false);
@@ -382,6 +383,7 @@ const App: React.FC = () => {
       // This client-side code is for UI feedback and fallback
       const processPaymentSuccess = async () => {
         console.log('[Payment] Processing success redirect for plan:', purchasedPlan);
+        setLastPurchasedPlan(purchasedPlan); // Track what was just purchased for notification
         setShowUpgradeSuccess(true);
         
         // Wait for session to be restored (retry a few times)
@@ -1159,21 +1161,21 @@ const App: React.FC = () => {
         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-bottom-10 fade-in duration-500">
           <div className="bg-[#3A342D] text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-[#C9A961]/20">
             <div className="w-8 h-8 bg-[#C9A961] rounded-full flex items-center justify-center text-xs">
-              <i className={`fa-solid ${plan === 'STARTER_PACK' ? 'fa-bolt' : 'fa-crown'}`}></i>
+              <i className={`fa-solid ${lastPurchasedPlan === 'STARTER_PACK' || lastPurchasedPlan === 'BULK_PACK' ? 'fa-bolt' : 'fa-crown'}`}></i>
             </div>
             <div>
               <p className="text-sm font-bold">
-                {plan === 'STARTER_PACK' ? '3 Audits Added!' : plan === 'BULK_PACK' ? '20 Audits Added!' : 'Pro Access Activated'}
+                {lastPurchasedPlan === 'STARTER_PACK' ? '3 Audits Added!' : lastPurchasedPlan === 'BULK_PACK' ? '20 Audits Added!' : 'Pro Access Activated'}
               </p>
               <p className="text-[10px] text-white/60">
-                {plan === 'STARTER_PACK' 
+                {lastPurchasedPlan === 'STARTER_PACK' 
                   ? 'You have 3 additional property audits.'
-                  : plan === 'BULK_PACK'
+                  : lastPurchasedPlan === 'BULK_PACK'
                   ? 'You have 20 additional property audits.'
                   : '10 audits per month. Search confidently.'}
               </p>
             </div>
-            <button onClick={() => setShowUpgradeSuccess(false)} className="ml-4 text-white/20 hover:text-white">
+            <button onClick={() => { setShowUpgradeSuccess(false); setLastPurchasedPlan(null); }} className="ml-4 text-white/20 hover:text-white">
               <i className="fa-solid fa-xmark"></i>
             </button>
           </div>
