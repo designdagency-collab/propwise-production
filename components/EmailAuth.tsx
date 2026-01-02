@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabaseService } from '../services/supabaseService';
+import { fingerprintService } from '../services/fingerprintService';
 
 type AuthMode = 'signup' | 'login' | 'forgot' | 'reset' | 'phone-recovery' | 'phone-verify';
 
@@ -133,11 +134,52 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
     setIsLoading(true);
 
     try {
+      // Get device fingerprint for abuse detection
+      let fingerprint = null;
+      try {
+        fingerprint = await fingerprintService.getDeviceFingerprint();
+      } catch (fpErr) {
+        console.log('[Signup] Could not get fingerprint:', fpErr);
+      }
+
+      // Validate email and check for abuse BEFORE creating account
+      const validateResponse = await fetch('/api/validate-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, fingerprint })
+      });
+
+      const validateResult = await validateResponse.json();
+
+      if (!validateResponse.ok) {
+        // Show helpful message based on error code
+        if (validateResult.code === 'DISPOSABLE_EMAIL') {
+          throw new Error('Please use a permanent email address. Temporary email services are not allowed.');
+        } else if (validateResult.code === 'FINGERPRINT_ABUSE') {
+          throw new Error(`Multiple accounts detected. Your existing account is ${validateResult.existingEmail}`);
+        } else {
+          throw new Error(validateResult.error || 'Signup validation failed');
+        }
+      }
+
+      // Validation passed - proceed with signup
       const { user, error } = await supabaseService.signUpWithEmail(email, password, fullName);
       
       if (error) throw error;
 
       if (user) {
+        // Link fingerprint to the new account
+        if (fingerprint) {
+          try {
+            await fetch('/api/link-device', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: user.id, fingerprint })
+            });
+          } catch (linkErr) {
+            console.log('[Signup] Could not link fingerprint:', linkErr);
+          }
+        }
         onSuccess(email, true);
       }
     } catch (err: any) {
@@ -249,7 +291,6 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
   const handlePhoneRecovery = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setTestCode(null);
 
     const normalizedPhone = normalizePhone(recoveryPhone);
     if (normalizedPhone.length < 12) {
@@ -346,7 +387,6 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
     if (countdown > 0) return;
     setRecoveryCode('');
     setError(null);
-    setTestCode(null);
     
     // Re-trigger the phone recovery
     const fakeEvent = { preventDefault: () => {} } as React.FormEvent;

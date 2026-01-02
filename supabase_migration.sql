@@ -20,6 +20,9 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS credit_topups INTEGER DEFAULT 0;
 -- Add plan_type column to profiles for tracking membership tier
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan_type TEXT DEFAULT 'FREE_TRIAL';
 
+-- Add signup_fingerprint column for abuse detection (tracks which device created the account)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS signup_fingerprint TEXT;
+
 -- Create subscriptions table
 CREATE TABLE IF NOT EXISTS subscriptions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
