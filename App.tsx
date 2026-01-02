@@ -257,13 +257,17 @@ const App: React.FC = () => {
       return;
     }
 
-    console.log('[Auth] Initializing - checking for OAuth callback or existing session');
+    const hasOAuthCallback = window.location.hash.includes('access_token');
+    console.log('[Auth] Initializing - hasOAuthCallback:', hasOAuthCallback);
     
     // Helper function to handle successful session
-    const handleSessionLogin = async (session: any) => {
-      if (!session?.user) return;
+    const handleSessionLogin = async (session: any, source: string) => {
+      if (!session?.user) {
+        console.log('[Auth] handleSessionLogin called but no user in session');
+        return;
+      }
       
-      console.log('[Auth] Login successful for:', session.user.email);
+      console.log('[Auth] Login successful from', source, 'for:', session.user.email);
       setIsLoggedIn(true);
       setShowEmailAuth(false);
       setShowPricing(false); // Close any open modals
@@ -274,114 +278,44 @@ const App: React.FC = () => {
       
       // Clean up OAuth hash from URL if present
       if (window.location.hash.includes('access_token')) {
+        console.log('[Auth] Cleaning OAuth hash from URL');
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     };
 
-    // Check for existing session or handle OAuth callback
+    // IMPORTANT: Do NOT manually parse OAuth tokens!
+    // Let Supabase handle the OAuth callback automatically via onAuthStateChange
+    // The listener below will fire when Supabase detects and processes the tokens
+    
+    // Only call getSession for NON-OAuth flows (normal page load with existing session)
     const initAuth = async () => {
-      // First check if we have an OAuth callback with tokens in hash
-      if (window.location.hash.includes('access_token')) {
-        console.log('[Auth] OAuth callback detected - extracting tokens from hash');
-        
-        try {
-          // Parse hash manually - save it before any potential modification
-          const hash = window.location.hash.substring(1);
-          const params = new URLSearchParams(hash);
-          const accessToken = params.get('access_token');
-          const refreshToken = params.get('refresh_token') || '';
-          
-          console.log('[Auth] Tokens extracted:', { 
-            hasAccessToken: !!accessToken, 
-            accessTokenLength: accessToken?.length,
-            hasRefreshToken: !!refreshToken 
-          });
-          
-          if (accessToken) {
-            // Clear hash immediately
-            window.history.replaceState({}, document.title, window.location.pathname);
-            
-            console.log('[Auth] Setting session with tokens...');
-            
-            // Set the session FIRST - this is required for persistence
-            const { data: sessionData, error: sessionError } = await supabaseService.supabase!.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken
-            });
-            
-            console.log('[Auth] setSession result:', { 
-              hasSession: !!sessionData.session, 
-              email: sessionData.session?.user?.email,
-              error: sessionError?.message 
-            });
-            
-            if (sessionData.session?.user) {
-              console.log('[Auth] Session established for:', sessionData.session.user.email);
-              setIsLoggedIn(true);
-              setShowEmailAuth(false);
-              setShowPricing(false);
-              
-              // Load user data from Supabase (sets userProfile)
-              await loadUserData(sessionData.session.user.id);
-              refreshCreditState();
-              console.log('[Auth] OAuth flow complete');
-              return;
-            } else {
-              console.error('[Auth] setSession failed:', sessionError?.message);
-              
-              // Fallback: try getUser
-              const { data: userData } = await supabaseService.supabase!.auth.getUser(accessToken);
-              if (userData.user) {
-                console.log('[Auth] User verified via fallback:', userData.user.email);
-                setIsLoggedIn(true);
-                setShowEmailAuth(false);
-                setShowPricing(false);
-                await loadUserData(userData.user.id);
-                refreshCreditState();
-              }
-            }
-          }
-        } catch (err: any) {
-          console.error('[Auth] Error processing OAuth callback:', err?.message || err);
-        }
+      if (hasOAuthCallback) {
+        // OAuth callback detected - DO NOT call getSession yet!
+        // Let Supabase process the hash first, then onAuthStateChange will fire
+        console.log('[Auth] OAuth callback detected - waiting for Supabase to process tokens...');
+        return;
       }
       
-      // Normal session check (no OAuth hash or OAuth failed)
+      // Normal session check (no OAuth hash)
+      console.log('[Auth] Checking for existing session...');
       const { data: { session }, error } = await supabaseService.supabase!.auth.getSession();
-      console.log('[Auth] getSession:', { hasSession: !!session, email: session?.user?.email, error: error?.message });
+      console.log('[Auth] getSession result:', { hasSession: !!session, email: session?.user?.email, error: error?.message });
       
       if (session?.user) {
-        handleSessionLogin(session);
+        await handleSessionLogin(session, 'getSession');
       }
-      // No localStorage fallback - Supabase session is the only source of truth
     };
     
     initAuth();
-
-    // Track if OAuth is being processed to avoid race condition
-    let oauthInProgress = window.location.hash.includes('access_token');
     
-    // Listen to auth changes
+    // Listen to auth changes - this handles BOTH OAuth callbacks AND normal auth events
     const { data: { subscription } } = supabaseService.supabase!.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('[Auth] Event:', event, 'Has session:', !!session, 'Email:', session?.user?.email, 'oauthInProgress:', oauthInProgress);
+        console.log('[Auth] onAuthStateChange:', event, 'hasSession:', !!session, 'email:', session?.user?.email);
         
-        // CRITICAL: Skip loadUserData if OAuth is in progress
-        // The OAuth code will call loadUserData AFTER setSession completes
-        if (oauthInProgress && event === 'SIGNED_IN') {
-          console.log('[Auth] Skipping loadUserData in event handler - OAuth flow will handle it');
-          setIsLoggedIn(true);
-          setShowEmailAuth(false);
-          return; // Let OAuth code handle the rest
-        }
-        
-        // Handle session restore on page load (INITIAL_SESSION) or sign in
+        // Handle OAuth callback completion or any sign in
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session) {
-          setIsLoggedIn(true);
-          setShowEmailAuth(false);
-          
-          // Load user data from Supabase (sets userProfile which derives email/phone)
-          await loadUserData(session.user?.id);
+          await handleSessionLogin(session, `onAuthStateChange:${event}`);
           
           // Return to idle if user has credits
           if (appState === AppState.LIMIT_REACHED && remainingCredits > 0) {
@@ -410,14 +344,7 @@ const App: React.FC = () => {
             }
           }
         } else if (event === 'SIGNED_OUT') {
-          // Verify session is actually gone (browser back can trigger spurious events)
-          const { data: { session: currentSession } } = await supabaseService.supabase!.auth.getSession();
-          
-          if (currentSession?.user) {
-            console.log('SIGNED_OUT event but session still exists - ignoring');
-            return;
-          }
-          
+          console.log('[Auth] Sign out event received');
           setIsLoggedIn(false);
           setUserProfile(null);
         } else if (event === 'PASSWORD_RECOVERY') {
