@@ -79,7 +79,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
                   <span className="text-3xl sm:text-4xl font-black" style={{ color: 'var(--text-primary)' }}>$19</span>
                   <span className="text-xs sm:text-sm font-bold" style={{ color: 'var(--text-muted)' }}>AUD</span>
                 </div>
-                <p className="text-[11px] sm:text-xs font-medium mt-2" style={{ color: 'var(--text-muted)' }}>$6.33 per credit</p>
+                <p className="text-[11px] sm:text-xs font-medium mt-2" style={{ color: 'var(--text-muted)' }}>No subscription. Buy when you need.</p>
               </div>
               <ul className="space-y-4 mb-10 flex-grow">
                 <li className="flex items-start gap-3 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
@@ -127,7 +127,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
                   <span className="text-4xl sm:text-5xl font-black" style={{ color: 'var(--text-primary)' }}>$99</span>
                   <span className="text-xs sm:text-sm font-bold" style={{ color: 'var(--text-muted)' }}>AUD</span>
                 </div>
-                <p className="text-[11px] sm:text-xs font-bold text-[#C9A961] mt-2">$4.95 per credit – Save 22%</p>
+                <p className="text-[11px] sm:text-xs font-bold text-[#C9A961] mt-2">Best value – Save 22%</p>
               </div>
               <ul className="space-y-4 mb-10 flex-grow">
                 <li className="flex items-start gap-3 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-primary)' }}>
