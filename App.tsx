@@ -260,9 +260,6 @@ const App: React.FC = () => {
     const hasOAuthCallback = window.location.hash.includes('access_token');
     console.log('[Auth] Initializing - hasOAuthCallback:', hasOAuthCallback);
     
-    // Track OAuth timeout for user feedback
-    let oauthTimeoutId: NodeJS.Timeout | null = null;
-    
     // Helper function to handle successful session
     const handleSessionLogin = async (session: any, source: string) => {
       if (!session?.user) {
@@ -292,18 +289,6 @@ const App: React.FC = () => {
         // OAuth callback detected - Supabase will handle this automatically via detectSessionInUrl
         // The onAuthStateChange listener below will fire when session is ready
         console.log('[Auth] OAuth callback detected - Supabase is processing tokens...');
-        console.log('[Auth] Waiting for onAuthStateChange event...');
-        
-        // Set timeout to show helpful message if OAuth takes too long (session conflict)
-        oauthTimeoutId = setTimeout(() => {
-          console.log('[Auth] OAuth timeout - possible session conflict');
-          // Clean up the hash
-          window.history.replaceState({}, document.title, window.location.pathname);
-          // Show helpful error message
-          setError('Login is taking longer than expected. You may be logged in on another device. Please try logging out of all devices and try again.');
-          setAppState(AppState.ERROR);
-        }, 8000); // 8 second timeout
-        
         // Don't call any auth methods here - let Supabase finish processing first
         return;
       }
@@ -327,12 +312,6 @@ const App: React.FC = () => {
     const { data: { subscription } } = supabaseService.supabase!.auth.onAuthStateChange(
       async (event, session) => {
         console.log('[Auth] onAuthStateChange:', event, 'hasSession:', !!session, 'email:', session?.user?.email);
-        
-        // Clear OAuth timeout if login succeeds
-        if (oauthTimeoutId) {
-          clearTimeout(oauthTimeoutId);
-          oauthTimeoutId = null;
-        }
         
         // Handle OAuth callback completion or any sign in
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session) {
@@ -385,13 +364,7 @@ const App: React.FC = () => {
     // Now initialize - the listener is ready to catch events
     initAuth();
 
-    return () => {
-      subscription.unsubscribe();
-      // Clean up timeout on unmount
-      if (oauthTimeoutId) {
-        clearTimeout(oauthTimeoutId);
-      }
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   // Handle Stripe payment success redirect
