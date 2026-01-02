@@ -16,7 +16,8 @@ export class SupabaseService {
         auth: {
           autoRefreshToken: true,
           persistSession: true,
-          detectSessionInUrl: false // We handle OAuth manually in App.tsx
+          detectSessionInUrl: true, // Let Supabase handle OAuth tokens
+          flowType: 'implicit' // Ensure implicit flow for Google OAuth
         }
       });
     } else {

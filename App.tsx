@@ -283,62 +283,18 @@ const App: React.FC = () => {
       }
     };
 
-    // Handle OAuth callback or check for existing session
+    // Handle session initialization
     const initAuth = async () => {
       if (hasOAuthCallback) {
-        // OAuth callback detected - manually parse and set session
-        console.log('[Auth] OAuth callback detected - parsing tokens manually...');
-        
-        try {
-          // Parse tokens from hash
-          const hash = window.location.hash.substring(1);
-          const params = new URLSearchParams(hash);
-          const accessToken = params.get('access_token');
-          const refreshToken = params.get('refresh_token') || '';
-          
-          console.log('[Auth] Tokens found:', { 
-            hasAccess: !!accessToken, 
-            hasRefresh: !!refreshToken,
-            accessLength: accessToken?.length 
-          });
-          
-          // Clean up hash from URL immediately
-          window.history.replaceState({}, document.title, window.location.pathname);
-          
-          if (accessToken) {
-            // Set session with timeout to prevent hanging
-            console.log('[Auth] Setting session with tokens...');
-            
-            const timeoutPromise = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('setSession timeout')), 10000)
-            );
-            
-            const setSessionPromise = supabaseService.supabase!.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken
-            });
-            
-            const result = await Promise.race([setSessionPromise, timeoutPromise]) as any;
-            
-            console.log('[Auth] setSession result:', { 
-              hasSession: !!result.data?.session, 
-              email: result.data?.session?.user?.email,
-              error: result.error?.message 
-            });
-            
-            if (result.data?.session?.user) {
-              await handleSessionLogin(result.data.session, 'OAuth');
-              return;
-            } else if (result.error) {
-              console.error('[Auth] setSession error:', result.error.message);
-            }
-          }
-        } catch (err: any) {
-          console.error('[Auth] OAuth error:', err?.message || err);
-        }
+        // OAuth callback detected - Supabase will handle this automatically via detectSessionInUrl
+        // The onAuthStateChange listener below will fire when session is ready
+        console.log('[Auth] OAuth callback detected - Supabase is processing tokens...');
+        console.log('[Auth] Waiting for onAuthStateChange event...');
+        // Don't call any auth methods here - let Supabase finish processing first
+        return;
       }
       
-      // Check for existing session (non-OAuth or OAuth fallback)
+      // No OAuth callback - check for existing session
       console.log('[Auth] Checking for existing session...');
       try {
         const { data: { session }, error } = await supabaseService.supabase!.auth.getSession();
@@ -352,15 +308,20 @@ const App: React.FC = () => {
       }
     };
     
-    initAuth();
-    
-    // Listen to auth changes - this handles BOTH OAuth callbacks AND normal auth events
+    // Set up auth state listener FIRST (before initAuth)
+    // This ensures we catch the SIGNED_IN event from OAuth processing
     const { data: { subscription } } = supabaseService.supabase!.auth.onAuthStateChange(
       async (event, session) => {
         console.log('[Auth] onAuthStateChange:', event, 'hasSession:', !!session, 'email:', session?.user?.email);
         
         // Handle OAuth callback completion or any sign in
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session) {
+          // Clean up OAuth hash from URL if present
+          if (window.location.hash.includes('access_token')) {
+            console.log('[Auth] Cleaning OAuth hash from URL');
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+          
           await handleSessionLogin(session, `onAuthStateChange:${event}`);
           
           // Return to idle if user has credits
@@ -400,6 +361,9 @@ const App: React.FC = () => {
         }
       }
     );
+    
+    // Now initialize - the listener is ready to catch events
+    initAuth();
 
     return () => subscription.unsubscribe();
   }, []);
