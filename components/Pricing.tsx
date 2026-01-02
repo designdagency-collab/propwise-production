@@ -64,6 +64,20 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
   };
 
   const isPro = currentPlan === 'PRO' || currentPlan === 'UNLIMITED_PRO';
+  const isStarterPack = currentPlan === 'STARTER_PACK';
+
+  // Determine header text based on current plan
+  const getHeaderText = () => {
+    if (isPro) return 'Top Up Your Account';
+    if (isStarterPack) return 'Get More Credits';
+    return 'Get More Audits';
+  };
+
+  const getSubheaderText = () => {
+    if (isPro) return 'Add more credits to your Pro subscription or upgrade to Enterprise for unlimited access.';
+    if (isStarterPack) return 'Need more audits? Buy additional credits or upgrade to Pro for monthly allowance.';
+    return 'Australian real estate moves fast. Get deeper insights and more audits to make confident offers.';
+  };
 
   return (
     <div className="min-h-screen pb-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -79,19 +93,183 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
           </button>
           <div className="space-y-4">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter" style={{ color: 'var(--text-primary)' }}>
-              {isPro ? 'Top Up Your Account' : 'Get More Audits'}
+              {getHeaderText()}
             </h1>
             <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-              {isPro 
-                ? 'Add more credits to your Pro subscription or upgrade to Enterprise for unlimited access.'
-                : 'Australian real estate moves fast. Get deeper insights and more audits to make confident offers.'
-              }
+              {getSubheaderText()}
             </p>
           </div>
         </div>
 
-        {/* PRO USERS: Show Credit Packs + Enterprise */}
-        {isPro ? (
+        {/* STARTER PACK USERS: Show 3-Pack | Pro | Enterprise */}
+        {isStarterPack ? (
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 items-stretch">
+            {/* Buy 3 More Credits */}
+            <div className="p-8 rounded-[3rem] border-2 flex flex-col transition-all relative hover:border-[#C9A961]/50" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="bg-[#C9A961] text-white text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full">
+                  Add More
+                </span>
+              </div>
+              <div className="mb-8 pt-2">
+                <h3 className="text-lg sm:text-xl font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>3 Credit Pack</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl sm:text-4xl font-black" style={{ color: 'var(--text-primary)' }}>$19</span>
+                  <span className="text-xs sm:text-sm font-bold" style={{ color: 'var(--text-muted)' }}>AUD one-time</span>
+                </div>
+              </div>
+              <ul className="space-y-3 text-sm mb-8 flex-1" style={{ color: 'var(--text-muted)' }}>
+                <li className="flex items-center gap-2">
+                  <i className="fa-solid fa-check text-[#C9A961] text-xs"></i>
+                  <span>3 Additional Property Audits</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <i className="fa-solid fa-check text-[#C9A961] text-xs"></i>
+                  <span>Never Expires</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <i className="fa-solid fa-check text-[#C9A961] text-xs"></i>
+                  <span>Premium PDF Export</span>
+                </li>
+              </ul>
+              <button 
+                onClick={handleSelectStarter}
+                disabled={isProcessing !== null}
+                className="w-full py-3 sm:py-4 rounded-2xl font-bold uppercase tracking-widest text-[12px] sm:text-[11px] border-2 border-[#C9A961] text-[#C9A961] hover:bg-[#C9A961] hover:text-white transition-all flex items-center justify-center gap-2"
+              >
+                {isProcessing === 'STARTER_PACK' ? (
+                  <>
+                    <i className="fa-solid fa-spinner fa-spin"></i>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-plus"></i>
+                    Add 3 Credits
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Upgrade to Pro */}
+            <div className="p-8 rounded-[3rem] border-2 border-[#C9A961] flex flex-col relative shadow-lg shadow-[#C9A961]/10" style={{ backgroundColor: 'var(--bg-card)' }}>
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="bg-[#C9A961] text-white text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full">
+                  Best Value
+                </span>
+              </div>
+              <div className="mb-8 pt-2">
+                <h3 className="text-lg sm:text-xl font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Pro</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl sm:text-4xl font-black" style={{ color: 'var(--text-primary)' }}>$49</span>
+                  <span className="text-xs sm:text-sm font-bold" style={{ color: 'var(--text-muted)' }}>AUD / month</span>
+                </div>
+              </div>
+              <ul className="space-y-3 text-sm mb-8 flex-1" style={{ color: 'var(--text-muted)' }}>
+                <li className="flex items-center gap-2">
+                  <i className="fa-solid fa-check text-[#C9A961] text-xs"></i>
+                  <span>10 Property Audits / month</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <i className="fa-solid fa-check text-[#C9A961] text-xs"></i>
+                  <span>Premium PDF Export</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <i className="fa-solid fa-check text-[#C9A961] text-xs"></i>
+                  <span>Bulk credit packs – 22% off</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <i className="fa-solid fa-check text-[#C9A961] text-xs"></i>
+                  <span>Priority Support</span>
+                </li>
+              </ul>
+              <button 
+                onClick={handleSelectPro}
+                disabled={isProcessing !== null}
+                className="w-full py-3 sm:py-4 rounded-2xl font-bold uppercase tracking-widest text-[12px] sm:text-[11px] bg-[#C9A961] text-white hover:bg-[#3A342D] transition-all flex items-center justify-center gap-2"
+              >
+                {isProcessing === 'PRO' ? (
+                  <>
+                    <i className="fa-solid fa-spinner fa-spin"></i>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-rocket"></i>
+                    Upgrade to Pro
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Enterprise */}
+            <div className="p-8 rounded-[3rem] border-2 flex flex-col transition-all relative hover:border-[#C9A961]/50" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full" style={{ backgroundColor: 'var(--text-muted)', color: 'var(--bg-primary)' }}>
+                  Coming Soon
+                </span>
+              </div>
+              <div className="mb-8 pt-2">
+                <h3 className="text-lg sm:text-xl font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>Enterprise</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl sm:text-4xl font-black" style={{ color: 'var(--text-primary)' }}>$1,200</span>
+                  <span className="text-xs sm:text-sm font-bold" style={{ color: 'var(--text-muted)' }}>AUD / month</span>
+                </div>
+              </div>
+              <ul className="space-y-3 text-sm mb-8 flex-1" style={{ color: 'var(--text-muted)' }}>
+                <li className="flex items-center gap-2">
+                  <i className="fa-solid fa-check text-[#C9A961] text-xs"></i>
+                  <span>Unlimited Property Audits</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <i className="fa-solid fa-check text-[#C9A961] text-xs"></i>
+                  <span>Qualified Leads</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <i className="fa-solid fa-check text-[#C9A961] text-xs"></i>
+                  <span>Commercial-Use Reports</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <i className="fa-solid fa-check text-[#C9A961] text-xs"></i>
+                  <span>Priority Compute & Support</span>
+                </li>
+              </ul>
+              <button 
+                onClick={handleJoinWaitlist}
+                disabled={!isLoggedIn || waitlistJoined || isJoiningWaitlist}
+                className={`w-full py-3 sm:py-4 rounded-2xl font-bold uppercase tracking-widest text-[12px] sm:text-[11px] transition-all flex items-center justify-center gap-2 ${
+                  waitlistJoined 
+                    ? 'bg-[#1a1a1a] text-white cursor-default' 
+                    : 'border-2 hover:bg-[#C9A961] hover:text-white hover:border-[#C9A961]'
+                }`}
+                style={!waitlistJoined ? { borderColor: 'var(--border-color)', color: 'var(--text-muted)' } : {}}
+              >
+                {isJoiningWaitlist ? (
+                  <>
+                    <i className="fa-solid fa-spinner fa-spin"></i>
+                    Joining...
+                  </>
+                ) : waitlistJoined ? (
+                  <>
+                    <i className="fa-solid fa-check"></i>
+                    You're on the list!
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-bell"></i>
+                    {isLoggedIn ? 'Join Waitlist' : 'Login to Join'}
+                  </>
+                )}
+              </button>
+              {waitlistJoined && (
+                <p className="text-xs text-center mt-3" style={{ color: 'var(--text-muted)' }}>
+                  We'll notify you when Enterprise launches
+                </p>
+              )}
+            </div>
+          </div>
+        ) : isPro ? (
+          /* PRO USERS: Show Credit Packs + Enterprise */
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 items-stretch">
             {/* 3 Credit Pack */}
             <div className="p-8 rounded-[3rem] border-2 flex flex-col transition-all relative hover:border-[#C9A961]/50" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>

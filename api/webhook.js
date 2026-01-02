@@ -120,11 +120,17 @@ export default async function handler(req, res) {
           let updateResult;
           if (planType === 'STARTER_PACK') {
             const newCredits = (profile.credit_topups || 0) + 3;
+            // Upgrade to STARTER_PACK tier (unless they're already PRO/UNLIMITED_PRO)
+            const shouldUpgradeTier = !['PRO', 'UNLIMITED_PRO'].includes(profile.plan_type);
             updateResult = await supabase
               .from('profiles')
-              .update({ credit_topups: newCredits, updated_at: new Date().toISOString() })
+              .update({ 
+                credit_topups: newCredits, 
+                ...(shouldUpgradeTier && { plan_type: 'STARTER_PACK' }),
+                updated_at: new Date().toISOString() 
+              })
               .eq('id', profile.id);
-            console.log('[Webhook] Added 3 credits for STARTER_PACK. New total:', newCredits);
+            console.log('[Webhook] Added 3 credits for STARTER_PACK. New total:', newCredits, 'Tier upgraded:', shouldUpgradeTier);
           } else if (planType === 'BULK_PACK') {
             const newCredits = (profile.credit_topups || 0) + 20;
             updateResult = await supabase
