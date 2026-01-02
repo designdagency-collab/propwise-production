@@ -356,21 +356,38 @@ RULES:
 - Always use data from the ACTUAL listing found, not assumptions based on search input.
 - Output ONLY valid JSON. No markdown blocks.`;
 
+    console.log('[PropertyInsights] Calling Gemini API...');
+    
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-preview-05-20',
+      model: 'gemini-2.0-flash',
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
-        thinkingConfig: { thinkingBudget: 2048 },
         responseMimeType: "application/json",
         responseSchema: responseSchema
       },
     });
 
+    console.log('[PropertyInsights] Got response, extracting text...');
+
     let text = response.text || '';
+    console.log('[PropertyInsights] Raw text length:', text.length);
+    
     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
     
-    const data = JSON.parse(text);
+    if (!text) {
+      console.error('[PropertyInsights] Empty response from Gemini');
+      return res.status(500).json({ error: 'Empty response from AI service' });
+    }
+    
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (parseError) {
+      console.error('[PropertyInsights] JSON parse error:', parseError.message);
+      console.error('[PropertyInsights] Raw text (first 500 chars):', text.substring(0, 500));
+      return res.status(500).json({ error: 'Invalid response format from AI service' });
+    }
     
     // Extract sources from grounding metadata if available
     const sources = [];
@@ -389,7 +406,8 @@ RULES:
     return res.status(200).json({ data });
   } catch (error) {
     console.error('[PropertyInsights] Error:', error.message || error);
-    return res.status(500).json({ error: 'Failed to fetch property insights' });
+    console.error('[PropertyInsights] Stack:', error.stack);
+    return res.status(500).json({ error: 'Failed to fetch property insights: ' + (error.message || 'Unknown error') });
   }
 }
 
