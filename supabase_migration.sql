@@ -23,6 +23,24 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan_type TEXT DEFAULT 'FREE_TRIAL
 -- Add signup_fingerprint column for abuse detection (tracks which device created the account)
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS signup_fingerprint TEXT;
 
+-- Add PRO plan tracking columns
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pro_used INTEGER DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pro_month TEXT;
+
+-- Add phone recovery columns
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone_verification_code TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone_code_expires_at TIMESTAMPTZ;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone_pending TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone_recovery_prompted BOOLEAN DEFAULT false;
+
+-- Add recovery code columns
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS recovery_code TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS recovery_code_expires_at TIMESTAMPTZ;
+
+-- Add enterprise waitlist columns
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS enterprise_waitlist BOOLEAN DEFAULT false;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS enterprise_waitlist_date TIMESTAMPTZ;
+
 -- Create subscriptions table
 CREATE TABLE IF NOT EXISTS subscriptions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

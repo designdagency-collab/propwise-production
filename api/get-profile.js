@@ -5,17 +5,27 @@ import { createClient } from '@supabase/supabase-js';
  * Verify the user's JWT token matches the userId
  */
 async function verifyUserOwnership(supabase, authHeader, userId) {
+  console.log('[GetProfile] Verifying auth - hasHeader:', !!authHeader, 'userId:', userId);
+  
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.log('[GetProfile] No auth header or wrong format');
     return { valid: false, error: 'Missing authorization header' };
   }
   
   const token = authHeader.replace('Bearer ', '');
+  console.log('[GetProfile] Token length:', token?.length);
   
   try {
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
+    console.log('[GetProfile] getUser result:', { 
+      hasUser: !!user, 
+      userId: user?.id?.substring(0, 8), 
+      error: error?.message 
+    });
+    
     if (error || !user) {
-      return { valid: false, error: 'Invalid token' };
+      return { valid: false, error: error?.message || 'Invalid token' };
     }
     
     if (user.id !== userId) {
@@ -25,8 +35,8 @@ async function verifyUserOwnership(supabase, authHeader, userId) {
     
     return { valid: true, user };
   } catch (err) {
-    console.error('[GetProfile] Token verification error:', err);
-    return { valid: false, error: 'Token verification failed' };
+    console.error('[GetProfile] Token verification error:', err.message);
+    return { valid: false, error: 'Token verification failed: ' + err.message };
   }
 }
 
@@ -78,6 +88,7 @@ export default async function handler(req, res) {
 
   try {
     // SECURITY: Only select safe fields - never expose verification codes or recovery codes
+    // NOTE: Only include columns that actually exist in the profiles table
     const safeFields = [
       'id',
       'email', 
@@ -90,10 +101,9 @@ export default async function handler(req, res) {
       'phone',
       'phone_verified',
       'phone_recovery_prompted',
-      'enterprise_waitlist',
-      'enterprise_waitlist_date',
       'created_at',
       'updated_at'
+      // enterprise_waitlist and enterprise_waitlist_date - add after running migration
     ].join(', ');
     
     const { data: profile, error: profileError } = await supabase
