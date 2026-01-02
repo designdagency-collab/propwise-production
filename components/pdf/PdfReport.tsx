@@ -672,7 +672,7 @@ export const getPdfDocumentStyles = () => `
     background: #FAFAF8;
     border-radius: 12px;
     border: 1px solid #E5E2DD;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
   }
   .pdf-metric {
     display: flex;
@@ -701,7 +701,7 @@ export const getPdfDocumentStyles = () => `
     height: 250px;
     border-radius: 12px;
     overflow: hidden;
-    margin-top: 80px;
+    margin-top: 20px;
     margin-bottom: 150px;
     background: #f5f5f5;
     position: relative;
