@@ -3,6 +3,16 @@ import { createClient } from '@supabase/supabase-js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+// Helper to read raw body from request stream
+async function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', (chunk) => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
 // Initialize Supabase client
 let supabase = null;
 try {
@@ -26,16 +36,17 @@ export default async function handler(req, res) {
 
   try {
     // Get raw body for webhook verification
-    const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
-    const rawBody = Buffer.from(body);
+    const rawBody = await getRawBody(req);
     
     event = stripe.webhooks.constructEvent(
       rawBody,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
+    
+    console.log('[Webhook] Event verified:', event.type);
   } catch (err) {
-    console.error('Webhook signature verification failed:', err.message);
+    console.error('[Webhook] Signature verification failed:', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -90,7 +101,7 @@ export default async function handler(req, res) {
             .eq('status', 'active');
 
           // Create new subscription record
-          await supabase
+          const { error: subscriptionError } = await supabase
             .from('subscriptions')
             .insert({
               user_id: profile.id,
@@ -100,27 +111,32 @@ export default async function handler(req, res) {
               stripe_subscription_id: session.subscription,
               stripe_session_id: session.id
             });
+          
+          if (subscriptionError) {
+            console.error('[Webhook] Subscription insert error:', subscriptionError.message);
+          }
 
           // Add credits based on plan type
+          let updateResult;
           if (planType === 'STARTER_PACK') {
             const newCredits = (profile.credit_topups || 0) + 3;
-            await supabase
+            updateResult = await supabase
               .from('profiles')
               .update({ credit_topups: newCredits, updated_at: new Date().toISOString() })
               .eq('id', profile.id);
-            console.log('[Webhook] Added 3 credits for STARTER_PACK:', newCredits);
+            console.log('[Webhook] Added 3 credits for STARTER_PACK. New total:', newCredits);
           } else if (planType === 'BULK_PACK') {
             const newCredits = (profile.credit_topups || 0) + 20;
-            await supabase
+            updateResult = await supabase
               .from('profiles')
               .update({ credit_topups: newCredits, updated_at: new Date().toISOString() })
               .eq('id', profile.id);
-            console.log('[Webhook] Added 20 credits for BULK_PACK:', newCredits);
+            console.log('[Webhook] Added 20 credits for BULK_PACK. New total:', newCredits);
           } else if (planType === 'PRO') {
             // Update plan type and initialize PRO usage
             const now = new Date();
             const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            await supabase
+            updateResult = await supabase
               .from('profiles')
               .update({ 
                 plan_type: 'PRO', 
@@ -131,17 +147,33 @@ export default async function handler(req, res) {
               .eq('id', profile.id);
             console.log('[Webhook] Upgraded to PRO:', { currentMonth });
           }
+          
+          if (updateResult?.error) {
+            console.error('[Webhook] Profile update error:', updateResult.error.message);
+          } else {
+            console.log('[Webhook] Profile updated successfully');
+          }
         } else {
           console.error('[Webhook] No profile found:', { userId, customerEmail });
         }
       } catch (error) {
-        console.error('[Webhook] Supabase update error:', error.message || error);
+        console.error('[Webhook] Supabase error:', error.message || error);
       }
     } else {
-      console.error('[Webhook] Supabase not configured or no user identifier:', { userId, customerEmail });
+      console.error('[Webhook] Cannot process - Supabase not configured or no user identifier:', { 
+        supabaseConfigured: !!supabase, 
+        userId, 
+        customerEmail 
+      });
     }
   }
 
   res.json({ received: true });
 }
 
+// Disable body parsing - Stripe needs raw body for signature verification
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
