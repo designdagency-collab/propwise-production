@@ -16,7 +16,7 @@ export class SupabaseService {
         auth: {
           autoRefreshToken: true,
           persistSession: true,
-          detectSessionInUrl: true
+          detectSessionInUrl: false // We handle OAuth manually in App.tsx
         }
       });
     } else {

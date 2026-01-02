@@ -283,29 +283,72 @@ const App: React.FC = () => {
       }
     };
 
-    // Check for session - Supabase's detectSessionInUrl will have already processed OAuth hash
+    // Handle OAuth callback or check for existing session
     const initAuth = async () => {
       if (hasOAuthCallback) {
-        // OAuth callback detected - give Supabase a moment to process the hash
-        console.log('[Auth] OAuth callback detected - waiting for Supabase to process...');
+        // OAuth callback detected - manually parse and set session
+        console.log('[Auth] OAuth callback detected - parsing tokens manually...');
         
-        // Small delay to ensure Supabase has processed the hash
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Clean up hash from URL first
-        window.history.replaceState({}, document.title, window.location.pathname);
+        try {
+          // Parse tokens from hash
+          const hash = window.location.hash.substring(1);
+          const params = new URLSearchParams(hash);
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token') || '';
+          
+          console.log('[Auth] Tokens found:', { 
+            hasAccess: !!accessToken, 
+            hasRefresh: !!refreshToken,
+            accessLength: accessToken?.length 
+          });
+          
+          // Clean up hash from URL immediately
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          if (accessToken) {
+            // Set session with timeout to prevent hanging
+            console.log('[Auth] Setting session with tokens...');
+            
+            const timeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('setSession timeout')), 10000)
+            );
+            
+            const setSessionPromise = supabaseService.supabase!.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
+            
+            const result = await Promise.race([setSessionPromise, timeoutPromise]) as any;
+            
+            console.log('[Auth] setSession result:', { 
+              hasSession: !!result.data?.session, 
+              email: result.data?.session?.user?.email,
+              error: result.error?.message 
+            });
+            
+            if (result.data?.session?.user) {
+              await handleSessionLogin(result.data.session, 'OAuth');
+              return;
+            } else if (result.error) {
+              console.error('[Auth] setSession error:', result.error.message);
+            }
+          }
+        } catch (err: any) {
+          console.error('[Auth] OAuth error:', err?.message || err);
+        }
       }
       
-      // Get session (will have been set by Supabase's detectSessionInUrl for OAuth)
-      console.log('[Auth] Getting session...');
-      const { data: { session }, error } = await supabaseService.supabase!.auth.getSession();
-      console.log('[Auth] getSession result:', { hasSession: !!session, email: session?.user?.email, error: error?.message });
-      
-      if (session?.user) {
-        await handleSessionLogin(session, 'getSession');
-      } else if (hasOAuthCallback) {
-        // OAuth failed - log error
-        console.error('[Auth] OAuth callback present but no session. Error:', error?.message);
+      // Check for existing session (non-OAuth or OAuth fallback)
+      console.log('[Auth] Checking for existing session...');
+      try {
+        const { data: { session }, error } = await supabaseService.supabase!.auth.getSession();
+        console.log('[Auth] getSession result:', { hasSession: !!session, email: session?.user?.email, error: error?.message });
+        
+        if (session?.user) {
+          await handleSessionLogin(session, 'getSession');
+        }
+      } catch (err: any) {
+        console.error('[Auth] getSession error:', err?.message);
       }
     };
     
