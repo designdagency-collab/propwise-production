@@ -356,16 +356,21 @@ RULES:
 - Always use data from the ACTUAL listing found, not assumptions based on search input.
 - Output ONLY valid JSON. No markdown blocks.`;
 
-    console.log('[PropertyInsights] Calling Gemini API with model gemini-pro...');
+    console.log('[PropertyInsights] Calling Gemini API with model gemini-3-flash-preview...');
     
-    // Try with gemini-pro (most widely available model)
+    // Use EXACT original format that was working
     const response = await ai.models.generateContent({
-      model: 'gemini-pro',
-      contents: prompt + '\n\nRespond with ONLY valid JSON matching the required schema. No markdown, no code blocks, just JSON.',
+      model: 'gemini-3-flash-preview',
+      contents: [{ parts: [{ text: prompt }] }],
+      config: {
+        tools: [{ googleSearch: {} }],
+        thinkingConfig: { thinkingBudget: 2048 },
+        responseMimeType: "application/json",
+        responseSchema: responseSchema
+      },
     });
 
     console.log('[PropertyInsights] Got response, extracting text...');
-    console.log('[PropertyInsights] Response object keys:', Object.keys(response || {}));
 
     let text = response.text || '';
     console.log('[PropertyInsights] Raw text length:', text.length);
