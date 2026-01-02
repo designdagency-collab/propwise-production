@@ -70,31 +70,35 @@ export class SupabaseService {
   }
 
   // Make authenticated API call with JWT token
-  async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
-    const token = await this.getAccessToken();
+  // Can optionally pass token directly (useful during OAuth when session isn't synced yet)
+  async authenticatedFetch(url: string, options: RequestInit = {}, providedToken?: string): Promise<Response> {
+    const token = providedToken || await this.getAccessToken();
     const headers = new Headers(options.headers);
     headers.set('Content-Type', 'application/json');
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
+    } else {
+      console.warn('[Supabase] authenticatedFetch - no token available for:', url);
     }
     return fetch(url, { ...options, headers, credentials: 'include' });
   }
 
   // Get current user profile using server-side API to bypass RLS issues during OAuth
-  async getCurrentProfile(userId?: string): Promise<any | null> {
+  // Can optionally pass accessToken directly (for OAuth where session isn't synced yet)
+  async getCurrentProfile(userId?: string, accessToken?: string): Promise<any | null> {
     if (!userId) {
       console.log('[Supabase] getCurrentProfile - no userId provided');
       return null;
     }
     
-    console.log('[Supabase] getCurrentProfile - fetching via API for userId:', userId);
+    console.log('[Supabase] getCurrentProfile - fetching via API for userId:', userId, 'hasToken:', !!accessToken);
     
     try {
       // Use server-side API with JWT authentication
       const response = await this.authenticatedFetch('/api/get-profile', {
         method: 'POST',
         body: JSON.stringify({ userId })
-      });
+      }, accessToken);
       
       if (!response.ok) {
         const errorData = await response.json();

@@ -273,7 +273,8 @@ const App: React.FC = () => {
       setShowPricing(false); // Close any open modals
       
       // Load user data from Supabase (sets userProfile which derives email/phone)
-      await loadUserData(session.user.id);
+      // Pass access_token directly to avoid timing issues where getSession() returns null
+      await loadUserData(session.user.id, session.access_token);
       refreshCreditState();
       
       // Clean up OAuth hash from URL if present
@@ -429,14 +430,15 @@ const App: React.FC = () => {
   }, []);
 
   // Load user data from Supabase and sync credit state
-  const loadUserData = async (userId?: string) => {
-    console.log('[loadUserData] Called with userId:', userId);
+  // Can optionally pass accessToken directly (for OAuth where session isn't synced yet)
+  const loadUserData = async (userId?: string, accessToken?: string) => {
+    console.log('[loadUserData] Called with userId:', userId, 'hasToken:', !!accessToken);
     
     // Using server-side API now, no delay needed
     
     try {
-      // Pass userId directly to avoid getUser() hanging during OAuth
-      const profile = await supabaseService.getCurrentProfile(userId);
+      // Pass userId and accessToken directly to avoid getUser() hanging during OAuth
+      const profile = await supabaseService.getCurrentProfile(userId, accessToken);
       console.log('[loadUserData] Got profile:', profile ? { id: profile.id, search_count: profile.search_count, credit_topups: profile.credit_topups, plan_type: profile.plan_type } : null);
       
       if (profile) {
