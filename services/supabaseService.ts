@@ -455,7 +455,8 @@ export class SupabaseService {
   // Sign out
   async signOut(): Promise<void> {
     if (!this.supabase) return;
-    await this.supabase.auth.signOut();
+    // Use global scope to clear all sessions across tabs
+    await this.supabase.auth.signOut({ scope: 'global' });
   }
 }
 

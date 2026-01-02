@@ -257,7 +257,7 @@ const App: React.FC = () => {
       return;
     }
 
-    console.log('[Auth] Initializing - Supabase will auto-handle OAuth hash via detectSessionInUrl');
+    console.log('[Auth] Initializing - checking for OAuth callback or existing session');
     
     // Helper function to handle successful session
     const handleSessionLogin = async (session: any) => {
@@ -266,6 +266,7 @@ const App: React.FC = () => {
       console.log('[Auth] Login successful for:', session.user.email);
       setIsLoggedIn(true);
       setShowEmailAuth(false);
+      setShowPricing(false); // Close any open modals
       
       // Load user data from Supabase (sets userProfile which derives email/phone)
       await loadUserData(session.user.id);
@@ -318,6 +319,7 @@ const App: React.FC = () => {
               console.log('[Auth] Session established for:', sessionData.session.user.email);
               setIsLoggedIn(true);
               setShowEmailAuth(false);
+              setShowPricing(false);
               
               // Load user data from Supabase (sets userProfile)
               await loadUserData(sessionData.session.user.id);
@@ -333,6 +335,7 @@ const App: React.FC = () => {
                 console.log('[Auth] User verified via fallback:', userData.user.email);
                 setIsLoggedIn(true);
                 setShowEmailAuth(false);
+                setShowPricing(false);
                 await loadUserData(userData.user.id);
                 refreshCreditState();
               }
