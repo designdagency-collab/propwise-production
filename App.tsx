@@ -258,11 +258,10 @@ const App: React.FC = () => {
     }
 
     const hasOAuthCallback = window.location.hash.includes('access_token');
-    const rawHash = window.location.hash;
     console.log('[Auth] Initializing - hasOAuthCallback:', hasOAuthCallback);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/5920d073-665c-4933-8c37-117eb88ec0ee',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:useEffect-init',message:'Auth useEffect START',data:{hasOAuthCallback,hashLength:rawHash.length,hashPreview:rawHash.substring(0,100),supabaseReady:!!supabaseService.supabase},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,D,E'})}).catch(()=>{});
-    // #endregion
+    
+    // Track OAuth timeout for user feedback
+    let oauthTimeoutId: NodeJS.Timeout | null = null;
     
     // Helper function to handle successful session
     const handleSessionLogin = async (session: any, source: string) => {
@@ -294,9 +293,17 @@ const App: React.FC = () => {
         // The onAuthStateChange listener below will fire when session is ready
         console.log('[Auth] OAuth callback detected - Supabase is processing tokens...');
         console.log('[Auth] Waiting for onAuthStateChange event...');
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/5920d073-665c-4933-8c37-117eb88ec0ee',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:initAuth-oauth',message:'OAuth path - waiting for Supabase',data:{hashStillThere:window.location.hash.includes('access_token')},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B,C,D'})}).catch(()=>{});
-        // #endregion
+        
+        // Set timeout to show helpful message if OAuth takes too long (session conflict)
+        oauthTimeoutId = setTimeout(() => {
+          console.log('[Auth] OAuth timeout - possible session conflict');
+          // Clean up the hash
+          window.history.replaceState({}, document.title, window.location.pathname);
+          // Show helpful error message
+          setError('Login is taking longer than expected. You may be logged in on another device. Please try logging out of all devices and try again.');
+          setAppState(AppState.ERROR);
+        }, 8000); // 8 second timeout
+        
         // Don't call any auth methods here - let Supabase finish processing first
         return;
       }
@@ -317,15 +324,15 @@ const App: React.FC = () => {
     
     // Set up auth state listener FIRST (before initAuth)
     // This ensures we catch the SIGNED_IN event from OAuth processing
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/5920d073-665c-4933-8c37-117eb88ec0ee',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:before-listener',message:'About to set up onAuthStateChange listener',data:{hashStillPresent:window.location.hash.includes('access_token')},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     const { data: { subscription } } = supabaseService.supabase!.auth.onAuthStateChange(
       async (event, session) => {
         console.log('[Auth] onAuthStateChange:', event, 'hasSession:', !!session, 'email:', session?.user?.email);
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/5920d073-665c-4933-8c37-117eb88ec0ee',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:onAuthStateChange',message:'AUTH EVENT RECEIVED',data:{event,hasSession:!!session,email:session?.user?.email,userId:session?.user?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B,C'})}).catch(()=>{});
-        // #endregion
+        
+        // Clear OAuth timeout if login succeeds
+        if (oauthTimeoutId) {
+          clearTimeout(oauthTimeoutId);
+          oauthTimeoutId = null;
+        }
         
         // Handle OAuth callback completion or any sign in
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session) {
@@ -375,18 +382,16 @@ const App: React.FC = () => {
       }
     );
     
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/5920d073-665c-4933-8c37-117eb88ec0ee',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:after-listener-setup',message:'Listener set up, calling initAuth',data:{subscriptionExists:!!subscription},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
     // Now initialize - the listener is ready to catch events
     initAuth();
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/5920d073-665c-4933-8c37-117eb88ec0ee',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'App.tsx:after-initAuth',message:'initAuth called, useEffect complete',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B'})}).catch(()=>{});
-    // #endregion
-
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      // Clean up timeout on unmount
+      if (oauthTimeoutId) {
+        clearTimeout(oauthTimeoutId);
+      }
+    };
   }, []);
 
   // Handle Stripe payment success redirect

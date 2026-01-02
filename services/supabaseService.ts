@@ -11,10 +11,6 @@ export class SupabaseService {
   public supabase: SupabaseClient | null = null;
   
   constructor() {
-    // #region agent log
-    const hashAtConstruction = typeof window !== 'undefined' ? window.location.hash : 'no-window';
-    fetch('http://127.0.0.1:7242/ingest/5920d073-665c-4933-8c37-117eb88ec0ee',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'supabaseService.ts:constructor',message:'Supabase client construction START',data:{isConfigured:isSupabaseConfigured,hashPresent:hashAtConstruction.includes('access_token'),hashLength:hashAtConstruction.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,D'})}).catch(()=>{});
-    // #endregion
     if (isSupabaseConfigured) {
       this.supabase = createClient(supabaseUrl, supabaseAnonKey, {
         auth: {
@@ -24,9 +20,6 @@ export class SupabaseService {
           flowType: 'implicit' // Ensure implicit flow for Google OAuth
         }
       });
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/5920d073-665c-4933-8c37-117eb88ec0ee',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'supabaseService.ts:constructor',message:'Supabase client created',data:{clientExists:!!this.supabase,hashAfterCreate:typeof window!=='undefined'?window.location.hash.substring(0,50):'no-window'},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,B,D'})}).catch(()=>{});
-      // #endregion
     } else {
       console.warn('Supabase not configured - phone verification will be unavailable');
     }
