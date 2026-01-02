@@ -106,12 +106,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 items-stretch">
             {/* Buy 3 More Credits */}
             <div className="p-8 rounded-[3rem] border-2 flex flex-col transition-all relative hover:border-[#C9A961]/50" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="bg-[#C9A961] text-white text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full">
-                  Add More
-                </span>
-              </div>
-              <div className="mb-8 pt-2">
+              <div className="mb-8">
                 <h3 className="text-lg sm:text-xl font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--text-secondary)' }}>3 Credit Pack</h3>
                 <div className="flex items-baseline gap-1">
                   <span className="text-3xl sm:text-4xl font-black" style={{ color: 'var(--text-primary)' }}>$19</span>
@@ -205,7 +200,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
             {/* Enterprise */}
             <div className="p-8 rounded-[3rem] border-2 flex flex-col transition-all relative hover:border-[#C9A961]/50" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span className="text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full" style={{ backgroundColor: 'var(--text-muted)', color: 'var(--bg-primary)' }}>
+                <span className="bg-[#3A342D] text-white text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full">
                   Coming Soon
                 </span>
               </div>
