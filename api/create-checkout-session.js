@@ -71,7 +71,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { plan, email } = req.body;
+    const { plan, email, userId } = req.body;
 
     if (!plan || !PLAN_CONFIGS[plan]) {
       return res.status(400).json({ error: 'Invalid plan selected' });
@@ -107,6 +107,7 @@ export default async function handler(req, res) {
       cancel_url: `${baseUrl}?payment=cancel`,
       metadata: {
         plan: plan,
+        userId: userId || '', // Include userId for reliable webhook lookup
       },
     };
 

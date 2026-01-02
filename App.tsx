@@ -650,52 +650,9 @@ const App: React.FC = () => {
     setShowEmailAuth(true);
   };
 
-  // Handle "Buy Starter Pack" CTA - calls Stripe checkout
+  // Legacy alias - routes to new unified handler
   const handleBuyStarterPack = async () => {
-    // REQUIRE LOGIN before payment - double-check with Supabase to avoid stale state
-    let userLoggedIn = isLoggedIn;
-    let email = userProfile?.email || '';
-    
-    if (!userLoggedIn) {
-      // Verify with Supabase directly
-      const user = await supabaseService.getCurrentUser();
-      if (user) {
-        console.log('[Auth] Session recovered from Supabase:', user.email);
-        setIsLoggedIn(true);
-        await loadUserData(user.id);
-        userLoggedIn = true;
-        email = user.email || '';
-      }
-    }
-    
-    if (!userLoggedIn) {
-      // Not logged in - show signup with pending upgrade in URL
-      setShowPricing(false);
-      setEmailAuthMode('signup');
-      setShowEmailAuth(true);
-      const url = new URL(window.location.href);
-      url.searchParams.set('pending_upgrade', 'STARTER_PACK');
-      window.history.replaceState({}, document.title, url.toString());
-      return;
-    }
-    
-    setIsProcessingUpgrade(true);
-    
-    // Call Stripe checkout for Starter Pack
-    const checkoutEmail = email || userProfile?.email || '';
-    const result = await stripeService.createCheckoutSession('STARTER_PACK', checkoutEmail);
-    
-    if (result.success && result.url) {
-      // Redirect to Stripe checkout
-      window.location.href = result.url;
-      return;
-    }
-    
-    // Handle error
-    console.error('Stripe checkout error:', result.error);
-    setIsProcessingUpgrade(false);
-    setError(result.error || 'Failed to start checkout. Please try again.');
-    setAppState(AppState.ERROR);
+    await handleBuyCreditPack('STARTER_PACK');
   };
 
   // Handle "Upgrade to Pro" CTA
@@ -737,7 +694,9 @@ const App: React.FC = () => {
     }
     
     try {
-      const response = await stripeService.createCheckoutSession('PRO', email);
+      // Pass userId for reliable webhook lookup
+      const userId = userProfile?.id || '';
+      const response = await stripeService.createCheckoutSession('PRO', email, userId);
       
       if (response.success && response.url) {
         window.location.href = response.url;
@@ -1075,12 +1034,61 @@ const App: React.FC = () => {
 
   const handleUpgrade = async (planType: PlanType = 'PRO') => {
     // Route to appropriate handler based on plan type
-    if (planType === 'STARTER_PACK') {
-      await handleBuyStarterPack();
+    if (planType === 'STARTER_PACK' || planType === 'BULK_PACK') {
+      // Credit packs use one-time payment flow
+      await handleBuyCreditPack(planType);
       return;
     }
-    // Default to PRO subscription
+    // PRO uses subscription flow
     await handleUpgradeToPro();
+  };
+  
+  // Handle buying credit packs (STARTER_PACK = 3 credits, BULK_PACK = 20 credits)
+  const handleBuyCreditPack = async (packType: 'STARTER_PACK' | 'BULK_PACK') => {
+    // REQUIRE LOGIN before payment
+    let userLoggedIn = isLoggedIn;
+    let email = userProfile?.email || '';
+    
+    if (!userLoggedIn) {
+      const user = await supabaseService.getCurrentUser();
+      if (user) {
+        console.log('[Auth] Session recovered from Supabase:', user.email);
+        setIsLoggedIn(true);
+        await loadUserData(user.id);
+        userLoggedIn = true;
+        email = user.email || '';
+      }
+    }
+    
+    if (!userLoggedIn) {
+      // Not logged in - show signup with pending upgrade
+      setShowPricing(false);
+      setEmailAuthMode('signup');
+      setShowEmailAuth(true);
+      const url = new URL(window.location.href);
+      url.searchParams.set('pending_upgrade', packType);
+      window.history.replaceState({}, document.title, url.toString());
+      return;
+    }
+    
+    setIsProcessingUpgrade(true);
+    
+    // Call Stripe checkout - pass userId for reliable webhook lookup
+    const checkoutEmail = email || userProfile?.email || '';
+    const checkoutUserId = userProfile?.id || '';
+    console.log('[Checkout] Creating session for', packType, 'userId:', checkoutUserId);
+    const result = await stripeService.createCheckoutSession(packType, checkoutEmail, checkoutUserId);
+    
+    if (result.success && result.url) {
+      window.location.href = result.url;
+      return;
+    }
+    
+    // Handle error
+    console.error('Stripe checkout error:', result.error);
+    setIsProcessingUpgrade(false);
+    setError(result.error || 'Failed to start checkout. Please try again.');
+    setAppState(AppState.ERROR);
   };
 
   return (

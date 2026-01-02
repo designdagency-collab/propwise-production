@@ -43,21 +43,44 @@ export default async function handler(req, res) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const customerEmail = session.customer_email;
+    const userId = session.metadata?.userId; // Primary lookup method
     const planType = session.metadata?.plan || 'STARTER_PACK';
     
-    console.log('[Webhook] Processing payment:', { customerEmail, planType, sessionId: session.id });
+    console.log('[Webhook] Processing payment:', { userId, customerEmail, planType, sessionId: session.id });
     
     // Update subscription and credits in Supabase if configured
-    if (supabase && customerEmail) {
+    if (supabase && (userId || customerEmail)) {
       try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('email', customerEmail)
-          .single();
+        let profile = null;
+        
+        // First try to find by userId (most reliable)
+        if (userId) {
+          const { data } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+          profile = data;
+          if (profile) {
+            console.log('[Webhook] Found profile by userId:', userId);
+          }
+        }
+        
+        // Fallback to email lookup if userId didn't work
+        if (!profile && customerEmail) {
+          const { data } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', customerEmail)
+            .single();
+          profile = data;
+          if (profile) {
+            console.log('[Webhook] Found profile by email:', customerEmail);
+          }
+        }
 
         if (profile) {
-          console.log('[Webhook] Found profile:', { userId: profile.id, currentCredits: profile.credit_topups });
+          console.log('[Webhook] Profile found:', { id: profile.id, email: profile.email, currentCredits: profile.credit_topups });
           
           // Deactivate old subscriptions
           await supabase
@@ -109,13 +132,13 @@ export default async function handler(req, res) {
             console.log('[Webhook] Upgraded to PRO:', { currentMonth });
           }
         } else {
-          console.error('[Webhook] No profile found for email:', customerEmail);
+          console.error('[Webhook] No profile found:', { userId, customerEmail });
         }
       } catch (error) {
-        console.error('[Webhook] Supabase update error:', error);
+        console.error('[Webhook] Supabase update error:', error.message || error);
       }
     } else {
-      console.error('[Webhook] Supabase not configured or no customer email');
+      console.error('[Webhook] Supabase not configured or no user identifier:', { userId, customerEmail });
     }
   }
 

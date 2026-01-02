@@ -10,7 +10,7 @@ export class StripeService {
    * Initiates the checkout process.
    * In a real environment, this calls your Node.js backend to get a Stripe Session URL.
    */
-  async createCheckoutSession(plan: PlanType, email?: string): Promise<{ url?: string; success: boolean; error?: string }> {
+  async createCheckoutSession(plan: PlanType, email?: string, userId?: string): Promise<{ url?: string; success: boolean; error?: string }> {
     if (StripeService.IS_DEV) {
       // Simulate network latency for a premium feel
       await new Promise(resolve => setTimeout(resolve, 2200));
@@ -21,7 +21,7 @@ export class StripeService {
       const response = await fetch(`${StripeService.API_BASE}/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan, email })
+        body: JSON.stringify({ plan, email, userId })
       });
 
       if (!response.ok) {
