@@ -25,7 +25,6 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
   const [recoveryPhone, setRecoveryPhone] = useState('');
   const [recoveryCode, setRecoveryCode] = useState('');
   const [maskedEmail, setMaskedEmail] = useState('');
-  const [testCode, setTestCode] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -273,9 +272,6 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
         throw new Error(data.error || 'Failed to send recovery code');
       }
 
-      if (data.testCode) {
-        setTestCode(data.testCode);
-      }
       if (data.email) {
         setMaskedEmail(data.email);
       }
@@ -784,16 +780,6 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
           {/* Phone Verify Form */}
           {mode === 'phone-verify' && (
             <form onSubmit={handleVerifyRecoveryCode} className="space-y-4">
-              {/* Test mode indicator */}
-              {testCode && (
-                <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
-                  <p className="text-xs text-amber-700 font-medium">
-                    <i className="fa-solid fa-flask mr-1"></i>
-                    Test Mode - Code: <span className="font-bold text-lg">{testCode}</span>
-                  </p>
-                </div>
-              )}
-
               {maskedEmail && (
                 <p className="text-xs text-[#3A342D]/60 text-center">
                   Account: <span className="font-medium">{maskedEmail}</span>

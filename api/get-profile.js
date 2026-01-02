@@ -77,10 +77,28 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Fetch profile using service role
+    // SECURITY: Only select safe fields - never expose verification codes or recovery codes
+    const safeFields = [
+      'id',
+      'email', 
+      'full_name',
+      'plan_type',
+      'search_count',
+      'credit_topups',
+      'pro_used',
+      'pro_month',
+      'phone',
+      'phone_verified',
+      'phone_recovery_prompted',
+      'enterprise_waitlist',
+      'enterprise_waitlist_date',
+      'created_at',
+      'updated_at'
+    ].join(', ');
+    
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('*')
+      .select(safeFields)
       .eq('id', userId)
       .maybeSingle();
 

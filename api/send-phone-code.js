@@ -99,12 +99,9 @@ export default async function handler(req, res) {
     if (updateError) {
       console.error('[SendPhoneCode] Failed to store code:', updateError);
       if (updateError.code === '42703' || updateError.message?.includes('column')) {
-        console.log('[SendPhoneCode] Columns may not exist - returning code for testing');
-        return res.status(200).json({ 
-          success: true, 
-          message: 'Code generated (database columns pending)',
-          testCode: code
-        });
+        // SECURITY: Never expose codes in response - log to server only
+        console.log('[SendPhoneCode] DB columns may not exist. Code (server log only):', code);
+        return res.status(500).json({ error: 'Phone verification not available. Please contact support.' });
       }
       return res.status(500).json({ error: 'Failed to generate code. Please try again.' });
     }
@@ -115,12 +112,9 @@ export default async function handler(req, res) {
     const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
 
     if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) {
-      console.log('[SendPhoneCode] Twilio not configured - returning code for testing');
-      return res.status(200).json({ 
-        success: true, 
-        message: 'Code generated (SMS not configured)',
-        testCode: code
-      });
+      // SECURITY: Never expose codes in response - log to server only
+      console.log('[SendPhoneCode] Twilio not configured. Code (server log only):', code);
+      return res.status(500).json({ error: 'SMS service not configured. Please contact support.' });
     }
 
     // Send SMS via Twilio REST API
