@@ -58,6 +58,28 @@ export class SupabaseService {
     return { user: data?.user, session: data?.session, error };
   }
 
+  // Get the current access token for authenticated API calls
+  async getAccessToken(): Promise<string | null> {
+    if (!this.supabase) return null;
+    try {
+      const { data: { session } } = await this.supabase.auth.getSession();
+      return session?.access_token || null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Make authenticated API call with JWT token
+  async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+    const token = await this.getAccessToken();
+    const headers = new Headers(options.headers);
+    headers.set('Content-Type', 'application/json');
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+    return fetch(url, { ...options, headers, credentials: 'include' });
+  }
+
   // Get current user profile using server-side API to bypass RLS issues during OAuth
   async getCurrentProfile(userId?: string): Promise<any | null> {
     if (!userId) {
@@ -68,10 +90,9 @@ export class SupabaseService {
     console.log('[Supabase] getCurrentProfile - fetching via API for userId:', userId);
     
     try {
-      // Use server-side API to bypass RLS - no getSession() call needed (it hangs during OAuth)
-      const response = await fetch('/api/get-profile', {
+      // Use server-side API with JWT authentication
+      const response = await this.authenticatedFetch('/api/get-profile', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId })
       });
       

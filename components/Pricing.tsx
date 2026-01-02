@@ -1,5 +1,6 @@
 import React from 'react';
 import { PlanType } from '../types';
+import { supabaseService } from '../services/supabaseService';
 
 interface PricingProps {
   currentPlan?: PlanType;
@@ -48,9 +49,8 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
     if (!userId || waitlistJoined) return;
     setIsJoiningWaitlist(true);
     try {
-      const response = await fetch('/api/join-enterprise-waitlist', {
+      const response = await supabaseService.authenticatedFetch('/api/join-enterprise-waitlist', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId })
       });
       if (response.ok) {

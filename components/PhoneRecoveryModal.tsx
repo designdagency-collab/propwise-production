@@ -99,10 +99,9 @@ const PhoneRecoveryModal: React.FC<PhoneRecoveryModalProps> = ({
     setIsLoading(true);
 
     try {
-      // Use API to send verification code
-      const response = await fetch('/api/send-phone-code', {
+      // Use API to send verification code (with JWT auth)
+      const response = await supabaseService.authenticatedFetch('/api/send-phone-code', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, phone: normalizedPhone })
       });
 
@@ -149,10 +148,9 @@ const PhoneRecoveryModal: React.FC<PhoneRecoveryModalProps> = ({
     const normalizedPhone = normalizePhone(phone);
 
     try {
-      // Use API to verify code
-      const response = await fetch('/api/verify-phone-code', {
+      // Use API to verify code (with JWT auth)
+      const response = await supabaseService.authenticatedFetch('/api/verify-phone-code', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, phone: normalizedPhone, code: otp })
       });
 
@@ -183,9 +181,8 @@ const PhoneRecoveryModal: React.FC<PhoneRecoveryModalProps> = ({
   const handleSkip = async () => {
     // Mark that we've prompted them
     try {
-      await fetch('/api/update-profile', {
+      await supabaseService.authenticatedFetch('/api/update-profile', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           userId, 
           updates: { phone_recovery_prompted: true } 

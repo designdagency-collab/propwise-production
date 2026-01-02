@@ -536,9 +536,8 @@ const App: React.FC = () => {
     
     try {
       // Just save to history, don't update search_count or credit_topups
-      const response = await fetch('/api/save-search', {
+      const response = await supabaseService.authenticatedFetch('/api/save-search', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           userId, 
           address,
@@ -580,13 +579,13 @@ const App: React.FC = () => {
       
       try {
         // Save search and consume credit via server API (updates Supabase)
-        const response = await fetch('/api/save-search', {
+        // SECURITY: Server calculates credits server-side, consumption hint is ignored
+        const response = await supabaseService.authenticatedFetch('/api/save-search', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             userId, 
-            address,
-            consumption // Tell server what to update
+            address
+            // Note: consumption calculated server-side for security
           })
         });
         
@@ -756,9 +755,8 @@ const App: React.FC = () => {
     }
     
     try {
-      const response = await fetch('/api/get-search-history', {
+      const response = await supabaseService.authenticatedFetch('/api/get-search-history', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId })
       });
       
