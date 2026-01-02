@@ -357,8 +357,8 @@ RULES:
 - Output ONLY valid JSON. No markdown blocks.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: [{ parts: [{ text: prompt }] }],
+      model: 'gemini-2.5-flash-preview-05-20',
+      contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
         thinkingConfig: { thinkingBudget: 2048 },
@@ -372,13 +372,11 @@ RULES:
     
     const data = JSON.parse(text);
     
-    // Extract sources from grounding metadata
+    // Extract sources from grounding metadata if available
     const sources = [];
     const candidates = response.candidates;
-    const chunks = candidates?.[0]?.groundingMetadata?.groundingChunks;
-    
-    if (chunks) {
-      chunks.forEach((chunk) => {
+    if (candidates?.[0]?.groundingMetadata?.groundingChunks) {
+      candidates[0].groundingMetadata.groundingChunks.forEach((chunk) => {
         if (chunk.web) {
           sources.push({ title: chunk.web.title || "Market Source", url: chunk.web.uri });
         }
