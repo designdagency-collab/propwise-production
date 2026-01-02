@@ -283,26 +283,29 @@ const App: React.FC = () => {
       }
     };
 
-    // IMPORTANT: Do NOT manually parse OAuth tokens!
-    // Let Supabase handle the OAuth callback automatically via onAuthStateChange
-    // The listener below will fire when Supabase detects and processes the tokens
-    
-    // Only call getSession for NON-OAuth flows (normal page load with existing session)
+    // Check for session - Supabase's detectSessionInUrl will have already processed OAuth hash
     const initAuth = async () => {
       if (hasOAuthCallback) {
-        // OAuth callback detected - DO NOT call getSession yet!
-        // Let Supabase process the hash first, then onAuthStateChange will fire
-        console.log('[Auth] OAuth callback detected - waiting for Supabase to process tokens...');
-        return;
+        // OAuth callback detected - give Supabase a moment to process the hash
+        console.log('[Auth] OAuth callback detected - waiting for Supabase to process...');
+        
+        // Small delay to ensure Supabase has processed the hash
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Clean up hash from URL first
+        window.history.replaceState({}, document.title, window.location.pathname);
       }
       
-      // Normal session check (no OAuth hash)
-      console.log('[Auth] Checking for existing session...');
+      // Get session (will have been set by Supabase's detectSessionInUrl for OAuth)
+      console.log('[Auth] Getting session...');
       const { data: { session }, error } = await supabaseService.supabase!.auth.getSession();
       console.log('[Auth] getSession result:', { hasSession: !!session, email: session?.user?.email, error: error?.message });
       
       if (session?.user) {
         await handleSessionLogin(session, 'getSession');
+      } else if (hasOAuthCallback) {
+        // OAuth failed - log error
+        console.error('[Auth] OAuth callback present but no session. Error:', error?.message);
       }
     };
     
