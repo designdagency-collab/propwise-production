@@ -235,7 +235,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
                 disabled={!userId || waitlistJoined || isJoiningWaitlist}
                 className={`w-full py-4 sm:py-5 rounded-2xl font-bold uppercase tracking-widest text-[13px] sm:text-[12px] border-2 transition-all flex items-center justify-center gap-3 ${
                   waitlistJoined 
-                    ? 'bg-green-500 text-white border-green-500' 
+                    ? 'bg-[#3A342D] text-white border-[#3A342D]' 
                     : !userId 
                       ? 'cursor-not-allowed opacity-60' 
                       : 'hover:border-[#C9A961] hover:text-[#C9A961]'
