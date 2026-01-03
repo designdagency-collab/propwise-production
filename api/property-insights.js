@@ -366,7 +366,8 @@ RULES:
         tools: [{ googleSearch: {} }],
         thinkingConfig: { thinkingBudget: 2048 },
         responseMimeType: "application/json",
-        responseSchema: responseSchema
+        responseSchema: responseSchema,
+        temperature: 0.3  // Lower temperature for more consistent results (facts accurate, strategies still varied)
       },
     });
 
