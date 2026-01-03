@@ -135,6 +135,30 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Check if this address was searched by this user in the last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const { data: recentSearch, error: recentSearchError } = await supabase
+      .from('search_history')
+      .select('id, created_at')
+      .eq('user_id', userId)
+      .eq('address', address)
+      .gte('created_at', sevenDaysAgo.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    
+    const isRecentSearch = !recentSearchError && recentSearch;
+    
+    if (isRecentSearch) {
+      console.log('[SaveSearch] Recent search found (within 7 days), skipping credit consumption:', { 
+        userId, 
+        address: address.substring(0, 30) + '...', 
+        lastSearched: recentSearch.created_at 
+      });
+    }
+
     // Get current profile
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -150,7 +174,8 @@ export default async function handler(req, res) {
     const updates = { updated_at: new Date().toISOString() };
     
     // SECURITY: Calculate consumption SERVER-SIDE - never trust client input
-    if (!skipCreditConsumption) {
+    // Skip credit consumption if this is a recent re-search (within 7 days)
+    if (!skipCreditConsumption && !isRecentSearch) {
       const consumption = calculateCreditConsumption(profile);
       
       if (!consumption) {
@@ -188,10 +213,20 @@ export default async function handler(req, res) {
       }
     }
 
-    // Insert search history
-    const { error: historyError } = await supabase
-      .from('search_history')
-      .insert({ user_id: userId, address });
+    // Insert search history ONLY if not a recent search (prevents duplicates)
+    let historyError = null;
+    if (!isRecentSearch) {
+      const { error } = await supabase
+        .from('search_history')
+        .insert({ user_id: userId, address });
+      historyError = error;
+    } else {
+      // Update the timestamp of the existing search so it appears at the top
+      await supabase
+        .from('search_history')
+        .update({ created_at: new Date().toISOString() })
+        .eq('id', recentSearch.id);
+    }
 
     if (historyError) {
       console.error('[SaveSearch] History insert error:', historyError.message);
@@ -204,7 +239,12 @@ export default async function handler(req, res) {
       .eq('id', userId)
       .single();
 
-    console.log('[SaveSearch] Complete:', { userId, address: address.substring(0, 30) + '...' });
+    console.log('[SaveSearch] Complete:', { 
+      userId, 
+      address: address.substring(0, 30) + '...', 
+      isRecentSearch,
+      creditConsumed: !isRecentSearch && !skipCreditConsumption
+    });
     
     return res.status(200).json({ 
       success: true,
@@ -213,7 +253,9 @@ export default async function handler(req, res) {
       proUsed: updatedProfile?.pro_used || 0,
       proMonth: updatedProfile?.pro_month || '',
       planType: updatedProfile?.plan_type || 'FREE_TRIAL',
-      historyError: historyError?.message || null
+      historyError: historyError?.message || null,
+      isRecentSearch: isRecentSearch || false,  // Let frontend know this was a free re-search
+      creditConsumed: !isRecentSearch && !skipCreditConsumption
     });
   } catch (error) {
     console.error('[SaveSearch] Server error:', error);
