@@ -364,10 +364,10 @@ RULES:
       contents: [{ parts: [{ text: prompt }] }],
       config: {
         tools: [{ googleSearch: {} }],
-        thinkingConfig: { thinkingBudget: 2048 },
+        thinkingConfig: { thinkingBudget: 8192 },  // 4x more thinking time for thorough research
         responseMimeType: "application/json",
         responseSchema: responseSchema,
-        temperature: 0.3  // Lower temperature for more consistent results (facts accurate, strategies still varied)
+        temperature: 0.7  // Higher creativity for varied strategies, accuracy from increased thinking budget
       },
     });
 
