@@ -364,10 +364,9 @@ RULES:
       contents: [{ parts: [{ text: prompt }] }],
       config: {
         tools: [{ googleSearch: {} }],
-        thinkingConfig: { thinkingBudget: 8192 },  // 4x more thinking time for thorough research
+        thinkingConfig: { thinkingBudget: 2048 },
         responseMimeType: "application/json",
-        responseSchema: responseSchema,
-        temperature: 0.7  // Higher creativity for varied strategies, accuracy from increased thinking budget
+        responseSchema: responseSchema
       },
     });
 
