@@ -439,7 +439,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
           </div>
           
           {/* Deal Score - Above metrics, right aligned */}
-          <div className="flex justify-end pt-2 pb-1">
+          <div className="flex justify-end -mt-8 mb-4">
              <button 
                 onClick={() => setIsScoreExpanded(!isScoreExpanded)}
                 className="flex items-center gap-3 px-4 py-2 rounded-xl border hover:bg-black/[0.02] transition-colors"
@@ -459,7 +459,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
           </div>
 
           {/* 4 Metrics Row */}
-          <div className="flex flex-wrap items-start justify-between gap-y-4 pt-2 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
+          <div className="flex flex-wrap items-start justify-between gap-y-4 pt-4 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
              <div className="space-y-0.5" data-pdf-kpi>
                 <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Market Value</p>
                 <p className="text-xl sm:text-2xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
