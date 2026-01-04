@@ -236,7 +236,7 @@ export function computeUpblockScore(inputs: ScoreInputs): ScoreResult {
     score: yieldResult.score,
     label: yieldResult.available ? getYieldLabel(yieldResult.score) : "Unknown",
     detail: yieldResult.available
-      ? `${yieldResult.isNet ? "Net" : "Gross"} yield: ${yieldResult.yieldPct?.toFixed(1)}%`
+      ? `${yieldResult.isNet ? "Net" : "Gross"} yield: ${yieldResult.yieldPct?.toFixed(1)}% (comparable rentals)`
       : "Missing inputs",
   };
 
@@ -245,7 +245,7 @@ export function computeUpblockScore(inputs: ScoreInputs): ScoreResult {
     score: cashFlowResult.score,
     label: cashFlowResult.available ? getCashFlowLabel(cashFlowResult.score) : "Unknown",
     detail: cashFlowResult.available
-      ? `${cashFlowResult.weeklyFlow! >= 0 ? "+" : ""}$${Math.round(cashFlowResult.weeklyFlow!)}/wk`
+      ? `${cashFlowResult.weeklyFlow! >= 0 ? "+" : ""}$${Math.round(cashFlowResult.weeklyFlow!)}/wk (80% LVR, P&I)`
       : "Missing inputs",
   };
 
