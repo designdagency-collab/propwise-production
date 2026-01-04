@@ -64,7 +64,10 @@ const responseSchema = {
       type: "OBJECT",
       properties: {
         estimatedWeeklyRent: { type: "NUMBER" },
-        estimatedCashPositionWeekly: { type: "NUMBER" }
+        estimatedAnnualRent: { type: "NUMBER" },
+        grossYieldPercent: { type: "NUMBER" },
+        estimatedCashPositionWeekly: { type: "NUMBER" },
+        gearingStatus: { type: "STRING", enum: ['Positively Geared', 'Negatively Geared', 'Neutral'] }
       }
     },
     approvalPathway: {
@@ -326,11 +329,14 @@ MANDATORY MODULES:
 - Analyze up to 3 scenarios: Knockdown Rebuild, Duplex, and Townhouse/Multi-dwelling.
 - Provide indicative costs, estimated end value (GRV), net profit, and timeframe.
 
-3. INDICATIVE RENTAL CASH POSITION
-- Calculate potential rent AFTER improvements.
-- Assume an investment loan of 80% LVR against Predicted Post-Improvement Midpoint Value.
+3. INDICATIVE RENTAL & YIELD POSITION
+- Estimate weekly rent based on comparable rentals in the area (estimatedWeeklyRent).
+- Calculate annual rent (estimatedAnnualRent = weekly × 52).
+- Calculate gross yield percent (grossYieldPercent = annualRent / indicativeMidpoint × 100).
+- Assume an investment loan of 80% LVR against indicativeMidpoint Value.
 - Use Australian interest rates (~6.3%) for P&I 30yr loan.
-- State the indicative weekly Surplus/Deficit (Cash Position) after accounting for weekly mortgage repayments vs expected weekly rent.
+- Calculate weekly cash position (estimatedCashPositionWeekly = weekly rent - weekly mortgage).
+- Set gearingStatus: 'Positively Geared' if cash position > 0, 'Negatively Geared' if < 0, 'Neutral' if ~0.
 
 4. LOCAL AREA INTEL, APPROVAL PATHWAY & ZONING INTEL.
 - Include schools and key public transport (trains/buses).
