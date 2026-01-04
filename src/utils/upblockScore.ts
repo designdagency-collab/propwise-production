@@ -230,11 +230,11 @@ export function computeUpblockScore(inputs: ScoreInputs): ScoreResult {
   const upliftResult = computeUpliftSubScore(inputs);
   const constraintsResult = computeConstraintsSubScore(inputs);
 
-  // Build sub-score objects
+  // Build sub-score objects - use "Unknown" label when data is missing
   const yieldSub: SubScore = {
     name: "yield",
     score: yieldResult.score,
-    label: getYieldLabel(yieldResult.score),
+    label: yieldResult.available ? getYieldLabel(yieldResult.score) : "Unknown",
     detail: yieldResult.available
       ? `${yieldResult.isNet ? "Net" : "Gross"} yield: ${yieldResult.yieldPct?.toFixed(1)}%`
       : "Missing inputs",
@@ -243,7 +243,7 @@ export function computeUpblockScore(inputs: ScoreInputs): ScoreResult {
   const cashFlowSub: SubScore = {
     name: "cashFlow",
     score: cashFlowResult.score,
-    label: getCashFlowLabel(cashFlowResult.score),
+    label: cashFlowResult.available ? getCashFlowLabel(cashFlowResult.score) : "Unknown",
     detail: cashFlowResult.available
       ? `${cashFlowResult.weeklyFlow! >= 0 ? "+" : ""}$${Math.round(cashFlowResult.weeklyFlow!)}/wk`
       : "Missing inputs",
@@ -252,7 +252,7 @@ export function computeUpblockScore(inputs: ScoreInputs): ScoreResult {
   const upliftSub: SubScore = {
     name: "uplift",
     score: upliftResult.score,
-    label: getUpliftLabel(upliftResult.score),
+    label: upliftResult.available ? getUpliftLabel(upliftResult.score) : "Unknown",
     detail: upliftResult.available
       ? `Base uplift: ${upliftResult.basePct?.toFixed(0)}%${upliftResult.conservativePct !== undefined ? ` (conservative: ${upliftResult.conservativePct.toFixed(0)}%)` : ""}`
       : "Missing inputs",
@@ -261,7 +261,7 @@ export function computeUpblockScore(inputs: ScoreInputs): ScoreResult {
   const constraintsSub: SubScore = {
     name: "constraints",
     score: constraintsResult.score,
-    label: getConstraintsLabel(constraintsResult.score),
+    label: constraintsResult.available ? getConstraintsLabel(constraintsResult.score) : "Unknown",
     detail: constraintsResult.available
       ? constraintsResult.flags.length > 0
         ? constraintsResult.flags.slice(0, 3).map(f => f.label).join(", ")

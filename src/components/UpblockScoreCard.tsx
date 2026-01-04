@@ -12,9 +12,16 @@ const SUB_SCORE_LABELS: Record<SubScore['name'], string> = {
   constraints: 'Constraints',
 };
 
+// Get label color class
+function getLabelColor(label: string, isPositive: boolean): string {
+  if (label === 'Unknown') return 'text-slate-400';
+  if (isPositive) return 'text-emerald-600';
+  return 'text-amber-600';
+}
+
 // Generate a natural language summary based on the score result
 function generateSummary(result: ScoreResult): string {
-  const strengths = result.drivers.positive;
+  const strengths = result.drivers.positive.filter(s => s.label !== 'Unknown');
   const weaknesses = result.drivers.negative;
   
   // Build strength phrases
@@ -31,10 +38,10 @@ function generateSummary(result: ScoreResult): string {
     }
   }
   
-  // Build weakness phrases
+  // Build weakness phrases  
   const weaknessPhrases: string[] = [];
   for (const w of weaknesses) {
-    if (w.detail === 'Missing inputs') {
+    if (w.label === 'Unknown' || w.detail === 'Missing inputs' || w.detail === 'No constraint data provided') {
       weaknessPhrases.push(`${SUB_SCORE_LABELS[w.name].toLowerCase()} data`);
     } else if (w.name === 'constraints' && w.label !== 'Few Issues') {
       weaknessPhrases.push('planning constraints');
@@ -122,17 +129,17 @@ export function UpblockScoreCard({ result }: Props) {
               {result.drivers.positive.map((driver) => (
                 <div 
                   key={driver.name}
-                  className="p-3 rounded-xl bg-emerald-50 border border-emerald-100"
+                  className={`p-3 rounded-xl border ${driver.label === 'Unknown' ? 'bg-slate-50 border-slate-200' : 'bg-emerald-50 border-emerald-100'}`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold text-emerald-800">
+                    <span className={`text-xs font-bold ${driver.label === 'Unknown' ? 'text-slate-600' : 'text-emerald-800'}`}>
                       {SUB_SCORE_LABELS[driver.name]}
                     </span>
-                    <span className="text-xs font-bold text-emerald-600">
+                    <span className={`text-xs font-bold ${getLabelColor(driver.label, true)}`}>
                       {driver.label}
                     </span>
                   </div>
-                  <p className="text-[10px] text-emerald-700">{driver.detail}</p>
+                  <p className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-emerald-700'}`}>{driver.detail}</p>
                 </div>
               ))}
             </div>
@@ -145,17 +152,17 @@ export function UpblockScoreCard({ result }: Props) {
               {result.drivers.negative.map((driver) => (
                 <div 
                   key={driver.name}
-                  className="p-3 rounded-xl bg-amber-50 border border-amber-100"
+                  className={`p-3 rounded-xl border ${driver.label === 'Unknown' ? 'bg-slate-50 border-slate-200' : 'bg-amber-50 border-amber-100'}`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold text-amber-800">
+                    <span className={`text-xs font-bold ${driver.label === 'Unknown' ? 'text-slate-600' : 'text-amber-800'}`}>
                       {SUB_SCORE_LABELS[driver.name]}
                     </span>
-                    <span className="text-xs font-bold text-amber-600">
+                    <span className={`text-xs font-bold ${getLabelColor(driver.label, false)}`}>
                       {driver.label}
                     </span>
                   </div>
-                  <p className="text-[10px] text-amber-700">{driver.detail}</p>
+                  <p className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-amber-700'}`}>{driver.detail}</p>
                 </div>
               ))}
             </div>
