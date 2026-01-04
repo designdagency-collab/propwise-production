@@ -436,7 +436,13 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
               )}
             </div>
           </div>
-          <div className="flex flex-wrap gap-8 pt-8 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
+          
+          {/* Upblock Score Card - Collapsible breakdown */}
+          <div className="pt-4 pb-2">
+            <UpblockScoreCard result={upblockScore} />
+          </div>
+          
+          <div className="flex flex-wrap gap-8 pt-6 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
              <div className="space-y-1" data-pdf-kpi>
                 <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Estimated Market Value</p>
                 <p className="text-xl sm:text-2xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
@@ -467,11 +473,6 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
                    </ul>
                 </div>
              </div>
-          </div>
-          
-          {/* Upblock Score Card - Collapsible breakdown */}
-          <div className="pt-6">
-            <UpblockScoreCard result={upblockScore} />
           </div>
         </div>
       </div>
