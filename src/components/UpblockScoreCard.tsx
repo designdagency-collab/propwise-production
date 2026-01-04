@@ -12,12 +12,57 @@ const SUB_SCORE_LABELS: Record<SubScore['name'], string> = {
   constraints: 'Constraints',
 };
 
-const SUB_SCORE_WEIGHTS: Record<SubScore['name'], string> = {
-  yield: '25%',
-  cashFlow: '35%',
-  uplift: '25%',
-  constraints: '15%',
-};
+// Generate a natural language summary based on the score result
+function generateSummary(result: ScoreResult): string {
+  const strengths = result.drivers.positive;
+  const weaknesses = result.drivers.negative;
+  
+  // Build strength phrases
+  const strengthPhrases: string[] = [];
+  for (const s of strengths) {
+    if (s.name === 'cashFlow' && s.detail !== 'Missing inputs') {
+      strengthPhrases.push(`cash flow (${s.detail})`);
+    } else if (s.name === 'yield' && s.detail !== 'Missing inputs') {
+      strengthPhrases.push(`yield (${s.detail})`);
+    } else if (s.name === 'constraints' && s.label === 'Few Issues') {
+      strengthPhrases.push('few planning constraints');
+    } else if (s.name === 'uplift' && s.detail !== 'Missing inputs') {
+      strengthPhrases.push(`uplift potential (${s.detail})`);
+    }
+  }
+  
+  // Build weakness phrases
+  const weaknessPhrases: string[] = [];
+  for (const w of weaknesses) {
+    if (w.detail === 'Missing inputs') {
+      weaknessPhrases.push(`${SUB_SCORE_LABELS[w.name].toLowerCase()} data`);
+    } else if (w.name === 'constraints' && w.label !== 'Few Issues') {
+      weaknessPhrases.push('planning constraints');
+    } else if (w.name === 'cashFlow' && w.score < 50) {
+      weaknessPhrases.push(`cash flow (${w.detail})`);
+    } else if (w.name === 'uplift' && w.score < 60) {
+      weaknessPhrases.push('uplift potential');
+    }
+  }
+  
+  // Compose summary
+  let summary = '';
+  
+  if (strengthPhrases.length > 0) {
+    summary += `This property scores well on ${strengthPhrases.join(' and ')}.`;
+  }
+  
+  if (weaknessPhrases.length > 0) {
+    summary += summary ? ' ' : '';
+    summary += `Consider verifying ${weaknessPhrases.join(' and ')} before proceeding.`;
+  }
+  
+  if (!summary) {
+    summary = 'Review the detailed analysis above to understand the key factors driving this score.';
+  }
+  
+  return summary;
+}
 
 export function UpblockScoreCard({ result }: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -84,7 +129,7 @@ export function UpblockScoreCard({ result }: Props) {
                       {SUB_SCORE_LABELS[driver.name]}
                     </span>
                     <span className="text-xs font-bold text-emerald-600">
-                      {driver.score}/100
+                      {driver.label}
                     </span>
                   </div>
                   <p className="text-[10px] text-emerald-700">{driver.detail}</p>
@@ -107,7 +152,7 @@ export function UpblockScoreCard({ result }: Props) {
                       {SUB_SCORE_LABELS[driver.name]}
                     </span>
                     <span className="text-xs font-bold text-amber-600">
-                      {driver.score}/100
+                      {driver.label}
                     </span>
                   </div>
                   <p className="text-[10px] text-amber-700">{driver.detail}</p>
@@ -116,56 +161,13 @@ export function UpblockScoreCard({ result }: Props) {
             </div>
           </div>
 
-          {/* All Sub-scores */}
-          <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-              Score Components
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {result.subs.map((sub) => (
-                <div 
-                  key={sub.name}
-                  className="p-3 rounded-xl border group relative"
-                  style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
-                >
-                  <p className="text-[9px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>
-                    {SUB_SCORE_LABELS[sub.name]} ({SUB_SCORE_WEIGHTS[sub.name]})
-                  </p>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-lg font-black" style={{ color: 'var(--text-primary)' }}>
-                      {sub.score}
-                    </span>
-                    <span className="text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>/100</span>
-                  </div>
-                  <span 
-                    className={`text-[9px] font-bold ${
-                      sub.label === 'Strong' || sub.label === 'Few Issues' 
-                        ? 'text-emerald-600' 
-                        : sub.label === 'OK' || sub.label === 'Some Issues'
-                        ? 'text-amber-600'
-                        : 'text-red-500'
-                    }`}
-                  >
-                    {sub.label}
-                  </span>
-                  
-                  {/* Tooltip */}
-                  <div className="invisible group-hover:visible absolute bottom-full left-0 mb-2 w-48 p-2 bg-[#4A4137] text-white text-[9px] font-medium rounded-lg shadow-xl z-50 opacity-0 group-hover:opacity-100 pointer-events-none">
-                    {sub.detail}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* How it's calculated */}
+          {/* Summary */}
           <div className="pt-2 space-y-2">
             <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-              How it's calculated
+              Summary
             </p>
-            <p className="text-[10px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-              Weighted average: Cash Flow (35%) + Yield (25%) + Uplift Potential (25%) + Constraints (15%). 
-              Based on available property data and scenario assumptions.
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+              {generateSummary(result)}
             </p>
           </div>
 
@@ -181,4 +183,3 @@ export function UpblockScoreCard({ result }: Props) {
     </div>
   );
 }
-
