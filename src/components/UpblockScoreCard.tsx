@@ -40,19 +40,20 @@ function generateSummary(result: ScoreResult): string {
     paragraphs.push("This property scores below average on several metrics.");
   }
   
-  // Cash flow observation — factual, no advice
+  // Cash flow observation — factual, with assumption context
   if (cashFlow.label !== 'Unknown') {
     const weeklyMatch = cashFlow.detail.match(/([+-]?\$?-?\d+)/);
     const weekly = weeklyMatch ? parseInt(weeklyMatch[1].replace(/[$,]/g, '')) : 0;
+    const assumptionNote = "(based on 80% LVR, ~6.3% P&I)";
     
     if (weekly >= 100) {
-      paragraphs.push(`Cash flow is positive at ${cashFlow.detail}, indicating income exceeds estimated holding costs.`);
+      paragraphs.push(`Cash flow is positive at ${cashFlow.detail} ${assumptionNote}, indicating income exceeds estimated holding costs.`);
     } else if (weekly >= 0) {
-      paragraphs.push(`Cash flow is approximately neutral at ${cashFlow.detail}.`);
+      paragraphs.push(`Cash flow is approximately neutral at ${cashFlow.detail} ${assumptionNote}.`);
     } else if (weekly >= -200) {
-      paragraphs.push(`Cash flow is negative at ${cashFlow.detail}, indicating estimated holding costs exceed rental income.`);
+      paragraphs.push(`Cash flow is negative at ${cashFlow.detail} ${assumptionNote}, indicating estimated holding costs exceed rental income.`);
     } else {
-      paragraphs.push(`Cash flow shows a significant negative position at ${cashFlow.detail}.`);
+      paragraphs.push(`Cash flow shows a significant negative position at ${cashFlow.detail} ${assumptionNote}.`);
     }
   }
   
