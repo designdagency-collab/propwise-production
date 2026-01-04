@@ -438,57 +438,61 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
             </div>
           </div>
           
-          <div className="flex flex-wrap items-start justify-between gap-y-4 pt-8 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
-             <div className="space-y-0.5 min-w-0" data-pdf-kpi>
-                <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Market Value</p>
-                <p className="text-lg sm:text-xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
+          {/* Deal Score - Above metrics, right aligned */}
+          <div className="flex justify-end pt-6">
+             <button 
+                onClick={() => setIsScoreExpanded(!isScoreExpanded)}
+                className="flex items-center gap-3 px-4 py-2 rounded-xl border hover:bg-black/[0.02] transition-colors"
+                style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-card)' }}
+             >
+                <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                   Deal Score
+                   <i className={`fa-solid fa-chevron-${isScoreExpanded ? 'up' : 'down'} text-[8px]`}></i>
+                </span>
+                <span className="text-xl font-black flex items-center gap-0.5" style={{ color: '#C9A961' }}>
+                   {upblockScore.scoreRange 
+                     ? `${upblockScore.scoreRange.low}–${upblockScore.scoreRange.high}` 
+                     : upblockScore.score}
+                   <span className="text-sm font-bold" style={{ color: 'var(--text-muted)' }}>/100</span>
+                </span>
+             </button>
+          </div>
+
+          {/* 4 Metrics Row */}
+          <div className="flex flex-wrap items-start justify-between gap-y-4 pt-6 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
+             <div className="space-y-0.5" data-pdf-kpi>
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Market Value</p>
+                <p className="text-xl sm:text-2xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
              </div>
-             <div className="space-y-0.5 min-w-0" data-pdf-kpi>
-                <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Post-Improvement</p>
-                <p className={`text-lg sm:text-xl font-black transition-colors whitespace-nowrap ${effectiveSelection.size > 0 ? 'text-[#8A9A6D]' : ''}`} style={{ color: effectiveSelection.size > 0 ? '#8A9A6D' : 'var(--text-primary)' }}>
+             <div className="space-y-0.5" data-pdf-kpi>
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Post-Improvement</p>
+                <p className={`text-xl sm:text-2xl font-black transition-colors whitespace-nowrap ${effectiveSelection.size > 0 ? 'text-[#8A9A6D]' : ''}`} style={{ color: effectiveSelection.size > 0 ? '#8A9A6D' : 'var(--text-primary)' }}>
                    {baseline === undefined ? 'TBA' : effectiveSelection.size === 0 ? formatValue(baseline) : `${formatValue(afterLow)} – ${formatValue(afterHigh)}`}
                 </p>
              </div>
              <div className="space-y-0.5" data-pdf-kpi>
-                <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Growth (5yr)</p>
-                <p className="text-lg sm:text-xl font-black" style={{ color: 'var(--text-primary)' }}>{data?.valueSnapshot?.growth || 'TBA'}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Growth (5yr)</p>
+                <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{data?.valueSnapshot?.growth || 'TBA'}</p>
              </div>
              <div className="space-y-0.5 group relative" data-pdf-kpi>
-                <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest cursor-help" style={{ color: 'var(--text-muted)' }}>Confidence</p>
-                <p className="text-lg sm:text-xl font-black flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+                <p className="text-[10px] font-bold uppercase tracking-widest cursor-help" style={{ color: 'var(--text-muted)' }}>Data Confidence</p>
+                <p className="text-xl sm:text-2xl font-black flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                    {data?.valueSnapshot?.confidenceLevel || 'Low'}
-                   <i className={`fa-solid fa-circle-info text-[10px] cursor-help ${data?.valueSnapshot?.confidenceLevel === 'High' ? 'text-emerald-500' : 'text-amber-500'}`}></i>
+                   <i className={`fa-solid fa-circle-info text-xs cursor-help ${data?.valueSnapshot?.confidenceLevel === 'High' ? 'text-emerald-500' : 'text-amber-500'}`}></i>
                 </p>
                 {/* Confidence tooltip */}
-                <div className="invisible group-hover:visible absolute bottom-full left-0 mb-2 w-48 p-2.5 bg-[#4A4137] text-white text-[9px] font-medium rounded-lg shadow-xl z-50 opacity-0 group-hover:opacity-100 pointer-events-none leading-relaxed">
+                <div className="invisible group-hover:visible absolute bottom-full left-0 mb-2 w-52 p-3 bg-[#4A4137] text-white text-[9px] font-medium rounded-lg shadow-xl z-50 opacity-0 group-hover:opacity-100 pointer-events-none leading-relaxed">
                    <p className="font-bold mb-1">Based on:</p>
                    <ul className="space-y-0.5 text-white/80">
-                     <li>• Recent comparable sales</li>
+                     <li>• Recent comparable sales (12mo)</li>
                      <li>• Property data completeness</li>
                      <li>• Market activity in suburb</li>
                    </ul>
                 </div>
              </div>
-             {/* Deal Score - Clickable to expand */}
-             <button 
-                onClick={() => setIsScoreExpanded(!isScoreExpanded)}
-                className="space-y-0.5 text-left hover:opacity-80 transition-opacity"
-                data-pdf-kpi
-             >
-                <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
-                   Deal Score
-                   <i className={`fa-solid fa-chevron-${isScoreExpanded ? 'up' : 'down'} text-[7px]`}></i>
-                </p>
-                <p className="text-lg sm:text-xl font-black flex items-center gap-0.5" style={{ color: '#C9A961' }}>
-                   {upblockScore.scoreRange 
-                     ? `${upblockScore.scoreRange.low}–${upblockScore.scoreRange.high}` 
-                     : upblockScore.score}
-                   <span className="text-xs font-bold" style={{ color: 'var(--text-muted)' }}>/100</span>
-                </p>
-             </button>
           </div>
           
-          {/* Deal Score Breakdown - Expandable */}
+          {/* Deal Score Breakdown - Expandable below metrics */}
           {isScoreExpanded && (
             <div className="mt-6">
               <UpblockScoreCard result={upblockScore} />
