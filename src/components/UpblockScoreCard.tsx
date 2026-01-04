@@ -19,6 +19,14 @@ function getLabelColor(label: string, isPositive: boolean): string {
   return 'text-amber-600';
 }
 
+// Scroll to rental position section
+function scrollToRentalPosition() {
+  const el = document.getElementById('rental-position');
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
 // Generate a factual, observational summary — NO advice or recommendations
 function generateSummary(result: ScoreResult): string {
   const subs = Object.fromEntries(result.subs.map(s => [s.name, s]));
@@ -152,7 +160,17 @@ export function UpblockScoreCard({ result }: Props) {
                     {driver.label}
                   </span>
                 </div>
-                <p className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-emerald-700'}`}>{driver.detail}</p>
+                {driver.name === 'cashFlow' || driver.name === 'yield' ? (
+                  <button 
+                    onClick={scrollToRentalPosition}
+                    className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-emerald-700'} hover:underline flex items-center gap-1`}
+                  >
+                    {driver.detail}
+                    <i className="fa-solid fa-arrow-up-right-from-square text-[8px] opacity-60"></i>
+                  </button>
+                ) : (
+                  <p className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-emerald-700'}`}>{driver.detail}</p>
+                )}
               </div>
             ))}
           </div>
@@ -175,7 +193,17 @@ export function UpblockScoreCard({ result }: Props) {
                     {driver.label}
                   </span>
                 </div>
-                <p className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-amber-700'}`}>{driver.detail}</p>
+                {driver.name === 'cashFlow' || driver.name === 'yield' ? (
+                  <button 
+                    onClick={scrollToRentalPosition}
+                    className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-amber-700'} hover:underline flex items-center gap-1`}
+                  >
+                    {driver.detail}
+                    <i className="fa-solid fa-arrow-up-right-from-square text-[8px] opacity-60"></i>
+                  </button>
+                ) : (
+                  <p className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-amber-700'}`}>{driver.detail}</p>
+                )}
               </div>
             ))}
           </div>

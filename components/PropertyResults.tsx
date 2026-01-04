@@ -738,7 +738,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
             <i className="fa-solid fa-key"></i>
           </div>
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Indicative Post-Renovation Rental Position</h2>
+            <h2 id="rental-position" className="text-xl sm:text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Indicative Post-Renovation Rental Position</h2>
             <p className="text-[11px] sm:text-[10px] font-bold text-[#C9A961] uppercase tracking-widest mt-0.5">Yield & Cash Flow (After Improvements)</p>
           </div>
         </div>
