@@ -19,7 +19,7 @@ function getLabelColor(label: string, isPositive: boolean): string {
   return 'text-amber-600';
 }
 
-// Generate a detailed, insightful summary based on the score result
+// Generate a factual, observational summary — NO advice or recommendations
 function generateSummary(result: ScoreResult): string {
   const subs = Object.fromEntries(result.subs.map(s => [s.name, s]));
   const cashFlow = subs.cashFlow;
@@ -29,69 +29,76 @@ function generateSummary(result: ScoreResult): string {
   
   const paragraphs: string[] = [];
   
-  // Overall score context
+  // Overall score context — factual statement only
   if (result.score >= 80) {
-    paragraphs.push("This property shows strong investment fundamentals across multiple metrics.");
+    paragraphs.push("This property scores strongly across multiple metrics.");
   } else if (result.score >= 65) {
-    paragraphs.push("This property presents a moderate opportunity with some areas requiring attention.");
+    paragraphs.push("This property shows moderate scores with variation across metrics.");
   } else if (result.score >= 50) {
-    paragraphs.push("This property has mixed signals — careful due diligence is recommended before proceeding.");
+    paragraphs.push("This property shows mixed results across the scored metrics.");
   } else {
-    paragraphs.push("This property faces several challenges that may impact returns. Proceed with caution.");
+    paragraphs.push("This property scores below average on several metrics.");
   }
   
-  // Cash flow analysis
+  // Cash flow observation — factual, no advice
   if (cashFlow.label !== 'Unknown') {
     const weeklyMatch = cashFlow.detail.match(/([+-]?\$?-?\d+)/);
     const weekly = weeklyMatch ? parseInt(weeklyMatch[1].replace(/[$,]/g, '')) : 0;
     
     if (weekly >= 100) {
-      paragraphs.push(`The strong positive cash flow of ${cashFlow.detail} provides a solid income buffer, reducing holding risk and supporting long-term ownership.`);
+      paragraphs.push(`Cash flow is positive at ${cashFlow.detail}, indicating income exceeds estimated holding costs.`);
     } else if (weekly >= 0) {
-      paragraphs.push(`Cash flow is roughly neutral at ${cashFlow.detail}, meaning the property should cover its own costs without significant out-of-pocket contributions.`);
+      paragraphs.push(`Cash flow is approximately neutral at ${cashFlow.detail}.`);
     } else if (weekly >= -200) {
-      paragraphs.push(`The property is negatively geared at ${cashFlow.detail}. While this creates a holding cost, it may suit investors seeking capital growth or tax benefits. Ensure you can comfortably cover the shortfall.`);
+      paragraphs.push(`Cash flow is negative at ${cashFlow.detail}, indicating estimated holding costs exceed rental income.`);
     } else {
-      paragraphs.push(`Significant negative cash flow of ${cashFlow.detail} represents a substantial holding cost. This level of negative gearing requires strong income or alternative strategy to sustain.`);
+      paragraphs.push(`Cash flow shows a significant negative position at ${cashFlow.detail}.`);
     }
   }
   
-  // Uplift + constraints interplay
+  // Uplift + constraints observation — factual only
   if (uplift.label !== 'Unknown' && constraints.label !== 'Unknown') {
     const hasGoodUplift = uplift.score >= 70;
     const hasFewConstraints = constraints.score >= 75;
     
     if (hasGoodUplift && hasFewConstraints) {
-      paragraphs.push(`Value-add potential looks promising with ${uplift.detail.toLowerCase()} and minimal planning hurdles. This combination suggests renovation or development strategies could be executed relatively smoothly.`);
+      paragraphs.push(`Uplift scenarios show ${uplift.detail.toLowerCase()}. Identified constraints are minimal.`);
     } else if (hasGoodUplift && !hasFewConstraints) {
-      paragraphs.push(`While uplift potential exists (${uplift.detail.toLowerCase()}), planning constraints may complicate or delay value-add strategies. Engage a town planner early to understand approval pathways.`);
+      paragraphs.push(`Uplift scenarios show ${uplift.detail.toLowerCase()}. Multiple planning or site constraints have been identified.`);
     } else if (!hasGoodUplift && hasFewConstraints) {
-      paragraphs.push(`Limited uplift potential is identified, though few planning constraints exist. Consider whether the property suits a buy-and-hold strategy rather than active value creation.`);
+      paragraphs.push(`Uplift scenarios show limited potential. Few planning constraints were identified.`);
+    } else {
+      paragraphs.push(`Uplift scenarios show limited potential. Multiple constraints have been identified.`);
     }
   } else if (uplift.label !== 'Unknown') {
-    if (uplift.score >= 70) {
-      paragraphs.push(`Uplift potential of ${uplift.detail.toLowerCase()} is encouraging, though constraint data is incomplete. Verify zoning and overlays before committing to a value-add strategy.`);
-    }
+    paragraphs.push(`Uplift scenarios show ${uplift.detail.toLowerCase()}. Constraint data is incomplete.`);
+  } else if (constraints.label !== 'Unknown') {
+    const constraintNote = constraints.score >= 75 ? "Few constraints identified." : "Multiple constraints identified.";
+    paragraphs.push(`Uplift data is incomplete. ${constraintNote}`);
   }
   
-  // Yield context
+  // Yield observation — factual only
   if (yieldSub.label !== 'Unknown') {
     if (yieldSub.score >= 75) {
-      paragraphs.push(`The yield (${yieldSub.detail.toLowerCase()}) is above average for the market, indicating solid rental demand relative to price.`);
-    } else if (yieldSub.score <= 40) {
-      paragraphs.push(`Below-average yield (${yieldSub.detail.toLowerCase()}) suggests the property may be priced for capital growth rather than income. This is common in premium locations but increases reliance on future appreciation.`);
+      paragraphs.push(`Estimated ${yieldSub.detail.toLowerCase()} — above typical market averages.`);
+    } else if (yieldSub.score >= 45) {
+      paragraphs.push(`Estimated ${yieldSub.detail.toLowerCase()} — within typical market range.`);
+    } else {
+      paragraphs.push(`Estimated ${yieldSub.detail.toLowerCase()} — below typical market averages.`);
     }
   }
   
-  // Missing data warning
+  // Missing data note — factual
   const unknownMetrics = result.subs.filter(s => s.label === 'Unknown').map(s => SUB_SCORE_LABELS[s.name].toLowerCase());
   if (unknownMetrics.length > 0) {
-    paragraphs.push(`Note: ${unknownMetrics.join(' and ')} data is incomplete, which limits scoring accuracy. Source this information to refine the analysis.`);
+    paragraphs.push(`Data for ${unknownMetrics.join(' and ')} was not available for this analysis.`);
   }
   
-  // Confidence caveat
+  // Confidence note — factual
   if (result.confidenceLabel === 'Low') {
-    paragraphs.push("Due to limited data, treat this score as directional only. Additional research is strongly recommended.");
+    paragraphs.push("Limited data availability affects scoring precision.");
+  } else if (result.confidenceLabel === 'Medium') {
+    paragraphs.push("Some data points were unavailable, affecting scoring precision.");
   }
   
   return paragraphs.join(' ');
