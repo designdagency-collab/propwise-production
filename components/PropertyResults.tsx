@@ -438,24 +438,24 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
             </div>
           </div>
           
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 sm:gap-6 pt-8 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
-             <div className="space-y-0.5" data-pdf-kpi>
+          <div className="flex flex-wrap items-start justify-between gap-y-4 pt-8 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
+             <div className="space-y-0.5 min-w-0" data-pdf-kpi>
                 <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Market Value</p>
-                <p className="text-base sm:text-xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
+                <p className="text-lg sm:text-xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
              </div>
-             <div className="space-y-0.5" data-pdf-kpi>
+             <div className="space-y-0.5 min-w-0" data-pdf-kpi>
                 <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Post-Improvement</p>
-                <p className={`text-base sm:text-xl font-black transition-colors ${effectiveSelection.size > 0 ? 'text-[#8A9A6D]' : ''}`} style={{ color: effectiveSelection.size > 0 ? '#8A9A6D' : 'var(--text-primary)' }}>
+                <p className={`text-lg sm:text-xl font-black transition-colors whitespace-nowrap ${effectiveSelection.size > 0 ? 'text-[#8A9A6D]' : ''}`} style={{ color: effectiveSelection.size > 0 ? '#8A9A6D' : 'var(--text-primary)' }}>
                    {baseline === undefined ? 'TBA' : effectiveSelection.size === 0 ? formatValue(baseline) : `${formatValue(afterLow)} – ${formatValue(afterHigh)}`}
                 </p>
              </div>
              <div className="space-y-0.5" data-pdf-kpi>
                 <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Growth (5yr)</p>
-                <p className="text-base sm:text-xl font-black" style={{ color: 'var(--text-primary)' }}>{data?.valueSnapshot?.growth || 'TBA'}</p>
+                <p className="text-lg sm:text-xl font-black" style={{ color: 'var(--text-primary)' }}>{data?.valueSnapshot?.growth || 'TBA'}</p>
              </div>
              <div className="space-y-0.5 group relative" data-pdf-kpi>
                 <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest cursor-help" style={{ color: 'var(--text-muted)' }}>Confidence</p>
-                <p className="text-base sm:text-xl font-black flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+                <p className="text-lg sm:text-xl font-black flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
                    {data?.valueSnapshot?.confidenceLevel || 'Low'}
                    <i className={`fa-solid fa-circle-info text-[10px] cursor-help ${data?.valueSnapshot?.confidenceLevel === 'High' ? 'text-emerald-500' : 'text-amber-500'}`}></i>
                 </p>
@@ -479,7 +479,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
                    Deal Score
                    <i className={`fa-solid fa-chevron-${isScoreExpanded ? 'up' : 'down'} text-[7px]`}></i>
                 </p>
-                <p className="text-base sm:text-xl font-black flex items-center gap-0.5" style={{ color: '#C9A961' }}>
+                <p className="text-lg sm:text-xl font-black flex items-center gap-0.5" style={{ color: '#C9A961' }}>
                    {upblockScore.scoreRange 
                      ? `${upblockScore.scoreRange.low}–${upblockScore.scoreRange.high}` 
                      : upblockScore.score}
