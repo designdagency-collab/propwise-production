@@ -27,6 +27,14 @@ function scrollToRentalPosition() {
   }
 }
 
+// Scroll to uplift strategies section
+function scrollToUpliftStrategies() {
+  const el = document.getElementById('uplift-strategies');
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
 // Generate a factual, observational summary — NO advice or recommendations
 function generateSummary(result: ScoreResult): string {
   const subs = Object.fromEntries(result.subs.map(s => [s.name, s]));
@@ -147,32 +155,39 @@ export function UpblockScoreCard({ result }: Props) {
             <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">
               <i className="fa-solid fa-arrow-trend-up mr-1"></i> Strengths
             </p>
-            {result.drivers.positive.map((driver) => (
-              <div 
-                key={driver.name}
-                className={`p-3 rounded-xl border flex-1 flex flex-col justify-between ${driver.label === 'Unknown' ? 'bg-slate-50 border-slate-200' : 'bg-emerald-50 border-emerald-100'}`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  {driver.name === 'cashFlow' || driver.name === 'yield' ? (
-                    <button 
-                      onClick={scrollToRentalPosition}
-                      className={`text-xs font-bold ${driver.label === 'Unknown' ? 'text-slate-600' : 'text-emerald-800'} hover:underline flex items-center gap-1`}
-                    >
-                      {SUB_SCORE_LABELS[driver.name]}
-                      <i className="fa-solid fa-arrow-up-right-from-square text-[8px] opacity-60"></i>
-                    </button>
-                  ) : (
-                    <span className={`text-xs font-bold ${driver.label === 'Unknown' ? 'text-slate-600' : 'text-emerald-800'}`}>
-                      {SUB_SCORE_LABELS[driver.name]}
+            {result.drivers.positive.map((driver) => {
+              const scrollFn = driver.name === 'cashFlow' || driver.name === 'yield' 
+                ? scrollToRentalPosition 
+                : driver.name === 'uplift' 
+                  ? scrollToUpliftStrategies 
+                  : null;
+              return (
+                <div 
+                  key={driver.name}
+                  className={`p-3 rounded-xl border flex-1 flex flex-col justify-between ${driver.label === 'Unknown' ? 'bg-slate-50 border-slate-200' : 'bg-emerald-50 border-emerald-100'}`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    {scrollFn ? (
+                      <button 
+                        onClick={scrollFn}
+                        className={`text-xs font-bold ${driver.label === 'Unknown' ? 'text-slate-600' : 'text-emerald-800'} hover:underline flex items-center gap-1`}
+                      >
+                        {SUB_SCORE_LABELS[driver.name]}
+                        <i className="fa-solid fa-arrow-up-right-from-square text-[8px] opacity-60"></i>
+                      </button>
+                    ) : (
+                      <span className={`text-xs font-bold ${driver.label === 'Unknown' ? 'text-slate-600' : 'text-emerald-800'}`}>
+                        {SUB_SCORE_LABELS[driver.name]}
+                      </span>
+                    )}
+                    <span className={`text-xs font-bold ${getLabelColor(driver.label, true)}`}>
+                      {driver.label}
                     </span>
-                  )}
-                  <span className={`text-xs font-bold ${getLabelColor(driver.label, true)}`}>
-                    {driver.label}
-                  </span>
+                  </div>
+                  <p className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-emerald-700'}`}>{driver.detail}</p>
                 </div>
-                <p className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-emerald-700'}`}>{driver.detail}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Negative Drivers */}
@@ -180,32 +195,39 @@ export function UpblockScoreCard({ result }: Props) {
             <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600">
               <i className="fa-solid fa-triangle-exclamation mr-1"></i> Areas to Watch
             </p>
-            {result.drivers.negative.map((driver) => (
-              <div 
-                key={driver.name}
-                className={`p-3 rounded-xl border flex-1 flex flex-col justify-between ${driver.label === 'Unknown' ? 'bg-slate-50 border-slate-200' : 'bg-amber-50 border-amber-100'}`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  {driver.name === 'cashFlow' || driver.name === 'yield' ? (
-                    <button 
-                      onClick={scrollToRentalPosition}
-                      className={`text-xs font-bold ${driver.label === 'Unknown' ? 'text-slate-600' : 'text-amber-800'} hover:underline flex items-center gap-1`}
-                    >
-                      {SUB_SCORE_LABELS[driver.name]}
-                      <i className="fa-solid fa-arrow-up-right-from-square text-[8px] opacity-60"></i>
-                    </button>
-                  ) : (
-                    <span className={`text-xs font-bold ${driver.label === 'Unknown' ? 'text-slate-600' : 'text-amber-800'}`}>
-                      {SUB_SCORE_LABELS[driver.name]}
+            {result.drivers.negative.map((driver) => {
+              const scrollFn = driver.name === 'cashFlow' || driver.name === 'yield' 
+                ? scrollToRentalPosition 
+                : driver.name === 'uplift' 
+                  ? scrollToUpliftStrategies 
+                  : null;
+              return (
+                <div 
+                  key={driver.name}
+                  className={`p-3 rounded-xl border flex-1 flex flex-col justify-between ${driver.label === 'Unknown' ? 'bg-slate-50 border-slate-200' : 'bg-amber-50 border-amber-100'}`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    {scrollFn ? (
+                      <button 
+                        onClick={scrollFn}
+                        className={`text-xs font-bold ${driver.label === 'Unknown' ? 'text-slate-600' : 'text-amber-800'} hover:underline flex items-center gap-1`}
+                      >
+                        {SUB_SCORE_LABELS[driver.name]}
+                        <i className="fa-solid fa-arrow-up-right-from-square text-[8px] opacity-60"></i>
+                      </button>
+                    ) : (
+                      <span className={`text-xs font-bold ${driver.label === 'Unknown' ? 'text-slate-600' : 'text-amber-800'}`}>
+                        {SUB_SCORE_LABELS[driver.name]}
+                      </span>
+                    )}
+                    <span className={`text-xs font-bold ${getLabelColor(driver.label, false)}`}>
+                      {driver.label}
                     </span>
-                  )}
-                  <span className={`text-xs font-bold ${getLabelColor(driver.label, false)}`}>
-                    {driver.label}
-                  </span>
+                  </div>
+                  <p className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-amber-700'}`}>{driver.detail}</p>
                 </div>
-                <p className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-amber-700'}`}>{driver.detail}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
