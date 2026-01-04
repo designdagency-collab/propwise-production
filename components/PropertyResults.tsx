@@ -444,7 +444,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
                 style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-card)' }}
               >
                 <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
-                   Deal Score
+                   Upblock Score
                    <i className={`fa-solid fa-chevron-${isScoreExpanded ? 'up' : 'down'} text-[8px]`}></i>
                 </span>
                 <span className="text-xl font-black flex items-center gap-0.5" style={{ color: '#C9A961' }}>
@@ -464,7 +464,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
                 <p className="text-xl sm:text-2xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
              </div>
              <div className="space-y-0.5" data-pdf-kpi>
-                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Value Post-Improvements</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Post-Improvements</p>
                 <p className={`text-xl sm:text-2xl font-black transition-colors whitespace-nowrap ${effectiveSelection.size > 0 ? 'text-[#8A9A6D]' : ''}`} style={{ color: effectiveSelection.size > 0 ? '#8A9A6D' : 'var(--text-primary)' }}>
                    {baseline === undefined ? 'TBA' : effectiveSelection.size === 0 ? formatValue(baseline) : `${formatValue(afterLow)} – ${formatValue(afterHigh)}`}
                 </p>
