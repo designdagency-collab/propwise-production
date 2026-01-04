@@ -19,56 +19,82 @@ function getLabelColor(label: string, isPositive: boolean): string {
   return 'text-amber-600';
 }
 
-// Generate a natural language summary based on the score result
+// Generate a detailed, insightful summary based on the score result
 function generateSummary(result: ScoreResult): string {
-  const strengths = result.drivers.positive.filter(s => s.label !== 'Unknown');
-  const weaknesses = result.drivers.negative;
+  const subs = Object.fromEntries(result.subs.map(s => [s.name, s]));
+  const cashFlow = subs.cashFlow;
+  const yieldSub = subs.yield;
+  const uplift = subs.uplift;
+  const constraints = subs.constraints;
   
-  // Build strength phrases
-  const strengthPhrases: string[] = [];
-  for (const s of strengths) {
-    if (s.name === 'cashFlow' && s.detail !== 'Missing inputs') {
-      strengthPhrases.push(`cash flow (${s.detail})`);
-    } else if (s.name === 'yield' && s.detail !== 'Missing inputs') {
-      strengthPhrases.push(`yield (${s.detail})`);
-    } else if (s.name === 'constraints' && s.label === 'Few Issues') {
-      strengthPhrases.push('few planning constraints');
-    } else if (s.name === 'uplift' && s.detail !== 'Missing inputs') {
-      strengthPhrases.push(`uplift potential (${s.detail})`);
+  const paragraphs: string[] = [];
+  
+  // Overall score context
+  if (result.score >= 80) {
+    paragraphs.push("This property shows strong investment fundamentals across multiple metrics.");
+  } else if (result.score >= 65) {
+    paragraphs.push("This property presents a moderate opportunity with some areas requiring attention.");
+  } else if (result.score >= 50) {
+    paragraphs.push("This property has mixed signals — careful due diligence is recommended before proceeding.");
+  } else {
+    paragraphs.push("This property faces several challenges that may impact returns. Proceed with caution.");
+  }
+  
+  // Cash flow analysis
+  if (cashFlow.label !== 'Unknown') {
+    const weeklyMatch = cashFlow.detail.match(/([+-]?\$?-?\d+)/);
+    const weekly = weeklyMatch ? parseInt(weeklyMatch[1].replace(/[$,]/g, '')) : 0;
+    
+    if (weekly >= 100) {
+      paragraphs.push(`The strong positive cash flow of ${cashFlow.detail} provides a solid income buffer, reducing holding risk and supporting long-term ownership.`);
+    } else if (weekly >= 0) {
+      paragraphs.push(`Cash flow is roughly neutral at ${cashFlow.detail}, meaning the property should cover its own costs without significant out-of-pocket contributions.`);
+    } else if (weekly >= -200) {
+      paragraphs.push(`The property is negatively geared at ${cashFlow.detail}. While this creates a holding cost, it may suit investors seeking capital growth or tax benefits. Ensure you can comfortably cover the shortfall.`);
+    } else {
+      paragraphs.push(`Significant negative cash flow of ${cashFlow.detail} represents a substantial holding cost. This level of negative gearing requires strong income or alternative strategy to sustain.`);
     }
   }
   
-  // Build weakness phrases  
-  const weaknessPhrases: string[] = [];
-  for (const w of weaknesses) {
-    if (w.label === 'Unknown' || w.detail === 'Missing inputs' || w.detail === 'No constraint data provided') {
-      weaknessPhrases.push(`${SUB_SCORE_LABELS[w.name].toLowerCase()} data`);
-    } else if (w.name === 'constraints' && w.label !== 'Few Issues') {
-      weaknessPhrases.push('planning constraints');
-    } else if (w.name === 'cashFlow' && w.score < 50) {
-      weaknessPhrases.push(`cash flow (${w.detail})`);
-    } else if (w.name === 'uplift' && w.score < 60) {
-      weaknessPhrases.push('uplift potential');
+  // Uplift + constraints interplay
+  if (uplift.label !== 'Unknown' && constraints.label !== 'Unknown') {
+    const hasGoodUplift = uplift.score >= 70;
+    const hasFewConstraints = constraints.score >= 75;
+    
+    if (hasGoodUplift && hasFewConstraints) {
+      paragraphs.push(`Value-add potential looks promising with ${uplift.detail.toLowerCase()} and minimal planning hurdles. This combination suggests renovation or development strategies could be executed relatively smoothly.`);
+    } else if (hasGoodUplift && !hasFewConstraints) {
+      paragraphs.push(`While uplift potential exists (${uplift.detail.toLowerCase()}), planning constraints may complicate or delay value-add strategies. Engage a town planner early to understand approval pathways.`);
+    } else if (!hasGoodUplift && hasFewConstraints) {
+      paragraphs.push(`Limited uplift potential is identified, though few planning constraints exist. Consider whether the property suits a buy-and-hold strategy rather than active value creation.`);
+    }
+  } else if (uplift.label !== 'Unknown') {
+    if (uplift.score >= 70) {
+      paragraphs.push(`Uplift potential of ${uplift.detail.toLowerCase()} is encouraging, though constraint data is incomplete. Verify zoning and overlays before committing to a value-add strategy.`);
     }
   }
   
-  // Compose summary
-  let summary = '';
-  
-  if (strengthPhrases.length > 0) {
-    summary += `This property scores well on ${strengthPhrases.join(' and ')}.`;
+  // Yield context
+  if (yieldSub.label !== 'Unknown') {
+    if (yieldSub.score >= 75) {
+      paragraphs.push(`The yield (${yieldSub.detail.toLowerCase()}) is above average for the market, indicating solid rental demand relative to price.`);
+    } else if (yieldSub.score <= 40) {
+      paragraphs.push(`Below-average yield (${yieldSub.detail.toLowerCase()}) suggests the property may be priced for capital growth rather than income. This is common in premium locations but increases reliance on future appreciation.`);
+    }
   }
   
-  if (weaknessPhrases.length > 0) {
-    summary += summary ? ' ' : '';
-    summary += `Consider verifying ${weaknessPhrases.join(' and ')} before proceeding.`;
+  // Missing data warning
+  const unknownMetrics = result.subs.filter(s => s.label === 'Unknown').map(s => SUB_SCORE_LABELS[s.name].toLowerCase());
+  if (unknownMetrics.length > 0) {
+    paragraphs.push(`Note: ${unknownMetrics.join(' and ')} data is incomplete, which limits scoring accuracy. Source this information to refine the analysis.`);
   }
   
-  if (!summary) {
-    summary = 'Review the detailed analysis above to understand the key factors driving this score.';
+  // Confidence caveat
+  if (result.confidenceLabel === 'Low') {
+    paragraphs.push("Due to limited data, treat this score as directional only. Additional research is strongly recommended.");
   }
   
-  return summary;
+  return paragraphs.join(' ');
 }
 
 export function UpblockScoreCard({ result }: Props) {
