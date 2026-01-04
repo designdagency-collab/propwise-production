@@ -14,6 +14,8 @@ import {
   filterSoldComparables,
   getComparablesFallbackMessage
 } from '../services/propertyUtils';
+import { computeUpblockScore, mapPropertyDataToScoreInputs, ScoreResult } from '../src/utils/upblockScore';
+import { UpblockScoreCard } from '../src/components/UpblockScoreCard';
 
 interface PropertyResultsProps {
   data: PropertyData;
@@ -350,6 +352,10 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
   const cashPos = data.rentalPosition?.estimatedCashPositionWeekly;
   const isPositive = cashPos !== undefined && cashPos >= 0;
   const isNegative = cashPos !== undefined && cashPos < 0;
+
+  // Compute Upblock Deal Score
+  const scoreInputs = useMemo(() => mapPropertyDataToScoreInputs(data), [data]);
+  const upblockScore = useMemo(() => computeUpblockScore(scoreInputs), [scoreInputs]);
   // Strictly use red/green for the font
   const cashColorClass = isPositive ? 'text-[#10B981]' : isNegative ? 'text-[#E11D48]' : 'text-[#3A342D]';
 
@@ -461,6 +467,35 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
                    </ul>
                 </div>
              </div>
+             {/* Upblock Deal Score */}
+             <div className="space-y-1 group relative" data-pdf-kpi>
+                <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest cursor-help" style={{ color: 'var(--text-muted)' }}>Upblock Score</p>
+                <p className="text-xl sm:text-2xl font-black flex items-center gap-2" style={{ color: '#C9A961' }}>
+                   {upblockScore.scoreRange 
+                     ? `${upblockScore.scoreRange.low}–${upblockScore.scoreRange.high}` 
+                     : upblockScore.score}
+                   <span className="text-sm font-bold text-[#4A4137]/50">/100</span>
+                   <i className="fa-solid fa-circle-info text-xs cursor-help text-[#C9A961]/60"></i>
+                </p>
+                {/* Score tooltip */}
+                <div className="invisible group-hover:visible absolute bottom-full right-0 mb-2 w-64 p-3 bg-[#4A4137] text-white text-[9px] font-medium rounded-lg shadow-xl z-50 opacity-0 group-hover:opacity-100 pointer-events-none leading-relaxed">
+                   <p className="font-bold mb-2">Deal Score ({upblockScore.confidenceLabel} confidence)</p>
+                   <ul className="space-y-1 text-white/80">
+                     {upblockScore.subs.map(sub => (
+                       <li key={sub.name} className="flex justify-between">
+                         <span className="capitalize">{sub.name === 'cashFlow' ? 'Cash Flow' : sub.name}</span>
+                         <span className="text-[#C9A961]">{sub.score}/100 • {sub.label}</span>
+                       </li>
+                     ))}
+                   </ul>
+                   <p className="mt-2 text-[8px] text-white/50">General info only. Not financial advice.</p>
+                </div>
+             </div>
+          </div>
+          
+          {/* Upblock Score Card - Collapsible breakdown */}
+          <div className="pt-6">
+            <UpblockScoreCard result={upblockScore} />
           </div>
         </div>
       </div>
