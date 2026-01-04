@@ -30,6 +30,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
   const [isExporting, setIsExporting] = useState(false);
   const [pdfCountdown, setPdfCountdown] = useState<number>(3);
   const [pdfReady, setPdfReady] = useState<boolean>(false);
+  const [isScoreExpanded, setIsScoreExpanded] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
   
   // Extract Australian state from address for state-aware approval badges
@@ -437,12 +438,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
             </div>
           </div>
           
-          {/* Upblock Score Card - Collapsible breakdown */}
-          <div className="pt-4 pb-2">
-            <UpblockScoreCard result={upblockScore} />
-          </div>
-          
-          <div className="flex flex-wrap gap-8 pt-6 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
+          <div className="flex flex-wrap gap-8 pt-8 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
              <div className="space-y-1" data-pdf-kpi>
                 <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Estimated Market Value</p>
                 <p className="text-xl sm:text-2xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
@@ -473,7 +469,31 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
                    </ul>
                 </div>
              </div>
+             {/* Deal Score - Clickable to expand */}
+             <button 
+                onClick={() => setIsScoreExpanded(!isScoreExpanded)}
+                className="space-y-1 text-left hover:opacity-80 transition-opacity"
+                data-pdf-kpi
+             >
+                <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-widest flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                   Deal Score
+                   <i className={`fa-solid fa-chevron-${isScoreExpanded ? 'up' : 'down'} text-[8px]`}></i>
+                </p>
+                <p className="text-xl sm:text-2xl font-black flex items-center gap-1" style={{ color: '#C9A961' }}>
+                   {upblockScore.scoreRange 
+                     ? `${upblockScore.scoreRange.low}–${upblockScore.scoreRange.high}` 
+                     : upblockScore.score}
+                   <span className="text-sm font-bold" style={{ color: 'var(--text-muted)' }}>/100</span>
+                </p>
+             </button>
           </div>
+          
+          {/* Deal Score Breakdown - Expandable */}
+          {isScoreExpanded && (
+            <div className="mt-6">
+              <UpblockScoreCard result={upblockScore} />
+            </div>
+          )}
         </div>
       </div>
 

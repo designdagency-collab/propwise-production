@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { ScoreResult, SubScore } from '../utils/upblockScore';
 
 type Props = {
@@ -105,12 +105,6 @@ function generateSummary(result: ScoreResult): string {
 }
 
 export function UpblockScoreCard({ result }: Props) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const scoreDisplay = result.scoreRange
-    ? `${result.scoreRange.low}–${result.scoreRange.high}`
-    : `${result.score}`;
-
   const confidenceColor = {
     High: 'bg-emerald-100 text-emerald-700',
     Medium: 'bg-amber-100 text-amber-700',
@@ -119,107 +113,91 @@ export function UpblockScoreCard({ result }: Props) {
 
   return (
     <div 
-      className="rounded-2xl border overflow-hidden transition-all"
+      className="rounded-2xl border overflow-hidden"
       style={{ 
         backgroundColor: 'var(--bg-card)', 
         borderColor: 'var(--border-color)' 
       }}
     >
-      {/* Header - Always visible */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-6 py-4 flex items-center justify-between hover:bg-black/[0.02] transition-colors"
-      >
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <i className={`fa-solid fa-chevron-${isExpanded ? 'up' : 'down'} text-xs`} style={{ color: 'var(--text-muted)' }}></i>
-            <span className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-              Upblock Deal Score
-            </span>
-          </div>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${confidenceColor}`}>
+      {/* Content - Always visible (controlled by parent) */}
+      <div className="px-6 py-5 space-y-5">
+        {/* Confidence badge */}
+        <div className="flex items-center gap-3">
+          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${confidenceColor}`}>
             {result.confidenceLabel} Confidence
           </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-2xl font-black" style={{ color: '#C9A961' }}>
-            {scoreDisplay}
+          <span className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>
+            Based on {result.subs.filter(s => s.label !== 'Unknown').length} of 4 metrics
           </span>
-          <span className="text-sm font-bold" style={{ color: 'var(--text-muted)' }}>/100</span>
         </div>
-      </button>
 
-      {/* Expanded Content */}
-      {isExpanded && (
-        <div className="px-6 pb-6 space-y-5 border-t" style={{ borderColor: 'var(--border-color)' }}>
-          {/* Top Drivers */}
-          <div className="pt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Positive Drivers */}
-            <div className="space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">
-                <i className="fa-solid fa-arrow-trend-up mr-1"></i> Strengths
-              </p>
-              {result.drivers.positive.map((driver) => (
-                <div 
-                  key={driver.name}
-                  className={`p-3 rounded-xl border ${driver.label === 'Unknown' ? 'bg-slate-50 border-slate-200' : 'bg-emerald-50 border-emerald-100'}`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-xs font-bold ${driver.label === 'Unknown' ? 'text-slate-600' : 'text-emerald-800'}`}>
-                      {SUB_SCORE_LABELS[driver.name]}
-                    </span>
-                    <span className={`text-xs font-bold ${getLabelColor(driver.label, true)}`}>
-                      {driver.label}
-                    </span>
-                  </div>
-                  <p className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-emerald-700'}`}>{driver.detail}</p>
+        {/* Top Drivers */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Positive Drivers */}
+          <div className="space-y-2">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">
+              <i className="fa-solid fa-arrow-trend-up mr-1"></i> Strengths
+            </p>
+            {result.drivers.positive.map((driver) => (
+              <div 
+                key={driver.name}
+                className={`p-3 rounded-xl border ${driver.label === 'Unknown' ? 'bg-slate-50 border-slate-200' : 'bg-emerald-50 border-emerald-100'}`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`text-xs font-bold ${driver.label === 'Unknown' ? 'text-slate-600' : 'text-emerald-800'}`}>
+                    {SUB_SCORE_LABELS[driver.name]}
+                  </span>
+                  <span className={`text-xs font-bold ${getLabelColor(driver.label, true)}`}>
+                    {driver.label}
+                  </span>
                 </div>
-              ))}
-            </div>
-
-            {/* Negative Drivers */}
-            <div className="space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600">
-                <i className="fa-solid fa-triangle-exclamation mr-1"></i> Areas to Watch
-              </p>
-              {result.drivers.negative.map((driver) => (
-                <div 
-                  key={driver.name}
-                  className={`p-3 rounded-xl border ${driver.label === 'Unknown' ? 'bg-slate-50 border-slate-200' : 'bg-amber-50 border-amber-100'}`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-xs font-bold ${driver.label === 'Unknown' ? 'text-slate-600' : 'text-amber-800'}`}>
-                      {SUB_SCORE_LABELS[driver.name]}
-                    </span>
-                    <span className={`text-xs font-bold ${getLabelColor(driver.label, false)}`}>
-                      {driver.label}
-                    </span>
-                  </div>
-                  <p className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-amber-700'}`}>{driver.detail}</p>
-                </div>
-              ))}
-            </div>
+                <p className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-emerald-700'}`}>{driver.detail}</p>
+              </div>
+            ))}
           </div>
 
-          {/* Summary */}
-          <div className="pt-2 space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-              Summary
+          {/* Negative Drivers */}
+          <div className="space-y-2">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-600">
+              <i className="fa-solid fa-triangle-exclamation mr-1"></i> Areas to Watch
             </p>
-            <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-              {generateSummary(result)}
-            </p>
-          </div>
-
-          {/* Disclaimer */}
-          <div className="pt-2 px-3 py-2 rounded-lg bg-slate-50 border border-slate-200">
-            <p className="text-[9px] text-slate-500 leading-relaxed">
-              <i className="fa-solid fa-circle-info mr-1"></i>
-              <strong>General information only.</strong> Scenario estimate based on assumptions; not financial, legal, or tax advice.
-            </p>
+            {result.drivers.negative.map((driver) => (
+              <div 
+                key={driver.name}
+                className={`p-3 rounded-xl border ${driver.label === 'Unknown' ? 'bg-slate-50 border-slate-200' : 'bg-amber-50 border-amber-100'}`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`text-xs font-bold ${driver.label === 'Unknown' ? 'text-slate-600' : 'text-amber-800'}`}>
+                    {SUB_SCORE_LABELS[driver.name]}
+                  </span>
+                  <span className={`text-xs font-bold ${getLabelColor(driver.label, false)}`}>
+                    {driver.label}
+                  </span>
+                </div>
+                <p className={`text-[10px] ${driver.label === 'Unknown' ? 'text-slate-500' : 'text-amber-700'}`}>{driver.detail}</p>
+              </div>
+            ))}
           </div>
         </div>
-      )}
+
+        {/* Summary */}
+        <div className="space-y-2">
+          <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+            Summary
+          </p>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+            {generateSummary(result)}
+          </p>
+        </div>
+
+        {/* Disclaimer */}
+        <div className="px-3 py-2 rounded-lg bg-slate-50 border border-slate-200">
+          <p className="text-[9px] text-slate-500 leading-relaxed">
+            <i className="fa-solid fa-circle-info mr-1"></i>
+            <strong>General information only.</strong> Scenario estimate based on assumptions; not financial, legal, or tax advice.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
