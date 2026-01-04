@@ -425,26 +425,24 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
           </div>
           <div>
             <h1 className="text-[2rem] sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tighter font-address leading-tight" style={{ color: 'var(--text-primary)' }}>{data.address}</h1>
-            <div className="flex items-center gap-3 mt-2">
-              <p className="font-medium text-sm sm:text-base" style={{ color: 'var(--text-muted)' }}>
-                {data.propertyType} • {getPrimaryAreaDisplay(data.landSize, data.propertyType).label} • {getPrimaryAreaDisplay(data.landSize, data.propertyType).value}
-              </p>
-              {data.isCombinedLots && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-500/10 text-purple-600 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                  <i className="fa-solid fa-layer-group text-[8px]"></i>
-                  Combined Lots
-                </span>
-              )}
-            </div>
-          </div>
-          
-          {/* Deal Score - Above metrics, right aligned */}
-          <div className="flex justify-end -mt-8 mb-4">
-             <button 
+            <div className="flex items-center justify-between gap-3 mt-2">
+              <div className="flex items-center gap-3">
+                <p className="font-medium text-sm sm:text-base" style={{ color: 'var(--text-muted)' }}>
+                  {data.propertyType} • {getPrimaryAreaDisplay(data.landSize, data.propertyType).label} • {getPrimaryAreaDisplay(data.landSize, data.propertyType).value}
+                </p>
+                {data.isCombinedLots && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-500/10 text-purple-600 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                    <i className="fa-solid fa-layer-group text-[8px]"></i>
+                    Combined Lots
+                  </span>
+                )}
+              </div>
+              {/* Deal Score - Inline with property type */}
+              <button 
                 onClick={() => setIsScoreExpanded(!isScoreExpanded)}
                 className="flex items-center gap-3 px-4 py-2 rounded-xl border hover:bg-black/[0.02] transition-colors"
                 style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-card)' }}
-             >
+              >
                 <span className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
                    Deal Score
                    <i className={`fa-solid fa-chevron-${isScoreExpanded ? 'up' : 'down'} text-[8px]`}></i>
@@ -455,11 +453,12 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
                      : upblockScore.score}
                    <span className="text-sm font-bold" style={{ color: 'var(--text-muted)' }}>/100</span>
                 </span>
-             </button>
+              </button>
+            </div>
           </div>
 
           {/* 4 Metrics Row */}
-          <div className="flex flex-wrap items-start justify-between gap-y-4 pt-4 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
+          <div className="flex flex-wrap items-start justify-between gap-y-4 pt-6 mt-4 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
              <div className="space-y-0.5" data-pdf-kpi>
                 <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Market Value</p>
                 <p className="text-xl sm:text-2xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
