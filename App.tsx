@@ -573,8 +573,15 @@ const App: React.FC = () => {
           plan: state.plan
         });
         
+        // IMPORTANT: Set ALL credit-related state immediately to avoid stale state issues
+        setCreditState(state);  // This is what checkSearchLimit() uses!
         setRemainingCredits(calculatedCredits);
         setPlan(state.plan);
+        
+        // Return to home if was on limit reached screen and now has credits
+        if (canAudit(state)) {
+          setAppState(prev => prev === AppState.LIMIT_REACHED ? AppState.IDLE : prev);
+        }
       } else {
         console.log('[loadUserData] No profile found - user may need to complete signup');
       }
