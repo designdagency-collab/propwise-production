@@ -1113,6 +1113,9 @@ const App: React.FC = () => {
     if (user?.id) {
       await supabaseService.updatePhone(user.id, phone);
       await loadUserData(user.id);
+      // IMPORTANT: Refresh credit state after phone verification
+      // This picks up any referral bonus credits that were awarded
+      refreshCreditState();
     }
     
     setShowPhoneVerification(false);
@@ -1711,9 +1714,15 @@ const App: React.FC = () => {
           onVerified={async (phone) => {
             console.log('[PhoneRecovery] Phone verified:', phone);
             setShowPhoneRecovery(false);
-            // Refresh profile to get updated phone_verified status
+            // Refresh profile to get updated phone_verified status and credits
+            // (referral credits are awarded after phone verification)
             if (userProfile?.id) {
               await loadUserData(userProfile.id);
+              refreshCreditState();
+            }
+            // Return to home if was on limit screen
+            if (appState === AppState.LIMIT_REACHED) {
+              setAppState(AppState.IDLE);
             }
           }}
           userId={userProfile.id}
