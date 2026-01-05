@@ -1,12 +1,13 @@
 /* Propwise Styles - Most styling handled by Tailwind */
 
-/* Shake animation for gift icon */
+/* Shake animation for gift icon - gentle wiggle */
 @keyframes shake {
   0%, 100% { transform: rotate(0deg); }
-  10%, 30%, 50%, 70%, 90% { transform: rotate(-8deg); }
-  20%, 40%, 60%, 80% { transform: rotate(8deg); }
+  25% { transform: rotate(-12deg); }
+  50% { transform: rotate(0deg); }
+  75% { transform: rotate(12deg); }
 }
 
 .animate-shake {
-  animation: shake 0.5s ease-in-out infinite;
+  animation: shake 0.8s ease-in-out infinite;
 }

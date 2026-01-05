@@ -91,21 +91,21 @@ const Navbar: React.FC<NavbarProps> = ({
   // Check if user can use referrals (Trial or Starter Pack only)
   const canUseReferrals = plan === 'FREE_TRIAL' || plan === 'STARTER_PACK';
 
-  // Shake gift icon every 30 seconds for 3 seconds
+  // Shake gift icon every 60 seconds for 4 seconds
   useEffect(() => {
     if (!isLoggedIn || !canUseReferrals) return;
     
-    // Initial shake after 5 seconds
+    // Initial shake after 8 seconds
     const initialTimeout = setTimeout(() => {
       setIsShaking(true);
-      setTimeout(() => setIsShaking(false), 3000);
-    }, 5000);
+      setTimeout(() => setIsShaking(false), 4000);
+    }, 8000);
     
-    // Then shake every 30 seconds
+    // Then shake every 60 seconds
     const interval = setInterval(() => {
       setIsShaking(true);
-      setTimeout(() => setIsShaking(false), 3000);
-    }, 30000);
+      setTimeout(() => setIsShaking(false), 4000);
+    }, 60000);
     
     return () => {
       clearTimeout(initialTimeout);
