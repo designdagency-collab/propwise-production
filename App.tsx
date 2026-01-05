@@ -238,7 +238,7 @@ const App: React.FC = () => {
         } catch (e) {
           console.warn('[Navigation] Could not restore results:', e);
         }
-      } else if (results !== null) {
+      } else if (results !== null || appState === AppState.LIMIT_REACHED) {
         // Back navigation - clear results and go to home
         console.log('[Navigation] Back button pressed, returning to home');
         setResults(null);
@@ -249,7 +249,7 @@ const App: React.FC = () => {
     
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [results]);
+  }, [results, appState]);
 
   // Check for referral code in URL on page load
   useEffect(() => {
@@ -1250,6 +1250,8 @@ const App: React.FC = () => {
 
     if (!checkSearchLimit()) {
       setAppState(AppState.LIMIT_REACHED);
+      // Push history state so back button works
+      window.history.pushState({ view: 'limit' }, '', window.location.pathname);
       return;
     }
 
