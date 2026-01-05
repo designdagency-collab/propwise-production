@@ -68,28 +68,6 @@ const Navbar: React.FC<NavbarProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Shake gift icon every 30 seconds for 3 seconds
-  useEffect(() => {
-    if (!isLoggedIn || !canUseReferrals) return;
-    
-    // Initial shake after 5 seconds
-    const initialTimeout = setTimeout(() => {
-      setIsShaking(true);
-      setTimeout(() => setIsShaking(false), 3000);
-    }, 5000);
-    
-    // Then shake every 30 seconds
-    const interval = setInterval(() => {
-      setIsShaking(true);
-      setTimeout(() => setIsShaking(false), 3000);
-    }, 30000);
-    
-    return () => {
-      clearTimeout(initialTimeout);
-      clearInterval(interval);
-    };
-  }, [isLoggedIn, canUseReferrals]);
-
   const handleSelectKey = async () => {
     if (window.aistudio && window.aistudio.openSelectKey) {
       await window.aistudio.openSelectKey();
@@ -112,6 +90,28 @@ const Navbar: React.FC<NavbarProps> = ({
 
   // Check if user can use referrals (Trial or Starter Pack only)
   const canUseReferrals = plan === 'FREE_TRIAL' || plan === 'STARTER_PACK';
+
+  // Shake gift icon every 30 seconds for 3 seconds
+  useEffect(() => {
+    if (!isLoggedIn || !canUseReferrals) return;
+    
+    // Initial shake after 5 seconds
+    const initialTimeout = setTimeout(() => {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 3000);
+    }, 5000);
+    
+    // Then shake every 30 seconds
+    const interval = setInterval(() => {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 3000);
+    }, 30000);
+    
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
+  }, [isLoggedIn, canUseReferrals]);
 
   // Get display name (first name from full name, or from email)
   const getDisplayName = () => {
