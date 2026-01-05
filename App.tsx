@@ -208,11 +208,26 @@ const App: React.FC = () => {
     return () => window.removeEventListener('pageshow', handlePageShow);
   }, [isProcessingUpgrade]);
 
-  // Handle browser back button to return from results to home
+  // Handle browser back/forward navigation
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      // If we're showing results and user pressed back, go to home
-      if (event.state?.view !== 'results' && results !== null) {
+      if (event.state?.view === 'results') {
+        // Forward navigation - try to restore results from sessionStorage
+        console.log('[Navigation] Forward to results, restoring from cache');
+        try {
+          const cached = sessionStorage.getItem('upblock_last_results');
+          const cachedAddress = sessionStorage.getItem('upblock_last_address');
+          if (cached && cachedAddress) {
+            setResults(JSON.parse(cached));
+            setAddress(cachedAddress);
+            setAppState(AppState.RESULTS);
+            setIsValidAddress(true);
+          }
+        } catch (e) {
+          console.warn('[Navigation] Could not restore results:', e);
+        }
+      } else if (results !== null) {
+        // Back navigation - clear results and go to home
         console.log('[Navigation] Back button pressed, returning to home');
         setResults(null);
         setAppState(AppState.IDLE);
@@ -1068,6 +1083,13 @@ const App: React.FC = () => {
       setTimeout(() => {
         setResults(data);
         setAppState(AppState.RESULTS);
+        // Save to sessionStorage for forward navigation
+        try {
+          sessionStorage.setItem('upblock_last_results', JSON.stringify(data));
+          sessionStorage.setItem('upblock_last_address', address);
+        } catch (e) {
+          console.warn('[Navigation] Could not cache results:', e);
+        }
         // Push history state so back button returns to home
         window.history.pushState({ view: 'results', address }, '', window.location.pathname);
         // Only consume credit on successful results
