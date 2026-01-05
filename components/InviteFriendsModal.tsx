@@ -139,7 +139,7 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 rounded-xl border" style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-primary)' }}>
               <p className="text-2xl font-black text-[#C9A961]">{referralCount}/{MAX_REFERRALS}</p>
-              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Friends Accepted</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Friends Joined</p>
             </div>
             <div className="p-4 rounded-xl border" style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-primary)' }}>
               <p className="text-2xl font-black text-emerald-600">+{referralCreditsEarned}</p>
