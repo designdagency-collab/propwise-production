@@ -611,8 +611,14 @@ const App: React.FC = () => {
       if (state.plan !== plan) {
         setPlan(state.plan);
       }
+      
+      // SAFETY NET: If logged in with credits but stuck on LIMIT_REACHED, go to IDLE
+      if (isLoggedIn && canAudit(state) && appState === AppState.LIMIT_REACHED) {
+        console.log('[Credits] Safety net: User has credits but stuck on LIMIT_REACHED, returning to IDLE');
+        setAppState(AppState.IDLE);
+      }
     }
-  }, [userProfile]);
+  }, [userProfile, isLoggedIn, appState]);
 
   const checkSearchLimit = () => {
     // API key users bypass limits
@@ -1077,14 +1083,43 @@ const App: React.FC = () => {
 
   // Handle email auth success (both signup and login)
   const handleEmailAuthSuccess = async (email: string, isNewUser: boolean) => {
-    console.log(isNewUser ? 'New user signup' : 'Returning user login', '- loading from Supabase');
+    console.log('[handleEmailAuthSuccess]', isNewUser ? 'New user signup' : 'Returning user login');
     
+    // CRITICAL: Close modals and return to home FIRST
+    // This ensures the user isn't stuck on LIMIT_REACHED regardless of data loading
+    setShowEmailAuth(false);
+    setAppState(AppState.IDLE);
     setIsLoggedIn(true);
+    
+    console.log('[handleEmailAuthSuccess] Set state to IDLE, now loading user data...');
     
     // Load user data from Supabase (sets userProfile)
     const user = await supabaseService.getCurrentUser();
+    console.log('[handleEmailAuthSuccess] getCurrentUser result:', user?.id);
+    
     if (user?.id) {
-      await loadUserData(user.id);
+      // For new users, the profile might not exist yet (Supabase trigger timing)
+      // Retry a few times with delay
+      let retries = 3;
+      let profileLoaded = false;
+      
+      while (retries > 0 && !profileLoaded) {
+        await loadUserData(user.id);
+        
+        // Check if profile was loaded (userProfile will be set by loadUserData)
+        const profile = await supabaseService.getCurrentProfile(user.id);
+        if (profile) {
+          profileLoaded = true;
+          console.log('[handleEmailAuthSuccess] Profile loaded successfully');
+        } else {
+          retries--;
+          if (retries > 0) {
+            console.log('[handleEmailAuthSuccess] Profile not found, retrying...', retries, 'left');
+            await new Promise(r => setTimeout(r, 500)); // Wait 500ms before retry
+          }
+        }
+      }
+      
       refreshCreditState();
       
       // Track referral for new users
@@ -1094,7 +1129,9 @@ const App: React.FC = () => {
       }
     }
     
-    setShowEmailAuth(false);
+    // ENSURE we're on IDLE even after data loading
+    // (in case something during loading tried to set LIMIT_REACHED)
+    console.log('[handleEmailAuthSuccess] Complete - ensuring IDLE state');
     setAppState(AppState.IDLE);
     
     // Check for pending upgrade in URL
