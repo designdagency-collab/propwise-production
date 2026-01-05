@@ -284,13 +284,13 @@ const Navbar: React.FC<NavbarProps> = ({
                             <div className="flex items-start gap-3">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                                 notification.type === 'referral_credited' ? 'bg-emerald-100 text-emerald-600' :
-                                notification.type === 'referral_signup' ? 'bg-blue-100 text-blue-600' :
-                                notification.type === 'welcome_bonus' ? 'bg-purple-100 text-purple-600' :
+                                notification.type === 'referral_signup' ? 'bg-[#C9A961]/20 text-[#C9A961]' :
+                                notification.type === 'welcome_bonus' ? 'bg-[#C9A961]/20 text-[#C9A961]' :
                                 'bg-amber-100 text-amber-600'
                               }`}>
                                 <i className={`fa-solid text-xs ${
                                   notification.type === 'referral_credited' ? 'fa-check' :
-                                  notification.type === 'referral_signup' ? 'fa-user-plus' :
+                                  notification.type === 'referral_signup' ? 'fa-user-check' :
                                   notification.type === 'welcome_bonus' ? 'fa-gift' :
                                   'fa-trophy'
                                 }`}></i>
