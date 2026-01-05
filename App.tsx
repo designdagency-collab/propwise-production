@@ -77,6 +77,9 @@ const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(false); // true = login, false = signup
   
+  // Flag to prevent LIMIT_REACHED immediately after signup (race condition fix)
+  const justSignedUpRef = useRef(false);
+  
   // Derived from userProfile (Supabase is source of truth)
   const userEmail = userProfile?.email || '';
   const userPhone = userProfile?.phone || '';
@@ -1085,6 +1088,9 @@ const App: React.FC = () => {
   const handleEmailAuthSuccess = async (email: string, isNewUser: boolean) => {
     console.log('[handleEmailAuthSuccess]', isNewUser ? 'New user signup' : 'Returning user login');
     
+    // Set flag to prevent race conditions setting LIMIT_REACHED
+    justSignedUpRef.current = true;
+    
     // CRITICAL: Close modals and return to home FIRST
     // This ensures the user isn't stuck on LIMIT_REACHED regardless of data loading
     setShowEmailAuth(false);
@@ -1146,6 +1152,12 @@ const App: React.FC = () => {
       console.log('[handleEmailAuthSuccess] Address already validated, preserving state');
       setIsValidAddress(true); // Explicitly set to ensure React doesn't lose this state
     }
+    
+    // Clear the justSignedUp flag after a short delay (allow state to settle)
+    setTimeout(() => {
+      justSignedUpRef.current = false;
+      console.log('[handleEmailAuthSuccess] Cleared justSignedUp flag');
+    }, 2000);
     
     // Check for pending upgrade in URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -1305,11 +1317,17 @@ const App: React.FC = () => {
     if (e) e.preventDefault();
     if (!address.trim()) return;
 
-    if (!checkSearchLimit()) {
+    // Check search limit, but bypass if user just signed up (credits may still be loading)
+    if (!checkSearchLimit() && !justSignedUpRef.current) {
       setAppState(AppState.LIMIT_REACHED);
       // Push history state so back button works
       window.history.pushState({ view: 'limit' }, '', window.location.pathname);
       return;
+    }
+    
+    // If just signed up, log and proceed (they have credits, just may not be loaded yet)
+    if (justSignedUpRef.current) {
+      console.log('[handleSearch] Bypassing limit check - user just signed up');
     }
 
     setAppState(AppState.LOADING);
