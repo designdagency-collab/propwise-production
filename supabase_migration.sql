@@ -188,3 +188,27 @@ DROP POLICY IF EXISTS "Allow anonymous fingerprint update" ON device_fingerprint
 CREATE POLICY "Allow anonymous fingerprint update" ON device_fingerprints
   FOR UPDATE USING (true);
 
+-- ============================================
+-- PROPERTY CACHE TABLE (for consistent results)
+-- ============================================
+-- Caches Gemini API responses by address for 2 weeks
+CREATE TABLE IF NOT EXISTS property_cache (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  address_key TEXT UNIQUE NOT NULL,  -- normalized lowercase address
+  data JSONB NOT NULL,               -- full API response
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for fast lookups
+CREATE INDEX IF NOT EXISTS idx_property_cache_address ON property_cache(address_key);
+CREATE INDEX IF NOT EXISTS idx_property_cache_created ON property_cache(created_at);
+
+-- RLS policies (service role access for server-side caching)
+ALTER TABLE property_cache ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Service role full access property_cache" ON property_cache;
+CREATE POLICY "Service role full access property_cache" ON property_cache FOR ALL USING (true);
+
+-- Optional: Auto-cleanup old cache entries (run periodically via cron)
+-- DELETE FROM property_cache WHERE created_at < NOW() - INTERVAL '14 days';
+

@@ -1,5 +1,23 @@
 // Server-side Gemini API calls - API key is NEVER exposed to client
 import { GoogleGenAI } from "@google/genai";
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client for caching
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Cache TTL: 2 weeks in milliseconds
+const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+
+// Normalize address for consistent cache keys
+function normalizeAddress(address) {
+  return address
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ')           // collapse multiple spaces
+    .replace(/[,\.]/g, '')          // remove punctuation
+    .replace(/\s+(nsw|vic|qld|wa|sa|tas|nt|act)\s+/gi, ' $1 '); // normalize state
+}
 
 // Response schema for Gemini (matching the TypeScript types)
 const responseSchema = {
@@ -249,6 +267,39 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Address is required' });
   }
 
+  // Normalize address for cache lookup
+  const addressKey = normalizeAddress(address);
+  
+  // Check cache first (if Supabase is configured)
+  if (supabaseUrl && supabaseServiceKey) {
+    try {
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      const twoWeeksAgo = new Date(Date.now() - CACHE_TTL_MS).toISOString();
+      
+      const { data: cached, error: cacheError } = await supabase
+        .from('property_cache')
+        .select('data, created_at')
+        .eq('address_key', addressKey)
+        .gte('created_at', twoWeeksAgo)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (cached && !cacheError) {
+        console.log('[PropertyInsights] Cache HIT for:', addressKey.substring(0, 40) + '...');
+        return res.status(200).json({ data: cached.data, cached: true });
+      }
+      
+      if (cacheError) {
+        console.warn('[PropertyInsights] Cache lookup error (continuing without cache):', cacheError.message);
+      } else {
+        console.log('[PropertyInsights] Cache MISS for:', addressKey.substring(0, 40) + '...');
+      }
+    } catch (cacheErr) {
+      console.warn('[PropertyInsights] Cache check failed (continuing without cache):', cacheErr.message);
+    }
+  }
+
   const apiKey = process.env.GEMINI_API_KEY;
   
   if (!apiKey) {
@@ -410,6 +461,23 @@ RULES:
     data.sources = sources;
 
     console.log('[PropertyInsights] Success for:', address.substring(0, 40) + '...');
+    
+    // Save to cache (non-blocking, don't fail if cache save fails)
+    if (supabaseUrl && supabaseServiceKey) {
+      try {
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        await supabase
+          .from('property_cache')
+          .upsert({
+            address_key: addressKey,
+            data: data,
+            created_at: new Date().toISOString()
+          }, { onConflict: 'address_key' });
+        console.log('[PropertyInsights] Cached result for:', addressKey.substring(0, 40) + '...');
+      } catch (cacheErr) {
+        console.warn('[PropertyInsights] Failed to cache result:', cacheErr.message);
+      }
+    }
     
     return res.status(200).json({ data });
   } catch (error) {
