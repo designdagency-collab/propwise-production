@@ -1311,6 +1311,13 @@ const App: React.FC = () => {
     setIsQuotaError(false);
     setShowUpgradeSuccess(false);
     setShowPricing(false);
+    // Clear cached search from sessionStorage
+    try {
+      sessionStorage.removeItem('upblock_last_results');
+      sessionStorage.removeItem('upblock_last_address');
+    } catch (e) {
+      // Ignore sessionStorage errors
+    }
   }, []);
 
   const handleSearch = useCallback(async (e?: React.FormEvent) => {
