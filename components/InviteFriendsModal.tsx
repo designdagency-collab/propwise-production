@@ -148,27 +148,27 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 p-1 rounded-xl" style={{ backgroundColor: 'var(--bg-primary)' }}>
+          <div className="flex gap-1 p-1 rounded-xl border" style={{ backgroundColor: '#f5f5f0', borderColor: '#e8e6e3' }}>
             <button
               onClick={() => setActiveTab('email')}
-              className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-bold transition-all ${
+              className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-bold transition-all outline-none ${
                 activeTab === 'email' 
                   ? 'bg-[#C9A961] text-white shadow-sm' 
-                  : 'hover:bg-black/5'
+                  : 'bg-transparent hover:bg-white/50'
               }`}
-              style={{ color: activeTab === 'email' ? undefined : 'var(--text-muted)' }}
+              style={{ color: activeTab === 'email' ? '#ffffff' : '#2d2d2d' }}
             >
               <i className="fa-solid fa-envelope mr-1.5"></i>
               Send Email
             </button>
             <button
               onClick={() => setActiveTab('link')}
-              className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-bold transition-all ${
+              className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-bold transition-all outline-none ${
                 activeTab === 'link' 
                   ? 'bg-[#C9A961] text-white shadow-sm' 
-                  : 'hover:bg-black/5'
+                  : 'bg-transparent hover:bg-white/50'
               }`}
-              style={{ color: activeTab === 'link' ? undefined : 'var(--text-muted)' }}
+              style={{ color: activeTab === 'link' ? '#ffffff' : '#2d2d2d' }}
             >
               <i className="fa-solid fa-link mr-1.5"></i>
               Share Link
