@@ -122,21 +122,44 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Check if input looks like an Australian address (for paste support)
+  const looksLikeAustralianAddress = useCallback((input: string): boolean => {
+    const trimmed = input.trim();
+    // Must have at least 3 words
+    const hasMinWords = trimmed.split(/\s+/).length >= 3;
+    // Has a 4-digit postcode
+    const hasPostcode = /\b\d{4}\b/.test(trimmed);
+    // Has a state abbreviation
+    const hasState = /\b(NSW|VIC|QLD|WA|SA|TAS|NT|ACT)\b/i.test(trimmed);
+    // Has street-like words
+    const hasStreetWord = /\b(street|st|road|rd|avenue|ave|drive|dr|lane|ln|court|ct|place|pl|crescent|cres|way|parade|pde|highway|hwy|boulevard|blvd|terrace|tce)\b/i.test(trimmed);
+    
+    return hasMinWords && (hasPostcode || hasState) && hasStreetWord;
+  }, []);
+
   // Debounced address input handler
   const handleAddressChange = useCallback((value: string) => {
     setAddress(value);
-    setIsValidAddress(false); // Must select from autocomplete
+    
+    // Auto-validate if it looks like a pasted Australian address
+    if (looksLikeAustralianAddress(value)) {
+      setIsValidAddress(true);
+      setSuggestions([]);
+      setShowSuggestions(false);
+    } else {
+      setIsValidAddress(false);
+    }
     
     // Clear existing timer
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
     
-    // Set new debounced fetch
+    // Set new debounced fetch (still show suggestions for partial inputs)
     debounceTimerRef.current = setTimeout(() => {
       fetchSuggestions(value);
     }, 300);
-  }, [fetchSuggestions]);
+  }, [fetchSuggestions, looksLikeAustralianAddress]);
 
   // Handle suggestion selection
   const handleSelectSuggestion = useCallback((suggestion: { description: string }) => {
