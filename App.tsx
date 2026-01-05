@@ -1131,8 +1131,17 @@ const App: React.FC = () => {
     
     // ENSURE we're on IDLE even after data loading
     // (in case something during loading tried to set LIMIT_REACHED)
-    console.log('[handleEmailAuthSuccess] Complete - ensuring IDLE state');
+    console.log('[handleEmailAuthSuccess] Complete - ensuring IDLE state, address:', address);
     setAppState(AppState.IDLE);
+    
+    // Re-validate the address if one exists (preserve user's search intent)
+    if (address && address.trim().length > 0) {
+      console.log('[handleEmailAuthSuccess] Re-validating existing address');
+      // If it looks like a valid Australian address, mark as valid
+      if (looksLikeAustralianAddress(address)) {
+        setIsValidAddress(true);
+      }
+    }
     
     // Check for pending upgrade in URL
     const urlParams = new URLSearchParams(window.location.search);
