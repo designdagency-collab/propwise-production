@@ -109,7 +109,7 @@ export default async function handler(req, res) {
 
     // Send the email
     const { data: emailData, error: emailError } = await resend.emails.send({
-      from: 'upblock.ai <hello@upblock.ai>',
+      from: 'upblock.ai <hello@mail.upblock.ai>',
       to: friendEmail,
       subject: `${senderName} invited you to try upblock.ai`,
       html: generateEmailHtml(senderName, friendName, referralLink, profile.referral_code),
