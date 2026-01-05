@@ -101,6 +101,9 @@ export default async function handler(req, res) {
       'phone',
       'phone_verified',
       'phone_recovery_prompted',
+      'referral_code',
+      'referral_count',
+      'referral_credits_earned',
       'created_at',
       'updated_at'
       // enterprise_waitlist and enterprise_waitlist_date - add after running migration

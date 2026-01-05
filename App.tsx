@@ -7,6 +7,7 @@ import PhoneRecoveryModal from './components/PhoneRecoveryModal';
 import EmailAuth from './components/EmailAuth';
 import TermsAndConditions from './components/TermsAndConditions';
 import AccountSettings from './components/AccountSettings';
+import InviteFriendsModal from './components/InviteFriendsModal';
 import { geminiService } from './services/geminiService';
 import { stripeService } from './services/stripeService';
 import { supabaseService } from './services/supabaseService';
@@ -60,6 +61,17 @@ const App: React.FC = () => {
   const [showPhoneRecovery, setShowPhoneRecovery] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [searchHistory, setSearchHistory] = useState<{ address: string; created_at: string }[]>([]);
+  
+  // Referral system state
+  const [showInviteFriends, setShowInviteFriends] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralLink, setReferralLink] = useState<string | null>(null);
+  const [referralCount, setReferralCount] = useState(0);
+  const [referralCreditsEarned, setReferralCreditsEarned] = useState(0);
+  const [isGeneratingReferralCode, setIsGeneratingReferralCode] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const [pendingReferralCode, setPendingReferralCode] = useState<string | null>(null); // From URL ?ref=XXX
   
   // Auth state - derived from Supabase session (no localStorage)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -238,6 +250,22 @@ const App: React.FC = () => {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [results]);
+
+  // Check for referral code in URL on page load
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+      console.log('[Referral] Found referral code in URL:', refCode);
+      setPendingReferralCode(refCode.toUpperCase());
+      // Remove from URL to clean it up
+      urlParams.delete('ref');
+      const newUrl = urlParams.toString() 
+        ? `${window.location.pathname}?${urlParams}` 
+        : window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
 
   // Check device fingerprint for anonymous users on page load
   useEffect(() => {
@@ -875,6 +903,129 @@ const App: React.FC = () => {
     setShowAccountSettings(false);
   };
 
+  // Fetch notifications from server
+  const fetchNotifications = async () => {
+    if (!isLoggedIn) return;
+    
+    try {
+      const response = await supabaseService.authenticatedFetch('/api/notifications', {
+        method: 'GET'
+      });
+      
+      if (response.ok) {
+        const { notifications: notifs, unreadCount } = await response.json();
+        setNotifications(notifs || []);
+        setUnreadNotificationCount(unreadCount || 0);
+      }
+    } catch (error) {
+      console.error('[Notifications] Fetch error:', error);
+    }
+  };
+
+  // Generate referral code
+  const generateReferralCode = async () => {
+    if (!isLoggedIn || referralCode) return;
+    
+    setIsGeneratingReferralCode(true);
+    try {
+      const response = await supabaseService.authenticatedFetch('/api/generate-referral-code', {
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        const { referralCode: code, referralLink: link } = await response.json();
+        setReferralCode(code);
+        setReferralLink(link);
+      } else {
+        const errorData = await response.json();
+        console.error('[Referral] Generate error:', errorData.error);
+      }
+    } catch (error) {
+      console.error('[Referral] Generate error:', error);
+    } finally {
+      setIsGeneratingReferralCode(false);
+    }
+  };
+
+  // Mark notification as read
+  const markNotificationRead = async (notificationId: string) => {
+    try {
+      await supabaseService.authenticatedFetch('/api/notifications', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'markRead', notificationId })
+      });
+      
+      setNotifications(prev => 
+        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+      );
+      setUnreadNotificationCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('[Notifications] Mark read error:', error);
+    }
+  };
+
+  // Mark all notifications as read
+  const markAllNotificationsRead = async () => {
+    try {
+      await supabaseService.authenticatedFetch('/api/notifications', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'markAllRead' })
+      });
+      
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setUnreadNotificationCount(0);
+    } catch (error) {
+      console.error('[Notifications] Mark all read error:', error);
+    }
+  };
+
+  // Track referral when new user signs up
+  const trackReferral = async (newUserId: string) => {
+    if (!pendingReferralCode) return;
+    
+    try {
+      const response = await fetch('/api/track-referral', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          referralCode: pendingReferralCode,
+          newUserId 
+        })
+      });
+      
+      if (response.ok) {
+        console.log('[Referral] Tracked successfully');
+      } else {
+        const errorData = await response.json();
+        console.log('[Referral] Track failed:', errorData.error);
+      }
+    } catch (error) {
+      console.error('[Referral] Track error:', error);
+    } finally {
+      setPendingReferralCode(null);
+    }
+  };
+
+  // Load referral stats from profile
+  useEffect(() => {
+    if (userProfile) {
+      setReferralCode(userProfile.referral_code || null);
+      setReferralLink(userProfile.referral_code ? `https://upblock.ai/?ref=${userProfile.referral_code}` : null);
+      setReferralCount(userProfile.referral_count || 0);
+      setReferralCreditsEarned(userProfile.referral_credits_earned || 0);
+    }
+  }, [userProfile]);
+
+  // Fetch notifications when logged in
+  useEffect(() => {
+    if (isLoggedIn && userProfile) {
+      fetchNotifications();
+      // Refresh notifications every 2 minutes
+      const interval = setInterval(fetchNotifications, 120000);
+      return () => clearInterval(interval);
+    }
+  }, [isLoggedIn, userProfile]);
+
   // Handle subscription cancellation
   const handleCancelSubscription = async () => {
     // TODO: Call Stripe to cancel subscription when connected
@@ -907,6 +1058,12 @@ const App: React.FC = () => {
     if (user?.id) {
       await loadUserData(user.id);
       refreshCreditState();
+      
+      // Track referral for new users
+      if (isNewUser && pendingReferralCode) {
+        console.log('[Referral] Tracking referral for new user:', user.id);
+        trackReferral(user.id);
+      }
     }
     
     setShowEmailAuth(false);
@@ -1195,6 +1352,7 @@ const App: React.FC = () => {
         onLogin={() => { setShowTerms(false); setShowPricing(false); setShowAccountSettings(false); handleLogin(); }}
         onLogout={handleLogout}
         onAccountSettings={() => { setShowTerms(false); setShowPricing(false); setShowAccountSettings(true); fetchSearchHistory(); }}
+        onInviteFriends={() => setShowInviteFriends(true)}
         isLoggedIn={isLoggedIn}
         userName={userProfile?.full_name}
         userEmail={userEmail}
@@ -1202,6 +1360,10 @@ const App: React.FC = () => {
         phoneVerified={userProfile?.phone_verified}
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
+        notifications={notifications}
+        unreadCount={unreadNotificationCount}
+        onMarkNotificationRead={markNotificationRead}
+        onMarkAllRead={markAllNotificationsRead}
       />
 
       {/* Upgrade Processing Overlay */}
@@ -1536,6 +1698,18 @@ const App: React.FC = () => {
           userId={userProfile.id}
         />
       )}
+
+      {/* Invite Friends Modal */}
+      <InviteFriendsModal
+        isOpen={showInviteFriends}
+        onClose={() => setShowInviteFriends(false)}
+        referralCode={referralCode}
+        referralLink={referralLink}
+        referralCount={referralCount}
+        referralCreditsEarned={referralCreditsEarned}
+        onGenerateCode={generateReferralCode}
+        isLoading={isGeneratingReferralCode}
+      />
 
       {/* Footer - only show on main pages, not modals */}
       {!showTerms && !showPricing && !showAccountSettings && (

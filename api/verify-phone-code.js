@@ -159,6 +159,23 @@ export default async function handler(req, res) {
 
     console.log('[VerifyPhoneCode] Phone verified for user:', userId);
     
+    // Award referral credits if this user was referred
+    try {
+      const awardResponse = await fetch(`${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'}/api/award-referral-credits`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+      
+      if (awardResponse.ok) {
+        const awardData = await awardResponse.json();
+        console.log('[VerifyPhoneCode] Referral credits result:', awardData);
+      }
+    } catch (referralError) {
+      // Don't fail the main request if referral award fails
+      console.error('[VerifyPhoneCode] Referral credit award error (non-blocking):', referralError);
+    }
+    
     return res.status(200).json({ 
       success: true, 
       message: 'Phone verified successfully',
