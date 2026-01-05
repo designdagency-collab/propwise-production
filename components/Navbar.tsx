@@ -54,6 +54,7 @@ const Navbar: React.FC<NavbarProps> = ({
   onMarkAllRead
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on click outside
@@ -66,6 +67,28 @@ const Navbar: React.FC<NavbarProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Shake gift icon every 30 seconds for 3 seconds
+  useEffect(() => {
+    if (!isLoggedIn || !canUseReferrals) return;
+    
+    // Initial shake after 5 seconds
+    const initialTimeout = setTimeout(() => {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 3000);
+    }, 5000);
+    
+    // Then shake every 30 seconds
+    const interval = setInterval(() => {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 3000);
+    }, 30000);
+    
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
+  }, [isLoggedIn, canUseReferrals]);
 
   const handleSelectKey = async () => {
     if (window.aistudio && window.aistudio.openSelectKey) {
@@ -186,7 +209,12 @@ const Navbar: React.FC<NavbarProps> = ({
                   style={{ color: 'var(--text-muted)' }}
                   title="Rewards & Notifications"
                 >
-                  <i className="fa-solid fa-gift text-sm sm:text-lg text-[#C9A961]"></i>
+                  <i 
+                    className={`fa-solid fa-gift text-sm sm:text-lg text-[#C9A961] ${isShaking ? 'animate-shake' : ''}`}
+                    style={isShaking ? {
+                      animation: 'shake 0.5s ease-in-out infinite'
+                    } : {}}
+                  ></i>
                   {unreadCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
                       <span className="text-[8px] sm:text-[9px] font-bold text-white">{unreadCount > 9 ? '9+' : unreadCount}</span>
