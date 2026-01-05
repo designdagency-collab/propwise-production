@@ -1131,16 +1131,20 @@ const App: React.FC = () => {
     
     // ENSURE we're on IDLE even after data loading
     // (in case something during loading tried to set LIMIT_REACHED)
-    console.log('[handleEmailAuthSuccess] Complete - ensuring IDLE state, address:', address);
+    console.log('[handleEmailAuthSuccess] Complete - ensuring IDLE state, address:', address, 'isValidAddress:', isValidAddress);
     setAppState(AppState.IDLE);
     
-    // Re-validate the address if one exists (preserve user's search intent)
-    if (address && address.trim().length > 0) {
-      console.log('[handleEmailAuthSuccess] Re-validating existing address');
-      // If it looks like a valid Australian address, mark as valid
+    // Preserve address validation - if they had a valid address before signup, keep it valid
+    // Only try to re-validate if currently invalid but address exists
+    if (address && address.trim().length > 0 && !isValidAddress) {
+      console.log('[handleEmailAuthSuccess] Address exists but not valid, attempting re-validation');
       if (looksLikeAustralianAddress(address)) {
         setIsValidAddress(true);
       }
+    } else if (address && address.trim().length > 0 && isValidAddress) {
+      // Address was already validated before signup - ensure it stays valid
+      console.log('[handleEmailAuthSuccess] Address already validated, preserving state');
+      setIsValidAddress(true); // Explicitly set to ensure React doesn't lose this state
     }
     
     // Check for pending upgrade in URL
