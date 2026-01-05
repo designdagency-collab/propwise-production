@@ -189,16 +189,18 @@ const Navbar: React.FC<NavbarProps> = ({
               <i className="fa-solid fa-key"></i>
             </button>
             
-            {/* Credits indicator */}
-            <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
-              <i className="fa-solid fa-bolt text-[#C9A961] text-[10px] sm:text-xs"></i>
-              <span className="text-[10px] sm:text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>
-                {plan === 'UNLIMITED_PRO' ? '∞' : remainingCredits}
-              </span>
-              <span className="hidden sm:inline text-[9px] font-medium opacity-50" style={{ color: 'var(--text-muted)' }}>
-                left
-              </span>
-            </div>
+            {/* Credits indicator - only show when logged in */}
+            {isLoggedIn && (
+              <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
+                <i className="fa-solid fa-bolt text-[#C9A961] text-[10px] sm:text-xs"></i>
+                <span className="text-[10px] sm:text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {plan === 'UNLIMITED_PRO' ? '∞' : remainingCredits}
+                </span>
+                <span className="hidden sm:inline text-[9px] font-medium opacity-50" style={{ color: 'var(--text-muted)' }}>
+                  left
+                </span>
+              </div>
+            )}
 
             {/* Notifications/Referral Gift Icon - only for eligible users when logged in */}
             {isLoggedIn && canUseReferrals && (
@@ -317,14 +319,16 @@ const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
             
-            {/* Tier badge - hidden on mobile */}
-            <div className="hidden lg:flex items-center space-x-6 border-r pr-6" style={{ borderColor: 'var(--border-color)' }}>
-               <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                 Tier: <span className={(plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK') ? 'text-[#C9A961]' : 'opacity-60'}>
-                   {plan === 'PRO' ? 'Pro' : plan === 'UNLIMITED_PRO' ? 'Unlimited' : plan === 'STARTER_PACK' ? 'Starter Pack' : 'Free Trial'}
+            {/* Tier badge - hidden on mobile, only show when logged in */}
+            {isLoggedIn && (
+              <div className="hidden lg:flex items-center space-x-6 border-r pr-6" style={{ borderColor: 'var(--border-color)' }}>
+                 <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                   Tier: <span className={(plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK') ? 'text-[#C9A961]' : 'opacity-60'}>
+                     {plan === 'PRO' ? 'Pro' : plan === 'UNLIMITED_PRO' ? 'Unlimited' : plan === 'STARTER_PACK' ? 'Starter Pack' : 'Free Trial'}
+                   </span>
                  </span>
-               </span>
-            </div>
+              </div>
+            )}
             
             {/* Login/Logout Button */}
             {isLoggedIn ? (
