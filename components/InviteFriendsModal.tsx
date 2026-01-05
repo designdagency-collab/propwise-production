@@ -121,7 +121,7 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
               </div>
               <div>
                 <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Invite Friends</h2>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Get 3 free audits for each friend!</p>
+                <p className="text-xs" style={{ color: '#6b6b6b' }}>Get 3 free audits for each friend!</p>
               </div>
             </div>
             <button
@@ -139,11 +139,11 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 rounded-xl border" style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-primary)' }}>
               <p className="text-2xl font-black" style={{ color: '#2d2d2d' }}>{referralCount}/{MAX_REFERRALS}</p>
-              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Friends Joined</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#6b6b6b' }}>Friends Joined</p>
             </div>
             <div className="p-4 rounded-xl border" style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-primary)' }}>
               <p className="text-2xl font-black" style={{ color: '#2d2d2d' }}>+{referralCreditsEarned}</p>
-              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Credits Earned</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#6b6b6b' }}>Credits Earned</p>
             </div>
           </div>
 
@@ -186,7 +186,7 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
               ) : (
                 <form onSubmit={handleSendEmail} className="space-y-3">
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: '#6b6b6b' }}>
                       Friend's Email *
                     </label>
                     <input
@@ -206,8 +206,8 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
                   </div>
                   
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: 'var(--text-muted)' }}>
-                      Their Name <span className="font-normal opacity-60">(optional)</span>
+                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: '#6b6b6b' }}>
+                      Their Name <span className="font-normal opacity-70">(optional)</span>
                     </label>
                     <input
                       type="text"
@@ -266,7 +266,7 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
                 </div>
               ) : referralCode && referralLink ? (
                 <div className="space-y-3">
-                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Your referral link</p>
+                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#6b6b6b' }}>Your referral link</p>
                   <div 
                     className="flex items-center gap-2 p-3 rounded-xl border"
                     style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-primary)' }}
