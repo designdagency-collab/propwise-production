@@ -616,7 +616,8 @@ const App: React.FC = () => {
       }
       
       // SAFETY NET: If logged in with credits but stuck on LIMIT_REACHED, go to IDLE
-      if (isLoggedIn && canAudit(state) && appState === AppState.LIMIT_REACHED) {
+      // BUT: Don't do this if user just signed up (to prevent flash)
+      if (isLoggedIn && canAudit(state) && appState === AppState.LIMIT_REACHED && !justSignedUpRef.current) {
         console.log('[Credits] Safety net: User has credits but stuck on LIMIT_REACHED, returning to IDLE');
         setAppState(AppState.IDLE);
       }
@@ -1128,6 +1129,19 @@ const App: React.FC = () => {
       
       refreshCreditState();
       
+      // Force immediate credit state update to prevent stale state
+      const profile = await supabaseService.getCurrentProfile(user.id);
+      if (profile) {
+        const freshState = calculateCreditState(profile);
+        setCreditState(freshState);
+        setRemainingCredits(getRemainingCredits(freshState));
+        console.log('[handleEmailAuthSuccess] Credit state refreshed:', {
+          remaining: getRemainingCredits(freshState),
+          canAudit: canAudit(freshState),
+          plan: freshState.plan
+        });
+      }
+      
       // Track referral for new users
       if (isNewUser && pendingReferralCode) {
         console.log('[Referral] Tracking referral for new user:', user.id);
@@ -1322,27 +1336,53 @@ const App: React.FC = () => {
 
   const handleSearch = useCallback(async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!address.trim()) return;
+    if (!address.trim()) {
+      console.log('[handleSearch] No address provided');
+      return;
+    }
+
+    console.log('[handleSearch] Starting search', {
+      address: address.substring(0, 50),
+      justSignedUp: justSignedUpRef.current,
+      isLoggedIn,
+      remainingCredits,
+      creditState: creditState ? { plan: creditState.plan, freeUsed: creditState.freeUsed, creditTopups: creditState.creditTopups } : null,
+      canAudit: checkSearchLimit()
+    });
 
     // Check search limit, but bypass if user just signed up (credits may still be loading)
-    if (!checkSearchLimit() && !justSignedUpRef.current) {
+    const canSearch = checkSearchLimit() || justSignedUpRef.current;
+    
+    if (!canSearch) {
+      console.log('[handleSearch] Search blocked - no credits available');
       setAppState(AppState.LIMIT_REACHED);
-      // Push history state so back button works
       window.history.pushState({ view: 'limit' }, '', window.location.pathname);
       return;
     }
     
-    // If just signed up, log and proceed (they have credits, just may not be loaded yet)
     if (justSignedUpRef.current) {
       console.log('[handleSearch] Bypassing limit check - user just signed up');
+      // Force refresh credit state to ensure it's up to date
+      if (userProfile) {
+        const freshState = calculateCreditState(userProfile);
+        setCreditState(freshState);
+        setRemainingCredits(getRemainingCredits(freshState));
+        console.log('[handleSearch] Refreshed credit state:', {
+          remaining: getRemainingCredits(freshState),
+          canAudit: canAudit(freshState)
+        });
+      }
     }
 
+    console.log('[handleSearch] Proceeding with search...');
     setAppState(AppState.LOADING);
     setError(null);
     setIsQuotaError(false);
 
     try {
+      console.log('[handleSearch] Calling fetchPropertyInsights for:', address.substring(0, 50));
       const data = await geminiService.fetchPropertyInsights(address);
+      console.log('[handleSearch] Received data, setting results...');
       setProgress(100);
       setLoadingMessage('Audit complete!');
       setTimeout(() => {
@@ -1389,7 +1429,7 @@ const App: React.FC = () => {
         setAppState(AppState.ERROR);
       }
     }
-  }, [address, hasKey]);
+  }, [address, hasKey, isLoggedIn, creditState, userProfile, checkIfRecentSearch]);
 
   const handleUpgrade = async (planType: PlanType = 'PRO') => {
     // Route to appropriate handler based on plan type
