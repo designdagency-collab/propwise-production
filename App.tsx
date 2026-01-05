@@ -185,6 +185,22 @@ const App: React.FC = () => {
     return () => window.removeEventListener('pageshow', handlePageShow);
   }, [isProcessingUpgrade]);
 
+  // Handle browser back button to return from results to home
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // If we're showing results and user pressed back, go to home
+      if (event.state?.view !== 'results' && results !== null) {
+        console.log('[Navigation] Back button pressed, returning to home');
+        setResults(null);
+        setAppState(AppState.IDLE);
+        setError(null);
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [results]);
+
   // Check device fingerprint for anonymous users on page load
   useEffect(() => {
     const checkDevice = async () => {
@@ -1029,6 +1045,8 @@ const App: React.FC = () => {
       setTimeout(() => {
         setResults(data);
         setAppState(AppState.RESULTS);
+        // Push history state so back button returns to home
+        window.history.pushState({ view: 'results', address }, '', window.location.pathname);
         // Only consume credit on successful results
         // Check if this is a FREE re-search (searched within last 7 days)
         if (!hasKey) {
