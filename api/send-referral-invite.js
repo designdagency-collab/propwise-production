@@ -6,8 +6,8 @@ const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const resendApiKey = process.env.RESEND_API_KEY;
 
-// Rate limit: max 5 invites per user per day
-const MAX_DAILY_INVITES = 5;
+// Rate limit: max 10 invites per user per day
+const MAX_DAILY_INVITES = 10;
 
 export default async function handler(req, res) {
   // CORS
