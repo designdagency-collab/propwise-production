@@ -159,21 +159,96 @@ export default async function handler(req, res) {
 
     console.log('[VerifyPhoneCode] Phone verified for user:', userId);
     
-    // Award referral credits if this user was referred
+    // Award referral credits if this user was referred (inline logic)
     try {
-      const awardResponse = await fetch(`${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'}/api/award-referral-credits`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      });
+      const REFERRAL_CREDITS = 3;
       
-      if (awardResponse.ok) {
-        const awardData = await awardResponse.json();
-        console.log('[VerifyPhoneCode] Referral credits result:', awardData);
+      // Find pending referral for this user
+      const { data: referral, error: referralError } = await supabase
+        .from('referrals')
+        .select('id, referrer_id')
+        .eq('referred_id', userId)
+        .eq('status', 'pending')
+        .maybeSingle();
+
+      if (referral && !referralError) {
+        console.log('[VerifyPhoneCode] Found pending referral, awarding credits...');
+        
+        // Get referrer's current credits
+        const { data: referrer } = await supabase
+          .from('profiles')
+          .select('credit_topups, referral_credits_earned, referral_count, full_name')
+          .eq('id', referral.referrer_id)
+          .single();
+
+        // Get referred user's current credits and name
+        const { data: referredUser } = await supabase
+          .from('profiles')
+          .select('credit_topups, full_name')
+          .eq('id', userId)
+          .single();
+
+        if (referrer && referredUser) {
+          const referredName = referredUser.full_name?.split(' ')[0] || 'Your friend';
+          
+          // Award credits to REFERRED user (the new signup)
+          await supabase
+            .from('profiles')
+            .update({ credit_topups: (referredUser.credit_topups || 0) + REFERRAL_CREDITS })
+            .eq('id', userId);
+
+          // Award credits to REFERRER
+          await supabase
+            .from('profiles')
+            .update({ 
+              credit_topups: (referrer.credit_topups || 0) + REFERRAL_CREDITS,
+              referral_credits_earned: (referrer.referral_credits_earned || 0) + REFERRAL_CREDITS,
+              referral_count: (referrer.referral_count || 0) + 1
+            })
+            .eq('id', referral.referrer_id);
+
+          // Update referral status
+          await supabase
+            .from('referrals')
+            .update({ 
+              status: 'credited',
+              referrer_credited: true,
+              referred_credited: true,
+              verified_at: new Date().toISOString(),
+              credited_at: new Date().toISOString()
+            })
+            .eq('id', referral.id);
+
+          // Create notification for REFERRER
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: referral.referrer_id,
+              type: 'referral_credited',
+              title: '🎉 +3 credits earned!',
+              message: `${referredName} verified their account. You both earned 3 free property audits!`,
+              data: { credits: REFERRAL_CREDITS, referred_id: userId, referred_name: referredName }
+            });
+
+          // Create welcome notification for REFERRED user
+          await supabase
+            .from('notifications')
+            .insert({
+              user_id: userId,
+              type: 'welcome_bonus',
+              title: '🎁 Welcome bonus!',
+              message: 'You got 3 bonus credits for joining via a friend\'s referral!',
+              data: { credits: REFERRAL_CREDITS, referrer_id: referral.referrer_id }
+            });
+
+          console.log('[VerifyPhoneCode] Referral credits awarded:', { referrer: referral.referrer_id, referred: userId });
+        }
+      } else {
+        console.log('[VerifyPhoneCode] No pending referral found for user');
       }
-    } catch (referralError) {
+    } catch (referralErr) {
       // Don't fail the main request if referral award fails
-      console.error('[VerifyPhoneCode] Referral credit award error (non-blocking):', referralError);
+      console.error('[VerifyPhoneCode] Referral credit award error (non-blocking):', referralErr);
     }
     
     return res.status(200).json({ 

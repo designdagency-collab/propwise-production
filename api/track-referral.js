@@ -90,6 +90,15 @@ export default async function handler(req, res) {
       .update({ referred_by: referrer.id })
       .eq('id', newUserId);
 
+    // Get the new user's name for the notification
+    const { data: newUserProfile } = await supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', newUserId)
+      .single();
+
+    const newUserName = newUserProfile?.full_name?.split(' ')[0] || 'Someone';
+
     // Create notification for referrer (pending verification)
     await supabase
       .from('notifications')
@@ -97,11 +106,11 @@ export default async function handler(req, res) {
         user_id: referrer.id,
         type: 'referral_signup',
         title: 'New referral signup!',
-        message: 'Someone signed up with your link. Credits will be awarded once they verify their phone.',
-        data: { referred_id: newUserId }
+        message: `${newUserName} signed up with your link. Credits will be awarded once they verify their phone.`,
+        data: { referred_id: newUserId, referred_name: newUserName }
       });
 
-    console.log('[TrackReferral] Referral tracked:', { referrer: referrer.id, referred: newUserId });
+    console.log('[TrackReferral] Referral tracked:', { referrer: referrer.id, referred: newUserId, referredName: newUserName });
 
     return res.status(200).json({ 
       success: true,
