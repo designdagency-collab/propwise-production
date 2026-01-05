@@ -165,7 +165,7 @@ function generateEmailHtml(senderName, friendName, referralLink, code) {
           
           <!-- Header -->
           <tr>
-            <td style="background: linear-gradient(135deg, #3A342D 0%, #4A443D 100%); padding: 32px 40px; text-align: center;">
+            <td style="background-color: #FAF9F6; padding: 32px 40px; text-align: center; border-bottom: 1px solid #E8E6E3;">
               <img src="https://upblock.ai/upblock.ai-logo.png" alt="upblock.ai" style="height: 50px; width: auto;">
             </td>
           </tr>
