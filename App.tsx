@@ -979,6 +979,27 @@ const App: React.FC = () => {
     }
   };
 
+  // Send referral invite email
+  const sendReferralInvite = async (email: string, name?: string): Promise<{ success: boolean; message?: string; error?: string }> => {
+    try {
+      const response = await supabaseService.authenticatedFetch('/api/send-referral-invite', {
+        method: 'POST',
+        body: JSON.stringify({ friendEmail: email, friendName: name })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        return { success: true, message: data.message };
+      } else {
+        return { success: false, error: data.error || 'Failed to send invite' };
+      }
+    } catch (error) {
+      console.error('[Referral] Send invite error:', error);
+      return { success: false, error: 'Something went wrong. Please try again.' };
+    }
+  };
+
   // Track referral when new user signs up
   const trackReferral = async (newUserId: string) => {
     if (!pendingReferralCode) return;
@@ -1708,6 +1729,7 @@ const App: React.FC = () => {
         referralCount={referralCount}
         referralCreditsEarned={referralCreditsEarned}
         onGenerateCode={generateReferralCode}
+        onSendInvite={sendReferralInvite}
         isLoading={isGeneratingReferralCode}
       />
 

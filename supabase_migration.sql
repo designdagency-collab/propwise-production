@@ -311,3 +311,31 @@ ALTER TABLE sms_reminder_queue ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Service role full access sms_queue" ON sms_reminder_queue;
 CREATE POLICY "Service role full access sms_queue" ON sms_reminder_queue FOR ALL USING (true);
 
+-- ============================================
+-- REFERRAL INVITES TABLE (email tracking)
+-- ============================================
+CREATE TABLE IF NOT EXISTS referral_invites (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  recipient_email TEXT NOT NULL,
+  recipient_name TEXT,
+  referral_code TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'sent' CHECK (status IN ('sent', 'opened', 'signed_up', 'verified')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  opened_at TIMESTAMPTZ,
+  signed_up_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_referral_invites_sender ON referral_invites(sender_id);
+CREATE INDEX IF NOT EXISTS idx_referral_invites_email ON referral_invites(recipient_email);
+CREATE INDEX IF NOT EXISTS idx_referral_invites_created ON referral_invites(created_at DESC);
+
+ALTER TABLE referral_invites ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own invites" ON referral_invites;
+CREATE POLICY "Users can view own invites" ON referral_invites
+  FOR SELECT USING (auth.uid() = sender_id);
+
+DROP POLICY IF EXISTS "Service role full access referral_invites" ON referral_invites;
+CREATE POLICY "Service role full access referral_invites" ON referral_invites FOR ALL USING (true);
+

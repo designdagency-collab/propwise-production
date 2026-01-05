@@ -8,6 +8,7 @@ interface InviteFriendsModalProps {
   referralCount: number;
   referralCreditsEarned: number;
   onGenerateCode: () => Promise<void>;
+  onSendInvite: (email: string, name?: string) => Promise<{ success: boolean; message?: string; error?: string }>;
   isLoading?: boolean;
 }
 
@@ -21,16 +22,32 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
   referralCount,
   referralCreditsEarned,
   onGenerateCode,
+  onSendInvite,
   isLoading = false
 }) => {
   const [copied, setCopied] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
+  const [activeTab, setActiveTab] = useState<'email' | 'link'>('email');
+  
+  // Email invite state
+  const [friendEmail, setFriendEmail] = useState('');
+  const [friendName, setFriendName] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [sendResult, setSendResult] = useState<{ success: boolean; message: string } | null>(null);
 
   useEffect(() => {
     if (isOpen && !referralCode && !isLoading) {
       onGenerateCode();
     }
   }, [isOpen, referralCode, isLoading, onGenerateCode]);
+
+  // Clear send result after 4 seconds
+  useEffect(() => {
+    if (sendResult) {
+      const timer = setTimeout(() => setSendResult(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [sendResult]);
 
   const handleCopy = async () => {
     if (referralLink) {
@@ -49,11 +66,35 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
       whatsapp: `https://wa.me/?text=${message}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`,
       twitter: `https://twitter.com/intent/tweet?text=${message}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(referralLink)}`,
-      email: `mailto:?subject=Check out upblock.ai&body=${decodeURIComponent(message)}`
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(referralLink)}`
     };
 
     window.open(urls[platform], '_blank', 'width=600,height=400');
+  };
+
+  const handleSendEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!friendEmail.trim()) return;
+    
+    setIsSending(true);
+    setSendResult(null);
+    
+    try {
+      const result = await onSendInvite(friendEmail.trim(), friendName.trim() || undefined);
+      
+      if (result.success) {
+        setSendResult({ success: true, message: result.message || `Invite sent to ${friendEmail}!` });
+        setFriendEmail('');
+        setFriendName('');
+      } else {
+        setSendResult({ success: false, message: result.error || 'Failed to send invite' });
+      }
+    } catch (error) {
+      setSendResult({ success: false, message: 'Something went wrong. Please try again.' });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -68,7 +109,7 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
       
       {/* Modal */}
       <div 
-        className="relative w-full max-w-md rounded-3xl border shadow-2xl overflow-hidden"
+        className="relative w-full max-w-md rounded-3xl border shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
         style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
       >
         {/* Header */}
@@ -106,119 +147,206 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
             </div>
           </div>
 
-          {/* How it works */}
-          <div className="space-y-3">
-            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>How it works</p>
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-[#C9A961]/20 text-[#C9A961] text-xs font-bold flex items-center justify-center">1</span>
-                <p className="text-sm" style={{ color: 'var(--text-primary)' }}>Share your unique link with friends</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-[#C9A961]/20 text-[#C9A961] text-xs font-bold flex items-center justify-center">2</span>
-                <p className="text-sm" style={{ color: 'var(--text-primary)' }}>They sign up and verify their phone</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="w-6 h-6 rounded-full bg-[#C9A961]/20 text-[#C9A961] text-xs font-bold flex items-center justify-center">3</span>
-                <p className="text-sm" style={{ color: 'var(--text-primary)' }}>You both get 3 free property audits!</p>
-              </div>
-            </div>
+          {/* Tabs */}
+          <div className="flex gap-1 p-1 rounded-xl" style={{ backgroundColor: 'var(--bg-primary)' }}>
+            <button
+              onClick={() => setActiveTab('email')}
+              className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-bold transition-all ${
+                activeTab === 'email' 
+                  ? 'bg-[#C9A961] text-white shadow-sm' 
+                  : 'hover:bg-black/5'
+              }`}
+              style={{ color: activeTab === 'email' ? undefined : 'var(--text-muted)' }}
+            >
+              <i className="fa-solid fa-envelope mr-1.5"></i>
+              Send Email
+            </button>
+            <button
+              onClick={() => setActiveTab('link')}
+              className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-bold transition-all ${
+                activeTab === 'link' 
+                  ? 'bg-[#C9A961] text-white shadow-sm' 
+                  : 'hover:bg-black/5'
+              }`}
+              style={{ color: activeTab === 'link' ? undefined : 'var(--text-muted)' }}
+            >
+              <i className="fa-solid fa-link mr-1.5"></i>
+              Share Link
+            </button>
           </div>
 
-          {/* Referral Link */}
-          {isLoading ? (
-            <div className="p-4 rounded-xl border text-center" style={{ borderColor: 'var(--border-color)' }}>
-              <i className="fa-solid fa-spinner fa-spin text-[#C9A961] text-xl mb-2"></i>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Generating your unique link...</p>
-            </div>
-          ) : referralCode && referralLink ? (
-            <div className="space-y-3">
-              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Your referral link</p>
-              <div 
-                className="flex items-center gap-2 p-3 rounded-xl border"
-                style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-primary)' }}
-              >
-                <input
-                  type="text"
-                  value={referralLink}
-                  readOnly
-                  className="flex-1 bg-transparent text-sm font-mono outline-none"
-                  style={{ color: 'var(--text-primary)' }}
-                />
-                <button
-                  onClick={handleCopy}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                    copied 
-                      ? 'bg-emerald-500 text-white' 
-                      : 'bg-[#C9A961] text-white hover:bg-[#3A342D]'
-                  }`}
-                >
-                  {copied ? (
-                    <><i className="fa-solid fa-check mr-1"></i> Copied!</>
-                  ) : (
-                    <><i className="fa-solid fa-copy mr-1"></i> Copy</>
-                  )}
-                </button>
-              </div>
-              
-              {/* Share buttons */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleShare('whatsapp')}
-                  className="flex-1 p-3 rounded-xl bg-[#25D366] text-white font-bold text-xs hover:opacity-90 transition-opacity"
-                >
-                  <i className="fa-brands fa-whatsapp mr-1"></i> WhatsApp
-                </button>
-                <button
-                  onClick={() => handleShare('email')}
-                  className="flex-1 p-3 rounded-xl border font-bold text-xs hover:bg-black/5 transition-colors"
-                  style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
-                >
-                  <i className="fa-solid fa-envelope mr-1"></i> Email
-                </button>
-                <button
-                  onClick={() => setShowShareOptions(!showShareOptions)}
-                  className="p-3 rounded-xl border hover:bg-black/5 transition-colors"
-                  style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
-                >
-                  <i className="fa-solid fa-ellipsis"></i>
-                </button>
-              </div>
+          {/* Email Tab */}
+          {activeTab === 'email' && (
+            <div className="space-y-4">
+              {isLoading ? (
+                <div className="p-6 rounded-xl border text-center" style={{ borderColor: 'var(--border-color)' }}>
+                  <i className="fa-solid fa-spinner fa-spin text-[#C9A961] text-xl mb-2"></i>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Setting up...</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSendEmail} className="space-y-3">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                      Friend's Email *
+                    </label>
+                    <input
+                      type="email"
+                      value={friendEmail}
+                      onChange={(e) => setFriendEmail(e.target.value)}
+                      placeholder="friend@example.com"
+                      required
+                      disabled={isSending}
+                      className="w-full px-4 py-3 rounded-xl border text-sm outline-none focus:border-[#C9A961] transition-colors disabled:opacity-50"
+                      style={{ 
+                        borderColor: 'var(--border-color)', 
+                        backgroundColor: 'var(--bg-primary)',
+                        color: 'var(--text-primary)'
+                      }}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                      Their Name <span className="font-normal opacity-60">(optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={friendName}
+                      onChange={(e) => setFriendName(e.target.value)}
+                      placeholder="John"
+                      disabled={isSending}
+                      className="w-full px-4 py-3 rounded-xl border text-sm outline-none focus:border-[#C9A961] transition-colors disabled:opacity-50"
+                      style={{ 
+                        borderColor: 'var(--border-color)', 
+                        backgroundColor: 'var(--bg-primary)',
+                        color: 'var(--text-primary)'
+                      }}
+                    />
+                  </div>
 
-              {/* More share options */}
-              {showShareOptions && (
-                <div className="flex items-center gap-2">
+                  {/* Send Result Message */}
+                  {sendResult && (
+                    <div className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                      sendResult.success 
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-red-50 text-red-700 border border-red-200'
+                    }`}>
+                      <i className={`fa-solid ${sendResult.success ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
+                      {sendResult.message}
+                    </div>
+                  )}
+                  
                   <button
-                    onClick={() => handleShare('facebook')}
-                    className="flex-1 p-3 rounded-xl bg-[#1877F2] text-white font-bold text-xs hover:opacity-90 transition-opacity"
+                    type="submit"
+                    disabled={isSending || !friendEmail.trim() || referralCount >= MAX_REFERRALS}
+                    className="w-full py-3.5 rounded-xl bg-[#C9A961] text-white text-sm font-bold hover:bg-[#3A342D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <i className="fa-brands fa-facebook mr-1"></i> Facebook
+                    {isSending ? (
+                      <><i className="fa-solid fa-spinner fa-spin mr-2"></i>Sending...</>
+                    ) : (
+                      <><i className="fa-solid fa-paper-plane mr-2"></i>Send Invite</>
+                    )}
                   </button>
-                  <button
-                    onClick={() => handleShare('twitter')}
-                    className="flex-1 p-3 rounded-xl bg-black text-white font-bold text-xs hover:opacity-90 transition-opacity"
+                </form>
+              )}
+              
+              <p className="text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
+                We'll send them a personalized email with your referral link
+              </p>
+            </div>
+          )}
+
+          {/* Link Tab */}
+          {activeTab === 'link' && (
+            <>
+              {isLoading ? (
+                <div className="p-4 rounded-xl border text-center" style={{ borderColor: 'var(--border-color)' }}>
+                  <i className="fa-solid fa-spinner fa-spin text-[#C9A961] text-xl mb-2"></i>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Generating your unique link...</p>
+                </div>
+              ) : referralCode && referralLink ? (
+                <div className="space-y-3">
+                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Your referral link</p>
+                  <div 
+                    className="flex items-center gap-2 p-3 rounded-xl border"
+                    style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-primary)' }}
                   >
-                    <i className="fa-brands fa-x-twitter mr-1"></i> Twitter
-                  </button>
+                    <input
+                      type="text"
+                      value={referralLink}
+                      readOnly
+                      className="flex-1 bg-transparent text-sm font-mono outline-none"
+                      style={{ color: 'var(--text-primary)' }}
+                    />
+                    <button
+                      onClick={handleCopy}
+                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                        copied 
+                          ? 'bg-emerald-500 text-white' 
+                          : 'bg-[#C9A961] text-white hover:bg-[#3A342D]'
+                      }`}
+                    >
+                      {copied ? (
+                        <><i className="fa-solid fa-check mr-1"></i> Copied!</>
+                      ) : (
+                        <><i className="fa-solid fa-copy mr-1"></i> Copy</>
+                      )}
+                    </button>
+                  </div>
+                  
+                  {/* Share buttons */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleShare('whatsapp')}
+                      className="flex-1 p-3 rounded-xl bg-[#25D366] text-white font-bold text-xs hover:opacity-90 transition-opacity"
+                    >
+                      <i className="fa-brands fa-whatsapp mr-1"></i> WhatsApp
+                    </button>
+                    <button
+                      onClick={() => setShowShareOptions(!showShareOptions)}
+                      className="p-3 rounded-xl border hover:bg-black/5 transition-colors"
+                      style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
+                    >
+                      <i className="fa-solid fa-ellipsis"></i>
+                    </button>
+                  </div>
+
+                  {/* More share options */}
+                  {showShareOptions && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleShare('facebook')}
+                        className="flex-1 p-3 rounded-xl bg-[#1877F2] text-white font-bold text-xs hover:opacity-90 transition-opacity"
+                      >
+                        <i className="fa-brands fa-facebook mr-1"></i> Facebook
+                      </button>
+                      <button
+                        onClick={() => handleShare('twitter')}
+                        className="flex-1 p-3 rounded-xl bg-black text-white font-bold text-xs hover:opacity-90 transition-opacity"
+                      >
+                        <i className="fa-brands fa-x-twitter mr-1"></i> Twitter
+                      </button>
+                      <button
+                        onClick={() => handleShare('linkedin')}
+                        className="flex-1 p-3 rounded-xl bg-[#0A66C2] text-white font-bold text-xs hover:opacity-90 transition-opacity"
+                      >
+                        <i className="fa-brands fa-linkedin mr-1"></i> LinkedIn
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-4 rounded-xl border text-center" style={{ borderColor: 'var(--border-color)' }}>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Unable to generate referral link. Please try again.</p>
                   <button
-                    onClick={() => handleShare('linkedin')}
-                    className="flex-1 p-3 rounded-xl bg-[#0A66C2] text-white font-bold text-xs hover:opacity-90 transition-opacity"
+                    onClick={onGenerateCode}
+                    className="mt-2 px-4 py-2 bg-[#C9A961] text-white rounded-lg text-xs font-bold hover:bg-[#3A342D] transition-colors"
                   >
-                    <i className="fa-brands fa-linkedin mr-1"></i> LinkedIn
+                    Retry
                   </button>
                 </div>
               )}
-            </div>
-          ) : (
-            <div className="p-4 rounded-xl border text-center" style={{ borderColor: 'var(--border-color)' }}>
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Unable to generate referral link. Please try again.</p>
-              <button
-                onClick={onGenerateCode}
-                className="mt-2 px-4 py-2 bg-[#C9A961] text-white rounded-lg text-xs font-bold hover:bg-[#3A342D] transition-colors"
-              >
-                Retry
-              </button>
-            </div>
+            </>
           )}
 
           {/* Max referrals warning */}
@@ -244,4 +372,3 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
 };
 
 export default InviteFriendsModal;
-
