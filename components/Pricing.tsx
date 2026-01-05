@@ -319,7 +319,7 @@ const Pricing: React.FC<PricingProps> = ({ currentPlan = 'FREE_TRIAL', onUpgrade
               <div className="mb-8">
                 <h3 className="text-xl sm:text-2xl font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-primary)' }}>20 Pack</h3>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl sm:text-5xl font-black" style={{ color: 'var(--text-primary)' }}>$99</span>
+                  <span className="text-4xl sm:text-5xl font-black" style={{ color: 'var(--text-primary)' }}>$89</span>
                   <span className="text-xs sm:text-sm font-bold" style={{ color: 'var(--text-muted)' }}>AUD</span>
                 </div>
                 <p className="text-[11px] sm:text-xs font-bold text-[#C9A961] mt-2">Best value – Save 22%</p>

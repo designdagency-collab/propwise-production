@@ -26,7 +26,7 @@ const PLAN_CONFIGS = {
     credits: 3,
   },
   BULK_PACK: {
-    amount: 9900, // $99.00 AUD in cents
+    amount: 8900, // $89.00 AUD in cents
     currency: 'aud',
     name: 'upblock.ai 20 Pack',
     description: '20 property audit credits - best value',
