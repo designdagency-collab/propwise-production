@@ -212,3 +212,102 @@ CREATE POLICY "Service role full access property_cache" ON property_cache FOR AL
 -- Optional: Auto-cleanup old cache entries (run periodically via cron)
 -- DELETE FROM property_cache WHERE created_at < NOW() - INTERVAL '14 days';
 
+-- ============================================
+-- REFERRAL SYSTEM TABLES
+-- ============================================
+
+-- Add referral columns to profiles
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS referral_code TEXT UNIQUE;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS referred_by UUID REFERENCES profiles(id);
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS referral_credits_earned INTEGER DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS referral_count INTEGER DEFAULT 0;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
+
+-- Index for referral code lookups
+CREATE INDEX IF NOT EXISTS idx_profiles_referral_code ON profiles(referral_code);
+
+-- Referrals tracking table
+CREATE TABLE IF NOT EXISTS referrals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  referrer_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  referred_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'verified', 'credited', 'expired')),
+  referrer_credited BOOLEAN DEFAULT false,
+  referred_credited BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  verified_at TIMESTAMPTZ,
+  credited_at TIMESTAMPTZ,
+  UNIQUE(referrer_id, referred_id)
+);
+
+-- Indexes for referrals
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_referred ON referrals(referred_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_status ON referrals(status);
+
+-- RLS for referrals
+ALTER TABLE referrals ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own referrals" ON referrals;
+CREATE POLICY "Users can view own referrals" ON referrals
+  FOR SELECT USING (auth.uid() = referrer_id OR auth.uid() = referred_id);
+
+DROP POLICY IF EXISTS "Service role full access referrals" ON referrals;
+CREATE POLICY "Service role full access referrals" ON referrals FOR ALL USING (true);
+
+-- ============================================
+-- NOTIFICATIONS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('referral_signup', 'referral_credited', 'referral_milestone', 'welcome_bonus')),
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  data JSONB,
+  read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for notifications
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(user_id, read) WHERE read = false;
+CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC);
+
+-- RLS for notifications
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view own notifications" ON notifications;
+CREATE POLICY "Users can view own notifications" ON notifications
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own notifications" ON notifications;
+CREATE POLICY "Users can update own notifications" ON notifications
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Service role full access notifications" ON notifications;
+CREATE POLICY "Service role full access notifications" ON notifications FOR ALL USING (true);
+
+-- ============================================
+-- SMS REMINDER QUEUE (for delayed notifications)
+-- ============================================
+CREATE TABLE IF NOT EXISTS sms_reminder_queue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  phone TEXT NOT NULL,
+  message TEXT NOT NULL,
+  send_after TIMESTAMPTZ NOT NULL,
+  sent BOOLEAN DEFAULT false,
+  sent_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index for pending SMS
+CREATE INDEX IF NOT EXISTS idx_sms_queue_pending ON sms_reminder_queue(send_after) WHERE sent = false;
+
+-- RLS for SMS queue
+ALTER TABLE sms_reminder_queue ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Service role full access sms_queue" ON sms_reminder_queue;
+CREATE POLICY "Service role full access sms_queue" ON sms_reminder_queue FOR ALL USING (true);
+

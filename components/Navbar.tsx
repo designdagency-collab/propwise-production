@@ -1,5 +1,14 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PlanType } from '../types';
+
+interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+}
 
 interface NavbarProps {
   plan?: PlanType;
@@ -9,6 +18,7 @@ interface NavbarProps {
   onLogin?: () => void;
   onLogout?: () => void;
   onAccountSettings?: () => void;
+  onInviteFriends?: () => void;
   isLoggedIn?: boolean;
   userName?: string;
   userEmail?: string;
@@ -16,6 +26,10 @@ interface NavbarProps {
   phoneVerified?: boolean;
   isDarkMode?: boolean;
   onToggleTheme?: () => void;
+  notifications?: Notification[];
+  unreadCount?: number;
+  onMarkNotificationRead?: (id: string) => void;
+  onMarkAllRead?: () => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ 
@@ -26,19 +40,55 @@ const Navbar: React.FC<NavbarProps> = ({
   onLogin, 
   onLogout,
   onAccountSettings,
+  onInviteFriends,
   isLoggedIn = false,
   userName,
   userEmail,
   userPhone,
   phoneVerified,
   isDarkMode = false,
-  onToggleTheme
+  onToggleTheme,
+  notifications = [],
+  unreadCount = 0,
+  onMarkNotificationRead,
+  onMarkAllRead
 }) => {
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notificationRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleSelectKey = async () => {
     if (window.aistudio && window.aistudio.openSelectKey) {
       await window.aistudio.openSelectKey();
     }
   };
+
+  // Format time ago
+  const formatTimeAgo = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  };
+
+  // Check if user can use referrals (Trial or Starter Pack only)
+  const canUseReferrals = plan === 'FREE_TRIAL' || plan === 'STARTER_PACK';
 
   // Get display name (first name from full name, or from email)
   const getDisplayName = () => {
@@ -126,6 +176,118 @@ const Navbar: React.FC<NavbarProps> = ({
                 left
               </span>
             </div>
+
+            {/* Notifications/Referral Gift Icon - only for eligible users when logged in */}
+            {isLoggedIn && canUseReferrals && (
+              <div className="relative" ref={notificationRef}>
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative p-1.5 sm:p-2.5 transition-colors rounded-xl hover:bg-[#C9A961]/10"
+                  style={{ color: 'var(--text-muted)' }}
+                  title="Rewards & Notifications"
+                >
+                  <i className="fa-solid fa-gift text-sm sm:text-lg text-[#C9A961]"></i>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
+                      <span className="text-[8px] sm:text-[9px] font-bold text-white">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                    </span>
+                  )}
+                </button>
+
+                {/* Dropdown */}
+                {showNotifications && (
+                  <div 
+                    className="absolute right-0 top-full mt-2 w-72 sm:w-80 rounded-2xl border shadow-xl overflow-hidden z-50"
+                    style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
+                  >
+                    {/* Header */}
+                    <div className="px-4 py-3 border-b flex items-center justify-between" style={{ borderColor: 'var(--border-color)' }}>
+                      <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                        Rewards
+                      </span>
+                      {unreadCount > 0 && onMarkAllRead && (
+                        <button 
+                          onClick={onMarkAllRead}
+                          className="text-[10px] font-semibold text-[#C9A961] hover:underline"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Invite Friends CTA */}
+                    <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--accent-gold-light)' }}>
+                      <button
+                        onClick={() => {
+                          setShowNotifications(false);
+                          onInviteFriends?.();
+                        }}
+                        className="w-full flex items-center gap-3 text-left"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-[#C9A961] flex items-center justify-center flex-shrink-0">
+                          <i className="fa-solid fa-user-plus text-white text-sm"></i>
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Invite Friends</p>
+                          <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Get 3 free audits for each friend!</p>
+                        </div>
+                        <i className="fa-solid fa-chevron-right text-xs ml-auto" style={{ color: 'var(--text-muted)' }}></i>
+                      </button>
+                    </div>
+
+                    {/* Notifications List */}
+                    <div className="max-h-64 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="px-4 py-6 text-center">
+                          <i className="fa-solid fa-bell-slash text-2xl mb-2" style={{ color: 'var(--text-muted)' }}></i>
+                          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>No notifications yet</p>
+                          <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>Invite friends to earn rewards!</p>
+                        </div>
+                      ) : (
+                        notifications.map((notification) => (
+                          <div
+                            key={notification.id}
+                            onClick={() => onMarkNotificationRead?.(notification.id)}
+                            className={`px-4 py-3 border-b cursor-pointer transition-colors hover:bg-black/5 ${!notification.read ? 'bg-[#C9A961]/5' : ''}`}
+                            style={{ borderColor: 'var(--border-color)' }}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                notification.type === 'referral_credited' ? 'bg-emerald-100 text-emerald-600' :
+                                notification.type === 'referral_signup' ? 'bg-blue-100 text-blue-600' :
+                                notification.type === 'welcome_bonus' ? 'bg-purple-100 text-purple-600' :
+                                'bg-amber-100 text-amber-600'
+                              }`}>
+                                <i className={`fa-solid text-xs ${
+                                  notification.type === 'referral_credited' ? 'fa-check' :
+                                  notification.type === 'referral_signup' ? 'fa-user-plus' :
+                                  notification.type === 'welcome_bonus' ? 'fa-gift' :
+                                  'fa-trophy'
+                                }`}></i>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+                                  {notification.title}
+                                </p>
+                                <p className="text-[10px] mt-0.5 line-clamp-2" style={{ color: 'var(--text-muted)' }}>
+                                  {notification.message}
+                                </p>
+                                <p className="text-[9px] mt-1 opacity-60" style={{ color: 'var(--text-muted)' }}>
+                                  {formatTimeAgo(notification.created_at)}
+                                </p>
+                              </div>
+                              {!notification.read && (
+                                <span className="w-2 h-2 rounded-full bg-[#C9A961] flex-shrink-0 mt-1"></span>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             
             {/* Tier badge - hidden on mobile */}
             <div className="hidden lg:flex items-center space-x-6 border-r pr-6" style={{ borderColor: 'var(--border-color)' }}>
