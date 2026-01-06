@@ -363,7 +363,8 @@ const InviteFriendsModal: React.FC<InviteFriendsModalProps> = ({
         {/* Footer */}
         <div className="px-6 py-4 border-t" style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-primary)' }}>
           <p className="text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
-            Credits are awarded when your friend verifies their phone number. Max {MAX_REFERRALS} referrals per user.
+            <i className="fa-solid fa-info-circle mr-1"></i>
+            Referral credits only apply to friends who create a <strong>new account</strong>. Max {MAX_REFERRALS} referrals.
           </p>
         </div>
       </div>

@@ -223,6 +223,9 @@ function generateEmailHtml(senderName, friendName, referralLink, code) {
               <p style="margin: 24px 0 0 0; font-size: 12px; color: #9B9590; text-align: center;">
                 Your referral code: <strong style="color: #C9A961;">${code}</strong>
               </p>
+              <p style="margin: 12px 0 0 0; font-size: 11px; color: #9B9590; text-align: center;">
+                This offer is for new accounts only. Already have an account? Sign in to use your existing credits.
+              </p>
             </td>
           </tr>
           
@@ -263,6 +266,8 @@ What you get:
 • Local comparable sales
 
 Get started free: ${referralLink}
+
+Note: This offer is for new accounts only.
 
 ---
 © ${new Date().getFullYear()} upblock.ai
