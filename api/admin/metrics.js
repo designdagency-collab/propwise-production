@@ -45,17 +45,29 @@ export default async function handler(req, res) {
     .eq('id', user.id)
     .single();
 
+  console.log('[AdminMetrics] Profile check:', { 
+    email: profile?.email, 
+    phone_verified: profile?.phone_verified,
+    profileError: profileError?.message 
+  });
+
   // Authorized admin emails (hardcoded for security)
   const ADMIN_EMAILS = [
     'designd.agency@gmail.com'
   ];
   
-  const isAuthorizedAdmin = ADMIN_EMAILS.includes(profile?.email?.toLowerCase());
+  const userEmail = profile?.email?.toLowerCase()?.trim();
+  const isAuthorizedAdmin = ADMIN_EMAILS.includes(userEmail);
+  
+  console.log('[AdminMetrics] Auth check:', { userEmail, isAuthorizedAdmin });
+  
   if (profileError || !isAuthorizedAdmin) {
+    console.log('[AdminMetrics] Access denied - not authorized admin');
     return res.status(403).json({ error: 'Access denied. Admin only.' });
   }
   
   if (!profile?.phone_verified) {
+    console.log('[AdminMetrics] Phone verification required');
     return res.status(403).json({ error: 'Phone verification required for admin access', requiresPhoneVerification: true });
   }
 
