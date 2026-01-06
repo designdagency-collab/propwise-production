@@ -69,6 +69,31 @@ export interface DevelopmentScenario {
   sources?: { title: string; url: string }[];
 }
 
+export interface FrontageModifier {
+  factor: string;
+  adjustment: number;
+}
+
+export interface FrontageAssessment {
+  frontageMeters?: number;
+  frontageSource: 'Measured' | 'From Plan' | 'Estimated' | 'Unknown';
+  confidence: 'High' | 'Medium' | 'Low';
+  lotAreaSqm?: number;
+  intendedOutcome: 'Duplex' | '3 Townhouses' | '4+ Townhouses' | 'Terraces' | 'Not Assessed';
+  localRuleFound: boolean;
+  localRuleDetails?: string;
+  minimumRequiredMeters?: number;
+  recommendedWidthMeters?: number;
+  result: 'GREEN' | 'AMBER' | 'RED' | 'UNKNOWN';
+  resultExplanation: string;
+  frontageScore: number;
+  modifiers?: FrontageModifier[];
+  nextAction: string;
+  isCornerBlock?: boolean;
+  isBattleAxe?: boolean;
+  accessConstraints?: string;
+}
+
 export interface HighestBestUseSummary {
   bestScenarioTitle?: string;
   bestBy?: 'NetProfit' | 'EndValue' | 'Feasibility';
@@ -297,6 +322,7 @@ export interface PropertyData {
   nextSteps: NextStep[];
   valueAddStrategies: ValueAddStrategy[];
   developmentScenarios?: DevelopmentScenario[];
+  frontageAssessment?: FrontageAssessment;
   highestBestUse?: HighestBestUseSummary;
   localAreaIntel?: LocalAreaIntel;
   portfolioSelloutSummary: PortfolioSelloutSummary;

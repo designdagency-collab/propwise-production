@@ -157,6 +157,37 @@ const responseSchema = {
         }
       }
     },
+    frontageAssessment: {
+      type: "OBJECT",
+      properties: {
+        frontageMeters: { type: "NUMBER" },
+        frontageSource: { type: "STRING", enum: ['Measured', 'From Plan', 'Estimated', 'Unknown'] },
+        confidence: { type: "STRING", enum: ['High', 'Medium', 'Low'] },
+        lotAreaSqm: { type: "NUMBER" },
+        intendedOutcome: { type: "STRING", enum: ['Duplex', '3 Townhouses', '4+ Townhouses', 'Terraces', 'Not Assessed'] },
+        localRuleFound: { type: "BOOLEAN" },
+        localRuleDetails: { type: "STRING" },
+        minimumRequiredMeters: { type: "NUMBER" },
+        recommendedWidthMeters: { type: "NUMBER" },
+        result: { type: "STRING", enum: ['GREEN', 'AMBER', 'RED', 'UNKNOWN'] },
+        resultExplanation: { type: "STRING" },
+        frontageScore: { type: "NUMBER" },
+        modifiers: {
+          type: "ARRAY",
+          items: {
+            type: "OBJECT",
+            properties: {
+              factor: { type: "STRING" },
+              adjustment: { type: "NUMBER" }
+            }
+          }
+        },
+        nextAction: { type: "STRING" },
+        isCornerBlock: { type: "BOOLEAN" },
+        isBattleAxe: { type: "BOOLEAN" },
+        accessConstraints: { type: "STRING" }
+      }
+    },
     portfolioSelloutSummary: {
       type: "OBJECT",
       properties: {
@@ -382,8 +413,56 @@ MANDATORY MODULES:
 - Analyze up to 3 scenarios: Knockdown Rebuild, Duplex, and Townhouse/Multi-dwelling.
 - Provide indicative costs, estimated end value (GRV), net profit, and timeframe.
 - ⚠️ IMPORTANT: If any development scenario is recommended as bestStrategyByProfit, that EXACT scenario title MUST appear here with full details.
+- Reference frontageAssessment result when determining eligibility for multi-dwelling outcomes.
 
-3. INDICATIVE RENTAL & YIELD POSITION
+3. FRONTAGE ASSESSMENT (CRITICAL FOR TOWNHOUSE/DUPLEX FEASIBILITY)
+Assess the site's lot width/frontage for development potential:
+
+A) DETERMINE PROPERTY CONTEXT:
+   - State (NSW/VIC/QLD/SA/WA/TAS/ACT/NT)
+   - Council/LGA
+   - Zoning + overlays (heritage, flood, bushfire, coastal)
+   - Proposed development intent: Duplex / 3 TH / 4+ TH / Terraces
+   - Site geometry: lot area (m²), frontage (m), corner block (Y/N), access constraints
+
+B) FIND FRONTAGE DATA (priority order):
+   1) Council GIS / property mapping with frontage dimensions
+   2) Title plan / deposited plan references
+   3) Real estate listing floorplan/site plan with dimensions
+   4) Estimate from satellite/parcel map (label as "Estimated")
+   If unknown: set frontageSource = "Unknown", confidence = "Low", cap frontageScore at 55
+
+C) LOCAL PLANNING CONFIRMATION:
+   Search for "[Council] DCP minimum lot width dual occupancy/multi-dwelling"
+   Extract: minimum lot width/frontage, measurement method, specific rules
+
+D) SCREENING HEURISTICS (Australian rule-of-thumb):
+   - Duplex (2 dwellings): Likely min ~12–15m, Recommended ~16–18m
+   - 3 Townhouses: Likely min ~15–18m, Recommended ~18–20m
+   - 4+ Townhouses/Terraces: Likely min ~18–21m, Recommended ~20–24m
+
+E) RESULT CLASSIFICATION:
+   - GREEN: meets recommended or clearly meets local minimum with buffer
+   - AMBER: meets rough minimum but tight / design risk / needs planner check
+   - RED: below likely minimum or conflicts with confirmed local rule
+   - UNKNOWN: frontage data not available
+
+F) FRONTAGE SCORE (0–100):
+   Start at 100, then:
+   - If width unknown: cap at 55, add "Needs plan" flag
+   - If below likely minimum: 0–30 based on how far below
+   - If meets minimum but not recommended: 50–75
+   - If meets recommended: 80–95
+   - If exceeds recommended + strong access: 95–100
+   MODIFIERS:
+   +10 if corner block with easy access
+   -10 to -25 if battle-axe / constrained access / easements restrict driveway
+   -10 if strict heritage/streetscape controls limit outcomes
+
+G) NEXT ACTION:
+   Set one of: "Proceed to concept design" / "Planner check needed" / "Obtain title plan" / "Not suitable for multi-dwelling"
+
+4. INDICATIVE RENTAL & YIELD POSITION
 - Estimate weekly rent based on comparable rentals in the area (estimatedWeeklyRent).
 - Calculate annual rent (estimatedAnnualRent = weekly × 52).
 - Calculate gross yield percent (grossYieldPercent = annualRent / indicativeMidpoint × 100).
@@ -392,10 +471,10 @@ MANDATORY MODULES:
 - Calculate weekly cash position (estimatedCashPositionWeekly = weekly rent - weekly mortgage).
 - Set gearingStatus: 'Positively Geared' if cash position > 0, 'Negatively Geared' if < 0, 'Neutral' if ~0.
 
-4. LOCAL AREA INTEL, APPROVAL PATHWAY & ZONING INTEL.
+5. LOCAL AREA INTEL, APPROVAL PATHWAY & ZONING INTEL.
 - Include schools and key public transport (trains/buses).
 
-5. COMPARABLE SALES (CRITICAL - SOLD ONLY)
+6. COMPARABLE SALES (CRITICAL - SOLD ONLY)
 ⚠️ ONLY return RECENTLY SOLD properties as comparables. Do NOT include:
 - Active listings (for sale, coming soon, expressions of interest)
 - Under offer / under contract properties
