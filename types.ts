@@ -121,6 +121,8 @@ export interface ValueSnapshot {
   estimateMin: number;
   estimateMax: number;
   indicativeMidpoint: number;
+  askingPrice?: number;
+  askingPriceSource?: string;
   yield: string;
   growth: string;
   confidenceLevel: 'High' | 'Medium' | 'Low';

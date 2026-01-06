@@ -157,5 +157,78 @@ describe('computeUpblockScore', () => {
       expect(sub.score).toBeLessThanOrEqual(100);
     }
   });
+
+  it('severely overpriced property (30%+ above market) => very low value score', () => {
+    const inputs: ScoreInputs = {
+      purchasePrice: 800000, // Estimated market value
+      askingPrice: 1100000, // 37.5% above market (terrible deal)
+      yieldPercent: 5.0,
+      cashFlowWeekly: 100,
+      uplift: { base: 80000 },
+      constraints: [],
+    };
+
+    const result = computeUpblockScore(inputs);
+    
+    // Value subscore should be very low
+    const valueSub = result.subs.find(s => s.name === 'value');
+    expect(valueSub?.score).toBeLessThanOrEqual(20);
+    expect(valueSub?.label).toBe('Avoid');
+    
+    // Overall score should be significantly reduced
+    expect(result.score).toBeLessThan(70);
+  });
+
+  it('fairly priced property => good value score', () => {
+    const inputs: ScoreInputs = {
+      purchasePrice: 800000, // Estimated market value
+      askingPrice: 820000, // Only 2.5% above market (fair)
+      yieldPercent: 5.0,
+      cashFlowWeekly: 100,
+      uplift: { base: 80000 },
+      constraints: [],
+    };
+
+    const result = computeUpblockScore(inputs);
+    
+    // Value subscore should be reasonable
+    const valueSub = result.subs.find(s => s.name === 'value');
+    expect(valueSub?.score).toBeGreaterThanOrEqual(65);
+    expect(valueSub?.label).toBe('Fair');
+  });
+
+  it('underpriced property (below market) => great value score', () => {
+    const inputs: ScoreInputs = {
+      purchasePrice: 800000, // Estimated market value
+      askingPrice: 700000, // 12.5% below market (great deal)
+      yieldPercent: 5.0,
+      cashFlowWeekly: 100,
+      uplift: { base: 80000 },
+      constraints: [],
+    };
+
+    const result = computeUpblockScore(inputs);
+    
+    // Value subscore should be high
+    const valueSub = result.subs.find(s => s.name === 'value');
+    expect(valueSub?.score).toBeGreaterThanOrEqual(90);
+    expect(valueSub?.label).toBe('Great Value');
+  });
+
+  it('no asking price available => unknown value score with lower confidence', () => {
+    const inputs: ScoreInputs = {
+      purchasePrice: 800000,
+      // No askingPrice
+      yieldPercent: 5.0,
+      cashFlowWeekly: 100,
+    };
+
+    const result = computeUpblockScore(inputs);
+    
+    // Value subscore should be unknown
+    const valueSub = result.subs.find(s => s.name === 'value');
+    expect(valueSub?.label).toBe('Unknown');
+    expect(valueSub?.detail).toContain('No asking price');
+  });
 });
 

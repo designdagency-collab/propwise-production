@@ -73,6 +73,8 @@ const responseSchema = {
         estimateMin: { type: "NUMBER" },
         estimateMax: { type: "NUMBER" },
         indicativeMidpoint: { type: "NUMBER" },
+        askingPrice: { type: "NUMBER" },
+        askingPriceSource: { type: "STRING" },
         yield: { type: "STRING" },
         growth: { type: "STRING" },
         confidenceLevel: { type: "STRING", enum: ['High', 'Medium', 'Low'] }
@@ -404,6 +406,15 @@ Before generating ANY data, you MUST search and verify:
       - If recommending development as bestStrategyByProfit, ensure that EXACT scenario is in developmentScenarios
 
 FOCUS: Value Uplift, Renovation Feasibility, Development Potential, Comparable Sales, Rental Yield, and Local Amenities.
+
+⚠️ CRITICAL: ASKING PRICE CAPTURE
+When analyzing a property from realestate.com.au or Domain:
+- ALWAYS try to extract the current asking price or price guide from the listing
+- Set valueSnapshot.askingPrice to the numeric asking price (use midpoint if range, e.g., "$1.2M-$1.3M" → 1250000)
+- Set valueSnapshot.askingPriceSource to describe where price came from (e.g., "realestate.com.au listing", "Domain price guide", "Auction guide")
+- If no asking price found (e.g., "Contact Agent", "Price on Application"), leave askingPrice undefined
+- This is used to calculate deal quality: if asking price is significantly above estimated value, the property is overpriced
+
 MANDATORY MODULES:
 
 1. VALUE-ADD STRATEGIES

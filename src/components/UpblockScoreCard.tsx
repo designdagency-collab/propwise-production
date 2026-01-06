@@ -6,6 +6,7 @@ type Props = {
 };
 
 const SUB_SCORE_LABELS: Record<SubScore['name'], string> = {
+  value: 'Price Value',
   yield: 'Yield',
   cashFlow: 'Cash Flow',
   uplift: 'Uplift Potential',
@@ -38,12 +39,24 @@ function scrollToUpliftStrategies() {
 // Generate a factual, observational summary — NO advice or recommendations
 function generateSummary(result: ScoreResult): string {
   const subs = Object.fromEntries(result.subs.map(s => [s.name, s]));
+  const valueSub = subs.value;
   const cashFlow = subs.cashFlow;
   const yieldSub = subs.yield;
   const uplift = subs.uplift;
   const constraints = subs.constraints;
   
   const paragraphs: string[] = [];
+  
+  // Value/Price observation — critical if overpriced
+  if (valueSub && valueSub.label !== 'Unknown') {
+    if (valueSub.score <= 30) {
+      paragraphs.push(`Asking price appears significantly above estimated market value. ${valueSub.detail}.`);
+    } else if (valueSub.score <= 50) {
+      paragraphs.push(`Asking price appears above estimated market value. ${valueSub.detail}.`);
+    } else if (valueSub.score >= 85) {
+      paragraphs.push(`Asking price appears to be at or below estimated market value. ${valueSub.detail}.`);
+    }
+  }
   
   // Overall score context — factual statement only
   if (result.score >= 80) {

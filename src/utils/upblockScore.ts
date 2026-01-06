@@ -18,7 +18,8 @@ export type UpliftScenario = {
 };
 
 export type ScoreInputs = {
-  purchasePrice?: number;     // $ value (market value)
+  purchasePrice?: number;     // $ value (estimated market value / indicativeMidpoint)
+  askingPrice?: number;       // $ value (current listing price from realestate.com.au/Domain)
   annualRent?: number;        // $ per year
   annualExpenses?: number;    // $ per year (optional)
   annualDebtService?: number; // $ per year mortgage interest+principal (optional)
@@ -30,7 +31,7 @@ export type ScoreInputs = {
 };
 
 export type SubScore = {
-  name: "yield" | "cashFlow" | "uplift" | "constraints";
+  name: "yield" | "cashFlow" | "uplift" | "constraints" | "value";
   score: number;              // 0–100
   label: string;              // Strong/OK/Weak etc
   detail: string;             // explanation for UI tooltip
@@ -65,10 +66,11 @@ function safeNumber(val: unknown): number | undefined {
 // ============ WEIGHTS (configurable) ============
 
 const WEIGHTS = {
-  cashFlow: 0.35,
-  yield: 0.25,
-  uplift: 0.25,
-  constraints: 0.15,
+  value: 0.20,       // Price vs estimated value - critical for deal quality
+  cashFlow: 0.30,
+  yield: 0.20,
+  uplift: 0.20,
+  constraints: 0.10,
 };
 
 // ============ SUB-SCORE CALCULATIONS ============
@@ -221,16 +223,83 @@ function getConstraintsLabel(score: number): string {
   return "Major Issues";
 }
 
+// ============ VALUE (PRICE PREMIUM) SUB-SCORE ============
+
+function computeValueSubScore(inputs: ScoreInputs): { score: number; premiumPct?: number; available: boolean } {
+  const estimatedValue = safeNumber(inputs.purchasePrice);
+  const askingPrice = safeNumber(inputs.askingPrice);
+
+  // If no asking price available, return neutral score
+  if (askingPrice === undefined || estimatedValue === undefined || estimatedValue === 0) {
+    return { score: 60, available: false };
+  }
+
+  // Calculate premium percentage: (asking - estimated) / estimated * 100
+  const premiumPct = ((askingPrice - estimatedValue) / estimatedValue) * 100;
+
+  let score: number;
+
+  if (premiumPct >= 40) {
+    // 40%+ above market: Deal breaker - terrible value
+    score = 5;
+  } else if (premiumPct >= 30) {
+    // 30-40% above market: Very poor value
+    score = 15;
+  } else if (premiumPct >= 20) {
+    // 20-30% above market: Poor value
+    score = 30;
+  } else if (premiumPct >= 10) {
+    // 10-20% above market: Below average value
+    score = 50;
+  } else if (premiumPct >= 0) {
+    // 0-10% above market: Fair value
+    score = 70;
+  } else if (premiumPct >= -10) {
+    // 0-10% below market: Good value
+    score = 85;
+  } else if (premiumPct >= -20) {
+    // 10-20% below market: Great value
+    score = 95;
+  } else {
+    // 20%+ below market: Exceptional value (or suspicious)
+    score = 100;
+  }
+
+  return { score, premiumPct, available: true };
+}
+
+function getValueLabel(score: number): string {
+  if (score >= 85) return "Great Value";
+  if (score >= 70) return "Fair";
+  if (score >= 50) return "Overpriced";
+  if (score >= 30) return "Poor Value";
+  return "Avoid";
+}
+
 // ============ MAIN SCORING FUNCTION ============
 
 export function computeUpblockScore(inputs: ScoreInputs): ScoreResult {
   // Compute all sub-scores
+  const valueResult = computeValueSubScore(inputs);
   const yieldResult = computeYieldSubScore(inputs);
   const cashFlowResult = computeCashFlowSubScore(inputs);
   const upliftResult = computeUpliftSubScore(inputs);
   const constraintsResult = computeConstraintsSubScore(inputs);
 
   // Build sub-score objects - use "Unknown" label when data is missing
+  const valueSub: SubScore = {
+    name: "value",
+    score: valueResult.score,
+    label: valueResult.available ? getValueLabel(valueResult.score) : "Unknown",
+    detail: valueResult.available
+      ? valueResult.premiumPct !== undefined
+        ? valueResult.premiumPct >= 0
+          ? `Asking ${valueResult.premiumPct.toFixed(0)}% above estimated value`
+          : `Asking ${Math.abs(valueResult.premiumPct).toFixed(0)}% below estimated value`
+        : "Price comparison available"
+      : "No asking price available",
+  };
+
   const yieldSub: SubScore = {
     name: "yield",
     score: yieldResult.score,
@@ -269,10 +338,11 @@ export function computeUpblockScore(inputs: ScoreInputs): ScoreResult {
       : "No constraint data provided",
   };
 
-  const subs: SubScore[] = [yieldSub, cashFlowSub, upliftSub, constraintsSub];
+  const subs: SubScore[] = [valueSub, yieldSub, cashFlowSub, upliftSub, constraintsSub];
 
   // Calculate weighted score
   const weightedScore =
+    valueSub.score * WEIGHTS.value +
     yieldSub.score * WEIGHTS.yield +
     cashFlowSub.score * WEIGHTS.cashFlow +
     upliftSub.score * WEIGHTS.uplift +
@@ -282,10 +352,11 @@ export function computeUpblockScore(inputs: ScoreInputs): ScoreResult {
 
   // Calculate confidence
   let confidence = 0;
-  if (yieldResult.available) confidence += 0.25;
-  if (cashFlowResult.available) confidence += 0.25;
-  if (upliftResult.available) confidence += 0.25;
-  if (constraintsResult.available) confidence += 0.25;
+  if (valueResult.available) confidence += 0.20;
+  if (yieldResult.available) confidence += 0.20;
+  if (cashFlowResult.available) confidence += 0.20;
+  if (upliftResult.available) confidence += 0.20;
+  if (constraintsResult.available) confidence += 0.20;
   confidence = clamp(confidence, 0, 1);
 
   const confidenceLabel: "Low" | "Medium" | "High" =
@@ -318,7 +389,10 @@ export function computeUpblockScore(inputs: ScoreInputs): ScoreResult {
 
 // Helper to convert PropertyAnalysis data to ScoreInputs
 export function mapPropertyDataToScoreInputs(data: {
-  valueSnapshot?: { indicativeMidpoint?: number };
+  valueSnapshot?: { 
+    indicativeMidpoint?: number;
+    askingPrice?: number;
+  };
   rentalPosition?: {
     grossYieldPercent?: number;
     estimatedAnnualRent?: number;
@@ -339,6 +413,7 @@ export function mapPropertyDataToScoreInputs(data: {
   }>;
 }): ScoreInputs {
   const purchasePrice = data.valueSnapshot?.indicativeMidpoint;
+  const askingPrice = data.valueSnapshot?.askingPrice;
   
   // Yield and rent
   const yieldPercent = data.rentalPosition?.grossYieldPercent;
@@ -422,6 +497,7 @@ export function mapPropertyDataToScoreInputs(data: {
 
   return {
     purchasePrice,
+    askingPrice,
     yieldPercent,
     annualRent,
     cashFlowWeekly,
