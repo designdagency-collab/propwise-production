@@ -71,7 +71,47 @@ export default async function handler(req, res) {
 
       // Apply search filter
       if (search) {
-        query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%,phone.ilike.%${search}%`);
+        // Check if search looks like a phone number (starts with digits, +, or 0)
+        const isPhoneSearch = /^[\d\+\s\-\(\)]+$/.test(search.trim());
+        
+        if (isPhoneSearch) {
+          // Normalize phone search - handle 04xx, 4xx, +614xx formats
+          const digits = search.replace(/\D/g, '');
+          let phoneVariants = [search]; // Original search
+          
+          if (digits.length > 0) {
+            // Add various formats to search
+            phoneVariants.push(digits); // Just digits: 460123456
+            phoneVariants.push(`+61${digits}`); // +61 prefix
+            phoneVariants.push(`0${digits}`); // Leading 0
+            
+            // If starts with 0, also search without it and with +61
+            if (digits.startsWith('0')) {
+              const withoutZero = digits.substring(1);
+              phoneVariants.push(withoutZero);
+              phoneVariants.push(`+61${withoutZero}`);
+            }
+            
+            // If starts with 61, also search with 0 prefix for local part
+            if (digits.startsWith('61')) {
+              const localPart = digits.substring(2);
+              phoneVariants.push(localPart);
+              phoneVariants.push(`0${localPart}`);
+            }
+            
+            // If starts with 4 (mobile), add common prefixes
+            if (digits.startsWith('4')) {
+              phoneVariants.push(`0${digits}`);
+              phoneVariants.push(`+61${digits}`);
+            }
+          }
+          
+          // Build OR query for all phone variants
+          const phoneFilters = phoneVariants.map(v => `phone.ilike.%${v}%`).join(',');
+          query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%,${phoneFilters}`);
+        } else {
+          query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%,phone.ilike.%${search}%`);
+        }
       }
 
       const { data: users, error, count } = await query;
