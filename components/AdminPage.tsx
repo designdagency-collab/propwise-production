@@ -165,17 +165,46 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     }, 300);
   };
 
+  // Normalize phone number for searching (handle 0 vs +61)
+  const normalizePhone = (phone: string): string => {
+    if (!phone) return '';
+    // Remove all non-digits
+    const digits = phone.replace(/\D/g, '');
+    // If starts with 61 (Australia), return just the local part
+    if (digits.startsWith('61')) {
+      return digits.substring(2);
+    }
+    // If starts with 0, remove it
+    if (digits.startsWith('0')) {
+      return digits.substring(1);
+    }
+    return digits;
+  };
+
   // Client-side filtered users for instant feedback
   const filteredUsers = useMemo(() => {
     if (!searchQuery.trim()) return users;
     
     const query = searchQuery.toLowerCase().trim();
-    return users.filter(user => 
-      user.email?.toLowerCase().includes(query) ||
-      user.full_name?.toLowerCase().includes(query) ||
-      user.phone?.includes(query) ||
-      user.plan_type?.toLowerCase().includes(query)
-    );
+    const queryDigits = normalizePhone(query);
+    
+    return users.filter(user => {
+      // Standard text matching
+      if (user.email?.toLowerCase().includes(query)) return true;
+      if (user.full_name?.toLowerCase().includes(query)) return true;
+      if (user.plan_type?.toLowerCase().includes(query)) return true;
+      
+      // Phone number matching - normalize both for comparison
+      if (user.phone) {
+        const userPhoneNormalized = normalizePhone(user.phone);
+        // Check if the normalized query digits are in the normalized phone
+        if (queryDigits && userPhoneNormalized.includes(queryDigits)) return true;
+        // Also check raw phone in case they search exact format
+        if (user.phone.includes(query)) return true;
+      }
+      
+      return false;
+    });
   }, [users, searchQuery]);
 
   // Update user
