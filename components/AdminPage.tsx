@@ -420,8 +420,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                        timePeriod === 'week' ? metrics.users.newWeek : 
                        timePeriod === 'year' ? metrics.users.total : metrics.users.newMonth} 
                 icon="fa-users" 
-                color="text-blue-600"
-                bgColor="bg-blue-50"
+                color="text-[#C9A961]"
+                bgColor="bg-[#C9A961]/10"
               />
               <MetricCard 
                 title={timePeriod === 'day' ? "Searches Today" : 
@@ -431,8 +431,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                        timePeriod === 'week' ? metrics.users.active7d : 
                        timePeriod === 'year' ? metrics.searches.total : metrics.users.active30d} 
                 icon="fa-search" 
-                color="text-purple-600"
-                bgColor="bg-purple-50"
+                color="text-[#8B7355]"
+                bgColor="bg-[#8B7355]/10"
               />
               <MetricCard 
                 title={timePeriod === 'day' ? "Revenue Today" : 
@@ -444,16 +444,16 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                   timePeriod === 'year' ? (revenue?.revenueThisYear || 0) : (revenue?.revenueThisMonth || 0)
                 )} 
                 icon="fa-chart-line" 
-                color="text-emerald-600"
-                bgColor="bg-emerald-50"
+                color="text-[#5D8A66]"
+                bgColor="bg-[#5D8A66]/10"
                 isString
               />
               <MetricCard 
                 title="Total Revenue" 
                 value={formatCurrency(revenue?.totalRevenue || 0)} 
                 icon="fa-coins" 
-                color="text-amber-600"
-                bgColor="bg-amber-50"
+                color="text-[#C9A961]"
+                bgColor="bg-[#C9A961]/10"
                 isString
               />
             </div>
@@ -462,7 +462,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-white rounded-2xl p-6 shadow-sm border">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
-                  <i className="fa-solid fa-user-plus mr-2 text-blue-500"></i>
+                  <i className="fa-solid fa-user-plus mr-2 text-[#C9A961]"></i>
                   User Growth
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
@@ -483,7 +483,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
 
               <div className="bg-white rounded-2xl p-6 shadow-sm border">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
-                  <i className="fa-solid fa-bolt mr-2 text-amber-500"></i>
+                  <i className="fa-solid fa-bolt mr-2 text-[#C9A961]"></i>
                   Activity
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
@@ -507,13 +507,13 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-white rounded-2xl p-6 shadow-sm border">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
-                  <i className="fa-solid fa-layer-group mr-2 text-purple-500"></i>
+                  <i className="fa-solid fa-layer-group mr-2 text-[#8B7355]"></i>
                   Users by Plan
                 </h3>
                 <div className="space-y-3">
                   <PlanBar label="Free Trial" count={metrics.users.byPlan.FREE_TRIAL || 0} total={metrics.users.total} color="bg-gray-400" />
-                  <PlanBar label="Starter Pack" count={metrics.users.byPlan.STARTER_PACK || 0} total={metrics.users.total} color="bg-amber-500" />
-                  <PlanBar label="PRO" count={metrics.users.byPlan.PRO || 0} total={metrics.users.total} color="bg-purple-500" />
+                  <PlanBar label="Starter Pack" count={metrics.users.byPlan.STARTER_PACK || 0} total={metrics.users.total} color="bg-[#C9A961]" />
+                  <PlanBar label="PRO" count={metrics.users.byPlan.PRO || 0} total={metrics.users.total} color="bg-[#3A342D]" />
                 </div>
                 <div className="mt-4 pt-4 border-t flex justify-between text-sm">
                   <span className="text-gray-500">Users at 0 credits:</span>
@@ -523,7 +523,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
 
               <div className="bg-white rounded-2xl p-6 shadow-sm border">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
-                  <i className="fa-solid fa-user-group mr-2 text-emerald-500"></i>
+                  <i className="fa-solid fa-user-group mr-2 text-[#5D8A66]"></i>
                   Referrals
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -531,12 +531,12 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     <p className="text-2xl font-black text-[#3A342D]">{metrics.referrals.total}</p>
                     <p className="text-xs text-gray-500 mt-1">Total</p>
                   </div>
-                  <div className="text-center p-4 bg-emerald-50 rounded-xl">
-                    <p className="text-2xl font-black text-emerald-600">{metrics.referrals.credited}</p>
+                  <div className="text-center p-4 bg-[#5D8A66]/10 rounded-xl">
+                    <p className="text-2xl font-black text-[#5D8A66]">{metrics.referrals.credited}</p>
                     <p className="text-xs text-gray-500 mt-1">Credited</p>
                   </div>
-                  <div className="text-center p-4 bg-amber-50 rounded-xl">
-                    <p className="text-2xl font-black text-amber-600">{metrics.referrals.pending}</p>
+                  <div className="text-center p-4 bg-[#C9A961]/10 rounded-xl">
+                    <p className="text-2xl font-black text-[#C9A961]">{metrics.referrals.pending}</p>
                     <p className="text-xs text-gray-500 mt-1">Pending</p>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-xl">
@@ -560,8 +560,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     title="Total Revenue" 
                     value={formatCurrency(revenue.totalRevenue)} 
                     icon="fa-sack-dollar" 
-                    color="text-emerald-600"
-                    bgColor="bg-emerald-50"
+                    color="text-[#5D8A66]"
+                    bgColor="bg-[#5D8A66]/10"
                     isString
                   />
                   <MetricCard 
@@ -577,8 +577,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     icon={timePeriod === 'day' ? "fa-sun" : 
                           timePeriod === 'week' ? "fa-calendar-week" : 
                           timePeriod === 'year' ? "fa-calendar" : "fa-calendar-days"} 
-                    color="text-blue-600"
-                    bgColor="bg-blue-50"
+                    color="text-[#C9A961]"
+                    bgColor="bg-[#C9A961]/10"
                     isString
                   />
                   <MetricCard 
@@ -592,15 +592,15 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                       revenue.transactionsThisMonth
                     } 
                     icon="fa-receipt" 
-                    color="text-amber-600"
-                    bgColor="bg-amber-50"
+                    color="text-[#8B7355]"
+                    bgColor="bg-[#8B7355]/10"
                   />
                   <MetricCard 
                     title="MRR" 
                     value={formatCurrency(revenue.mrr)} 
                     icon="fa-chart-line" 
-                    color="text-purple-600"
-                    bgColor="bg-purple-50"
+                    color="text-[#C9A961]"
+                    bgColor="bg-[#C9A961]/10"
                     isString
                   />
                 </div>
@@ -609,24 +609,24 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                 <div className="grid md:grid-cols-3 gap-6">
                   <div className="bg-white rounded-2xl p-6 shadow-sm border">
                     <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
-                      <i className="fa-solid fa-wallet mr-2 text-emerald-500"></i>
+                      <i className="fa-solid fa-wallet mr-2 text-[#5D8A66]"></i>
                       Stripe Balance
                     </h3>
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Available</span>
-                        <span className="text-xl font-bold text-emerald-600">{formatCurrency(revenue.availableBalance)}</span>
+                        <span className="text-xl font-bold text-[#5D8A66]">{formatCurrency(revenue.availableBalance)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Pending</span>
-                        <span className="text-xl font-bold text-amber-600">{formatCurrency(revenue.pendingBalance)}</span>
+                        <span className="text-xl font-bold text-[#C9A961]">{formatCurrency(revenue.pendingBalance)}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="bg-white rounded-2xl p-6 shadow-sm border">
                     <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
-                      <i className="fa-solid fa-receipt mr-2 text-blue-500"></i>
+                      <i className="fa-solid fa-receipt mr-2 text-[#C9A961]"></i>
                       Transactions
                     </h3>
                     <div className="space-y-4">
@@ -636,15 +636,15 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">Today</span>
-                        <span className="text-xl font-bold text-amber-600">{revenue.transactionsToday}</span>
+                        <span className="text-xl font-bold text-[#C9A961]">{revenue.transactionsToday}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">This Week</span>
-                        <span className="text-xl font-bold text-blue-600">{revenue.transactionsThisWeek}</span>
+                        <span className="text-xl font-bold text-[#C9A961]">{revenue.transactionsThisWeek}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">This Month</span>
-                        <span className="text-xl font-bold text-purple-600">{revenue.transactionsThisMonth}</span>
+                        <span className="text-xl font-bold text-[#8B7355]">{revenue.transactionsThisMonth}</span>
                       </div>
                       <div className="flex justify-between items-center pt-2 border-t">
                         <span className="text-gray-600">Avg Order</span>
@@ -655,7 +655,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
 
                   <div className="bg-white rounded-2xl p-6 shadow-sm border">
                     <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
-                      <i className="fa-solid fa-box mr-2 text-purple-500"></i>
+                      <i className="fa-solid fa-box mr-2 text-[#8B7355]"></i>
                       Sales by Product
                     </h3>
                     <div className="space-y-4">
@@ -669,7 +669,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-600">PRO Subscriptions</span>
-                        <span className="text-xl font-bold text-purple-600">{revenue.activeSubscriptions}</span>
+                        <span className="text-xl font-bold text-[#3A342D]">{revenue.activeSubscriptions}</span>
                       </div>
                     </div>
                   </div>
@@ -702,7 +702,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                             </td>
                             <td className="px-6 py-4">{tx.description}</td>
                             <td className="px-6 py-4 text-gray-600">{tx.customerEmail}</td>
-                            <td className="px-6 py-4 text-right font-bold text-emerald-600">
+                            <td className="px-6 py-4 text-right font-bold text-[#5D8A66]">
                               {formatCurrency(tx.amount)}
                             </td>
                           </tr>
@@ -763,7 +763,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                         : `${filteredUsers.length} of ${users.length} users`}
                     </span>
                     {searchQuery && filteredUsers.length === 0 && (
-                      <span className="text-amber-600">No matches found</span>
+                      <span className="text-[#C9A961]">No matches found</span>
                     )}
                   </div>
                 </div>
@@ -793,7 +793,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                           <tr 
                             key={user.id} 
                             onClick={() => setSelectedUser(user)}
-                            className={`border-t cursor-pointer hover:bg-gray-50 transition-colors ${selectedUser?.id === user.id ? 'bg-amber-50' : ''}`}
+                            className={`border-t cursor-pointer hover:bg-gray-50 transition-colors ${selectedUser?.id === user.id ? 'bg-[#C9A961]/10' : ''}`}
                           >
                             <td className="px-4 py-3">
                               <div className="font-medium text-[#3A342D]">{user.full_name || 'No name'}</div>
@@ -801,9 +801,9 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                             </td>
                             <td className="px-4 py-3">
                               <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                                user.plan_type === 'PRO' ? 'bg-purple-100 text-purple-700' :
-                                user.plan_type === 'UNLIMITED_PRO' ? 'bg-purple-100 text-purple-700' :
-                                user.plan_type === 'STARTER_PACK' ? 'bg-amber-100 text-amber-700' :
+                                user.plan_type === 'PRO' ? 'bg-[#3A342D]/10 text-[#3A342D]' :
+                                user.plan_type === 'UNLIMITED_PRO' ? 'bg-[#3A342D]/10 text-[#3A342D]' :
+                                user.plan_type === 'STARTER_PACK' ? 'bg-[#C9A961]/20 text-[#8B7355]' :
                                 'bg-gray-100 text-gray-700'
                               }`}>
                                 {user.plan_type === 'FREE_TRIAL' ? 'Trial' : 
@@ -816,14 +816,14 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                             <td className="px-4 py-3">{user.search_count}</td>
                             <td className="px-4 py-3">
                               {user.referral_count > 0 ? (
-                                <span className="text-emerald-600 font-medium">{user.referral_count}</span>
+                                <span className="text-[#5D8A66] font-medium">{user.referral_count}</span>
                               ) : (
                                 <span className="text-gray-400">0</span>
                               )}
                             </td>
                             <td className="px-4 py-3">
                               {estimatedLTV > 0 ? (
-                                <span className="text-emerald-600 font-medium">{formatCurrency(estimatedLTV)}</span>
+                                <span className="text-[#5D8A66] font-medium">{formatCurrency(estimatedLTV)}</span>
                               ) : (
                                 <span className="text-gray-400">$0</span>
                               )}
@@ -831,7 +831,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-1">
                                 {user.phone_verified ? (
-                                  <span className="w-2 h-2 rounded-full bg-emerald-500" title="Phone verified"></span>
+                                  <span className="w-2 h-2 rounded-full bg-[#5D8A66]" title="Phone verified"></span>
                                 ) : (
                                   <span className="w-2 h-2 rounded-full bg-gray-300" title="Not verified"></span>
                                 )}
