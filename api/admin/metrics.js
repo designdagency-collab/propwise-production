@@ -41,7 +41,7 @@ export default async function handler(req, res) {
   // Check if user is an authorized admin email
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('email, phone_verified')
+    .select('email, phone_verified, phone')
     .eq('id', user.id)
     .single();
 
@@ -59,23 +59,14 @@ export default async function handler(req, res) {
   const userEmail = profile?.email?.toLowerCase()?.trim();
   const isAuthorizedAdmin = ADMIN_EMAILS.includes(userEmail);
   
-  console.log('[AdminMetrics] Auth check:', { userEmail, isAuthorizedAdmin, phone_verified: profile?.phone_verified });
+  console.log('[AdminMetrics] Auth check:', { userEmail, isAuthorizedAdmin });
   
   if (profileError || !isAuthorizedAdmin) {
     console.log('[AdminMetrics] Access denied - not authorized admin');
     return res.status(403).json({ error: 'Access denied. Admin only.' });
   }
   
-  // Check phone verification - return special response so UI can prompt verification
-  if (!profile?.phone_verified) {
-    console.log('[AdminMetrics] Phone not verified - sending verification prompt');
-    return res.status(200).json({ 
-      requiresPhoneVerification: true,
-      message: 'Phone verification required for admin access'
-    });
-  }
-  
-  console.log('[AdminMetrics] Access granted, fetching metrics...');
+  console.log('[AdminMetrics] Access granted for:', userEmail);
 
   try {
     const now = new Date();

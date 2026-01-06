@@ -37,7 +37,7 @@ export default async function handler(req, res) {
   // Check if user is an authorized admin email
   const { data: adminProfile, error: profileError } = await supabase
     .from('profiles')
-    .select('email, phone_verified')
+    .select('email')
     .eq('id', user.id)
     .single();
 
@@ -51,9 +51,7 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Access denied. Admin only.' });
   }
   
-  if (!adminProfile?.phone_verified) {
-    return res.status(403).json({ error: 'Phone verification required for admin access', requiresPhoneVerification: true });
-  }
+  console.log('[AdminUsers] Access granted for:', adminProfile?.email);
 
   try {
     // GET - Search users
