@@ -239,6 +239,32 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(amount);
   };
 
+  // Calculate estimated LTV based on plan and credits purchased
+  const calculateLTV = (user: User): number => {
+    let ltv = 0;
+    
+    // Base value from plan upgrades
+    if (user.plan_type === 'STARTER_PACK') {
+      ltv += 19; // Starter pack purchase
+    } else if (user.plan_type === 'PRO') {
+      // Estimate PRO value - assume average 3 months subscription at $29/mo
+      ltv += 87;
+    } else if (user.plan_type === 'UNLIMITED_PRO') {
+      ltv += 199;
+    }
+    
+    // Additional value from credit topups beyond initial plan
+    // Starter Pack gives 3 credits, so anything above that was purchased
+    const extraCredits = Math.max(0, (user.credit_topups || 0) - 3);
+    if (extraCredits > 0) {
+      // Estimate: mix of $19/3 credits ($6.33) and $89/20 credits ($4.45)
+      // Use blended rate of ~$5 per extra credit
+      ltv += extraCredits * 5;
+    }
+    
+    return Math.round(ltv);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center">
@@ -652,43 +678,83 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-3 text-left font-bold text-gray-500">User</th>
-                        <th className="px-6 py-3 text-left font-bold text-gray-500">Plan</th>
-                        <th className="px-6 py-3 text-left font-bold text-gray-500">Credits</th>
-                        <th className="px-6 py-3 text-left font-bold text-gray-500">Searches</th>
-                        <th className="px-6 py-3 text-left font-bold text-gray-500">Joined</th>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">User</th>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">Plan</th>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">Credits</th>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">Searches</th>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">Referrals</th>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">LTV</th>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">Status</th>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">Joined</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredUsers.map((user) => (
-                        <tr 
-                          key={user.id} 
-                          onClick={() => setSelectedUser(user)}
-                          className={`border-t cursor-pointer hover:bg-gray-50 transition-colors ${selectedUser?.id === user.id ? 'bg-amber-50' : ''}`}
-                        >
-                          <td className="px-6 py-4">
-                            <div className="font-medium text-[#3A342D]">{user.full_name || 'No name'}</div>
-                            <div className="text-xs text-gray-500">{user.email}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                              user.plan_type === 'PRO' ? 'bg-purple-100 text-purple-700' :
-                              user.plan_type === 'STARTER_PACK' ? 'bg-amber-100 text-amber-700' :
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {user.plan_type}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 font-medium">{user.credit_topups}</td>
-                          <td className="px-6 py-4">{user.search_count}</td>
-                          <td className="px-6 py-4 text-gray-500">
-                            {new Date(user.created_at).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
+                      {filteredUsers.map((user) => {
+                        // Calculate estimated LTV based on credits purchased
+                        // Starter Pack = $19 (3 credits), Bulk Pack = $89 (20 credits)
+                        // Estimate: credits * ~$6.33 avg per credit (blended rate)
+                        const estimatedLTV = calculateLTV(user);
+                        
+                        return (
+                          <tr 
+                            key={user.id} 
+                            onClick={() => setSelectedUser(user)}
+                            className={`border-t cursor-pointer hover:bg-gray-50 transition-colors ${selectedUser?.id === user.id ? 'bg-amber-50' : ''}`}
+                          >
+                            <td className="px-4 py-3">
+                              <div className="font-medium text-[#3A342D]">{user.full_name || 'No name'}</div>
+                              <div className="text-xs text-gray-500">{user.email}</div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                user.plan_type === 'PRO' ? 'bg-purple-100 text-purple-700' :
+                                user.plan_type === 'UNLIMITED_PRO' ? 'bg-purple-100 text-purple-700' :
+                                user.plan_type === 'STARTER_PACK' ? 'bg-amber-100 text-amber-700' :
+                                'bg-gray-100 text-gray-700'
+                              }`}>
+                                {user.plan_type === 'FREE_TRIAL' ? 'Trial' : 
+                                 user.plan_type === 'STARTER_PACK' ? 'Starter' :
+                                 user.plan_type === 'UNLIMITED_PRO' ? 'Unlimited' :
+                                 user.plan_type}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 font-medium">{user.credit_topups}</td>
+                            <td className="px-4 py-3">{user.search_count}</td>
+                            <td className="px-4 py-3">
+                              {user.referral_count > 0 ? (
+                                <span className="text-emerald-600 font-medium">{user.referral_count}</span>
+                              ) : (
+                                <span className="text-gray-400">0</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              {estimatedLTV > 0 ? (
+                                <span className="text-emerald-600 font-medium">{formatCurrency(estimatedLTV)}</span>
+                              ) : (
+                                <span className="text-gray-400">$0</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-1">
+                                {user.phone_verified ? (
+                                  <span className="w-2 h-2 rounded-full bg-emerald-500" title="Phone verified"></span>
+                                ) : (
+                                  <span className="w-2 h-2 rounded-full bg-gray-300" title="Not verified"></span>
+                                )}
+                                <span className="text-xs text-gray-500">
+                                  {user.phone_verified ? 'Verified' : 'Unverified'}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-gray-500 text-sm">
+                              {new Date(user.created_at).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        );
+                      })}
                       {filteredUsers.length === 0 && (
                         <tr>
-                          <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                          <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                             {searchQuery ? 'No users match your search' : 'No users found'}
                           </td>
                         </tr>
