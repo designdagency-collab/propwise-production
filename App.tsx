@@ -8,7 +8,7 @@ import EmailAuth from './components/EmailAuth';
 import TermsAndConditions from './components/TermsAndConditions';
 import AccountSettings from './components/AccountSettings';
 import InviteFriendsModal from './components/InviteFriendsModal';
-import { AdminDashboard } from './components/AdminDashboard';
+import { AdminPage } from './components/AdminPage';
 import { geminiService } from './services/geminiService';
 import { stripeService } from './services/stripeService';
 import { supabaseService } from './services/supabaseService';
@@ -1877,12 +1877,11 @@ const App: React.FC = () => {
         isLoading={isGeneratingReferralCode}
       />
 
-      {/* Admin Dashboard Modal */}
+      {/* Admin Page - Full Screen */}
       {showAdminDashboard && (
-        <AdminDashboard 
-          onClose={() => setShowAdminDashboard(false)} 
-          onVerifyPhone={() => setShowPhoneVerification(true)}
-        />
+        <div className="fixed inset-0 z-[60] bg-[#FAF9F6]">
+          <AdminPage onBack={() => setShowAdminDashboard(false)} />
+        </div>
       )}
 
       {/* Footer - only show on main pages, not modals */}
