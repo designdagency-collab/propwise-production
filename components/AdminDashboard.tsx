@@ -28,9 +28,6 @@ interface Metrics {
     verified: number;
     credited: number;
   };
-  enterprise: {
-    waitlist: number;
-  };
   generatedAt: string;
 }
 
@@ -48,11 +45,8 @@ interface User {
   referral_code: string;
   referral_count: number;
   referral_credits_earned: number;
-  enterprise_waitlist: boolean;
-  is_admin: boolean;
   created_at: string;
   updated_at: string;
-  last_login_at: string;
 }
 
 interface AdminDashboardProps {
@@ -159,8 +153,7 @@ export const AdminDashboard = ({ onClose, onVerifyPhone }: AdminDashboardProps) 
         phone: selectedUser.phone,
         phone_verified: selectedUser.phone_verified,
         plan_type: selectedUser.plan_type,
-        credit_topups: selectedUser.credit_topups,
-        is_admin: selectedUser.is_admin
+        credit_topups: selectedUser.credit_topups
       });
     }
   }, [selectedUser]);
@@ -312,9 +305,8 @@ export const AdminDashboard = ({ onClose, onVerifyPhone }: AdminDashboardProps) 
               {/* Other */}
               <div>
                 <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-3">Other</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <MetricCard title="Credits in System" value={metrics.credits.totalInSystem} icon="fa-coins" color="text-amber-600" />
-                  <MetricCard title="Enterprise Waitlist" value={metrics.enterprise.waitlist} icon="fa-building" color="text-purple-600" />
                 </div>
               </div>
             </div>
@@ -441,16 +433,6 @@ export const AdminDashboard = ({ onClose, onVerifyPhone }: AdminDashboardProps) 
                       />
                       <label htmlFor="phone_verified" className="text-sm">Phone Verified</label>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="is_admin"
-                        checked={editForm.is_admin || false}
-                        onChange={(e) => setEditForm({...editForm, is_admin: e.target.checked})}
-                      />
-                      <label htmlFor="is_admin" className="text-sm">Admin Access</label>
-                    </div>
-
                     <button
                       onClick={updateUser}
                       disabled={saving}
@@ -463,7 +445,7 @@ export const AdminDashboard = ({ onClose, onVerifyPhone }: AdminDashboardProps) 
                       <p>ID: {selectedUser.id}</p>
                       <p>Searches: {selectedUser.search_count}</p>
                       <p>Referrals: {selectedUser.referral_count || 0}</p>
-                      <p>Last login: {selectedUser.last_login_at ? new Date(selectedUser.last_login_at).toLocaleString() : 'Never'}</p>
+                      <p>Joined: {new Date(selectedUser.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
                 </div>

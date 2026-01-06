@@ -64,8 +64,7 @@ export default async function handler(req, res) {
           id, email, full_name, phone, phone_verified,
           plan_type, search_count, credit_topups, pro_used, pro_month,
           referral_code, referral_count, referral_credits_earned,
-          enterprise_waitlist, is_admin,
-          created_at, updated_at, last_login_at
+          created_at, updated_at
         `)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);

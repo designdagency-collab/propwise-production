@@ -90,8 +90,7 @@ export default async function handler(req, res) {
       totalSearches,
       searchesToday,
       totalCreditsResult,
-      referralsResult,
-      enterpriseWaitlistResult
+      referralsResult
     ] = await Promise.all([
       // Total users
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
@@ -102,14 +101,14 @@ export default async function handler(req, res) {
       // Plan breakdown
       supabase.from('profiles').select('plan_type'),
       
-      // Active today
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('last_login_at', `${today}T00:00:00Z`),
+      // Active today (using updated_at as proxy)
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('updated_at', `${today}T00:00:00Z`),
       
       // Active 7 days
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('last_login_at', sevenDaysAgo),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('updated_at', sevenDaysAgo),
       
       // Active 30 days
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('last_login_at', thirtyDaysAgo),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('updated_at', thirtyDaysAgo),
       
       // New today
       supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', `${today}T00:00:00Z`),
@@ -130,10 +129,7 @@ export default async function handler(req, res) {
       supabase.from('profiles').select('credit_topups, search_count'),
       
       // Referrals
-      supabase.from('referrals').select('status'),
-      
-      // Enterprise waitlist
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('enterprise_waitlist', true)
+      supabase.from('referrals').select('status')
     ]);
 
     // Calculate plan breakdown
@@ -201,9 +197,6 @@ export default async function handler(req, res) {
         totalInSystem: totalCredits
       },
       referrals: referralStats,
-      enterprise: {
-        waitlist: enterpriseWaitlistResult.count || 0
-      },
       generatedAt: now.toISOString()
     };
 
