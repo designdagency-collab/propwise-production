@@ -41,6 +41,9 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS recovery_code_expires_at TIMESTAMP
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS enterprise_waitlist BOOLEAN DEFAULT false;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS enterprise_waitlist_date TIMESTAMPTZ;
 
+-- Add admin flag for admin dashboard access
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;
+
 -- Create subscriptions table
 CREATE TABLE IF NOT EXISTS subscriptions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

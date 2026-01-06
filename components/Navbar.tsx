@@ -19,7 +19,9 @@ interface NavbarProps {
   onLogout?: () => void;
   onAccountSettings?: () => void;
   onInviteFriends?: () => void;
+  onAdminPanel?: () => void;
   isLoggedIn?: boolean;
+  isAdmin?: boolean;
   userName?: string;
   userEmail?: string;
   userPhone?: string;
@@ -41,7 +43,9 @@ const Navbar: React.FC<NavbarProps> = ({
   onLogout,
   onAccountSettings,
   onInviteFriends,
+  onAdminPanel,
   isLoggedIn = false,
+  isAdmin = false,
   userName,
   userEmail,
   userPhone,
@@ -178,6 +182,18 @@ const Navbar: React.FC<NavbarProps> = ({
             >
               <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'} text-sm sm:text-lg`}></i>
             </button>
+            
+            {/* Admin Panel - only for authorized admin emails */}
+            {isLoggedIn && userEmail?.toLowerCase() === 'designd.agency@gmail.com' && (
+              <button 
+                onClick={onAdminPanel}
+                title="Admin Dashboard"
+                className="p-1.5 sm:p-2.5 transition-colors rounded-xl hover:bg-purple-100"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                <i className="fa-solid fa-shield text-sm sm:text-lg text-purple-600"></i>
+              </button>
+            )}
             
             {/* API Key - hidden on mobile */}
             <button 

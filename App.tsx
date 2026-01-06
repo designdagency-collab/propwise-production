@@ -8,6 +8,7 @@ import EmailAuth from './components/EmailAuth';
 import TermsAndConditions from './components/TermsAndConditions';
 import AccountSettings from './components/AccountSettings';
 import InviteFriendsModal from './components/InviteFriendsModal';
+import { AdminDashboard } from './components/AdminDashboard';
 import { geminiService } from './services/geminiService';
 import { stripeService } from './services/stripeService';
 import { supabaseService } from './services/supabaseService';
@@ -72,6 +73,10 @@ const App: React.FC = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [pendingReferralCode, setPendingReferralCode] = useState<string | null>(null); // From URL ?ref=XXX
+  
+  // Admin dashboard state
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   // Auth state - derived from Supabase session (no localStorage)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -560,6 +565,9 @@ const App: React.FC = () => {
       if (profile) {
         setUserProfile(profile);
         
+        // Check admin status
+        setIsAdmin(profile.is_admin === true);
+        
         // Use billingService for consistent credit calculation (single source of truth)
         const state = calculateCreditState(profile);
         const calculatedCredits = getRemainingCredits(state);
@@ -570,7 +578,8 @@ const App: React.FC = () => {
             credit_topups: profile.credit_topups,
             plan_type: profile.plan_type,
             pro_used: profile.pro_used,
-            pro_month: profile.pro_month
+            pro_month: profile.pro_month,
+            is_admin: profile.is_admin
           },
           calculatedCredits,
           plan: state.plan
@@ -1501,7 +1510,9 @@ const App: React.FC = () => {
         onLogout={handleLogout}
         onAccountSettings={() => { setShowTerms(false); setShowPricing(false); setShowAccountSettings(true); fetchSearchHistory(); }}
         onInviteFriends={() => setShowInviteFriends(true)}
+        onAdminPanel={() => setShowAdminDashboard(true)}
         isLoggedIn={isLoggedIn}
+        isAdmin={isAdmin}
         userName={userProfile?.full_name}
         userEmail={userEmail}
         userPhone={userPhone}
@@ -1865,6 +1876,14 @@ const App: React.FC = () => {
         onSendInvite={sendReferralInvite}
         isLoading={isGeneratingReferralCode}
       />
+
+      {/* Admin Dashboard Modal */}
+      {showAdminDashboard && (
+        <AdminDashboard 
+          onClose={() => setShowAdminDashboard(false)} 
+          onVerifyPhone={() => setShowPhoneVerification(true)}
+        />
+      )}
 
       {/* Footer - only show on main pages, not modals */}
       {!showTerms && !showPricing && !showAccountSettings && (
