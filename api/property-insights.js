@@ -369,6 +369,8 @@ Before generating ANY data, you MUST search and verify:
       - Use the COMBINED land area from the listing (e.g., 1,443sqm not 715sqm)
       - Update the address to reflect the combined lots (e.g., "2-4 Grace Avenue")
       - Emphasise development potential in your analysis
+      - MUST populate developmentScenarios with at least 1-2 viable development options
+      - If recommending development as bestStrategyByProfit, ensure that EXACT scenario is in developmentScenarios
 
 FOCUS: Value Uplift, Renovation Feasibility, Development Potential, Comparable Sales, Rental Yield, and Local Amenities.
 MANDATORY MODULES:
@@ -376,9 +378,10 @@ MANDATORY MODULES:
 1. VALUE-ADD STRATEGIES
 - Return 5–8 strategies (internal/renovation focused).
 
-2. DEVELOPMENT SCENARIOS
+2. DEVELOPMENT SCENARIOS (CRITICAL FOR COMBINED LOTS & LARGE SITES)
 - Analyze up to 3 scenarios: Knockdown Rebuild, Duplex, and Townhouse/Multi-dwelling.
 - Provide indicative costs, estimated end value (GRV), net profit, and timeframe.
+- ⚠️ IMPORTANT: If any development scenario is recommended as bestStrategyByProfit, that EXACT scenario title MUST appear here with full details.
 
 3. INDICATIVE RENTAL & YIELD POSITION
 - Estimate weekly rent based on comparable rentals in the area (estimatedWeeklyRent).
@@ -411,7 +414,15 @@ If you cannot find verified sold comparables, return an empty array rather than 
 RULES:
 - LISTING ADDRESS is king: If user searches "2 Grace Ave" but listing is "2-4 Grace Ave", use "2-4 Grace Ave" and treat as combined lots.
 - Always use data from the ACTUAL listing found, not assumptions based on search input.
-- Output ONLY valid JSON. No markdown blocks.`;
+- Output ONLY valid JSON. No markdown blocks.
+
+⚠️ BEST STRATEGY CONSISTENCY (CRITICAL):
+- portfolioSelloutSummary.bestStrategyByProfit MUST reference an EXISTING strategy.
+- If best strategy is a development type (Knockdown Rebuild, Duplex, Townhouse, Subdivision, etc.):
+  → The EXACT title MUST appear in developmentScenarios array with full details (costs, profit, eligibility).
+- If best strategy is a renovation/value-add (e.g., "Kitchen & Bathroom Renovation"):
+  → The EXACT title MUST appear in valueAddStrategies array.
+- For combined lots: developmentScenarios should NOT be empty. Include at least the recommended development option.`;
 
     console.log('[PropertyInsights] Calling Gemini API with model gemini-3-flash-preview...');
     
