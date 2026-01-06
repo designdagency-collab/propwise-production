@@ -1879,7 +1879,7 @@ const App: React.FC = () => {
 
       {/* Admin Page - Full Screen */}
       {showAdminDashboard && (
-        <div className="fixed inset-0 z-[60] bg-[#FAF9F6]">
+        <div className="fixed inset-0 z-[60] bg-[#FAF9F6] overflow-y-auto">
           <AdminPage onBack={() => setShowAdminDashboard(false)} />
         </div>
       )}
