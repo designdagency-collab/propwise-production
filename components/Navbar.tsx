@@ -224,10 +224,10 @@ const Navbar: React.FC<NavbarProps> = ({
                   )}
                 </button>
 
-                {/* Dropdown */}
+                {/* Dropdown - centered on mobile, right-aligned on desktop */}
                 {showNotifications && (
                   <div 
-                    className="absolute right-0 top-full mt-2 w-72 sm:w-80 rounded-2xl border shadow-xl overflow-hidden z-50"
+                    className="fixed sm:absolute left-1/2 sm:left-auto sm:right-0 top-16 sm:top-full -translate-x-1/2 sm:translate-x-0 mt-0 sm:mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm rounded-2xl border shadow-xl overflow-hidden z-50"
                     style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
                   >
                     {/* Header */}
