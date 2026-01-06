@@ -509,15 +509,16 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
 
                 {/* Recent Transactions */}
                 <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                  <div className="px-6 py-4 border-b">
+                  <div className="px-6 py-4 border-b flex items-center justify-between">
                     <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500">
                       <i className="fa-solid fa-clock-rotate-left mr-2"></i>
                       Recent Transactions
                     </h3>
+                    <span className="text-xs text-gray-400">{revenue.recentTransactions.length} transactions</span>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50">
+                      <thead className="bg-gray-50 sticky top-0">
                         <tr>
                           <th className="px-6 py-3 text-left font-bold text-gray-500">Date</th>
                           <th className="px-6 py-3 text-left font-bold text-gray-500">Description</th>
@@ -525,28 +526,32 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                           <th className="px-6 py-3 text-right font-bold text-gray-500">Amount</th>
                         </tr>
                       </thead>
-                      <tbody>
-                        {revenue.recentTransactions.map((tx) => (
-                          <tr key={tx.id} className="border-t hover:bg-gray-50">
-                            <td className="px-6 py-4 text-gray-600">
-                              {new Date(tx.created).toLocaleDateString()}
-                            </td>
-                            <td className="px-6 py-4">{tx.description}</td>
-                            <td className="px-6 py-4 text-gray-600">{tx.customerEmail}</td>
-                            <td className="px-6 py-4 text-right font-bold text-emerald-600">
-                              {formatCurrency(tx.amount)}
-                            </td>
-                          </tr>
-                        ))}
-                        {revenue.recentTransactions.length === 0 && (
-                          <tr>
-                            <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
-                              No recent transactions
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
                     </table>
+                    <div className="max-h-[400px] overflow-y-auto">
+                      <table className="w-full text-sm">
+                        <tbody>
+                          {revenue.recentTransactions.slice(0, 10).map((tx) => (
+                            <tr key={tx.id} className="border-t hover:bg-gray-50">
+                              <td className="px-6 py-4 text-gray-600">
+                                {new Date(tx.created).toLocaleDateString()}
+                              </td>
+                              <td className="px-6 py-4">{tx.description}</td>
+                              <td className="px-6 py-4 text-gray-600">{tx.customerEmail}</td>
+                              <td className="px-6 py-4 text-right font-bold text-emerald-600">
+                                {formatCurrency(tx.amount)}
+                              </td>
+                            </tr>
+                          ))}
+                          {revenue.recentTransactions.length === 0 && (
+                            <tr>
+                              <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                                No recent transactions
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </>
