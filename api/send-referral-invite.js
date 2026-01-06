@@ -121,7 +121,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Failed to send email. Please try again.' });
     }
 
-    // Record the invite
+    // Record the invite with Resend email ID for tracking
     await supabase
       .from('referral_invites')
       .insert({
@@ -129,6 +129,7 @@ export default async function handler(req, res) {
         recipient_email: friendEmail.toLowerCase(),
         recipient_name: friendName || null,
         referral_code: profile.referral_code,
+        email_id: emailData?.id || null, // Store Resend email ID for webhook tracking
         status: 'sent'
       });
 

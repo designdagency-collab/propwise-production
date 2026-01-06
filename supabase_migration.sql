@@ -320,11 +320,22 @@ CREATE TABLE IF NOT EXISTS referral_invites (
   recipient_email TEXT NOT NULL,
   recipient_name TEXT,
   referral_code TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'sent' CHECK (status IN ('sent', 'opened', 'signed_up', 'verified')),
+  status TEXT NOT NULL DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'opened', 'clicked', 'signed_up', 'verified')),
+  email_id TEXT, -- Resend email ID for tracking
   created_at TIMESTAMPTZ DEFAULT NOW(),
+  delivered_at TIMESTAMPTZ,
   opened_at TIMESTAMPTZ,
+  clicked_at TIMESTAMPTZ,
   signed_up_at TIMESTAMPTZ
 );
+
+-- Add email_id column if table already exists
+ALTER TABLE referral_invites ADD COLUMN IF NOT EXISTS email_id TEXT;
+ALTER TABLE referral_invites ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ;
+ALTER TABLE referral_invites ADD COLUMN IF NOT EXISTS clicked_at TIMESTAMPTZ;
+
+-- Index for webhook lookups by email_id
+CREATE INDEX IF NOT EXISTS idx_referral_invites_email_id ON referral_invites(email_id);
 
 CREATE INDEX IF NOT EXISTS idx_referral_invites_sender ON referral_invites(sender_id);
 CREATE INDEX IF NOT EXISTS idx_referral_invites_email ON referral_invites(recipient_email);
