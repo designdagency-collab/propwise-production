@@ -33,12 +33,17 @@ interface Metrics {
 
 interface Revenue {
   totalRevenue: number;
-  revenueThisMonth: number;
   revenueToday: number;
+  revenueThisWeek: number;
+  revenueThisMonth: number;
+  revenueThisYear: number;
   mrr: number;
   avgOrderValue: number;
   transactionCount: number;
+  transactionsToday: number;
+  transactionsThisWeek: number;
   transactionsThisMonth: number;
+  transactionsThisYear: number;
   productCounts: {
     starterPack: number;
     bulkPack: number;
@@ -83,6 +88,7 @@ interface AdminPageProps {
 
 export const AdminPage = ({ onBack }: AdminPageProps) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'revenue'>('overview');
+  const [timePeriod, setTimePeriod] = useState<'day' | 'week' | 'month' | 'year'>('month');
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [revenue, setRevenue] = useState<Revenue | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -351,25 +357,51 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
         </div>
 
         {/* Tabs */}
-        <div className="max-w-7xl mx-auto px-6 flex gap-1">
-          {[
-            { id: 'overview', label: 'Overview', icon: 'fa-chart-pie' },
-            { id: 'revenue', label: 'Revenue', icon: 'fa-dollar-sign' },
-            { id: 'users', label: 'Users', icon: 'fa-users' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors ${
-                activeTab === tab.id 
-                  ? 'border-[#C9A961] text-[#C9A961]' 
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <i className={`fa-solid ${tab.icon} mr-2`}></i>
-              {tab.label}
-            </button>
-          ))}
+        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+          <div className="flex gap-1">
+            {[
+              { id: 'overview', label: 'Overview', icon: 'fa-chart-pie' },
+              { id: 'revenue', label: 'Revenue', icon: 'fa-dollar-sign' },
+              { id: 'users', label: 'Users', icon: 'fa-users' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors ${
+                  activeTab === tab.id 
+                    ? 'border-[#C9A961] text-[#C9A961]' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <i className={`fa-solid ${tab.icon} mr-2`}></i>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          
+          {/* Time Period Selector - show for Overview and Revenue */}
+          {(activeTab === 'overview' || activeTab === 'revenue') && (
+            <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+              {[
+                { id: 'day', label: 'Today' },
+                { id: 'week', label: 'Week' },
+                { id: 'month', label: 'Month' },
+                { id: 'year', label: 'Year' }
+              ].map(period => (
+                <button
+                  key={period.id}
+                  onClick={() => setTimePeriod(period.id as any)}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${
+                    timePeriod === period.id 
+                      ? 'bg-white text-[#3A342D] shadow-sm' 
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {period.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </header>
 
@@ -378,25 +410,39 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
         {/* Overview Tab */}
         {activeTab === 'overview' && metrics && (
           <div className="space-y-8">
-            {/* Key Metrics Row */}
+            {/* Key Metrics Row - Dynamic based on time period */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <MetricCard 
-                title="Total Users" 
-                value={metrics.users.total} 
+                title={timePeriod === 'day' ? "New Users Today" : 
+                       timePeriod === 'week' ? "New Users (Week)" : 
+                       timePeriod === 'year' ? "Total Users" : "New Users (Month)"} 
+                value={timePeriod === 'day' ? metrics.users.newToday : 
+                       timePeriod === 'week' ? metrics.users.newWeek : 
+                       timePeriod === 'year' ? metrics.users.total : metrics.users.newMonth} 
                 icon="fa-users" 
                 color="text-blue-600"
                 bgColor="bg-blue-50"
               />
               <MetricCard 
-                title="Total Searches" 
-                value={metrics.searches.total} 
+                title={timePeriod === 'day' ? "Searches Today" : 
+                       timePeriod === 'week' ? "Active (7d)" : 
+                       timePeriod === 'year' ? "Total Searches" : "Active (30d)"} 
+                value={timePeriod === 'day' ? metrics.searches.today : 
+                       timePeriod === 'week' ? metrics.users.active7d : 
+                       timePeriod === 'year' ? metrics.searches.total : metrics.users.active30d} 
                 icon="fa-search" 
                 color="text-purple-600"
                 bgColor="bg-purple-50"
               />
               <MetricCard 
-                title="MRR" 
-                value={formatCurrency(revenue?.mrr || 0)} 
+                title={timePeriod === 'day' ? "Revenue Today" : 
+                       timePeriod === 'week' ? "Revenue (Week)" : 
+                       timePeriod === 'year' ? "Revenue (Year)" : "Revenue (Month)"} 
+                value={formatCurrency(
+                  timePeriod === 'day' ? (revenue?.revenueToday || 0) : 
+                  timePeriod === 'week' ? (revenue?.revenueThisWeek || 0) : 
+                  timePeriod === 'year' ? (revenue?.revenueThisYear || 0) : (revenue?.revenueThisMonth || 0)
+                )} 
                 icon="fa-chart-line" 
                 color="text-emerald-600"
                 bgColor="bg-emerald-50"
@@ -508,7 +554,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
           <div className="space-y-8">
             {revenue ? (
               <>
-                {/* Revenue Cards */}
+                {/* Revenue Cards - Dynamic based on time period */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <MetricCard 
                     title="Total Revenue" 
@@ -519,20 +565,35 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     isString
                   />
                   <MetricCard 
-                    title="This Month" 
-                    value={formatCurrency(revenue.revenueThisMonth)} 
-                    icon="fa-calendar" 
+                    title={timePeriod === 'day' ? "Today's Revenue" : 
+                           timePeriod === 'week' ? "This Week" : 
+                           timePeriod === 'year' ? "This Year" : "This Month"} 
+                    value={formatCurrency(
+                      timePeriod === 'day' ? revenue.revenueToday :
+                      timePeriod === 'week' ? revenue.revenueThisWeek :
+                      timePeriod === 'year' ? revenue.revenueThisYear :
+                      revenue.revenueThisMonth
+                    )} 
+                    icon={timePeriod === 'day' ? "fa-sun" : 
+                          timePeriod === 'week' ? "fa-calendar-week" : 
+                          timePeriod === 'year' ? "fa-calendar" : "fa-calendar-days"} 
                     color="text-blue-600"
                     bgColor="bg-blue-50"
                     isString
                   />
                   <MetricCard 
-                    title="Today" 
-                    value={formatCurrency(revenue.revenueToday)} 
-                    icon="fa-sun" 
+                    title={timePeriod === 'day' ? "Transactions Today" : 
+                           timePeriod === 'week' ? "Transactions (Week)" : 
+                           timePeriod === 'year' ? "Transactions (Year)" : "Transactions (Month)"} 
+                    value={
+                      timePeriod === 'day' ? revenue.transactionsToday :
+                      timePeriod === 'week' ? revenue.transactionsThisWeek :
+                      timePeriod === 'year' ? revenue.transactionsThisYear :
+                      revenue.transactionsThisMonth
+                    } 
+                    icon="fa-receipt" 
                     color="text-amber-600"
                     bgColor="bg-amber-50"
-                    isString
                   />
                   <MetricCard 
                     title="MRR" 
@@ -570,14 +631,22 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     </h3>
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Total</span>
+                        <span className="text-gray-600">All Time</span>
                         <span className="text-xl font-bold">{revenue.transactionCount}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">This Month</span>
-                        <span className="text-xl font-bold text-blue-600">{revenue.transactionsThisMonth}</span>
+                        <span className="text-gray-600">Today</span>
+                        <span className="text-xl font-bold text-amber-600">{revenue.transactionsToday}</span>
                       </div>
                       <div className="flex justify-between items-center">
+                        <span className="text-gray-600">This Week</span>
+                        <span className="text-xl font-bold text-blue-600">{revenue.transactionsThisWeek}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">This Month</span>
+                        <span className="text-xl font-bold text-purple-600">{revenue.transactionsThisMonth}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t">
                         <span className="text-gray-600">Avg Order</span>
                         <span className="text-xl font-bold">{formatCurrency(revenue.avgOrderValue)}</span>
                       </div>

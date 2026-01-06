@@ -64,8 +64,12 @@ export default async function handler(req, res) {
   try {
     const stripe = new Stripe(stripeSecretKey);
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
+    startOfWeek.setHours(0, 0, 0, 0);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
     const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
 
     // Fetch data from Stripe in parallel
@@ -103,13 +107,21 @@ export default async function handler(req, res) {
     // Total revenue (all time from fetched charges)
     const totalRevenue = charges.reduce((sum, charge) => sum + charge.amount, 0) / 100;
     
+    // Revenue today
+    const todayCharges = charges.filter(c => new Date(c.created * 1000) >= startOfDay);
+    const revenueToday = todayCharges.reduce((sum, charge) => sum + charge.amount, 0) / 100;
+    
+    // Revenue this week
+    const weekCharges = charges.filter(c => new Date(c.created * 1000) >= startOfWeek);
+    const revenueThisWeek = weekCharges.reduce((sum, charge) => sum + charge.amount, 0) / 100;
+    
     // Revenue this month
     const monthlyCharges = charges.filter(c => new Date(c.created * 1000) >= startOfMonth);
     const revenueThisMonth = monthlyCharges.reduce((sum, charge) => sum + charge.amount, 0) / 100;
     
-    // Revenue today
-    const todayCharges = charges.filter(c => new Date(c.created * 1000) >= startOfDay);
-    const revenueToday = todayCharges.reduce((sum, charge) => sum + charge.amount, 0) / 100;
+    // Revenue this year
+    const yearCharges = charges.filter(c => new Date(c.created * 1000) >= startOfYear);
+    const revenueThisYear = yearCharges.reduce((sum, charge) => sum + charge.amount, 0) / 100;
     
     // MRR from active subscriptions
     const mrr = subscriptionsResult.data.reduce((sum, sub) => {
@@ -144,9 +156,12 @@ export default async function handler(req, res) {
     // Average order value
     const avgOrderValue = charges.length > 0 ? totalRevenue / charges.length : 0;
     
-    // Transaction count
+    // Transaction counts by period
     const transactionCount = charges.length;
+    const transactionsToday = todayCharges.length;
+    const transactionsThisWeek = weekCharges.length;
     const transactionsThisMonth = monthlyCharges.length;
+    const transactionsThisYear = yearCharges.length;
     
     // Format recent transactions
     const recentTransactions = recentPaymentsResult.data
@@ -167,12 +182,17 @@ export default async function handler(req, res) {
 
     const revenue = {
       totalRevenue,
-      revenueThisMonth,
       revenueToday,
+      revenueThisWeek,
+      revenueThisMonth,
+      revenueThisYear,
       mrr,
       avgOrderValue: Math.round(avgOrderValue * 100) / 100,
       transactionCount,
+      transactionsToday,
+      transactionsThisWeek,
       transactionsThisMonth,
+      transactionsThisYear,
       productCounts,
       availableBalance,
       pendingBalance,
