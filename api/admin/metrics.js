@@ -59,17 +59,23 @@ export default async function handler(req, res) {
   const userEmail = profile?.email?.toLowerCase()?.trim();
   const isAuthorizedAdmin = ADMIN_EMAILS.includes(userEmail);
   
-  console.log('[AdminMetrics] Auth check:', { userEmail, isAuthorizedAdmin });
+  console.log('[AdminMetrics] Auth check:', { userEmail, isAuthorizedAdmin, phone_verified: profile?.phone_verified });
   
   if (profileError || !isAuthorizedAdmin) {
     console.log('[AdminMetrics] Access denied - not authorized admin');
     return res.status(403).json({ error: 'Access denied. Admin only.' });
   }
   
+  // Check phone verification - return special response so UI can prompt verification
   if (!profile?.phone_verified) {
-    console.log('[AdminMetrics] Phone verification required');
-    return res.status(403).json({ error: 'Phone verification required for admin access', requiresPhoneVerification: true });
+    console.log('[AdminMetrics] Phone not verified - sending verification prompt');
+    return res.status(200).json({ 
+      requiresPhoneVerification: true,
+      message: 'Phone verification required for admin access'
+    });
   }
+  
+  console.log('[AdminMetrics] Access granted, fetching metrics...');
 
   try {
     const now = new Date();

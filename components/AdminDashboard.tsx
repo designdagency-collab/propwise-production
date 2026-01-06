@@ -76,15 +76,19 @@ export const AdminDashboard = ({ onClose, onVerifyPhone }: AdminDashboardProps) 
   const fetchMetrics = async () => {
     try {
       const response = await supabaseService.authenticatedFetch('/api/admin/metrics');
+      const data = await response.json();
+      
+      // Check for phone verification requirement (can come as 200 or 403)
+      if (data.requiresPhoneVerification) {
+        setRequiresPhoneVerification(true);
+        setError('Phone verification required');
+        return;
+      }
+      
       if (!response.ok) {
-        const data = await response.json();
-        if (data.requiresPhoneVerification) {
-          setRequiresPhoneVerification(true);
-          throw new Error('Phone verification required');
-        }
         throw new Error(data.error || 'Failed to fetch metrics');
       }
-      const data = await response.json();
+      
       setMetrics(data);
     } catch (err: any) {
       setError(err.message);
