@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabaseService } from '../services/supabaseService';
 
 interface Metrics {
@@ -92,6 +92,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   const [error, setError] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<User>>({});
   const [saving, setSaving] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Fetch all data
   const fetchData = async () => {
@@ -127,12 +129,13 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     }
   };
 
-  // Search users
-  const searchUsers = async (query: string = '') => {
+  // Search users from server (debounced)
+  const searchUsersFromServer = async (query: string = '') => {
+    setIsSearching(true);
     try {
       const url = query 
-        ? `/api/admin/users?search=${encodeURIComponent(query)}&limit=50`
-        : '/api/admin/users?limit=50';
+        ? `/api/admin/users?search=${encodeURIComponent(query)}&limit=100`
+        : '/api/admin/users?limit=100';
       const response = await supabaseService.authenticatedFetch(url);
       if (response.ok) {
         const data = await response.json();
@@ -140,8 +143,40 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       }
     } catch (err: any) {
       console.error('Search error:', err);
+    } finally {
+      setIsSearching(false);
     }
   };
+
+  // Debounced search - triggers server search after 300ms of no typing
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    // Set new timeout for server search
+    searchTimeoutRef.current = setTimeout(() => {
+      if (value.length >= 2 || value.length === 0) {
+        searchUsersFromServer(value);
+      }
+    }, 300);
+  };
+
+  // Client-side filtered users for instant feedback
+  const filteredUsers = useMemo(() => {
+    if (!searchQuery.trim()) return users;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return users.filter(user => 
+      user.email?.toLowerCase().includes(query) ||
+      user.full_name?.toLowerCase().includes(query) ||
+      user.phone?.includes(query) ||
+      user.plan_type?.toLowerCase().includes(query)
+    );
+  }, [users, searchQuery]);
 
   // Update user
   const updateUser = async () => {
@@ -188,8 +223,17 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    searchUsers(searchQuery);
+    searchUsersFromServer(searchQuery);
   };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(amount);
@@ -572,18 +616,36 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
             <div className="flex-1">
               <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
                 <div className="px-6 py-4 border-b">
-                  <form onSubmit={handleSearch} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search by email, name, or phone..."
-                      className="flex-1 px-4 py-2 border rounded-lg text-sm focus:border-[#C9A961] outline-none"
-                    />
-                    <button type="submit" className="px-6 py-2 bg-[#C9A961] text-white rounded-lg text-sm font-bold hover:bg-[#3A342D] transition-colors">
-                      <i className="fa-solid fa-search mr-2"></i>Search
-                    </button>
-                  </form>
+                  <div className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        placeholder="Search by email, name, phone, or plan..."
+                        className="w-full px-4 py-2 pl-10 border rounded-lg text-sm focus:border-[#C9A961] outline-none"
+                      />
+                      <i className={`fa-solid ${isSearching ? 'fa-spinner fa-spin' : 'fa-search'} absolute left-3 top-1/2 -translate-y-1/2 text-gray-400`}></i>
+                    </div>
+                    {searchQuery && (
+                      <button 
+                        onClick={() => { setSearchQuery(''); searchUsersFromServer(''); }}
+                        className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                    <span>
+                      {filteredUsers.length === users.length 
+                        ? `${users.length} users` 
+                        : `${filteredUsers.length} of ${users.length} users`}
+                    </span>
+                    {searchQuery && filteredUsers.length === 0 && (
+                      <span className="text-amber-600">No matches found</span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -598,7 +660,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {users.map((user) => (
+                      {filteredUsers.map((user) => (
                         <tr 
                           key={user.id} 
                           onClick={() => setSelectedUser(user)}
@@ -624,6 +686,13 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                           </td>
                         </tr>
                       ))}
+                      {filteredUsers.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                            {searchQuery ? 'No users match your search' : 'No users found'}
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
