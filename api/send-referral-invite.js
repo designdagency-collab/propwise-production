@@ -300,9 +300,6 @@ function generateEmailHtml(senderName, friendName, referralLink, code) {
               <p style="margin: 0; font-size: 11px; color: #9B9590;">
                 © ${new Date().getFullYear()} upblock.ai · AI-powered property intelligence
               </p>
-              <p style="margin: 8px 0 0 0; font-size: 11px; color: #9B9590;">
-                You received this because ${senderName} thought you'd find it useful.
-              </p>
             </td>
           </tr>
           
@@ -341,7 +338,6 @@ Note: This offer is for new accounts only.
 
 ---
 © ${new Date().getFullYear()} upblock.ai
-You received this because ${senderName} thought you'd find it useful.
 `.trim();
 }
 
