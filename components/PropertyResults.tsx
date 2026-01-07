@@ -359,13 +359,13 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   const afterLow = baseline !== undefined ? baseline + totalUpliftLow : undefined;
   const afterHigh = baseline !== undefined ? baseline + totalUpliftHigh : undefined;
 
-  // Use Google Maps embed with place query (free, no API key needed)
+  // Use Google Maps embed 
   const cleanAddress = (data.address || address || '').trim();
   const encodedAddress = encodeURIComponent(cleanAddress);
   
-  // Google Maps embed URL - using the /maps/embed/v1/place format works without API key
+  // Google Maps embed URL - classic embed format that works without API key
   const mapUrl = cleanAddress 
-    ? `https://www.google.com/maps?q=${encodedAddress}&output=embed&z=17`
+    ? `https://maps.google.com/maps?q=${encodedAddress}&t=k&z=17&ie=UTF8&iwloc=&output=embed`
     : '';
   
   // Google Maps link for opening in new tab
@@ -545,34 +545,41 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         </div>
       </div>
 
-      {/* MAP SECTION - Link to Google Maps */}
+      {/* MAP SECTION - Embedded Google Maps */}
       <div 
         data-map="true" 
         data-pdf-no-break
         className="w-full h-[400px] rounded-[3rem] overflow-hidden shadow-lg border relative" 
         style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
       >
-         {googleMapsLink ? (
-           <a 
-             href={googleMapsLink}
-             target="_blank"
-             rel="noopener noreferrer"
-             className="block w-full h-full relative group"
-           >
-             <div className="absolute inset-0 bg-gradient-to-br from-[#C9A961]/20 to-[#3A342D]/10 flex items-center justify-center">
-               <div className="text-center">
-                 <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#C9A961]/20 flex items-center justify-center group-hover:bg-[#C9A961]/30 transition-colors">
-                   <i className="fa-solid fa-map-location-dot text-4xl text-[#C9A961]"></i>
-                 </div>
-                 <p className="text-lg font-bold text-[#3A342D] mb-1">View on Google Maps</p>
-                 <p className="text-sm text-[#3A342D]/60">{cleanAddress}</p>
-                 <div className="mt-4 px-6 py-2 bg-[#C9A961] text-white rounded-full text-sm font-bold group-hover:bg-[#3A342D] transition-colors inline-flex items-center gap-2">
-                   <i className="fa-solid fa-external-link"></i>
-                   Open Map
-                 </div>
-               </div>
-             </div>
-           </a>
+         {mapUrl ? (
+           <>
+             <div className="absolute inset-0 bg-slate-200/50 animate-pulse z-0"></div>
+             <iframe
+               key={encodedAddress} // Force re-render when address changes
+               title="Property Location Map"
+               width="100%"
+               height="100%"
+               frameBorder="0"
+               scrolling="no"
+               marginHeight={0}
+               marginWidth={0}
+               src={mapUrl}
+               className="relative z-10"
+               loading="lazy"
+               referrerPolicy="no-referrer-when-downgrade"
+             ></iframe>
+             {/* Fallback link overlay */}
+             <a 
+               href={googleMapsLink}
+               target="_blank"
+               rel="noopener noreferrer"
+               className="absolute bottom-4 right-4 z-20 px-4 py-2 bg-white/90 backdrop-blur rounded-full text-sm font-bold text-[#3A342D] hover:bg-white transition-colors shadow-lg flex items-center gap-2"
+             >
+               <i className="fa-solid fa-external-link text-xs"></i>
+               Open in Google Maps
+             </a>
+           </>
          ) : (
            <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
              <div className="text-center text-gray-500">
