@@ -356,7 +356,13 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   const afterHigh = baseline !== undefined ? baseline + totalUpliftHigh : undefined;
 
   // Use Google Maps embed (basic embed doesn't require API key)
-  const mapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(data.address)}&t=k&z=17&ie=UTF8&iwloc=&output=embed`;
+  // Clean the address to remove any problematic characters
+  const cleanAddress = (data.address || address || '')
+    .replace(/[^\w\s,.-]/g, '') // Remove special chars except basic punctuation
+    .trim();
+  const mapUrl = cleanAddress 
+    ? `https://maps.google.com/maps?q=${encodeURIComponent(cleanAddress)}&t=k&z=17&ie=UTF8&iwloc=&output=embed`
+    : '';
 
   // Filter out transport as requested
   const filteredProximity = data.proximity?.filter(a => a.type !== 'transport') || [];
@@ -537,17 +543,26 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
       >
          <div className="absolute inset-0 bg-slate-200/50 animate-pulse group-hover:hidden"></div>
-         <iframe
-          title="Property Location Map"
-          width="100%"
-          height="100%"
-          frameBorder="0"
-          scrolling="no"
-          marginHeight={0}
-          marginWidth={0}
-          src={mapUrl}
-          className="relative z-10 filter contrast-[1.1] grayscale-[0.2]"
-        ></iframe>
+         {mapUrl ? (
+           <iframe
+            title="Property Location Map"
+            width="100%"
+            height="100%"
+            frameBorder="0"
+            scrolling="no"
+            marginHeight={0}
+            marginWidth={0}
+            src={mapUrl}
+            className="relative z-10 filter contrast-[1.1] grayscale-[0.2]"
+          ></iframe>
+         ) : (
+           <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+             <div className="text-center text-gray-500">
+               <i className="fa-solid fa-map-location-dot text-4xl mb-2 text-gray-300"></i>
+               <p className="text-sm">Map unavailable</p>
+             </div>
+           </div>
+         )}
       </div>
 
       {/* COMMUNITY & LIFESTYLE */}
