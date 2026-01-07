@@ -23,6 +23,8 @@ const App: React.FC = () => {
   const [isCached, setIsCached] = useState(false);
   const [isRefreshingData, setIsRefreshingData] = useState(false);
   const [refreshCount, setRefreshCount] = useState(0);
+  const [isConfirmingData, setIsConfirmingData] = useState(false);
+  const [isDataConfirmed, setIsDataConfirmed] = useState(false);
   const MAX_REFRESHES = 3;
   const [error, setError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -1362,11 +1364,41 @@ const App: React.FC = () => {
     }
   };
 
+  // Handle confirming data as correct and saving to cache
+  const handleConfirmData = async () => {
+    if (!address || !results) return;
+    
+    setIsConfirmingData(true);
+    try {
+      console.log('[handleConfirmData] Saving verified data for:', address.substring(0, 50));
+      
+      // Call API to save confirmed data to cache
+      const response = await fetch('/api/confirm-property-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address, data: results })
+      });
+      
+      if (response.ok) {
+        console.log('[handleConfirmData] Data confirmed and saved');
+        setIsDataConfirmed(true);
+        setIsCached(false); // No longer "cached" - it's now verified
+      } else {
+        console.error('[handleConfirmData] Failed to save');
+      }
+    } catch (err: any) {
+      console.error('[handleConfirmData] Error:', err.message || err);
+    } finally {
+      setIsConfirmingData(false);
+    }
+  };
+
   const handleHome = useCallback(() => {
     setAppState(AppState.IDLE);
     setResults(null);
     setIsCached(false);
     setRefreshCount(0); // Reset refresh count for new search
+    setIsDataConfirmed(false); // Reset confirmed state
     setAddress('');
     setIsValidAddress(false); // Reset valid address
     // Close any open pages
@@ -1780,6 +1812,9 @@ const App: React.FC = () => {
               onRefresh={handleRefreshResults}
               refreshCount={refreshCount}
               maxRefreshes={MAX_REFRESHES}
+              isConfirming={isConfirmingData}
+              isConfirmed={isDataConfirmed}
+              onConfirmData={handleConfirmData}
             />
           )}
 

@@ -28,6 +28,9 @@ interface PropertyResultsProps {
   onRefresh?: () => void;
   refreshCount?: number;
   maxRefreshes?: number;
+  isConfirming?: boolean;
+  isConfirmed?: boolean;
+  onConfirmData?: () => void;
 }
 
 const PropertyResults: React.FC<PropertyResultsProps> = ({ 
@@ -40,7 +43,10 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   isRefreshing = false,
   onRefresh,
   refreshCount = 0,
-  maxRefreshes = 3
+  maxRefreshes = 3,
+  isConfirming = false,
+  isConfirmed = false,
+  onConfirmData
 }) => {
   const [selectedStrategies, setSelectedStrategies] = useState<Set<number>>(new Set());
   const [isExporting, setIsExporting] = useState(false);
@@ -506,6 +512,25 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                    <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>
                       {data?.valueSnapshot?.confidenceLevel || 'Low'}
                    </p>
+                   {/* Confirm data button (green tick) */}
+                   {onConfirmData && (
+                      <button
+                         onClick={onConfirmData}
+                         disabled={isConfirming || isConfirmed}
+                         className={`p-2 rounded-full transition-all disabled:opacity-50 ${
+                            isConfirmed 
+                               ? 'bg-emerald-500 cursor-default' 
+                               : 'bg-emerald-100 hover:bg-emerald-200'
+                         }`}
+                         title={isConfirmed ? "Data verified and saved" : "Confirm data is correct"}
+                      >
+                         {isConfirming ? (
+                            <i className="fa-solid fa-spinner animate-spin text-lg text-emerald-600"></i>
+                         ) : (
+                            <i className={`fa-solid fa-check text-lg ${isConfirmed ? 'text-white' : 'text-emerald-600'}`}></i>
+                         )}
+                      </button>
+                   )}
                    {/* Refresh data button (limited to maxRefreshes) */}
                    {refreshCount < maxRefreshes ? (
                       <button
