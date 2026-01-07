@@ -1675,8 +1675,8 @@ const App: React.FC = () => {
           {appState === AppState.IDLE && (
             <div className="max-w-4xl mx-auto text-center py-12 md:py-24 space-y-12">
               <div className="inline-flex items-center gap-2 px-4 py-2 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
-                <i className="fa-solid fa-file-contract"></i>
-                <span>Professional Site Audit & Intelligence</span>
+                <i className="fa-solid fa-bolt"></i>
+                <span>AI-Powered Property Intelligence</span>
               </div>
               <h1 className="text-[3.25rem] sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.05]" style={{ color: 'var(--text-primary)' }}>
                 Overpriced… <br/> <span className="text-[#C9A961] opacity-90">Or A Hidden Bargain?</span>
