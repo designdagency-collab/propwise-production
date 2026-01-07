@@ -173,7 +173,7 @@ export default async function handler(req, res) {
     };
 
     console.log('[AdminBilling] Estimated costs:', { 
-      currentMonth: currentMonthCost, 
+      currentMonth: currentMonthEstimate, 
       searches: currentMonthCount,
       user: profile.email 
     });
