@@ -340,13 +340,47 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'AI service not configured' });
   }
 
-  console.log('[PropertyInsights] Fetching insights for:', address.substring(0, 40) + '...');
+  console.log('[PropertyInsights] Fetching insights for:', address.substring(0, 40) + '...', forceRefresh ? '(DATA CORRECTION MODE)' : '');
 
   try {
     const ai = new GoogleGenAI({ apiKey });
 
+    // Data correction instructions when user triggers refresh
+    const dataCorrectionInstructions = forceRefresh ? `
+🔄 DATA CORRECTION MODE - USER REQUESTED REFRESH
+The user has indicated the previous data may be INCORRECT. Pay EXTRA attention to:
+
+1. PROPERTY TYPE VERIFICATION (Land vs House+Land):
+   - Is this VACANT LAND ONLY or does it have a DWELLING?
+   - Check satellite imagery for existing structures
+   - If listing says "land" or shows no dwelling, set propertyType to "Vacant Land"
+   - If there's a house on the land, include BOTH land AND dwelling value
+
+2. ADDRESS INTERPRETATION (Unit/Lot Numbers):
+   - "8-26 Fortune St" could mean: Unit 8 at 26 Fortune St, OR property spanning 8-26 Fortune St
+   - "26/8 Smith Rd" means Unit 26 at 8 Smith Rd
+   - "8/26 Smith Rd" means Unit 8 at 26 Smith Rd
+   - VERIFY the correct interpretation from actual listings
+   - If uncertain, search BOTH interpretations and use the one with actual listing data
+
+3. BEDROOM/BATHROOM/GARAGE VERIFICATION:
+   - DO NOT assume or estimate - ONLY use data from ACTUAL LISTINGS
+   - Cross-reference realestate.com.au AND domain.com.au
+   - If listings show different counts, use the most recent/detailed listing
+   - If no listing data available, set beds/baths/cars to 0 and confidenceLevel to "Low"
+
+4. LAND SIZE VERIFICATION:
+   - Get land size from council records or actual listings
+   - For units/apartments, land size should be the LOT size, not building footprint
+   - If land-only, ensure estimate reflects LAND value only, not house+land
+
+⚠️ ACCURACY IS CRITICAL - Previous data was flagged as potentially incorrect.
+
+` : '';
+
     const prompt = `You are a professional Australian property planning analyst and prop-tech engineer for upblock.ai.
 Your task is to generate a structured Property DNA report for: "${address}".
+${dataCorrectionInstructions}
 
 ⚠️ MANDATORY FIRST STEP - ZONING & PROPERTY TYPE VERIFICATION:
 Before generating ANY data, you MUST search and verify:
