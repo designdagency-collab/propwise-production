@@ -157,7 +157,7 @@ export default async function handler(req, res) {
       to: friendEmail,
       subject: `${senderName} invited you to try upblock.ai`,
       html: generateEmailHtml(senderName, friendName, referralLink, profile.referral_code),
-      text: generateEmailText(senderName, friendName, referralLink)
+      text: generateEmailText(senderName, friendName, referralLink, profile.referral_code)
     });
 
     if (emailError) {
@@ -193,6 +193,7 @@ export default async function handler(req, res) {
 // Generate HTML email
 function generateEmailHtml(senderName, friendName, referralLink, code) {
   const greeting = friendName ? `Hi ${friendName}` : 'Hi there';
+  const ctaLink = `https://upblock.ai/?autofocus=1&ref=${code}&utm_source=invite&utm_medium=email&utm_campaign=guru_mode`;
   
   return `
 <!DOCTYPE html>
@@ -219,48 +220,69 @@ function generateEmailHtml(senderName, friendName, referralLink, code) {
           <tr>
             <td style="padding: 40px;">
               <h1 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; color: #3A342D;">
-                You're invited! 🎁
+                Real Estate Guru Mode: On 🧠
               </h1>
               <p style="margin: 0 0 24px 0; font-size: 15px; color: #6B6560; line-height: 1.5;">
-                ${greeting}, <strong>${senderName}</strong> thinks you'd love upblock.ai.
+                ${greeting}, <strong>${senderName}</strong> thinks you'll love upblock.ai.
+              </p>
+              
+              <!-- Subhead -->
+              <p style="margin: 0 0 20px 0; font-size: 14px; color: #3A342D; line-height: 1.5;">
+                Instant property snapshot: value range + nearby solds + upside scenarios <span style="color: #9B9590;">(AI-assisted)</span>.
               </p>
               
               <!-- Value prop -->
               <div style="background-color: #FAF9F6; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
-                <p style="margin: 0 0 16px 0; font-size: 14px; color: #3A342D; font-weight: 600;">
-                  What you get:
-                </p>
                 <table cellpadding="0" cellspacing="0" style="width: 100%;">
                   <tr>
                     <td style="padding: 8px 0; font-size: 14px; color: #3A342D;">
-                      <span style="color: #C9A961; font-weight: bold;">✓</span> &nbsp;3 free AI property audits
+                      <span style="color: #C9A961; font-weight: bold;">✓</span> &nbsp;<strong>Value range</strong> — quick reality check
                     </td>
                   </tr>
                   <tr>
                     <td style="padding: 8px 0; font-size: 14px; color: #3A342D;">
-                      <span style="color: #C9A961; font-weight: bold;">✓</span> &nbsp;Instant value estimates
+                      <span style="color: #C9A961; font-weight: bold;">✓</span> &nbsp;<strong>Nearby solds</strong> — real sale prices
                     </td>
                   </tr>
                   <tr>
                     <td style="padding: 8px 0; font-size: 14px; color: #3A342D;">
-                      <span style="color: #C9A961; font-weight: bold;">✓</span> &nbsp;Renovation uplift scenarios
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; font-size: 14px; color: #3A342D;">
-                      <span style="color: #C9A961; font-weight: bold;">✓</span> &nbsp;Local comparable sales
+                      <span style="color: #C9A961; font-weight: bold;">✓</span> &nbsp;<strong>Upside scenarios</strong> — reno potential
                     </td>
                   </tr>
                 </table>
               </div>
               
-              <!-- CTA Button -->
+              <!-- Fake Input Bar CTA -->
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center">
-                    <a href="${referralLink}" style="display: inline-block; background-color: #C9A961; color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 16px 40px; border-radius: 10px; text-transform: uppercase; letter-spacing: 1px;">
-                      Get Started Free →
+                    <a href="${ctaLink}" style="display: block; text-decoration: none; max-width: 420px; width: 100%;">
+                      <table cellpadding="0" cellspacing="0" style="width: 100%; background-color: #ffffff; border: 1px solid rgba(0,0,0,0.18); border-radius: 14px; box-shadow: 0 6px 18px rgba(0,0,0,0.06);">
+                        <tr>
+                          <td style="padding: 14px 16px;">
+                            <table cellpadding="0" cellspacing="0" style="width: 100%;">
+                              <tr>
+                                <td style="font-size: 15px; color: #8a8a8a; vertical-align: middle;">
+                                  Enter an address…
+                                </td>
+                                <td style="text-align: right; vertical-align: middle; width: 100px;">
+                                  <span style="display: inline-block; background-color: #C9A961; color: #111111; font-size: 14px; font-weight: 700; padding: 10px 18px; border-radius: 10px;">
+                                    Search →
+                                  </span>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
                     </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top: 12px;">
+                    <p style="margin: 0; font-size: 12px; color: #9B9590;">
+                      Takes ~60 seconds
+                    </p>
                   </td>
                 </tr>
               </table>
@@ -296,21 +318,26 @@ function generateEmailHtml(senderName, friendName, referralLink, code) {
 }
 
 // Generate plain text version
-function generateEmailText(senderName, friendName, referralLink) {
+function generateEmailText(senderName, friendName, referralLink, code) {
   const greeting = friendName ? `Hi ${friendName}` : 'Hi there';
+  const ctaLink = `https://upblock.ai/?autofocus=1&ref=${code}&utm_source=invite&utm_medium=email&utm_campaign=guru_mode`;
   
   return `
-${greeting},
+${greeting}, ${senderName} thinks you'll love upblock.ai.
 
-${senderName} invited you to try upblock.ai - AI-powered property intelligence for Australian real estate.
+🧠 Real Estate Guru Mode: On
 
-What you get:
-• 3 free AI property audits
-• Instant value estimates
-• Renovation uplift scenarios
-• Local comparable sales
+Instant property snapshot: value range + nearby solds + upside scenarios (AI-assisted).
 
-Get started free: ${referralLink}
+✓ Value range — quick reality check
+✓ Nearby solds — real sale prices
+✓ Upside scenarios — reno potential
+
+👉 Enter an address and search: ${ctaLink}
+
+Takes ~60 seconds.
+
+Your referral code: ${code}
 
 Note: This offer is for new accounts only.
 
