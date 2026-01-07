@@ -355,13 +355,18 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   const afterLow = baseline !== undefined ? baseline + totalUpliftLow : undefined;
   const afterHigh = baseline !== undefined ? baseline + totalUpliftHigh : undefined;
 
-  // Use Google Maps embed (basic embed doesn't require API key)
-  // Clean the address to remove any problematic characters
-  const cleanAddress = (data.address || address || '')
-    .replace(/[^\w\s,.-]/g, '') // Remove special chars except basic punctuation
-    .trim();
+  // Use Google Maps embed with place query (free, no API key needed)
+  const cleanAddress = (data.address || address || '').trim();
+  const encodedAddress = encodeURIComponent(cleanAddress);
+  
+  // Google Maps embed URL - using the /maps/embed/v1/place format works without API key
   const mapUrl = cleanAddress 
-    ? `https://maps.google.com/maps?q=${encodeURIComponent(cleanAddress)}&t=k&z=17&ie=UTF8&iwloc=&output=embed`
+    ? `https://www.google.com/maps?q=${encodedAddress}&output=embed&z=17`
+    : '';
+  
+  // Google Maps link for opening in new tab
+  const googleMapsLink = cleanAddress
+    ? `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`
     : '';
 
   // Filter out transport as requested
@@ -523,26 +528,34 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         </div>
       </div>
 
-      {/* GOOGLE MAP INTEGRATION - Replaced with static image in PDF export */}
+      {/* MAP SECTION - Link to Google Maps */}
       <div 
         data-map="true" 
         data-pdf-no-break
-        className="w-full h-[400px] rounded-[3rem] overflow-hidden shadow-lg border relative group" 
+        className="w-full h-[400px] rounded-[3rem] overflow-hidden shadow-lg border relative" 
         style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
       >
-         <div className="absolute inset-0 bg-slate-200/50 animate-pulse group-hover:hidden"></div>
-         {mapUrl ? (
-           <iframe
-            title="Property Location Map"
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            scrolling="no"
-            marginHeight={0}
-            marginWidth={0}
-            src={mapUrl}
-            className="relative z-10 filter contrast-[1.1] grayscale-[0.2]"
-          ></iframe>
+         {googleMapsLink ? (
+           <a 
+             href={googleMapsLink}
+             target="_blank"
+             rel="noopener noreferrer"
+             className="block w-full h-full relative group"
+           >
+             <div className="absolute inset-0 bg-gradient-to-br from-[#C9A961]/20 to-[#3A342D]/10 flex items-center justify-center">
+               <div className="text-center">
+                 <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#C9A961]/20 flex items-center justify-center group-hover:bg-[#C9A961]/30 transition-colors">
+                   <i className="fa-solid fa-map-location-dot text-4xl text-[#C9A961]"></i>
+                 </div>
+                 <p className="text-lg font-bold text-[#3A342D] mb-1">View on Google Maps</p>
+                 <p className="text-sm text-[#3A342D]/60">{cleanAddress}</p>
+                 <div className="mt-4 px-6 py-2 bg-[#C9A961] text-white rounded-full text-sm font-bold group-hover:bg-[#3A342D] transition-colors inline-flex items-center gap-2">
+                   <i className="fa-solid fa-external-link"></i>
+                   Open Map
+                 </div>
+               </div>
+             </div>
+           </a>
          ) : (
            <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
              <div className="text-center text-gray-500">
