@@ -26,6 +26,8 @@ interface PropertyResultsProps {
   isCached?: boolean;
   isRefreshing?: boolean;
   onRefresh?: () => void;
+  refreshCount?: number;
+  maxRefreshes?: number;
 }
 
 const PropertyResults: React.FC<PropertyResultsProps> = ({ 
@@ -36,7 +38,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   onHome,
   isCached = false,
   isRefreshing = false,
-  onRefresh
+  onRefresh,
+  refreshCount = 0,
+  maxRefreshes = 3
 }) => {
   const [selectedStrategies, setSelectedStrategies] = useState<Set<number>>(new Set());
   const [isExporting, setIsExporting] = useState(false);
@@ -502,19 +506,32 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                    <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>
                       {data?.valueSnapshot?.confidenceLevel || 'Low'}
                    </p>
-                   {/* Refresh data button */}
-                   <button
-                      onClick={onRefresh}
-                      disabled={isRefreshing || !onRefresh}
-                      className="p-2 rounded-full bg-amber-100 hover:bg-amber-200 transition-all disabled:opacity-50"
-                      title="Refresh data"
-                   >
-                      {isRefreshing ? (
-                         <i className="fa-solid fa-spinner animate-spin text-lg text-amber-600"></i>
-                      ) : (
-                         <i className="fa-solid fa-sync text-lg text-amber-600"></i>
-                      )}
-                   </button>
+                   {/* Refresh data button (limited to maxRefreshes) */}
+                   {refreshCount < maxRefreshes ? (
+                      <button
+                         onClick={onRefresh}
+                         disabled={isRefreshing || !onRefresh}
+                         className="p-2 rounded-full bg-amber-100 hover:bg-amber-200 transition-all disabled:opacity-50 relative group"
+                         title={`Refresh data (${maxRefreshes - refreshCount} remaining)`}
+                      >
+                         {isRefreshing ? (
+                            <i className="fa-solid fa-spinner animate-spin text-lg text-amber-600"></i>
+                         ) : (
+                            <i className="fa-solid fa-sync text-lg text-amber-600"></i>
+                         )}
+                         {/* Remaining count badge */}
+                         <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                            {maxRefreshes - refreshCount}
+                         </span>
+                      </button>
+                   ) : (
+                      <span 
+                         className="p-2 rounded-full bg-gray-100 text-gray-400 cursor-not-allowed"
+                         title="Refresh limit reached"
+                      >
+                         <i className="fa-solid fa-sync text-lg"></i>
+                      </span>
+                   )}
                 </div>
              </div>
           </div>

@@ -22,6 +22,8 @@ const App: React.FC = () => {
   const [results, setResults] = useState<PropertyData | null>(null);
   const [isCached, setIsCached] = useState(false);
   const [isRefreshingData, setIsRefreshingData] = useState(false);
+  const [refreshCount, setRefreshCount] = useState(0);
+  const MAX_REFRESHES = 3;
   const [error, setError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   
@@ -1328,17 +1330,24 @@ const App: React.FC = () => {
     }
   };
 
-  // Handle refreshing cached results without leaving the page
+  // Handle refreshing cached results without leaving the page (limited to 3 per property)
   const handleRefreshResults = async () => {
     if (!address || !results) return;
     
+    // Check refresh limit
+    if (refreshCount >= MAX_REFRESHES) {
+      console.log('[handleRefreshResults] Refresh limit reached');
+      return;
+    }
+    
     setIsRefreshingData(true);
     try {
-      console.log('[handleRefreshResults] Force refreshing data for:', address.substring(0, 50));
+      console.log('[handleRefreshResults] Force refreshing data for:', address.substring(0, 50), `(${refreshCount + 1}/${MAX_REFRESHES})`);
       const { data, cached } = await geminiService.fetchPropertyInsights(address, true);
       console.log('[handleRefreshResults] Received fresh data');
       setResults(data);
       setIsCached(cached);
+      setRefreshCount(prev => prev + 1); // Increment refresh count
       // Update sessionStorage with fresh data
       try {
         sessionStorage.setItem('upblock_last_results', JSON.stringify(data));
@@ -1357,6 +1366,7 @@ const App: React.FC = () => {
     setAppState(AppState.IDLE);
     setResults(null);
     setIsCached(false);
+    setRefreshCount(0); // Reset refresh count for new search
     setAddress('');
     setIsValidAddress(false); // Reset valid address
     // Close any open pages
@@ -1768,6 +1778,8 @@ const App: React.FC = () => {
               isCached={isCached}
               isRefreshing={isRefreshingData}
               onRefresh={handleRefreshResults}
+              refreshCount={refreshCount}
+              maxRefreshes={MAX_REFRESHES}
             />
           )}
 
