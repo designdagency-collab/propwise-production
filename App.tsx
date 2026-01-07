@@ -1682,7 +1682,7 @@ const App: React.FC = () => {
                 Overpriced… <br/> <span className="text-[#C9A961] opacity-90">Or A Hidden Bargain?</span>
               </h1>
               <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium" style={{ color: 'var(--text-muted)' }}>
-                A detailed AI-assisted property report that explains zoning, planning context, comparable sales, and potential value-uplift scenarios in <strong className="font-bold">Australia</strong>.
+                Zoning, comparable sales, and value-uplift potential for any <strong className="font-bold">Australian</strong> address — in under 60 seconds.
               </p>
               
               <div className="max-w-2xl mx-auto" ref={autocompleteRef}>
