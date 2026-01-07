@@ -72,21 +72,47 @@ export default async function handler(req, res) {
     const startOfYear = new Date(now.getFullYear(), 0, 1);
     const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
 
-    // Fetch data from Stripe in parallel
+    // Helper function to fetch ALL charges with pagination
+    async function fetchAllCharges() {
+      const allCharges = [];
+      let hasMore = true;
+      let startingAfter = undefined;
+      
+      while (hasMore) {
+        const params = { 
+          limit: 100, 
+          status: 'succeeded'
+        };
+        if (startingAfter) {
+          params.starting_after = startingAfter;
+        }
+        
+        const result = await stripe.charges.list(params);
+        allCharges.push(...result.data);
+        
+        hasMore = result.has_more;
+        if (result.data.length > 0) {
+          startingAfter = result.data[result.data.length - 1].id;
+        }
+        
+        // Safety limit: stop at 1000 charges to prevent infinite loops
+        if (allCharges.length >= 1000) {
+          console.log('[AdminRevenue] Hit 1000 charge limit, stopping pagination');
+          break;
+        }
+      }
+      
+      return allCharges;
+    }
+
+    // Fetch data from Stripe in parallel (except charges which need pagination)
     const [
       balanceResult,
-      chargesResult,
       subscriptionsResult,
       recentPaymentsResult
     ] = await Promise.all([
       // Current balance
       stripe.balance.retrieve(),
-      
-      // All successful charges (last 100)
-      stripe.charges.list({ 
-        limit: 100, 
-        status: 'succeeded'
-      }),
       
       // Active subscriptions
       stripe.subscriptions.list({ 
@@ -101,8 +127,9 @@ export default async function handler(req, res) {
       })
     ]);
 
-    // Calculate revenue metrics
-    const charges = chargesResult.data;
+    // Fetch ALL charges with pagination
+    const charges = await fetchAllCharges();
+    console.log(`[AdminRevenue] Fetched ${charges.length} total charges`);
     
     // Total revenue (all time from fetched charges)
     const totalRevenue = charges.reduce((sum, charge) => sum + charge.amount, 0) / 100;
