@@ -9,6 +9,16 @@ const resendApiKey = process.env.RESEND_API_KEY;
 // Rate limit: max 10 invites per user per day
 const MAX_DAILY_INVITES = 10;
 
+// Generate a short, memorable referral code
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No I, O, 0, 1 for clarity
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
 export default async function handler(req, res) {
   // CORS
   const allowedOrigins = ['https://upblock.ai', 'http://localhost:5173', 'http://localhost:3000'];
@@ -67,8 +77,42 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Failed to fetch profile' });
     }
 
+    // Auto-generate referral code if user doesn't have one
     if (!profile.referral_code) {
-      return res.status(400).json({ error: 'No referral code found. Please generate one first.' });
+      let code = generateCode();
+      let attempts = 0;
+      const maxAttempts = 10;
+
+      // Ensure code is unique
+      while (attempts < maxAttempts) {
+        const { data: existing } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('referral_code', code)
+          .maybeSingle();
+
+        if (!existing) break;
+        code = generateCode();
+        attempts++;
+      }
+
+      if (attempts >= maxAttempts) {
+        return res.status(500).json({ error: 'Failed to generate unique referral code' });
+      }
+
+      // Save the code to user's profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ referral_code: code })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error('[ReferralInvite] Failed to save referral code:', updateError);
+        return res.status(500).json({ error: 'Failed to generate referral code' });
+      }
+
+      profile.referral_code = code;
+      console.log('[ReferralInvite] Auto-generated referral code for user:', user.id, code);
     }
 
     // Check daily invite limit (simple rate limiting)
