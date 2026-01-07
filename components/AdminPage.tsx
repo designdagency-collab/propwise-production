@@ -833,10 +833,10 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
         {/* Users Tab */}
         {activeTab === 'users' && (
           <div className="flex gap-6">
-            {/* User List or Invite Panel */}
+            {/* User List - Always visible */}
             <div className="flex-1">
               <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                {/* Search Header - Always visible */}
+                {/* Search Header */}
                 <div className="px-6 py-4 border-b">
                   <div className="flex gap-2">
                     <div className="flex-1 relative">
@@ -851,7 +851,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     </div>
                     {searchQuery && (
                       <button 
-                        onClick={() => { setSearchQuery(''); searchUsersFromServer(''); setSelectedUser(null); }}
+                        onClick={() => { setSearchQuery(''); searchUsersFromServer(''); }}
                         className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
                       >
                         Clear
@@ -859,193 +859,108 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     )}
                   </div>
                   <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
-                    <span>{users.length} users total</span>
+                    <span>
+                      {filteredUsers.length === users.length 
+                        ? `${users.length} users` 
+                        : `${filteredUsers.length} of ${users.length} users`}
+                    </span>
                     {searchQuery && filteredUsers.length === 0 && (
                       <span className="text-[#C9A961]">No matches found</span>
                     )}
                   </div>
                 </div>
 
-                {/* Conditional Content: Invite Panel (idle) vs User Table (searching) */}
-                {!searchQuery.trim() ? (
-                  /* IDLE STATE - Show Invite Panel */
-                  <div className="p-6 space-y-6">
-                    {/* Invite Stats */}
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="p-4 rounded-xl bg-[#C9A961]/10 text-center">
-                        <p className="text-2xl font-black text-[#3A342D]">{metrics?.invites?.sent || 0}</p>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Invites Sent</p>
-                      </div>
-                      <div className="p-4 rounded-xl bg-[#5D8A66]/10 text-center">
-                        <p className="text-2xl font-black text-[#5D8A66]">{metrics?.invites?.converted || 0}</p>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Converted</p>
-                      </div>
-                      <div className="p-4 rounded-xl bg-[#8B7355]/10 text-center">
-                        <p className="text-2xl font-black text-[#8B7355]">{metrics?.invites?.conversionRate || 0}%</p>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Conversion Rate</p>
-                      </div>
-                    </div>
-
-                    {/* Email Invite Form */}
-                    <div className="p-6 rounded-xl border bg-gray-50">
-                      <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
-                        <i className="fa-solid fa-paper-plane mr-2 text-[#C9A961]"></i>
-                        Send Invite
-                      </h3>
-                      <form onSubmit={handleAdminInvite} className="space-y-3">
-                        <div>
-                          <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5 text-gray-500">
-                            Email *
-                          </label>
-                          <input
-                            type="email"
-                            value={inviteEmail}
-                            onChange={(e) => setInviteEmail(e.target.value)}
-                            placeholder="friend@example.com"
-                            required
-                            disabled={sendingInvite}
-                            className="w-full px-4 py-3 rounded-xl border text-sm outline-none focus:border-[#C9A961] transition-colors disabled:opacity-50"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-bold uppercase tracking-widest block mb-1.5 text-gray-500">
-                            Name <span className="font-normal opacity-70">(optional)</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={inviteName}
-                            onChange={(e) => setInviteName(e.target.value)}
-                            placeholder="John"
-                            disabled={sendingInvite}
-                            className="w-full px-4 py-3 rounded-xl border text-sm outline-none focus:border-[#C9A961] transition-colors disabled:opacity-50"
-                          />
-                        </div>
-
-                        {/* Send Result Message */}
-                        {inviteResult && (
-                          <div className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
-                            inviteResult.success 
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-red-50 text-red-700 border border-red-200'
-                          }`}>
-                            <i className={`fa-solid ${inviteResult.success ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
-                            {inviteResult.message}
-                          </div>
-                        )}
+                {/* User Table - Always visible */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">User</th>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">Plan</th>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">Credits</th>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">Searches</th>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">Referrals</th>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">LTV</th>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">Status</th>
+                        <th className="px-4 py-3 text-left font-bold text-gray-500">Joined</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredUsers.map((user) => {
+                        const estimatedLTV = calculateLTV(user);
                         
-                        <button
-                          type="submit"
-                          disabled={sendingInvite || !inviteEmail.trim()}
-                          className="w-full py-3.5 rounded-xl bg-[#C9A961] text-white text-sm font-bold hover:bg-[#3A342D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {sendingInvite ? (
-                            <><i className="fa-solid fa-spinner fa-spin mr-2"></i>Sending...</>
-                          ) : (
-                            <><i className="fa-solid fa-paper-plane mr-2"></i>Send Invite</>
-                          )}
-                        </button>
-                      </form>
-                    </div>
-
-                    {/* Quick tip */}
-                    <p className="text-[10px] text-center text-gray-400">
-                      <i className="fa-solid fa-lightbulb mr-1"></i>
-                      Start typing in the search bar to find and manage users
-                    </p>
-                  </div>
-                ) : (
-                  /* SEARCH STATE - Show User Table */
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-3 text-left font-bold text-gray-500">User</th>
-                          <th className="px-4 py-3 text-left font-bold text-gray-500">Plan</th>
-                          <th className="px-4 py-3 text-left font-bold text-gray-500">Credits</th>
-                          <th className="px-4 py-3 text-left font-bold text-gray-500">Searches</th>
-                          <th className="px-4 py-3 text-left font-bold text-gray-500">Referrals</th>
-                          <th className="px-4 py-3 text-left font-bold text-gray-500">LTV</th>
-                          <th className="px-4 py-3 text-left font-bold text-gray-500">Status</th>
-                          <th className="px-4 py-3 text-left font-bold text-gray-500">Joined</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredUsers.map((user) => {
-                          const estimatedLTV = calculateLTV(user);
-                          
-                          return (
-                            <tr 
-                              key={user.id} 
-                              onClick={() => setSelectedUser(user)}
-                              className={`border-t cursor-pointer hover:bg-gray-50 transition-colors ${selectedUser?.id === user.id ? 'bg-[#C9A961]/10' : ''}`}
-                            >
-                              <td className="px-4 py-3">
-                                <div className="font-medium text-[#3A342D]">{user.full_name || 'No name'}</div>
-                                <div className="text-xs text-gray-500">{user.email}</div>
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                                  user.plan_type === 'PRO' ? 'bg-[#3A342D]/10 text-[#3A342D]' :
-                                  user.plan_type === 'UNLIMITED_PRO' ? 'bg-[#3A342D]/10 text-[#3A342D]' :
-                                  user.plan_type === 'STARTER_PACK' ? 'bg-[#C9A961]/20 text-[#8B7355]' :
-                                  'bg-gray-100 text-gray-700'
-                                }`}>
-                                  {user.plan_type === 'FREE_TRIAL' ? 'Trial' : 
-                                   user.plan_type === 'STARTER_PACK' ? 'Starter' :
-                                   user.plan_type === 'UNLIMITED_PRO' ? 'Unlimited' :
-                                   user.plan_type}
+                        return (
+                          <tr 
+                            key={user.id} 
+                            onClick={() => setSelectedUser(user)}
+                            className={`border-t cursor-pointer hover:bg-gray-50 transition-colors ${selectedUser?.id === user.id ? 'bg-[#C9A961]/10' : ''}`}
+                          >
+                            <td className="px-4 py-3">
+                              <div className="font-medium text-[#3A342D]">{user.full_name || 'No name'}</div>
+                              <div className="text-xs text-gray-500">{user.email}</div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                user.plan_type === 'PRO' ? 'bg-[#3A342D]/10 text-[#3A342D]' :
+                                user.plan_type === 'UNLIMITED_PRO' ? 'bg-[#3A342D]/10 text-[#3A342D]' :
+                                user.plan_type === 'STARTER_PACK' ? 'bg-[#C9A961]/20 text-[#8B7355]' :
+                                'bg-gray-100 text-gray-700'
+                              }`}>
+                                {user.plan_type === 'FREE_TRIAL' ? 'Trial' : 
+                                 user.plan_type === 'STARTER_PACK' ? 'Starter' :
+                                 user.plan_type === 'UNLIMITED_PRO' ? 'Unlimited' :
+                                 user.plan_type}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 font-medium">{user.credit_topups}</td>
+                            <td className="px-4 py-3">{user.search_count}</td>
+                            <td className="px-4 py-3">
+                              {user.referral_count > 0 ? (
+                                <span className="text-[#5D8A66] font-medium">{user.referral_count}</span>
+                              ) : (
+                                <span className="text-gray-400">0</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              {estimatedLTV > 0 ? (
+                                <span className="text-[#5D8A66] font-medium">{formatCurrency(estimatedLTV)}</span>
+                              ) : (
+                                <span className="text-gray-400">$0</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-1">
+                                {user.phone_verified ? (
+                                  <span className="w-2 h-2 rounded-full bg-[#5D8A66]" title="Phone verified"></span>
+                                ) : (
+                                  <span className="w-2 h-2 rounded-full bg-gray-300" title="Not verified"></span>
+                                )}
+                                <span className="text-xs text-gray-500">
+                                  {user.phone_verified ? 'Verified' : 'Unverified'}
                                 </span>
-                              </td>
-                              <td className="px-4 py-3 font-medium">{user.credit_topups}</td>
-                              <td className="px-4 py-3">{user.search_count}</td>
-                              <td className="px-4 py-3">
-                                {user.referral_count > 0 ? (
-                                  <span className="text-[#5D8A66] font-medium">{user.referral_count}</span>
-                                ) : (
-                                  <span className="text-gray-400">0</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-3">
-                                {estimatedLTV > 0 ? (
-                                  <span className="text-[#5D8A66] font-medium">{formatCurrency(estimatedLTV)}</span>
-                                ) : (
-                                  <span className="text-gray-400">$0</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-1">
-                                  {user.phone_verified ? (
-                                    <span className="w-2 h-2 rounded-full bg-[#5D8A66]" title="Phone verified"></span>
-                                  ) : (
-                                    <span className="w-2 h-2 rounded-full bg-gray-300" title="Not verified"></span>
-                                  )}
-                                  <span className="text-xs text-gray-500">
-                                    {user.phone_verified ? 'Verified' : 'Unverified'}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-4 py-3 text-gray-500 text-sm">
-                                {new Date(user.created_at).toLocaleDateString()}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                        {filteredUsers.length === 0 && (
-                          <tr>
-                            <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
-                              No users match your search
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-gray-500 text-sm">
+                              {new Date(user.created_at).toLocaleDateString()}
                             </td>
                           </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                        );
+                      })}
+                      {filteredUsers.length === 0 && (
+                        <tr>
+                          <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                            {searchQuery ? 'No users match your search' : 'No users found'}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
-            {/* User Edit Panel */}
-            {selectedUser && (
+            {/* Right Side Panel - Invite Panel (default) or Edit User Panel (when user selected) */}
+            {selectedUser ? (
               <div className="w-80 bg-white rounded-2xl shadow-sm border p-6 h-fit sticky top-32">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="font-bold text-[#3A342D]">Edit User</h3>
@@ -1131,6 +1046,89 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     <p><span className="font-medium">Referrals:</span> {selectedUser.referral_count || 0}</p>
                     <p><span className="font-medium">Referral Code:</span> {selectedUser.referral_code || 'None'}</p>
                   </div>
+                </div>
+              </div>
+            ) : (
+              /* Invite Panel - shown when no user is selected */
+              <div className="w-80 bg-white rounded-2xl shadow-sm border p-6 h-fit sticky top-32">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-full bg-[#C9A961] flex items-center justify-center">
+                    <i className="fa-solid fa-paper-plane text-white"></i>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[#3A342D]">Send Invite</h3>
+                    <p className="text-xs text-gray-500">Invite new users</p>
+                  </div>
+                </div>
+                
+                {/* Invite Stats */}
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  <div className="p-3 rounded-xl bg-[#C9A961]/10 text-center">
+                    <p className="text-lg font-black text-[#3A342D]">{metrics?.invites?.sent || 0}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-gray-500">Sent</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-[#5D8A66]/10 text-center">
+                    <p className="text-lg font-black text-[#5D8A66]">{metrics?.invites?.converted || 0}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-gray-500">Converted</p>
+                  </div>
+                </div>
+
+                {/* Email Invite Form */}
+                <form onSubmit={handleAdminInvite} className="space-y-3">
+                  <div>
+                    <label className="text-xs font-bold uppercase text-gray-500 block mb-1">Email *</label>
+                    <input
+                      type="email"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      placeholder="friend@example.com"
+                      required
+                      disabled={sendingInvite}
+                      className="w-full px-3 py-2 border rounded-lg text-sm focus:border-[#C9A961] outline-none disabled:opacity-50"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase text-gray-500 block mb-1">Name</label>
+                    <input
+                      type="text"
+                      value={inviteName}
+                      onChange={(e) => setInviteName(e.target.value)}
+                      placeholder="John (optional)"
+                      disabled={sendingInvite}
+                      className="w-full px-3 py-2 border rounded-lg text-sm focus:border-[#C9A961] outline-none disabled:opacity-50"
+                    />
+                  </div>
+
+                  {/* Send Result Message */}
+                  {inviteResult && (
+                    <div className={`p-2.5 rounded-lg text-xs font-semibold flex items-center gap-2 ${
+                      inviteResult.success 
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : 'bg-red-50 text-red-700 border border-red-200'
+                    }`}>
+                      <i className={`fa-solid ${inviteResult.success ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
+                      {inviteResult.message}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={sendingInvite || !inviteEmail.trim()}
+                    className="w-full py-2.5 bg-[#C9A961] text-white rounded-lg text-sm font-bold hover:bg-[#3A342D] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {sendingInvite ? (
+                      <><i className="fa-solid fa-spinner fa-spin mr-2"></i>Sending...</>
+                    ) : (
+                      <><i className="fa-solid fa-paper-plane mr-2"></i>Send Invite</>
+                    )}
+                  </button>
+                </form>
+
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-[10px] text-gray-400 text-center">
+                    <i className="fa-solid fa-info-circle mr-1"></i>
+                    Click on a user to edit their details
+                  </p>
                 </div>
               </div>
             )}
