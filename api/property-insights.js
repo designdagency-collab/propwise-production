@@ -294,7 +294,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { address } = req.body;
+  const { address, forceRefresh } = req.body;
 
   if (!address) {
     return res.status(400).json({ error: 'Address is required' });
@@ -303,8 +303,8 @@ export default async function handler(req, res) {
   // Normalize address for cache lookup
   const addressKey = normalizeAddress(address);
   
-  // Check cache first (if Supabase is configured)
-  if (supabaseUrl && supabaseServiceKey) {
+  // Check cache first (if Supabase is configured and not forcing refresh)
+  if (supabaseUrl && supabaseServiceKey && !forceRefresh) {
     try {
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
       const twoWeeksAgo = new Date(Date.now() - CACHE_TTL_MS).toISOString();

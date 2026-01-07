@@ -23,9 +23,21 @@ interface PropertyResultsProps {
   plan: PlanType;
   onUpgrade: () => void;
   onHome: () => void;
+  isCached?: boolean;
+  isRefreshing?: boolean;
+  onRefresh?: () => void;
 }
 
-const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, onUpgrade, onHome }) => {
+const PropertyResults: React.FC<PropertyResultsProps> = ({ 
+  data, 
+  address, 
+  plan, 
+  onUpgrade, 
+  onHome,
+  isCached = false,
+  isRefreshing = false,
+  onRefresh
+}) => {
   const [selectedStrategies, setSelectedStrategies] = useState<Set<number>>(new Set());
   const [isExporting, setIsExporting] = useState(false);
   const [pdfCountdown, setPdfCountdown] = useState<number>(3);
@@ -475,10 +487,27 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({ data, address, plan, 
              </div>
              <div className="space-y-0.5 group relative" data-pdf-kpi>
                 <p className="text-[10px] font-bold uppercase tracking-widest cursor-help" style={{ color: 'var(--text-muted)' }}>Data Confidence</p>
-                <p className="text-xl sm:text-2xl font-black flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                   {data?.valueSnapshot?.confidenceLevel || 'Low'}
-                   <i className={`fa-solid fa-circle-info text-xs cursor-help ${data?.valueSnapshot?.confidenceLevel === 'High' ? 'text-emerald-500' : 'text-amber-500'}`}></i>
-                </p>
+                <div className="flex items-center gap-2">
+                   <p className="text-xl sm:text-2xl font-black flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                      {data?.valueSnapshot?.confidenceLevel || 'Low'}
+                      <i className={`fa-solid fa-circle-info text-xs cursor-help ${data?.valueSnapshot?.confidenceLevel === 'High' ? 'text-emerald-500' : 'text-amber-500'}`}></i>
+                   </p>
+                   {/* Refresh button for cached data */}
+                   {isCached && onRefresh && (
+                      <button
+                         onClick={onRefresh}
+                         disabled={isRefreshing}
+                         className="p-1.5 rounded-full bg-red-100 hover:bg-red-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed group/refresh"
+                         title="Data may be outdated. Click to refresh with latest information."
+                      >
+                         {isRefreshing ? (
+                            <i className="fa-solid fa-spinner animate-spin text-red-500 text-sm"></i>
+                         ) : (
+                            <i className="fa-solid fa-rotate text-red-500 text-sm group-hover/refresh:rotate-180 transition-transform duration-300"></i>
+                         )}
+                      </button>
+                   )}
+                </div>
                 {/* Confidence tooltip */}
                 <div className="invisible group-hover:visible absolute bottom-full left-0 mb-2 w-52 p-3 bg-[#4A4137] text-white text-[9px] font-medium rounded-lg shadow-xl z-50 opacity-0 group-hover:opacity-100 pointer-events-none leading-relaxed">
                    <p className="font-bold mb-1">Based on:</p>

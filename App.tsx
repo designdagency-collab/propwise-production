@@ -20,6 +20,8 @@ const App: React.FC = () => {
   const [address, setAddress] = useState('');
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [results, setResults] = useState<PropertyData | null>(null);
+  const [isCached, setIsCached] = useState(false);
+  const [isRefreshingData, setIsRefreshingData] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   
@@ -242,6 +244,7 @@ const App: React.FC = () => {
             setAddress(cachedAddress);
             setAppState(AppState.RESULTS);
             setIsValidAddress(true);
+            setIsCached(true); // Mark as cached since restored from sessionStorage
           }
         } catch (e) {
           console.warn('[Navigation] Could not restore results:', e);
@@ -1325,9 +1328,35 @@ const App: React.FC = () => {
     }
   };
 
+  // Handle refreshing cached results without leaving the page
+  const handleRefreshResults = async () => {
+    if (!address || !results) return;
+    
+    setIsRefreshingData(true);
+    try {
+      console.log('[handleRefreshResults] Force refreshing data for:', address.substring(0, 50));
+      const { data, cached } = await geminiService.fetchPropertyInsights(address, true);
+      console.log('[handleRefreshResults] Received fresh data');
+      setResults(data);
+      setIsCached(cached);
+      // Update sessionStorage with fresh data
+      try {
+        sessionStorage.setItem('upblock_last_results', JSON.stringify(data));
+      } catch (e) {
+        console.warn('[handleRefreshResults] Could not update cache:', e);
+      }
+    } catch (err: any) {
+      console.error('[handleRefreshResults] Error:', err.message || err);
+      setError('Failed to refresh data. Please try again.');
+    } finally {
+      setIsRefreshingData(false);
+    }
+  };
+
   const handleHome = useCallback(() => {
     setAppState(AppState.IDLE);
     setResults(null);
+    setIsCached(false);
     setAddress('');
     setIsValidAddress(false); // Reset valid address
     // Close any open pages
@@ -1394,12 +1423,13 @@ const App: React.FC = () => {
 
     try {
       console.log('[handleSearch] Calling fetchPropertyInsights for:', address.substring(0, 50));
-      const data = await geminiService.fetchPropertyInsights(address);
-      console.log('[handleSearch] Received data, setting results...');
+      const { data, cached } = await geminiService.fetchPropertyInsights(address);
+      console.log('[handleSearch] Received data, setting results...', cached ? '(cached)' : '(fresh)');
       setProgress(100);
       setLoadingMessage('Audit complete!');
       setTimeout(() => {
         setResults(data);
+        setIsCached(cached);
         setAppState(AppState.RESULTS);
         // Save to sessionStorage for forward navigation
         try {
@@ -1735,6 +1765,9 @@ const App: React.FC = () => {
               plan={plan} 
               onUpgrade={() => setShowPricing(true)}
               onHome={handleHome}
+              isCached={isCached}
+              isRefreshing={isRefreshingData}
+              onRefresh={handleRefreshResults}
             />
           )}
 

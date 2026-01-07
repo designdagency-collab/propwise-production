@@ -2,9 +2,14 @@
 // API key is NEVER exposed to the browser
 import { PropertyData } from "../types";
 
+export interface PropertyInsightsResult {
+  data: PropertyData;
+  cached: boolean;
+}
+
 export class GeminiService {
-  async fetchPropertyInsights(address: string): Promise<PropertyData> {
-    console.log('[GeminiService] Fetching property insights for:', address);
+  async fetchPropertyInsights(address: string, forceRefresh: boolean = false): Promise<PropertyInsightsResult> {
+    console.log('[GeminiService] Fetching property insights for:', address, forceRefresh ? '(force refresh)' : '');
     
     try {
       // Call our secure server-side API (API key stays on server)
@@ -13,7 +18,7 @@ export class GeminiService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ address }),
+        body: JSON.stringify({ address, forceRefresh }),
       });
 
       if (!response.ok) {
@@ -21,10 +26,10 @@ export class GeminiService {
         throw new Error(errorData.error || 'Failed to fetch property insights');
       }
 
-      const { data } = await response.json();
+      const { data, cached } = await response.json();
       
-      console.log('[GeminiService] Successfully received property data');
-      return data as PropertyData;
+      console.log('[GeminiService] Successfully received property data', cached ? '(from cache)' : '(fresh)');
+      return { data: data as PropertyData, cached: cached === true };
     } catch (error: any) {
       console.error("[GeminiService] Error:", error.message || error);
       throw error;
