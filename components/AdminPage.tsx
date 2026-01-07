@@ -113,6 +113,17 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   const [inviteName, setInviteName] = useState('');
   const [sendingInvite, setSendingInvite] = useState(false);
   const [inviteResult, setInviteResult] = useState<{ success: boolean; message: string } | null>(null);
+  
+  // Billing state
+  const [billing, setBilling] = useState<{
+    configured: boolean;
+    currentMonth?: { total: number; period: string };
+    lastMonth?: { total: number; period: string };
+    projectedMonthly?: number;
+    dailyAverage?: number;
+    error?: string;
+    message?: string;
+  } | null>(null);
 
   // Fetch all data
   const fetchData = async (isAutoRefresh = false) => {
@@ -124,10 +135,11 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     }
     
     try {
-      const [metricsRes, revenueRes, usersRes] = await Promise.all([
+      const [metricsRes, revenueRes, usersRes, billingRes] = await Promise.all([
         supabaseService.authenticatedFetch('/api/admin/metrics'),
         supabaseService.authenticatedFetch('/api/admin/revenue'),
-        supabaseService.authenticatedFetch('/api/admin/users?limit=50')
+        supabaseService.authenticatedFetch('/api/admin/users?limit=50'),
+        supabaseService.authenticatedFetch('/api/admin/billing')
       ]);
 
       if (metricsRes.ok) {
@@ -145,6 +157,11 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       if (usersRes.ok) {
         const usersData = await usersRes.json();
         setUsers(usersData.users || []);
+      }
+
+      if (billingRes.ok) {
+        const billingData = await billingRes.json();
+        setBilling(billingData);
       }
 
       setLoading(false);
@@ -647,6 +664,57 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* API Costs Section */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
+                <i className="fa-solid fa-server mr-2 text-red-500"></i>
+                API Costs (Google Cloud)
+              </h3>
+              {billing ? (
+                billing.configured ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-4 bg-red-50 rounded-xl">
+                      <p className="text-2xl font-black text-red-600">
+                        {formatCurrency(billing.currentMonth?.total || 0)}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">This Month</p>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-xl">
+                      <p className="text-2xl font-black text-[#3A342D]">
+                        {formatCurrency(billing.lastMonth?.total || 0)}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">Last Month</p>
+                    </div>
+                    <div className="text-center p-4 bg-amber-50 rounded-xl">
+                      <p className="text-2xl font-black text-amber-600">
+                        {formatCurrency(billing.projectedMonthly || 0)}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">Projected Monthly</p>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-xl">
+                      <p className="text-2xl font-black text-[#3A342D]">
+                        {formatCurrency(billing.dailyAverage || 0)}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">Daily Average</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-gray-500">
+                    <i className="fa-solid fa-cloud text-3xl text-gray-300 mb-2"></i>
+                    <p className="text-sm">{billing.message || 'Billing not configured'}</p>
+                    <p className="text-xs text-gray-400 mt-1">Set up Google Cloud billing export for cost tracking</p>
+                  </div>
+                )
+              ) : (
+                <div className="text-center py-6">
+                  <i className="fa-solid fa-spinner fa-spin text-gray-400"></i>
+                </div>
+              )}
+              {billing?.error && (
+                <p className="text-xs text-red-500 mt-2 text-center">{billing.error}</p>
+              )}
             </div>
           </div>
         )}
