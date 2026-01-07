@@ -92,6 +92,7 @@ export default async function handler(req, res) {
       totalCreditsResult,
       referralsResult,
       invitesSentResult,
+      invitesOpenedResult,
       invitesConvertedResult
     ] = await Promise.all([
       // Total users
@@ -135,6 +136,9 @@ export default async function handler(req, res) {
       
       // Invites sent (referral_invites table)
       supabase.from('referral_invites').select('id', { count: 'exact', head: true }),
+      
+      // Invites opened
+      supabase.from('referral_invites').select('id', { count: 'exact', head: true }).not('opened_at', 'is', null),
       
       // Invites converted (clicked or signed up)
       supabase.from('referral_invites').select('id', { count: 'exact', head: true }).not('clicked_at', 'is', null)
@@ -185,6 +189,7 @@ export default async function handler(req, res) {
 
     // Calculate invite stats
     const invitesSent = invitesSentResult.count || 0;
+    const invitesOpened = invitesOpenedResult.count || 0;
     const invitesConverted = invitesConvertedResult.count || 0;
     const inviteConversionRate = invitesSent > 0 ? Math.round((invitesConverted / invitesSent) * 100) : 0;
 
@@ -212,6 +217,7 @@ export default async function handler(req, res) {
       referrals: referralStats,
       invites: {
         sent: invitesSent,
+        opened: invitesOpened,
         converted: invitesConverted,
         conversionRate: inviteConversionRate
       },

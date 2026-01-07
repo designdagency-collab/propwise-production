@@ -30,6 +30,7 @@ interface Metrics {
   };
   invites: {
     sent: number;
+    opened: number;
     converted: number;
     conversionRate: number;
   };
@@ -1062,14 +1063,18 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                 </div>
                 
                 {/* Invite Stats */}
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  <div className="p-3 rounded-xl bg-[#C9A961]/10 text-center">
+                <div className="grid grid-cols-3 gap-2 mb-6">
+                  <div className="p-2.5 rounded-xl bg-[#C9A961]/10 text-center">
                     <p className="text-lg font-black text-[#3A342D]">{metrics?.invites?.sent || 0}</p>
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-gray-500">Sent</p>
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-gray-500">Sent</p>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#5D8A66]/10 text-center">
+                  <div className="p-2.5 rounded-xl bg-[#8B7355]/10 text-center">
+                    <p className="text-lg font-black text-[#8B7355]">{metrics?.invites?.opened || 0}</p>
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-gray-500">Opened</p>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-[#5D8A66]/10 text-center">
                     <p className="text-lg font-black text-[#5D8A66]">{metrics?.invites?.converted || 0}</p>
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-gray-500">Converted</p>
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-gray-500">Converted</p>
                   </div>
                 </div>
 
