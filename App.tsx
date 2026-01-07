@@ -444,6 +444,8 @@ const App: React.FC = () => {
           console.log('[Auth] Sign out event received');
           setIsLoggedIn(false);
           setUserProfile(null);
+          setShowAdminDashboard(false);
+          setIsAdmin(false);
         } else if (event === 'PASSWORD_RECOVERY') {
           // User clicked password reset link - show reset form
           setEmailAuthMode('reset');
@@ -871,6 +873,8 @@ const App: React.FC = () => {
     setUserProfile(null);
     setSearchHistory([]);
     setShowAccountSettings(false);
+    setShowAdminDashboard(false); // Close admin dashboard on logout
+    setIsAdmin(false);
     setPlan('FREE_TRIAL');
     
     // Refresh credit state
