@@ -497,19 +497,17 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                    <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>
                       {data?.valueSnapshot?.confidenceLevel || 'Low'}
                    </p>
-                   {/* Refresh button - always available to get fresh data */}
+                   {/* Refresh data button */}
                    <button
                       onClick={onRefresh}
                       disabled={isRefreshing || !onRefresh}
-                      className={`p-2 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                         isCached ? 'bg-red-100 hover:bg-red-200' : 'bg-gray-100 hover:bg-gray-200'
-                      }`}
-                      title={isCached ? "Data may be outdated. Click to refresh." : "Refresh data"}
+                      className="p-2 rounded-full bg-amber-100 hover:bg-amber-200 transition-all disabled:opacity-50"
+                      title="Refresh data"
                    >
                       {isRefreshing ? (
-                         <i className={`fa-solid fa-spinner animate-spin text-base ${isCached ? 'text-red-500' : 'text-gray-500'}`}></i>
+                         <i className="fa-solid fa-spinner animate-spin text-lg text-amber-600"></i>
                       ) : (
-                         <i className={`fa-solid fa-rotate text-base hover:rotate-180 transition-transform duration-300 ${isCached ? 'text-red-500' : 'text-gray-500'}`}></i>
+                         <i className="fa-solid fa-sync text-lg text-amber-600"></i>
                       )}
                    </button>
                 </div>
