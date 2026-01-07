@@ -90,7 +90,9 @@ export default async function handler(req, res) {
       totalSearches,
       searchesToday,
       totalCreditsResult,
-      referralsResult
+      referralsResult,
+      invitesSentResult,
+      invitesConvertedResult
     ] = await Promise.all([
       // Total users
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
@@ -129,7 +131,13 @@ export default async function handler(req, res) {
       supabase.from('profiles').select('credit_topups, search_count'),
       
       // Referrals
-      supabase.from('referrals').select('status')
+      supabase.from('referrals').select('status'),
+      
+      // Invites sent (referral_invites table)
+      supabase.from('referral_invites').select('id', { count: 'exact', head: true }),
+      
+      // Invites converted (clicked or signed up)
+      supabase.from('referral_invites').select('id', { count: 'exact', head: true }).not('clicked_at', 'is', null)
     ]);
 
     // Calculate plan breakdown
@@ -175,6 +183,11 @@ export default async function handler(req, res) {
       });
     }
 
+    // Calculate invite stats
+    const invitesSent = invitesSentResult.count || 0;
+    const invitesConverted = invitesConvertedResult.count || 0;
+    const inviteConversionRate = invitesSent > 0 ? Math.round((invitesConverted / invitesSent) * 100) : 0;
+
     const metrics = {
       users: {
         total: totalUsersResult.count || 0,
@@ -197,6 +210,11 @@ export default async function handler(req, res) {
         totalInSystem: totalCredits
       },
       referrals: referralStats,
+      invites: {
+        sent: invitesSent,
+        converted: invitesConverted,
+        conversionRate: inviteConversionRate
+      },
       generatedAt: now.toISOString()
     };
 

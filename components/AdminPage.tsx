@@ -28,6 +28,11 @@ interface Metrics {
     verified: number;
     credited: number;
   };
+  invites: {
+    sent: number;
+    converted: number;
+    conversionRate: number;
+  };
   generatedAt: string;
 }
 
@@ -503,8 +508,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
               </div>
             </div>
 
-            {/* Plans & Referrals */}
-            <div className="grid md:grid-cols-2 gap-6">
+            {/* Plans & Invites */}
+            <div className="grid md:grid-cols-3 gap-6">
               <div className="bg-white rounded-2xl p-6 shadow-sm border">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
                   <i className="fa-solid fa-layer-group mr-2 text-[#8B7355]"></i>
@@ -523,21 +528,42 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
 
               <div className="bg-white rounded-2xl p-6 shadow-sm border">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
-                  <i className="fa-solid fa-user-group mr-2 text-[#5D8A66]"></i>
-                  Referrals
+                  <i className="fa-solid fa-paper-plane mr-2 text-[#C9A961]"></i>
+                  Invites
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-4 bg-gray-50 rounded-xl">
-                    <p className="text-2xl font-black text-[#3A342D]">{metrics.referrals.total}</p>
-                    <p className="text-xs text-gray-500 mt-1">Total</p>
+                    <p className="text-2xl font-black text-[#3A342D]">{metrics.invites?.sent || 0}</p>
+                    <p className="text-xs text-gray-500 mt-1">Total Sent</p>
                   </div>
                   <div className="text-center p-4 bg-[#5D8A66]/10 rounded-xl">
-                    <p className="text-2xl font-black text-[#5D8A66]">{metrics.referrals.credited}</p>
-                    <p className="text-xs text-gray-500 mt-1">Credited</p>
+                    <p className="text-2xl font-black text-[#5D8A66]">{metrics.invites?.converted || 0}</p>
+                    <p className="text-xs text-gray-500 mt-1">Converted</p>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t flex justify-between text-sm">
+                  <span className="text-gray-500">Conversion Rate:</span>
+                  <span className="font-bold text-[#C9A961]">{metrics.invites?.conversionRate || 0}%</span>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 shadow-sm border">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
+                  <i className="fa-solid fa-user-group mr-2 text-[#5D8A66]"></i>
+                  Activity & Referrals
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-4 bg-[#5D8A66]/10 rounded-xl">
+                    <p className="text-2xl font-black text-[#5D8A66]">{metrics.users.active30d}</p>
+                    <p className="text-xs text-gray-500 mt-1">Active Users (30d)</p>
+                  </div>
+                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                    <p className="text-2xl font-black text-[#3A342D]">{metrics.referrals.total}</p>
+                    <p className="text-xs text-gray-500 mt-1">Total Referrals</p>
                   </div>
                   <div className="text-center p-4 bg-[#C9A961]/10 rounded-xl">
-                    <p className="text-2xl font-black text-[#C9A961]">{metrics.referrals.pending}</p>
-                    <p className="text-xs text-gray-500 mt-1">Pending</p>
+                    <p className="text-2xl font-black text-[#C9A961]">{metrics.referrals.credited}</p>
+                    <p className="text-xs text-gray-500 mt-1">Referrals Credited</p>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-xl">
                     <p className="text-2xl font-black text-[#3A342D]">{metrics.credits.totalInSystem}</p>
