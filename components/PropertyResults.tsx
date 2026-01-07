@@ -498,18 +498,20 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                       {data?.valueSnapshot?.confidenceLevel || 'Low'}
                       <i className={`fa-solid fa-circle-info text-xs cursor-help ${data?.valueSnapshot?.confidenceLevel === 'High' ? 'text-emerald-500' : 'text-amber-500'}`}></i>
                    </p>
-                   {/* Refresh button for cached data */}
-                   {isCached && onRefresh && (
+                   {/* Refresh button - always available to get fresh data */}
+                   {onRefresh && (
                       <button
                          onClick={onRefresh}
                          disabled={isRefreshing}
-                         className="p-1.5 rounded-full bg-red-100 hover:bg-red-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed group/refresh"
-                         title="Data may be outdated. Click to refresh with latest information."
+                         className={`p-1.5 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed group/refresh ${
+                            isCached ? 'bg-red-100 hover:bg-red-200' : 'bg-gray-100 hover:bg-gray-200'
+                         }`}
+                         title={isCached ? "Data may be outdated. Click to refresh with latest information." : "Click to refresh data"}
                       >
                          {isRefreshing ? (
-                            <i className="fa-solid fa-spinner animate-spin text-red-500 text-sm"></i>
+                            <i className={`fa-solid fa-spinner animate-spin text-sm ${isCached ? 'text-red-500' : 'text-gray-500'}`}></i>
                          ) : (
-                            <i className="fa-solid fa-rotate text-red-500 text-sm group-hover/refresh:rotate-180 transition-transform duration-300"></i>
+                            <i className={`fa-solid fa-rotate text-sm group-hover/refresh:rotate-180 transition-transform duration-300 ${isCached ? 'text-red-500' : 'text-gray-500'}`}></i>
                          )}
                       </button>
                    )}
