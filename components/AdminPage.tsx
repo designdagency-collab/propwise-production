@@ -117,10 +117,15 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   // Billing state
   const [billing, setBilling] = useState<{
     configured: boolean;
-    currentMonth?: { total: number; period: string };
-    lastMonth?: { total: number; period: string };
+    currentMonth?: { estimated: number; actual?: number; searches: number; period: string };
+    lastMonth?: { estimated: number; searches: number };
+    allTime?: { estimated: number; searches: number };
+    googleCloud?: { accountName: string; status: string; currentMonth?: number; currentBalance?: number } | null;
     projectedMonthly?: number;
     dailyAverage?: number;
+    costPerSearch?: number;
+    calibrationFactor?: number;
+    note?: string;
     error?: string;
     message?: string;
   } | null>(null);
@@ -668,38 +673,65 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
 
             {/* API Costs Section */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
-                <i className="fa-solid fa-server mr-2 text-red-500"></i>
-                API Costs (Google Cloud)
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500">
+                  <i className="fa-solid fa-server mr-2 text-red-500"></i>
+                  API Costs (Gemini AI)
+                </h3>
+                {billing?.googleCloud && (
+                  <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                    <i className="fa-solid fa-check-circle mr-1"></i>
+                    {billing.googleCloud.accountName}
+                  </span>
+                )}
+              </div>
               {billing ? (
                 billing.configured ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center p-4 bg-red-50 rounded-xl">
-                      <p className="text-2xl font-black text-red-600">
-                        {formatCurrency(billing.currentMonth?.total || 0)}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">This Month</p>
+                  <>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                      <div className="text-center p-4 bg-red-50 rounded-xl">
+                        <p className="text-2xl font-black text-red-600">
+                          {formatCurrency(billing.currentMonth?.actual || billing.currentMonth?.estimated || 0)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          This Month {billing.currentMonth?.actual ? '' : '(est)'}
+                        </p>
+                        <p className="text-[10px] text-gray-400">{billing.currentMonth?.searches || 0} searches</p>
+                      </div>
+                      <div className="text-center p-4 bg-gray-50 rounded-xl">
+                        <p className="text-2xl font-black text-[#3A342D]">
+                          {formatCurrency(billing.lastMonth?.estimated || 0)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Last Month</p>
+                        <p className="text-[10px] text-gray-400">{billing.lastMonth?.searches || 0} searches</p>
+                      </div>
+                      <div className="text-center p-4 bg-amber-50 rounded-xl">
+                        <p className="text-2xl font-black text-amber-600">
+                          {formatCurrency(billing.projectedMonthly || 0)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Projected Monthly</p>
+                      </div>
+                      <div className="text-center p-4 bg-blue-50 rounded-xl">
+                        <p className="text-2xl font-black text-blue-600">
+                          {formatCurrency(billing.allTime?.estimated || 0)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">All-Time Cost</p>
+                        <p className="text-[10px] text-gray-400">{billing.allTime?.searches || 0} total searches</p>
+                      </div>
                     </div>
-                    <div className="text-center p-4 bg-gray-50 rounded-xl">
-                      <p className="text-2xl font-black text-[#3A342D]">
-                        {formatCurrency(billing.lastMonth?.total || 0)}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">Last Month</p>
+                    <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t">
+                      <span>
+                        <i className="fa-solid fa-calculator mr-1"></i>
+                        ${billing.costPerSearch?.toFixed(4) || '0.0085'}/search
+                        {billing.calibrationFactor && billing.calibrationFactor !== 1 && (
+                          <span className="ml-2 text-green-600">
+                            (calibrated {billing.calibrationFactor}×)
+                          </span>
+                        )}
+                      </span>
+                      <span className="text-gray-400">{billing.note}</span>
                     </div>
-                    <div className="text-center p-4 bg-amber-50 rounded-xl">
-                      <p className="text-2xl font-black text-amber-600">
-                        {formatCurrency(billing.projectedMonthly || 0)}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">Projected Monthly</p>
-                    </div>
-                    <div className="text-center p-4 bg-gray-50 rounded-xl">
-                      <p className="text-2xl font-black text-[#3A342D]">
-                        {formatCurrency(billing.dailyAverage || 0)}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">Daily Average</p>
-                    </div>
-                  </div>
+                  </>
                 ) : (
                   <div className="text-center py-6 text-gray-500">
                     <i className="fa-solid fa-cloud text-3xl text-gray-300 mb-2"></i>

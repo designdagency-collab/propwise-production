@@ -353,3 +353,23 @@ CREATE POLICY "Users can view own invites" ON referral_invites
 DROP POLICY IF EXISTS "Service role full access referral_invites" ON referral_invites;
 CREATE POLICY "Service role full access referral_invites" ON referral_invites FOR ALL USING (true);
 
+-- ============================================
+-- BILLING CALIBRATION TABLE
+-- Stores calibration data for API cost estimates
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS billing_calibration (
+  id TEXT PRIMARY KEY DEFAULT 'main',
+  calibration_factor DECIMAL(10, 4) DEFAULT 1.0,
+  last_actual_cost DECIMAL(10, 4),
+  last_search_count INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Allow service role full access
+ALTER TABLE billing_calibration ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Service role full access billing_calibration" ON billing_calibration;
+CREATE POLICY "Service role full access billing_calibration" ON billing_calibration FOR ALL USING (true);
+
