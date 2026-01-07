@@ -736,7 +736,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                 </div>
                 <div>
                    <h2 id="uplift-strategies" className="text-xl sm:text-2xl font-bold text-[#4A4137] tracking-tight">Uplift & Value-Add Strategies</h2>
-                   <p className="text-[11px] sm:text-[10px] font-bold text-[#D3D9B5] uppercase tracking-widest mt-0.5">Renovation & Potential Development</p>
+                   <p className="text-[11px] sm:text-[10px] font-bold text-[#D3D9B5] uppercase tracking-widest mt-0.5">Minor Works Post-Improvements</p>
                 </div>
              </div>
              {selectedStrategies.size > 0 && (

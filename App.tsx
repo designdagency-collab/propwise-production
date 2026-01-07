@@ -1637,7 +1637,7 @@ const App: React.FC = () => {
                 <span>Professional Site Audit & Intelligence</span>
               </div>
               <h1 className="text-[3.25rem] sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.05]" style={{ color: 'var(--text-primary)' }}>
-                Overpriced… <br/> <span className="text-[#C9A961] opacity-90">Or a hidden bargain?</span>
+                Overpriced… <br/> <span className="text-[#C9A961] opacity-90">Or a Hidden Bargain?</span>
               </h1>
               <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium" style={{ color: 'var(--text-muted)' }}>
                 A detailed AI-assisted property report that explains zoning, planning context, comparable sales, and potential value-uplift scenarios in <strong className="font-bold">Australia</strong>.
