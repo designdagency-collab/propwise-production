@@ -100,6 +100,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<User>>({});
   const [saving, setSaving] = useState(false);
@@ -107,8 +108,14 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   const searchTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Fetch all data
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (isAutoRefresh = false) => {
+    // Only show full loading on initial load
+    if (!isAutoRefresh) {
+      setLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
+    
     try {
       const [metricsRes, revenueRes, usersRes] = await Promise.all([
         supabaseService.authenticatedFetch('/api/admin/metrics'),
@@ -134,9 +141,11 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       }
 
       setLoading(false);
+      setIsRefreshing(false);
     } catch (err: any) {
       setError(err.message);
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -244,8 +253,16 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     }
   };
 
+  // Initial fetch and auto-refresh every 30 seconds
   useEffect(() => {
-    fetchData();
+    fetchData(false); // Initial load
+    
+    // Auto-refresh interval
+    const refreshInterval = setInterval(() => {
+      fetchData(true); // Auto-refresh
+    }, 30000); // 30 seconds
+    
+    return () => clearInterval(refreshInterval);
   }, []);
 
   useEffect(() => {
@@ -347,18 +364,26 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
             </button>
             <div>
               <h1 className="text-xl font-bold text-[#3A342D]">Admin Dashboard</h1>
-              <p className="text-xs text-gray-500">
-                Last updated: {metrics?.generatedAt ? new Date(metrics.generatedAt).toLocaleString() : 'N/A'}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-gray-500">
+                  Last updated: {metrics?.generatedAt ? new Date(metrics.generatedAt).toLocaleString() : 'N/A'}
+                </p>
+                <span className="flex items-center gap-1 text-xs text-[#5D8A66]">
+                  <span className="w-2 h-2 bg-[#5D8A66] rounded-full animate-pulse"></span>
+                  Live
+                </span>
+              </div>
             </div>
           </div>
           <button 
-            onClick={fetchData}
-            className="px-4 py-2 bg-[#C9A961] text-white rounded-lg text-sm font-bold hover:bg-[#3A342D] transition-colors"
+            onClick={() => fetchData(false)}
+            disabled={isRefreshing}
+            className={`px-4 py-2 bg-[#C9A961] text-white rounded-lg text-sm font-bold transition-colors ${
+              isRefreshing ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#3A342D]'
+            }`}
           >
-            <i className="fa-solid fa-refresh mr-2"></i>
-            Refresh
-          </button>
+            <i className={`fa-solid fa-refresh mr-2 ${isRefreshing ? 'animate-spin' : ''}`}></i>
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
         </div>
 
         {/* Tabs */}
