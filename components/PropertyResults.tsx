@@ -491,12 +491,11 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                 <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Growth (5yr)</p>
                 <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{data?.valueSnapshot?.growth || 'TBA'}</p>
              </div>
-             <div className="space-y-0.5 group relative" data-pdf-kpi>
-                <p className="text-[10px] font-bold uppercase tracking-widest cursor-help" style={{ color: 'var(--text-muted)' }}>Data Confidence</p>
+             <div className="space-y-0.5" data-pdf-kpi>
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Data Confidence</p>
                 <div className="flex items-center gap-2">
-                   <p className="text-xl sm:text-2xl font-black flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                   <p className="text-xl sm:text-2xl font-black" style={{ color: 'var(--text-primary)' }}>
                       {data?.valueSnapshot?.confidenceLevel || 'Low'}
-                      <i className={`fa-solid fa-circle-info text-xs cursor-help ${data?.valueSnapshot?.confidenceLevel === 'High' ? 'text-emerald-500' : 'text-amber-500'}`}></i>
                    </p>
                    {/* Refresh button - always available to get fresh data */}
                    <button
@@ -513,15 +512,6 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                          <i className={`fa-solid fa-rotate text-base hover:rotate-180 transition-transform duration-300 ${isCached ? 'text-red-500' : 'text-gray-500'}`}></i>
                       )}
                    </button>
-                </div>
-                {/* Confidence tooltip */}
-                <div className="invisible group-hover:visible absolute bottom-full left-0 mb-2 w-52 p-3 bg-[#4A4137] text-white text-[9px] font-medium rounded-lg shadow-xl z-50 opacity-0 group-hover:opacity-100 pointer-events-none leading-relaxed">
-                   <p className="font-bold mb-1">Based on:</p>
-                   <ul className="space-y-0.5 text-white/80">
-                     <li>• Recent comparable sales (12mo)</li>
-                     <li>• Property data completeness</li>
-                     <li>• Market activity in suburb</li>
-                   </ul>
                 </div>
              </div>
           </div>
