@@ -482,7 +482,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                 <p className="text-xl sm:text-2xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
              </div>
              <div className="space-y-0.5" data-pdf-kpi>
-                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Post-Improvements</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Minor Post-Improvements</p>
                 <p className={`text-xl sm:text-2xl font-black transition-colors whitespace-nowrap ${effectiveSelection.size > 0 ? 'text-[#8A9A6D]' : ''}`} style={{ color: effectiveSelection.size > 0 ? '#8A9A6D' : 'var(--text-primary)' }}>
                    {baseline === undefined ? 'TBA' : effectiveSelection.size === 0 ? formatValue(baseline) : `${formatValue(afterLow)} – ${formatValue(afterHigh)}`}
                 </p>
