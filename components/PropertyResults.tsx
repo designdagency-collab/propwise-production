@@ -499,22 +499,20 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                       <i className={`fa-solid fa-circle-info text-xs cursor-help ${data?.valueSnapshot?.confidenceLevel === 'High' ? 'text-emerald-500' : 'text-amber-500'}`}></i>
                    </p>
                    {/* Refresh button - always available to get fresh data */}
-                   {onRefresh && (
-                      <button
-                         onClick={onRefresh}
-                         disabled={isRefreshing}
-                         className={`p-1.5 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed group/refresh ${
-                            isCached ? 'bg-red-100 hover:bg-red-200' : 'bg-gray-100 hover:bg-gray-200'
-                         }`}
-                         title={isCached ? "Data may be outdated. Click to refresh with latest information." : "Click to refresh data"}
-                      >
-                         {isRefreshing ? (
-                            <i className={`fa-solid fa-spinner animate-spin text-sm ${isCached ? 'text-red-500' : 'text-gray-500'}`}></i>
-                         ) : (
-                            <i className={`fa-solid fa-rotate text-sm group-hover/refresh:rotate-180 transition-transform duration-300 ${isCached ? 'text-red-500' : 'text-gray-500'}`}></i>
-                         )}
-                      </button>
-                   )}
+                   <button
+                      onClick={onRefresh}
+                      disabled={isRefreshing || !onRefresh}
+                      className={`p-2 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                         isCached ? 'bg-red-100 hover:bg-red-200' : 'bg-gray-100 hover:bg-gray-200'
+                      }`}
+                      title={isCached ? "Data may be outdated. Click to refresh." : "Refresh data"}
+                   >
+                      {isRefreshing ? (
+                         <i className={`fa-solid fa-spinner animate-spin text-base ${isCached ? 'text-red-500' : 'text-gray-500'}`}></i>
+                      ) : (
+                         <i className={`fa-solid fa-rotate text-base hover:rotate-180 transition-transform duration-300 ${isCached ? 'text-red-500' : 'text-gray-500'}`}></i>
+                      )}
+                   </button>
                 </div>
                 {/* Confidence tooltip */}
                 <div className="invisible group-hover:visible absolute bottom-full left-0 mb-2 w-52 p-3 bg-[#4A4137] text-white text-[9px] font-medium rounded-lg shadow-xl z-50 opacity-0 group-hover:opacity-100 pointer-events-none leading-relaxed">
