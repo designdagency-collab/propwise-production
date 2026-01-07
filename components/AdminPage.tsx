@@ -384,6 +384,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
           >
             <i className={`fa-solid fa-refresh mr-2 ${isRefreshing ? 'animate-spin' : ''}`}></i>
             {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
         </div>
 
         {/* Tabs */}
