@@ -265,10 +265,8 @@ function generateEmailHtml(senderName, friendName, referralLink, code) {
                                 <td style="font-size: 15px; color: #8a8a8a; vertical-align: middle;">
                                   Enter an address…
                                 </td>
-                                <td style="text-align: right; vertical-align: middle; width: 100px;">
-                                  <span style="display: inline-block; background-color: #C9A961; color: #111111; font-size: 14px; font-weight: 700; padding: 10px 18px; border-radius: 10px;">
-                                    Search →
-                                  </span>
+                                <td style="text-align: right; vertical-align: middle; width: 110px;">
+                                  <span style="display: inline-block; background-color: #C9A961; color: #111111; font-size: 14px; font-weight: 700; padding: 10px 20px; border-radius: 10px; white-space: nowrap;">Search&nbsp;→</span>
                                 </td>
                               </tr>
                             </table>
