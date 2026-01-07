@@ -4,14 +4,14 @@
  * Uses FingerprintJS (open-source) to generate unique device identifiers
  * for preventing abuse of free searches without requiring sign-up.
  * 
- * Free searches per device: 1 (before requiring account creation)
+ * Free searches per device: 3 (before requiring account creation)
  */
 
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import { supabase } from './supabaseService';
 
 // How many free searches per device before requiring sign-up
-const FREE_SEARCHES_PER_DEVICE = 1;
+const FREE_SEARCHES_PER_DEVICE = 3;
 
 // LocalStorage key for caching fingerprint
 const FINGERPRINT_CACHE_KEY = 'prop_device_fp';
