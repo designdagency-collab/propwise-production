@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { PropertyData, PlanType, DevEligibility, Amenity } from '../types';
 import PdfReport, { getPdfDocumentStyles } from './pdf/PdfReport';
@@ -16,6 +16,7 @@ import {
 } from '../services/propertyUtils';
 import { computeUpblockScore, mapPropertyDataToScoreInputs, ScoreResult } from '../src/utils/upblockScore';
 import { UpblockScoreCard } from '../src/components/UpblockScoreCard';
+import RenovationModal from './RenovationModal';
 
 interface PropertyResultsProps {
   data: PropertyData;
@@ -54,6 +55,24 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   const [pdfReady, setPdfReady] = useState<boolean>(false);
   const [isScoreExpanded, setIsScoreExpanded] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
+  
+  // Renovation/Development Visualizer State
+  const [visualizerModal, setVisualizerModal] = useState<{
+    isOpen: boolean;
+    beforeImage: string;
+    afterImage: string;
+    title: string;
+    type: 'renovation' | 'development';
+    description?: string;
+  }>({ isOpen: false, beforeImage: '', afterImage: '', title: '', type: 'renovation' });
+  const [visualizerLoading, setVisualizerLoading] = useState<{
+    active: boolean;
+    progress: number;
+    message: string;
+    cardType?: 'strategy' | 'development';
+    cardIndex?: number;
+  }>({ active: false, progress: 0, message: '' });
+  const [dragOverCard, setDragOverCard] = useState<{ type: 'strategy' | 'development'; index: number } | null>(null);
   
   // Extract Australian state from address for state-aware approval badges
   const propertyState = useMemo(() => extractStateFromAddress(address), [address]);
@@ -392,6 +411,132 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   const upblockScore = useMemo(() => computeUpblockScore(scoreInputs), [scoreInputs]);
   // Strictly use red/green for the font
   const cashColorClass = isPositive ? 'text-[#10B981]' : isNegative ? 'text-[#E11D48]' : 'text-[#3A342D]';
+
+  // ========== RENOVATION/DEVELOPMENT VISUALIZER FUNCTIONS ==========
+  
+  const handleVisualizerUpload = useCallback(async (
+    file: File, 
+    type: 'strategy' | 'development',
+    index: number,
+    title: string
+  ) => {
+    // Read file as base64
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const base64Image = e.target?.result as string;
+      
+      // Start loading state
+      setVisualizerLoading({
+        active: true,
+        progress: 0,
+        message: type === 'development' 
+          ? 'Analyzing site for development rendering...' 
+          : 'Analyzing property for renovation...',
+        cardType: type,
+        cardIndex: index
+      });
+
+      // Simulate progress while API processes
+      const progressInterval = setInterval(() => {
+        setVisualizerLoading(prev => {
+          if (prev.progress >= 90) {
+            return { ...prev, progress: 90, message: 'Generating AI visualization...' };
+          }
+          const increment = prev.progress < 30 ? 8 : prev.progress < 60 ? 5 : 2;
+          const messages = type === 'development'
+            ? ['Analyzing lot boundaries...', 'Designing building footprint...', 'Rendering development...', 'Adding architectural details...']
+            : ['Identifying renovation areas...', 'Applying design upgrades...', 'Rendering improvements...', 'Finalizing visualization...'];
+          const msgIndex = Math.min(Math.floor(prev.progress / 25), messages.length - 1);
+          return { ...prev, progress: prev.progress + increment, message: messages[msgIndex] };
+        });
+      }, 200);
+
+      try {
+        const response = await fetch('/api/generate-renovation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            image: base64Image,
+            type: type === 'development' ? 'development' : 'renovation',
+            strategyTitle: type === 'strategy' ? title : undefined,
+            scenarioTitle: type === 'development' ? title : undefined,
+            propertyAddress: address
+          })
+        });
+
+        clearInterval(progressInterval);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to generate visualization');
+        }
+
+        const result = await response.json();
+
+        // Complete progress
+        setVisualizerLoading(prev => ({ ...prev, progress: 100, message: 'Complete!' }));
+
+        // Small delay then open modal
+        setTimeout(() => {
+          setVisualizerLoading({ active: false, progress: 0, message: '' });
+          setVisualizerModal({
+            isOpen: true,
+            beforeImage: base64Image,
+            afterImage: result.generatedImage,
+            title: title,
+            type: type === 'development' ? 'development' : 'renovation',
+            description: result.description
+          });
+        }, 500);
+
+      } catch (error: any) {
+        clearInterval(progressInterval);
+        console.error('Visualizer error:', error);
+        setVisualizerLoading({ active: false, progress: 0, message: '' });
+        alert(`Failed to generate visualization: ${error.message}`);
+      }
+    };
+    reader.readAsDataURL(file);
+  }, [address]);
+
+  const handleDragOver = useCallback((e: React.DragEvent, type: 'strategy' | 'development', index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverCard({ type, index });
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverCard(null);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, type: 'strategy' | 'development', index: number, title: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverCard(null);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        handleVisualizerUpload(file, type, index, title);
+      } else {
+        alert('Please drop an image file (JPG, PNG, etc.)');
+      }
+    }
+  }, [handleVisualizerUpload]);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>, type: 'strategy' | 'development', index: number, title: string) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleVisualizerUpload(file, type, index, title);
+    }
+    // Reset input so same file can be selected again
+    e.target.value = '';
+  }, [handleVisualizerUpload]);
+
+  // ========== END VISUALIZER FUNCTIONS ==========
 
   return (
     <div ref={reportRef} id="property-report" data-pdf-root="true" className="max-w-4xl mx-auto space-y-12 pb-32 animate-in fade-in slide-in-from-bottom-6 duration-700">
@@ -819,6 +964,54 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                        </div>
                      )}
                   </div>
+                  
+                  {/* AI Renovation Visualizer Drop Zone */}
+                  <div 
+                    data-no-pdf="true"
+                    className={`mt-4 pt-4 border-t border-dashed transition-all ${
+                      dragOverCard?.type === 'strategy' && dragOverCard?.index === i 
+                        ? 'border-[#C9A961] bg-[#C9A961]/10' 
+                        : 'border-slate-200'
+                    } ${visualizerLoading.active && visualizerLoading.cardType === 'strategy' && visualizerLoading.cardIndex === i ? 'pointer-events-none' : ''}`}
+                    onDragOver={(e) => handleDragOver(e, 'strategy', i)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, 'strategy', i, strategy.title)}
+                  >
+                    {visualizerLoading.active && visualizerLoading.cardType === 'strategy' && visualizerLoading.cardIndex === i ? (
+                      <div className="p-4 text-center">
+                        <div className="w-full bg-slate-200 rounded-full h-2 mb-3 overflow-hidden">
+                          <div 
+                            className="bg-[#C9A961] h-2 rounded-full transition-all duration-300 ease-out"
+                            style={{ width: `${visualizerLoading.progress}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-xs text-[#4A4137]/60 font-medium">
+                          <i className="fa-solid fa-wand-magic-sparkles mr-2 text-[#C9A961] animate-pulse"></i>
+                          {visualizerLoading.message}
+                        </p>
+                      </div>
+                    ) : (
+                      <label className="block cursor-pointer">
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          className="hidden" 
+                          onChange={(e) => handleFileSelect(e, 'strategy', i, strategy.title)}
+                        />
+                        <div className="p-4 text-center hover:bg-slate-50 rounded-xl transition-colors">
+                          <div className="flex items-center justify-center gap-2 text-[#4A4137]/40 hover:text-[#C9A961] transition-colors">
+                            <i className="fa-solid fa-wand-magic-sparkles text-lg"></i>
+                            <span className="text-xs font-bold uppercase tracking-wider">
+                              {dragOverCard?.type === 'strategy' && dragOverCard?.index === i 
+                                ? 'Drop image here' 
+                                : 'AI Visualize Renovation'}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-[#4A4137]/30 mt-1">Drag photo or click to upload</p>
+                        </div>
+                      </label>
+                    )}
+                  </div>
                </div>
              ))}
           </div>
@@ -930,7 +1123,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                      };
                      
                      return (
-                       <div className={`p-4 rounded-xl border mt-auto ${
+                       <div className={`p-4 rounded-xl border ${
                          isOverallNegative 
                            ? 'bg-red-50 border-red-100' 
                            : 'bg-emerald-50 border-emerald-100'
@@ -946,6 +1139,54 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                        </div>
                      );
                    })()}
+                   
+                   {/* AI Development Visualizer Drop Zone */}
+                   <div 
+                     data-no-pdf="true"
+                     className={`mt-4 pt-4 border-t border-dashed transition-all ${
+                       dragOverCard?.type === 'development' && dragOverCard?.index === i 
+                         ? 'border-[#4A4137] bg-[#4A4137]/10' 
+                         : 'border-slate-200'
+                     } ${visualizerLoading.active && visualizerLoading.cardType === 'development' && visualizerLoading.cardIndex === i ? 'pointer-events-none' : ''}`}
+                     onDragOver={(e) => handleDragOver(e, 'development', i)}
+                     onDragLeave={handleDragLeave}
+                     onDrop={(e) => handleDrop(e, 'development', i, scenario.title)}
+                   >
+                     {visualizerLoading.active && visualizerLoading.cardType === 'development' && visualizerLoading.cardIndex === i ? (
+                       <div className="p-4 text-center">
+                         <div className="w-full bg-slate-200 rounded-full h-2 mb-3 overflow-hidden">
+                           <div 
+                             className="bg-[#4A4137] h-2 rounded-full transition-all duration-300 ease-out"
+                             style={{ width: `${visualizerLoading.progress}%` }}
+                           ></div>
+                         </div>
+                         <p className="text-xs text-[#4A4137]/60 font-medium">
+                           <i className="fa-solid fa-city mr-2 text-[#4A4137] animate-pulse"></i>
+                           {visualizerLoading.message}
+                         </p>
+                       </div>
+                     ) : (
+                       <label className="block cursor-pointer">
+                         <input 
+                           type="file" 
+                           accept="image/*" 
+                           className="hidden" 
+                           onChange={(e) => handleFileSelect(e, 'development', i, scenario.title)}
+                         />
+                         <div className="p-4 text-center hover:bg-slate-50 rounded-xl transition-colors">
+                           <div className="flex items-center justify-center gap-2 text-[#4A4137]/40 hover:text-[#4A4137] transition-colors">
+                             <i className="fa-solid fa-city text-lg"></i>
+                             <span className="text-xs font-bold uppercase tracking-wider">
+                               {dragOverCard?.type === 'development' && dragOverCard?.index === i 
+                                 ? 'Drop aerial/drone image' 
+                                 : 'AI Visualize Development'}
+                             </span>
+                           </div>
+                           <p className="text-[10px] text-[#4A4137]/30 mt-1">Drop drone/aerial photo to render {scenario.title.toLowerCase()}</p>
+                         </div>
+                       </label>
+                     )}
+                   </div>
                 </div>
               ))}
            </div>
@@ -1089,6 +1330,17 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
           </p>
         </div>
       </footer>
+
+      {/* Renovation/Development Visualizer Modal */}
+      <RenovationModal
+        isOpen={visualizerModal.isOpen}
+        onClose={() => setVisualizerModal(prev => ({ ...prev, isOpen: false }))}
+        beforeImage={visualizerModal.beforeImage}
+        afterImage={visualizerModal.afterImage}
+        title={visualizerModal.title}
+        type={visualizerModal.type}
+        description={visualizerModal.description}
+      />
     </div>
   );
 };
