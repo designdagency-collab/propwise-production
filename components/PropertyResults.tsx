@@ -74,6 +74,11 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   }>({ active: false, progress: 0, message: '' });
   const [dragOverCard, setDragOverCard] = useState<{ type: 'strategy' | 'development'; index: number } | null>(null);
   
+  // Store generated visualizations for each card (persists until page refresh)
+  const [generatedVisuals, setGeneratedVisuals] = useState<{
+    [key: string]: { beforeImage: string; afterImage: string; title: string; type: 'renovation' | 'development' };
+  }>({});
+  
   // Extract Australian state from address for state-aware approval badges
   const propertyState = useMemo(() => extractStateFromAddress(address), [address]);
 
@@ -484,6 +489,18 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
             // Fallback mode - show description only
             alert(`Image generation temporarily unavailable.\n\nAI Vision Analysis:\n${result.description || 'Unable to generate visualization at this time.'}`);
           } else {
+            // Save to generatedVisuals for thumbnail display
+            const visualKey = `${type}-${index}`;
+            setGeneratedVisuals(prev => ({
+              ...prev,
+              [visualKey]: {
+                beforeImage: base64Image,
+                afterImage: result.generatedImage,
+                title: title,
+                type: type === 'development' ? 'development' : 'renovation'
+              }
+            }));
+            
             // Success - open modal with before/after
             setVisualizerModal({
               isOpen: true,
@@ -542,6 +559,22 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
     // Reset input so same file can be selected again
     e.target.value = '';
   }, [handleVisualizerUpload]);
+
+  // Open modal from saved thumbnail
+  const handleThumbnailClick = useCallback((type: 'strategy' | 'development', index: number) => {
+    const visualKey = `${type}-${index}`;
+    const visual = generatedVisuals[visualKey];
+    if (visual) {
+      setVisualizerModal({
+        isOpen: true,
+        beforeImage: visual.beforeImage,
+        afterImage: visual.afterImage,
+        title: visual.title,
+        type: visual.type,
+        description: undefined
+      });
+    }
+  }, [generatedVisuals]);
 
   // ========== END VISUALIZER FUNCTIONS ==========
 
@@ -959,17 +992,40 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                      </div>
                   </div>
                   <p className="text-sm text-[#4A4137]/60 leading-relaxed mb-6">{strategy.description}</p>
-                  <div className="grid grid-cols-2 gap-3 mb-2 mt-auto">
-                     <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-center">
-                        <p className="text-[8px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Estimated Cost</p>
-                        <p className="text-sm font-bold text-[#4A4137]">{formatValue(strategy.estimatedCost?.low)} – {formatValue(strategy.estimatedCost?.high)}</p>
-                     </div>
-                     {(strategy.indicativeEquityUplift || strategy.saleProfitEstimate) && (
-                       <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col justify-center">
-                          <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1">Equity Gain $</p>
-                          <p className="text-sm font-black text-emerald-700">{strategy.indicativeEquityUplift ? `${formatValue(strategy.indicativeEquityUplift.low)} – ${formatValue(strategy.indicativeEquityUplift.high)}` : `${formatValue(strategy.saleProfitEstimate?.low)} – ${formatValue(strategy.saleProfitEstimate?.high)}`}</p>
-                       </div>
+                  <div className="flex gap-3 mb-2 mt-auto">
+                     {/* AI Visualization Thumbnail (if generated) */}
+                     {generatedVisuals[`strategy-${i}`] && (
+                       <button
+                         data-no-pdf="true"
+                         onClick={() => handleThumbnailClick('strategy', i)}
+                         className="relative w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden border-2 border-[#C9A961] shadow-md hover:shadow-lg hover:scale-105 transition-all group"
+                         title="View AI Visualization"
+                       >
+                         <img 
+                           src={generatedVisuals[`strategy-${i}`].afterImage} 
+                           alt="AI Visualization" 
+                           className="w-full h-full object-cover"
+                         />
+                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                           <i className="fa-solid fa-expand text-white opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                         </div>
+                         <div className="absolute bottom-0 left-0 right-0 bg-[#C9A961] py-0.5">
+                           <p className="text-[6px] font-bold text-white text-center uppercase tracking-wider">AI Reno</p>
+                         </div>
+                       </button>
                      )}
+                     <div className="grid grid-cols-2 gap-3 flex-grow">
+                       <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                          <p className="text-[8px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Estimated Cost</p>
+                          <p className="text-sm font-bold text-[#4A4137]">{formatValue(strategy.estimatedCost?.low)} – {formatValue(strategy.estimatedCost?.high)}</p>
+                       </div>
+                       {(strategy.indicativeEquityUplift || strategy.saleProfitEstimate) && (
+                         <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col justify-center">
+                            <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1">Equity Gain $</p>
+                            <p className="text-sm font-black text-emerald-700">{strategy.indicativeEquityUplift ? `${formatValue(strategy.indicativeEquityUplift.low)} – ${formatValue(strategy.indicativeEquityUplift.high)}` : `${formatValue(strategy.saleProfitEstimate?.low)} – ${formatValue(strategy.saleProfitEstimate?.high)}`}</p>
+                         </div>
+                       )}
+                     </div>
                   </div>
                   
                   {/* AI Renovation Visualizer Drop Zone */}
@@ -1105,8 +1161,29 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                       <p className="text-[9px] font-bold text-[#4A4137]/50 uppercase tracking-widest mb-1">Assessment Notes</p>
                       <p className="text-xs text-[#4A4137]/70 italic leading-relaxed">{scenario.whyAllowedOrNot}</p>
                    </div>
-                   <div className="grid grid-cols-1 gap-3 mb-3">
-                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                   <div className="flex gap-3 mb-3">
+                      {/* AI Visualization Thumbnail (if generated) */}
+                      {generatedVisuals[`development-${i}`] && (
+                        <button
+                          data-no-pdf="true"
+                          onClick={() => handleThumbnailClick('development', i)}
+                          className="relative w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden border-2 border-[#4A4137] shadow-md hover:shadow-lg hover:scale-105 transition-all group"
+                          title="View AI Development Render"
+                        >
+                          <img 
+                            src={generatedVisuals[`development-${i}`].afterImage} 
+                            alt="AI Development Render" 
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                            <i className="fa-solid fa-expand text-white opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-[#4A4137] py-0.5">
+                            <p className="text-[6px] font-bold text-white text-center uppercase tracking-wider">AI Render</p>
+                          </div>
+                        </button>
+                      )}
+                      <div className="flex-grow p-3 bg-slate-50 rounded-xl border border-slate-100">
                          <p className="text-[9px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Est. Build Cost</p>
                          <p className="text-base font-bold text-[#4A4137]">{formatValue(scenario.estimatedCost?.low)} – {formatValue(scenario.estimatedCost?.high)}</p>
                       </div>
