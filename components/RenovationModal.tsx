@@ -108,36 +108,35 @@ const RenovationModal: React.FC<RenovationModalProps> = ({
         <div className="p-6">
           <div 
             ref={containerRef}
-            className="relative w-full h-[50vh] md:h-[60vh] overflow-hidden rounded-2xl shadow-xl cursor-col-resize select-none bg-neutral-200"
+            className="relative w-full aspect-video overflow-hidden rounded-2xl shadow-xl cursor-col-resize select-none bg-neutral-900"
             onMouseDown={() => { isResizing.current = true; }}
             onTouchStart={() => { isResizing.current = true; }}
             onMouseMove={onMouseMove}
             onTouchMove={onTouchMove}
           >
-            {/* After Image (AI Generated) */}
+            {/* After Image (AI Generated) - Full width background */}
             <img 
               src={afterImage} 
               alt="After" 
-              className="absolute inset-0 w-full h-full object-contain bg-neutral-100"
+              className="absolute inset-0 w-full h-full object-cover"
             />
 
-            {/* Before Image (Original - Clipped) */}
+            {/* Before Image (Original - Clipped from right) */}
             <div 
-              className="absolute inset-0 w-full h-full overflow-hidden"
-              style={{ width: `${sliderPos}%` }}
+              className="absolute inset-0 overflow-hidden"
+              style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
             >
               <img 
                 src={beforeImage} 
                 alt="Before" 
-                className="absolute inset-0 w-full h-full object-contain bg-neutral-100"
-                style={{ width: `${100 / (sliderPos / 100)}%` }}
+                className="absolute inset-0 w-full h-full object-cover"
               />
             </div>
 
             {/* Slider Bar */}
             <div 
-              className="absolute top-0 bottom-0 w-1 bg-white shadow-lg cursor-col-resize"
-              style={{ left: `${sliderPos}%` }}
+              className="absolute top-0 bottom-0 w-1 bg-white shadow-lg cursor-col-resize z-10"
+              style={{ left: `${sliderPos}%`, transform: 'translateX(-50%)' }}
             >
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-xl flex items-center justify-center border-2 border-[#C9A961]">
                 <i className="fa-solid fa-arrows-left-right text-[#C9A961]"></i>
@@ -145,17 +144,17 @@ const RenovationModal: React.FC<RenovationModalProps> = ({
             </div>
 
             {/* Labels */}
-            <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest pointer-events-none">
+            <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest pointer-events-none z-20">
               <i className="fa-solid fa-camera mr-2"></i>
               Original
             </div>
-            <div className="absolute top-4 right-4 bg-[#C9A961] text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest pointer-events-none">
+            <div className="absolute top-4 right-4 bg-[#C9A961] text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest pointer-events-none z-20">
               <i className="fa-solid fa-wand-magic-sparkles mr-2"></i>
               AI {type === 'development' ? 'Render' : 'Renovation'}
             </div>
 
             {/* Drag hint */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md px-6 py-3 rounded-full shadow-lg pointer-events-none">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md px-6 py-3 rounded-full shadow-lg pointer-events-none z-20">
               <span className="text-neutral-600 text-xs font-semibold flex items-center gap-2">
                 <i className="fa-solid fa-hand-pointer text-[#C9A961]"></i>
                 Drag to compare
