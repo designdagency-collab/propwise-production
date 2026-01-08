@@ -5,6 +5,106 @@ import { GoogleGenAI } from "@google/genai";
 
 const getAI = () => new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '' });
 
+// ========== IMAGE VALIDATION RULES ==========
+// Each strategy type requires a specific kind of photo
+
+const VALIDATION_RULES = {
+  kitchen: {
+    keywords: ['kitchen', 'cooking', 'benchtop', 'counter', 'cabinet', 'sink', 'stove', 'oven', 'cooktop', 'rangehood', 'pantry', 'splashback'],
+    description: 'a kitchen interior',
+    errorMessage: 'Please upload a photo of a kitchen interior (showing benchtops, cabinets, appliances, etc.)'
+  },
+  bathroom: {
+    keywords: ['bathroom', 'ensuite', 'toilet', 'shower', 'bath', 'bathtub', 'vanity', 'basin', 'tiles', 'washroom', 'powder room'],
+    description: 'a bathroom interior',
+    errorMessage: 'Please upload a photo of a bathroom interior (showing shower, vanity, toilet, etc.)'
+  },
+  facade: {
+    keywords: ['front', 'facade', 'exterior', 'street', 'entry', 'entrance', 'driveway', 'front door', 'house front', 'street view'],
+    description: 'the front exterior of a house',
+    errorMessage: 'Please upload a photo of the front/street-facing exterior of the house'
+  },
+  landscaping: {
+    keywords: ['backyard', 'garden', 'outdoor', 'yard', 'patio', 'deck', 'lawn', 'rear', 'courtyard', 'alfresco', 'entertaining', 'pool area', 'grass'],
+    description: 'a backyard or outdoor entertaining area',
+    errorMessage: 'Please upload a photo of the backyard, garden, or outdoor entertaining area'
+  },
+  flooring: {
+    keywords: ['interior', 'floor', 'room', 'living', 'bedroom', 'hallway', 'lounge', 'dining', 'carpet', 'timber floor', 'tiles'],
+    description: 'an interior room showing the floor',
+    errorMessage: 'Please upload a photo of an interior room where the flooring is visible'
+  },
+  energy: {
+    keywords: ['roof', 'rooftop', 'aerial', 'ceiling', 'solar', 'roofline', 'tiles', 'colorbond', 'gutters'],
+    description: 'a view showing the roof',
+    errorMessage: 'Please upload a photo where the roof is clearly visible (aerial view or exterior showing roofline)'
+  },
+  development: {
+    keywords: ['aerial', 'drone', 'land', 'lot', 'property', 'site', 'block', 'overhead', 'birds eye', 'vacant', 'plot', 'boundary'],
+    description: 'an aerial/drone view of the property',
+    errorMessage: 'Please upload an aerial or drone photo showing the land/property from above'
+  }
+};
+
+// Validate that uploaded image matches the strategy type
+async function validateImage(ai, base64Data, validationType) {
+  // Skip validation for general renovations
+  if (!validationType || validationType === 'general') {
+    return { valid: true };
+  }
+
+  const rule = VALIDATION_RULES[validationType];
+  if (!rule) {
+    return { valid: true }; // No specific rule, allow
+  }
+
+  console.log(`[GenerateRenovation] Validating image for type: ${validationType}`);
+
+  const validationPrompt = `Analyze this image and answer these questions:
+
+1. What type of space or area does this image show? Be specific (e.g., "kitchen interior", "front facade of house", "backyard with lawn", "aerial view of property").
+
+2. List the main elements visible in the image.
+
+Keep your response concise - just 2-3 sentences maximum.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash',
+      contents: {
+        parts: [
+          { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
+          { text: validationPrompt }
+        ]
+      }
+    });
+
+    const analysis = (response.text || '').toLowerCase();
+    console.log(`[GenerateRenovation] Image analysis: ${analysis.substring(0, 200)}...`);
+
+    // Check if any of the required keywords are present in the analysis
+    const matches = rule.keywords.some(keyword => analysis.includes(keyword.toLowerCase()));
+
+    if (!matches) {
+      console.log(`[GenerateRenovation] Validation FAILED - expected ${rule.description}`);
+      return {
+        valid: false,
+        analysis: response.text,
+        expected: rule.description,
+        errorMessage: rule.errorMessage
+      };
+    }
+
+    console.log(`[GenerateRenovation] Validation PASSED`);
+    return { valid: true, analysis: response.text };
+
+  } catch (err) {
+    console.error(`[GenerateRenovation] Validation error:`, err.message);
+    // If validation fails due to error, allow the request to proceed
+    return { valid: true, error: err.message };
+  }
+}
+
 // Strategy-specific prompts for renovations
 const RENOVATION_PROMPTS = {
   kitchen: `Transform this kitchen into a luxurious modern Australian kitchen. 
@@ -190,6 +290,41 @@ AUSTRALIAN DESIGN SAFETY RULES (CRITICAL):
     // Initialize AI (same pattern as Three Birds)
     const ai = getAI();
 
+    // ========== VALIDATE IMAGE MATCHES STRATEGY TYPE ==========
+    // Determine validation type based on strategy/scenario title
+    let validationType = 'general';
+    const titleLower = contextTitle.toLowerCase();
+
+    if (titleLower.includes('kitchen')) {
+      validationType = 'kitchen';
+    } else if (titleLower.includes('bath') || titleLower.includes('ensuite')) {
+      validationType = 'bathroom';
+    } else if (titleLower.includes('facade') || titleLower.includes('exterior') || titleLower.includes('street appeal') || titleLower.includes('front')) {
+      validationType = 'facade';
+    } else if (titleLower.includes('landscap') || titleLower.includes('outdoor') || titleLower.includes('deck') || titleLower.includes('entertainment') || titleLower.includes('backyard') || titleLower.includes('alfresco') || titleLower.includes('patio')) {
+      validationType = 'landscaping';
+    } else if (titleLower.includes('energy') || titleLower.includes('solar') || titleLower.includes('roof')) {
+      validationType = 'energy';
+    } else if (titleLower.includes('floor')) {
+      validationType = 'flooring';
+    } else if (isDevelopment) {
+      validationType = 'development';
+    }
+
+    // Validate the image
+    const validation = await validateImage(ai, base64Data, validationType);
+
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: 'Image does not match strategy',
+        message: validation.errorMessage || `This strategy requires ${validation.expected}. Please upload an appropriate photo.`,
+        validationFailed: true,
+        expected: validation.expected,
+        analysis: validation.analysis
+      });
+    }
+
+    // ========== GENERATE VISUALIZATION ==========
     // Generate image using gemini-2.5-flash-image (same as Three Birds)
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',

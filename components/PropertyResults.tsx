@@ -471,12 +471,17 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
 
         clearInterval(progressInterval);
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to generate visualization');
-        }
-
         const result = await response.json();
+        
+        if (!response.ok) {
+          // Check if this is a validation failure (wrong image type)
+          if (result.validationFailed) {
+            setVisualizerLoading({ active: false, progress: 0, message: '' });
+            alert(`⚠️ Wrong Image Type\n\n${result.message}\n\nPlease upload a photo that matches this strategy.`);
+            return;
+          }
+          throw new Error(result.error || 'Failed to generate visualization');
+        }
 
         // Complete progress
         setVisualizerLoading(prev => ({ ...prev, progress: 100, message: 'Complete!' }));
