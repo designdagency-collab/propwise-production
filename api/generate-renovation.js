@@ -167,11 +167,20 @@ export default async function handler(req, res) {
 Property: ${propertyAddress || 'Australian residential property'}
 
 STRICT VISUAL RULES:
-- IF EXTERIOR: Enhance the facade with crisp white render or weatherboard. Install modern window frames. Add Colorbond roof, timber decking, and landscaped gardens. DO NOT show interior drapes on exterior.
+- IF EXTERIOR: Enhance the facade with crisp white render or weatherboard. Install modern window frames. Add Colorbond roof and landscaped gardens. DO NOT show interior drapes on exterior.
 - IF INTERIOR: Focus on modern finishes, quality fixtures, LED downlights, and contemporary styling.
 - Lighting Atmosphere: Magazine-quality, bright, airy, and contemporary Australian.
 - Maintain the original structure and camera angle but modernize all surface finishes, hardware, and textures.
-- Do NOT add any text, watermarks, or labels.`;
+- Do NOT add any text, watermarks, or labels.
+
+AUSTRALIAN DESIGN SAFETY RULES (CRITICAL):
+- NEVER place swimming pools in front yards - pools go in backyards only
+- NEVER show BBQs, outdoor kitchens, or entertainment areas in front yards
+- NEVER show air conditioning units visible from the street/front facade
+- ALL balconies and elevated decks MUST have safety railings/balustrades
+- NO large entertainment decking in front yards - front areas should have landscaping, paths, and driveways only
+- Outdoor entertaining areas belong in backyards or side courtyards, not street-facing areas
+- Front yards should feature: lawn/garden beds, driveway, entry path, and appropriate landscaping`;
 
     console.log(`[GenerateRenovation] Generating ${isDevelopment ? 'development' : 'renovation'} visualization for: ${contextTitle}`);
 
