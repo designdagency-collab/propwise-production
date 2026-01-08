@@ -993,6 +993,18 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                   </div>
                   <p className="text-sm text-[#4A4137]/60 leading-relaxed mb-6">{strategy.description}</p>
                   <div className="flex gap-3 mb-2 mt-auto">
+                     <div className="grid grid-cols-2 gap-3 flex-grow">
+                       <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-center">
+                          <p className="text-[8px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Estimated Cost</p>
+                          <p className="text-sm font-bold text-[#4A4137]">{formatValue(strategy.estimatedCost?.low)} – {formatValue(strategy.estimatedCost?.high)}</p>
+                       </div>
+                       {(strategy.indicativeEquityUplift || strategy.saleProfitEstimate) && (
+                         <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col justify-center">
+                            <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1">Equity Gain $</p>
+                            <p className="text-sm font-black text-emerald-700">{strategy.indicativeEquityUplift ? `${formatValue(strategy.indicativeEquityUplift.low)} – ${formatValue(strategy.indicativeEquityUplift.high)}` : `${formatValue(strategy.saleProfitEstimate?.low)} – ${formatValue(strategy.saleProfitEstimate?.high)}`}</p>
+                         </div>
+                       )}
+                     </div>
                      {/* AI Visualization Thumbnail (if generated) */}
                      {generatedVisuals[`strategy-${i}`] && (
                        <button
@@ -1014,18 +1026,6 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                          </div>
                        </button>
                      )}
-                     <div className="grid grid-cols-2 gap-3 flex-grow">
-                       <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col justify-center">
-                          <p className="text-[8px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Estimated Cost</p>
-                          <p className="text-sm font-bold text-[#4A4137]">{formatValue(strategy.estimatedCost?.low)} – {formatValue(strategy.estimatedCost?.high)}</p>
-                       </div>
-                       {(strategy.indicativeEquityUplift || strategy.saleProfitEstimate) && (
-                         <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col justify-center">
-                            <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1">Equity Gain $</p>
-                            <p className="text-sm font-black text-emerald-700">{strategy.indicativeEquityUplift ? `${formatValue(strategy.indicativeEquityUplift.low)} – ${formatValue(strategy.indicativeEquityUplift.high)}` : `${formatValue(strategy.saleProfitEstimate?.low)} – ${formatValue(strategy.saleProfitEstimate?.high)}`}</p>
-                         </div>
-                       )}
-                     </div>
                   </div>
                   
                   {/* AI Renovation Visualizer Drop Zone */}
@@ -1162,6 +1162,10 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                       <p className="text-xs text-[#4A4137]/70 italic leading-relaxed">{scenario.whyAllowedOrNot}</p>
                    </div>
                    <div className="flex gap-3 mb-3">
+                      <div className="flex-grow p-3 bg-slate-50 rounded-xl border border-slate-100">
+                         <p className="text-[9px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Est. Build Cost</p>
+                         <p className="text-base font-bold text-[#4A4137]">{formatValue(scenario.estimatedCost?.low)} – {formatValue(scenario.estimatedCost?.high)}</p>
+                      </div>
                       {/* AI Visualization Thumbnail (if generated) */}
                       {generatedVisuals[`development-${i}`] && (
                         <button
@@ -1183,10 +1187,6 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                           </div>
                         </button>
                       )}
-                      <div className="flex-grow p-3 bg-slate-50 rounded-xl border border-slate-100">
-                         <p className="text-[9px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Est. Build Cost</p>
-                         <p className="text-base font-bold text-[#4A4137]">{formatValue(scenario.estimatedCost?.low)} – {formatValue(scenario.estimatedCost?.high)}</p>
-                      </div>
                    </div>
                    {scenario.estimatedNetProfit && (() => {
                      // Determine if overall outlook is positive or negative
