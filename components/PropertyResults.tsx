@@ -476,24 +476,31 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         // Complete progress
         setVisualizerLoading(prev => ({ ...prev, progress: 100, message: 'Complete!' }));
 
-        // Small delay then open modal
+        // Small delay then open modal or show fallback
         setTimeout(() => {
           setVisualizerLoading({ active: false, progress: 0, message: '' });
-          setVisualizerModal({
-            isOpen: true,
-            beforeImage: base64Image,
-            afterImage: result.generatedImage,
-            title: title,
-            type: type === 'development' ? 'development' : 'renovation',
-            description: result.description
-          });
+          
+          if (result.fallbackMode || !result.generatedImage) {
+            // Fallback mode - show description only
+            alert(`Image generation temporarily unavailable.\n\nAI Vision Analysis:\n${result.description || 'Unable to generate visualization at this time.'}`);
+          } else {
+            // Success - open modal with before/after
+            setVisualizerModal({
+              isOpen: true,
+              beforeImage: base64Image,
+              afterImage: result.generatedImage,
+              title: title,
+              type: type === 'development' ? 'development' : 'renovation',
+              description: result.description
+            });
+          }
         }, 500);
 
       } catch (error: any) {
         clearInterval(progressInterval);
         console.error('Visualizer error:', error);
         setVisualizerLoading({ active: false, progress: 0, message: '' });
-        alert(`Failed to generate visualization: ${error.message}`);
+        alert(`Failed to generate visualization. Please try again.\n\nError: ${error.message}`);
       }
     };
     reader.readAsDataURL(file);

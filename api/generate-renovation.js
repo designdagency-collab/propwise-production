@@ -1,5 +1,5 @@
 // API endpoint for AI-powered renovation and development visualization
-// Uses Gemini 2.0 Flash for image generation
+// Uses Gemini for image editing/generation
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -163,8 +163,8 @@ export default async function handler(req, res) {
       }
     }
 
-    // Build the full prompt
-    const fullPrompt = `${basePrompt}
+    // Build the full prompt for image editing
+    const fullPrompt = `Edit this image: ${basePrompt}
 
 Property context: ${propertyAddress || 'Australian residential property'}
 
@@ -174,7 +174,8 @@ IMPORTANT RULES:
 - Preserve the property boundaries and surrounding context
 - Make changes realistic and achievable
 - Output should be photorealistic, magazine-quality
-- Do NOT add any text, watermarks, or labels to the image`;
+- Do NOT add any text, watermarks, or labels to the image
+- Generate ONLY an edited version of the input image`;
 
     console.log(`[GenerateRenovation] Generating ${isDevelopment ? 'development' : 'renovation'} visualization for: ${contextTitle}`);
 
@@ -182,57 +183,159 @@ IMPORTANT RULES:
     const base64Data = image.includes(',') ? image.split(',')[1] : image;
     const mimeType = image.includes('data:') ? image.split(';')[0].split(':')[1] : 'image/jpeg';
 
-    // Use Gemini 2.0 Flash for image generation
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.0-flash-exp',
-      generationConfig: {
-        responseModalities: ['image', 'text'],
-      }
-    });
-
-    const result = await model.generateContent([
-      {
-        inlineData: {
-          mimeType: mimeType,
-          data: base64Data
-        }
-      },
-      { text: fullPrompt }
-    ]);
-
-    const response = result.response;
+    // Try using Gemini 1.5 Flash for image understanding + description
+    // Then use Imagen for actual image generation
+    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
     
-    // Extract the generated image from the response
-    let generatedImage = null;
-    let description = '';
+    // First, try direct REST API call to Imagen 3
+    const imagenResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          instances: [
+            {
+              prompt: fullPrompt,
+              image: {
+                bytesBase64Encoded: base64Data
+              }
+            }
+          ],
+          parameters: {
+            sampleCount: 1,
+            aspectRatio: "16:9",
+            personGeneration: "dont_allow",
+            safetySetting: "block_few"
+          }
+        })
+      }
+    );
 
-    if (response.candidates && response.candidates[0]?.content?.parts) {
-      for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData) {
-          generatedImage = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-        } else if (part.text) {
-          description = part.text;
+    if (!imagenResponse.ok) {
+      const errorText = await imagenResponse.text();
+      console.error('[GenerateRenovation] Imagen API error:', imagenResponse.status, errorText);
+      
+      // Fallback: Try gemini-2.0-flash-exp with proper image generation config
+      console.log('[GenerateRenovation] Trying Gemini 2.0 Flash fallback...');
+      
+      const geminiResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: mimeType,
+                    data: base64Data
+                  }
+                },
+                {
+                  text: fullPrompt
+                }
+              ]
+            }],
+            generationConfig: {
+              responseModalities: ["TEXT", "IMAGE"]
+            }
+          })
+        }
+      );
+
+      if (!geminiResponse.ok) {
+        const geminiError = await geminiResponse.text();
+        console.error('[GenerateRenovation] Gemini fallback error:', geminiResponse.status, geminiError);
+        
+        // Final fallback: Generate a detailed description instead
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const descResult = await model.generateContent([
+          {
+            inlineData: {
+              mimeType: mimeType,
+              data: base64Data
+            }
+          },
+          { text: `Analyze this property image and describe in detail how it would look after this transformation: ${basePrompt}. Be specific about colors, materials, and design elements that would be changed.` }
+        ]);
+        
+        const description = descResult.response.text();
+        
+        return res.status(200).json({
+          success: true,
+          generatedImage: null,
+          fallbackMode: true,
+          type: isDevelopment ? 'development' : 'renovation',
+          context: contextTitle,
+          description: description
+        });
+      }
+
+      const geminiData = await geminiResponse.json();
+      
+      // Extract image from Gemini response
+      let generatedImage = null;
+      let description = '';
+      
+      if (geminiData.candidates?.[0]?.content?.parts) {
+        for (const part of geminiData.candidates[0].content.parts) {
+          if (part.inlineData) {
+            generatedImage = `data:${part.inlineData.mimeType || 'image/png'};base64,${part.inlineData.data}`;
+          } else if (part.text) {
+            description = part.text;
+          }
         }
       }
-    }
 
-    if (!generatedImage) {
-      console.error('[GenerateRenovation] No image generated in response');
-      return res.status(500).json({ 
-        error: 'Failed to generate image',
-        description: description || 'The AI was unable to generate an image for this property.'
+      if (generatedImage) {
+        console.log(`[GenerateRenovation] Successfully generated image via Gemini 2.0 Flash`);
+        return res.status(200).json({
+          success: true,
+          generatedImage,
+          type: isDevelopment ? 'development' : 'renovation',
+          context: contextTitle,
+          description: description || `AI-generated ${isDevelopment ? 'development' : 'renovation'} visualization for ${contextTitle}`
+        });
+      }
+
+      // If no image in response, return description only
+      return res.status(200).json({
+        success: true,
+        generatedImage: null,
+        fallbackMode: true,
+        type: isDevelopment ? 'development' : 'renovation',
+        context: contextTitle,
+        description: description || 'Image generation is currently unavailable. Please try again later.'
       });
     }
 
-    console.log(`[GenerateRenovation] Successfully generated ${isDevelopment ? 'development' : 'renovation'} image`);
+    // Parse Imagen response
+    const imagenData = await imagenResponse.json();
+    
+    if (imagenData.predictions?.[0]?.bytesBase64Encoded) {
+      const generatedImage = `data:image/png;base64,${imagenData.predictions[0].bytesBase64Encoded}`;
+      
+      console.log(`[GenerateRenovation] Successfully generated image via Imagen 3`);
+      
+      return res.status(200).json({
+        success: true,
+        generatedImage,
+        type: isDevelopment ? 'development' : 'renovation',
+        context: contextTitle,
+        description: `AI-generated ${isDevelopment ? 'development' : 'renovation'} visualization for ${contextTitle}`
+      });
+    }
 
-    // Return the generated image (original image is NOT stored or returned)
-    return res.status(200).json({
-      success: true,
-      generatedImage,
-      type: isDevelopment ? 'development' : 'renovation',
-      context: contextTitle,
-      description: description || `AI-generated ${isDevelopment ? 'development' : 'renovation'} visualization for ${contextTitle}`
+    console.error('[GenerateRenovation] No image in Imagen response:', imagenData);
+    return res.status(500).json({ 
+      error: 'Failed to generate image',
+      message: 'The AI model did not return an image.'
     });
 
   } catch (error) {
@@ -243,4 +346,3 @@ IMPORTANT RULES:
     });
   }
 }
-
