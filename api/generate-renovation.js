@@ -74,6 +74,13 @@ STEP 4 - DESIGN:
 - Crisp white render, timber accents, Colorbond roof
 - Orient correctly based on steps above
 
+DUPLEX SPECIFIC RULES:
+- If block is WIDE (15m+ frontage): Use TWO SEPARATE driveways, one for each dwelling
+- If block is NARROW: Use ONE SHARED driveway down the middle or side
+- Each dwelling needs its own garage (single or double)
+- Side-by-side duplex OR front-back configuration based on block shape
+- Separate front entries for each dwelling
+
 REMEMBER: Pretty front facade = faces street ONLY. Camera might see the back or side!`;
     } else {
       // RENOVATION: Keep structure, cosmetic updates only
