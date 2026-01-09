@@ -16,8 +16,7 @@ export class SupabaseService {
         auth: {
           autoRefreshToken: true,
           persistSession: true,
-          detectSessionInUrl: true, // Let Supabase handle OAuth tokens
-          // Use default PKCE flow (implicit is deprecated)
+          detectSessionInUrl: true
         }
       });
     } else {
@@ -440,11 +439,10 @@ export class SupabaseService {
     if (!this.supabase) {
       return { error: { message: 'Supabase not configured' } };
     }
-    // Use dynamic origin to handle both www.upblock.ai and upblock.ai
     const { error } = await this.supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin
+        redirectTo: 'https://upblock.ai'
       }
     });
     return { error };
