@@ -440,10 +440,12 @@ export class SupabaseService {
     if (!this.supabase) {
       return { error: { message: 'Supabase not configured' } };
     }
+    // Use PKCE flow with our server-side callback handler
     const { error } = await this.supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'https://upblock.ai'
+        redirectTo: 'https://upblock.ai/api/auth-callback',
+        skipBrowserRedirect: false
       }
     });
     return { error };
