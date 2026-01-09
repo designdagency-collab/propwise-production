@@ -143,16 +143,6 @@ const RenovationModal: React.FC<RenovationModalProps> = ({
               </div>
             </div>
 
-            {/* Labels */}
-            <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider pointer-events-none z-20">
-              <i className="fa-solid fa-camera mr-1.5"></i>
-              Original
-            </div>
-            <div className="absolute top-3 right-3 bg-[#C9A961] text-white px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider pointer-events-none z-20">
-              <i className="fa-solid fa-wand-magic-sparkles mr-1.5"></i>
-              AI {type === 'development' ? 'Render' : 'Reno'}
-            </div>
-
             {/* Drag hint */}
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-md pointer-events-none z-20">
               <span className="text-neutral-600 text-[10px] font-semibold flex items-center gap-1.5">
@@ -171,12 +161,7 @@ const RenovationModal: React.FC<RenovationModalProps> = ({
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
-            <p className="text-[10px] text-neutral-400 italic">
-              <i className="fa-solid fa-shield-halved mr-1"></i>
-              AI-generated visualisation. Original image not stored.
-            </p>
-            
+          <div className="flex justify-end">
             <div className="flex gap-2">
               <button
                 onClick={onClose}
