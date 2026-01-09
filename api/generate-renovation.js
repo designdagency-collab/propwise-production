@@ -39,14 +39,32 @@ export default async function handler(req, res) {
     const isDevelopment = type === 'development';
     const contextTitle = isDevelopment ? (scenarioTitle || 'Development') : (strategyTitle || 'Renovation');
     
-    // Simple design brief based on context
-    let designBrief = isDevelopment 
-      ? `Modern Australian ${contextTitle.toLowerCase()} with contemporary architecture, quality materials, and landscaping.`
-      : `"Luxe for Less" ${contextTitle.toLowerCase()} with modern finishes, quality fixtures, and contemporary styling.`;
+    // Build prompt based on type
+    let fullPrompt;
+    
+    if (isDevelopment) {
+      // DEVELOPMENT: Remove existing building, show brand new luxury development
+      fullPrompt = `Remove the existing building and show a brand new contemporary Australian ${contextTitle.toLowerCase()} development on this site.
 
-    // Build prompt (Three Birds style - simple and effective)
-    const fullPrompt = `Transform this space into a Three Birds Renovations masterpiece (2026 Trend Edition).
-BRIEF: ${designBrief}
+DESIGN BRIEF:
+- Luxury contemporary Australian architecture
+- Clean modern lines, large windows, quality materials
+- Crisp white render or weatherboard with timber/stone accents
+- Colorbond roofing in modern charcoal or monument
+- Landscaped gardens with native Australian plants
+- Premium finishes throughout
+
+DEVELOPMENT REQUIREMENTS:
+- REMOVE the existing structure completely
+- Show a NEW building appropriate for: ${contextTitle}
+- Modern architectural style suitable for 2024-2026
+- Include driveways, garages, and landscaping
+- High-end architectural visualization quality
+- Magazine-worthy luxury development render`;
+    } else {
+      // RENOVATION: Keep structure, cosmetic updates only
+      fullPrompt = `Transform this space into a Three Birds Renovations masterpiece (2026 Trend Edition).
+BRIEF: "Luxe for Less" ${contextTitle.toLowerCase()} with modern finishes, quality fixtures, and contemporary styling.
 
 CRITICAL - PRESERVE STRUCTURE:
 - DO NOT change the building structure, shape, roofline, or layout
@@ -59,6 +77,7 @@ VISUAL RULES:
 - IF INTERIOR: Update wall colors, flooring, light fixtures, window treatments, furniture styling. Keep same room layout.
 - Lighting Atmosphere: Magazine-quality, bright, airy, and coastal-luxe.
 - This is a COSMETIC renovation only - no structural changes.`;
+    }
 
     console.log(`[GenerateRenovation] Generating for: ${contextTitle}`);
 
