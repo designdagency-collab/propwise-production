@@ -58,6 +58,8 @@ There may be a RECTANGLE, SQUARE, or OUTLINE drawn on this image marking the pro
 - The boundary defines the land area, not height restrictions
 - Fill the marked area with the development footprint
 
+NOTE ON 3D PERSPECTIVE: When building tall structures, the 3D building will naturally COVER some of the 2D boundary lines drawn on the ground (the lines "behind" the building from camera view). This is OK - the building obscures those lines. But the VISIBLE boundary lines (front/sides you can still see) must still show the building respects them.
+
 Now create a ${contextTitle.toLowerCase()} development:
 
 STEP 2 - WHERE IS THE STREET?

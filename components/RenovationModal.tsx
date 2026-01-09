@@ -62,7 +62,47 @@ const RenovationModal: React.FC<RenovationModalProps> = ({
     }
   }, [isOpen]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    // Check if Web Share API is available (mobile)
+    if (navigator.share && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      try {
+        // Convert base64 to blob for sharing
+        const response = await fetch(afterImage);
+        const blob = await response.blob();
+        const file = new File([blob], `upblock-${type}-visualisation.png`, { type: 'image/png' });
+        
+        await navigator.share({
+          files: [file],
+          title: `Upblock ${type === 'development' ? 'Development' : 'Renovation'} Visualisation`,
+        });
+        return;
+      } catch (err) {
+        // If share fails, fall through to alternative methods
+        console.log('Share failed, trying alternative:', err);
+      }
+    }
+    
+    // Try opening in new tab for mobile (allows long-press to save)
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      const newTab = window.open();
+      if (newTab) {
+        newTab.document.write(`
+          <html>
+            <head><title>Upblock Visualisation</title></head>
+            <body style="margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#000;">
+              <img src="${afterImage}" style="max-width:100%;max-height:100vh;" />
+              <p style="position:fixed;bottom:20px;left:0;right:0;text-align:center;color:white;font-family:sans-serif;font-size:14px;">
+                Long-press image to save
+              </p>
+            </body>
+          </html>
+        `);
+        newTab.document.close();
+        return;
+      }
+    }
+    
+    // Desktop fallback - standard download
     const link = document.createElement('a');
     link.href = afterImage;
     link.download = `upblock-${type}-visualisation.png`;

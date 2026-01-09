@@ -74,14 +74,36 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   }>({ active: false, progress: 0, message: '' });
   const [dragOverCard, setDragOverCard] = useState<{ type: 'strategy' | 'development'; index: number } | null>(null);
   
-  // Store generated visualizations for each card (persists until page refresh)
+  // Store generated visualizations for each card (persists across browser navigation)
   // Now supports multiple visualizations per card as an array
   const [generatedVisuals, setGeneratedVisuals] = useState<{
     [key: string]: Array<{ beforeImage: string; afterImage: string; title: string; type: 'renovation' | 'development' }>;
-  }>({});
+  }>(() => {
+    // Restore from sessionStorage on mount
+    try {
+      const saved = sessionStorage.getItem(`upblock_visuals_${address}`);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.warn('Could not restore visuals:', e);
+    }
+    return {};
+  });
   
   // Track which visualization is being viewed in the gallery (for cards with multiple images)
   const [activeVisualIndex, setActiveVisualIndex] = useState<{ [key: string]: number }>({});
+  
+  // Save visuals to sessionStorage when they change
+  useEffect(() => {
+    if (Object.keys(generatedVisuals).length > 0) {
+      try {
+        sessionStorage.setItem(`upblock_visuals_${address}`, JSON.stringify(generatedVisuals));
+      } catch (e) {
+        console.warn('Could not save visuals:', e);
+      }
+    }
+  }, [generatedVisuals, address]);
   
   // Extract Australian state from address for state-aware approval badges
   const propertyState = useMemo(() => extractStateFromAddress(address), [address]);
