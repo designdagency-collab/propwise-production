@@ -154,6 +154,19 @@ const RENOVATION_PROMPTS = {
     Modern skirting boards, and cohesive color palette. 
     Light-filled and contemporary.`,
   
+  energy: `Transform this property with energy efficiency upgrades. 
+    Add solar panels on the roof in an optimal configuration, 
+    show modern energy-efficient windows, LED lighting visible through windows,
+    and any visible improvements like insulation or updated roof materials.
+    Keep the home's character but show it as a modern, energy-efficient dwelling.
+    Magazine-quality exterior with clean solar panel installation.`,
+  
+  outdoor: `Transform this outdoor space into a premium entertaining area. 
+    Include: quality decking or paved area, comfortable outdoor seating, 
+    modern outdoor lighting, lush plantings and greenery,
+    potential BBQ or outdoor kitchen area, shade structures or pergola.
+    Resort-style Australian outdoor living design.`,
+  
   general: `Transform this space into a "Luxe for Less" renovation masterpiece. 
     Include: modern neutral palette, quality fixtures and fittings, 
     improved lighting with LED downlights, fresh paint, 
@@ -161,52 +174,47 @@ const RENOVATION_PROMPTS = {
     Bright, airy, and magazine-worthy.`
 };
 
-// Development-specific prompts for aerial/drone images
+// Development-specific prompts for property images (aerial, street, or general exterior)
 const DEVELOPMENT_PROMPTS = {
-  duplex: `Render a modern Australian duplex development on this land. 
-    Show: two contemporary 2-story dwellings side-by-side or front-back configuration, 
-    individual driveways and garages, Colorbond roofing, 
-    rendered facades with timber accents, landscaped front yards, 
-    and clear property boundaries. Architectural visualization quality.`,
+  duplex: `Show this property transformed with a modern Australian duplex development. 
+    Add two contemporary dwellings with Colorbond roofing, 
+    rendered facades, landscaped front yards, and driveways.
+    Modern architectural style, clean lines, quality finishes.`,
   
-  townhouse: `Render a modern townhouse development on this land. 
-    Show: 3-4 contemporary attached townhouses in a row, 
-    individual entries and small courtyards, 
-    mixed cladding (render, timber, brick), flat or skillion roofs, 
-    visitor parking, and landscaped common areas. 
-    High-end architectural render style.`,
+  townhouse: `Show this property transformed with modern townhouse development. 
+    Add 2-4 contemporary attached townhouses with individual entries,
+    mixed cladding materials, modern rooflines, and landscaping.
+    High-quality architectural render style.`,
   
-  knockdown: `Render a new contemporary home on this cleared residential lot. 
-    Show: a modern single or two-story family home, 
-    double garage, landscaped gardens, 
-    clean architectural lines, large windows, 
-    outdoor entertaining area, and quality finishes. 
-    Architectural visualization of a premium new build.`,
+  knockdown: `Show this property with a new contemporary home replacing any existing structure. 
+    Add a modern family home with clean architectural lines, 
+    large windows, double garage, and landscaped gardens.
+    Premium new build visualization.`,
   
-  subdivision: `Render a small subdivision development on this land. 
-    Show: 2-3 separate modern dwellings on subdivided lots, 
-    individual driveways and access, 
-    contemporary Australian architectural style, 
-    landscaping between properties, and clear lot boundaries. 
-    Town planning visualization quality.`,
+  subdivision: `Show this land subdivided with multiple modern dwellings. 
+    Add 2-3 contemporary homes on separate lots,
+    individual driveways, quality landscaping between properties.
+    Town planning visualization style.`,
   
-  grannyflat: `Render a secondary dwelling/granny flat addition to this property. 
-    Show: a compact modern 1-2 bedroom dwelling in the backyard, 
-    separate entry path, small private courtyard, 
-    complementary design to main house, 
-    and integrated landscaping. Architectural visualization.`,
+  grannyflat: `Show this property with a secondary dwelling/granny flat added. 
+    Add a compact modern 1-2 bedroom dwelling,
+    complementary design to existing house, private courtyard.
+    Integrated landscaping and separate entry.`,
   
-  apartment: `Render a boutique apartment development on this site. 
-    Show: a 3-4 story contemporary apartment building, 
-    balconies on each unit, basement or undercroft parking, 
-    quality facade materials, rooftop garden or amenities, 
-    and landscaped street frontage. Architectural render quality.`,
+  apartment: `Show this site with a boutique apartment development. 
+    Add a 3-4 story contemporary building with balconies,
+    quality facade materials, street landscaping.
+    Modern architectural render style.`,
   
-  mixed: `Render a mixed-use development on this site. 
-    Show: ground floor retail/commercial space with apartments above, 
-    2-4 stories total, modern facade with varied materials, 
-    street-level activation, and residential balconies. 
-    Urban infill architectural visualization.`
+  mixed: `Show this site with a mixed-use development. 
+    Add ground floor retail/commercial with apartments above,
+    modern facade, activated street frontage.
+    Urban development visualization.`,
+    
+  general: `Show this property with a modern development concept. 
+    Add contemporary residential buildings appropriate for the site,
+    quality landscaping, modern architectural style.
+    Clean visualization showing development potential.`
 };
 
 export default async function handler(req, res) {
@@ -273,18 +281,22 @@ export default async function handler(req, res) {
       } else if (scenarioLower.includes('mixed')) {
         basePrompt = DEVELOPMENT_PROMPTS.mixed;
       } else {
-        basePrompt = DEVELOPMENT_PROMPTS.duplex;
+        basePrompt = DEVELOPMENT_PROMPTS.general;
       }
     } else {
       contextTitle = strategyTitle || 'Renovation';
       const strategyLower = contextTitle.toLowerCase();
       if (strategyLower.includes('kitchen')) {
         basePrompt = RENOVATION_PROMPTS.kitchen;
-      } else if (strategyLower.includes('bath')) {
+      } else if (strategyLower.includes('bath') || strategyLower.includes('ensuite')) {
         basePrompt = RENOVATION_PROMPTS.bathroom;
-      } else if (strategyLower.includes('facade') || strategyLower.includes('exterior') || strategyLower.includes('street')) {
+      } else if (strategyLower.includes('facade') || strategyLower.includes('exterior') || strategyLower.includes('street') || strategyLower.includes('curb')) {
         basePrompt = RENOVATION_PROMPTS.facade;
-      } else if (strategyLower.includes('landscap') || strategyLower.includes('outdoor') || strategyLower.includes('garden')) {
+      } else if (strategyLower.includes('energy') || strategyLower.includes('solar') || strategyLower.includes('efficiency') || strategyLower.includes('sustainable')) {
+        basePrompt = RENOVATION_PROMPTS.energy;
+      } else if (strategyLower.includes('outdoor') || strategyLower.includes('living') || strategyLower.includes('entertainment') || strategyLower.includes('alfresco') || strategyLower.includes('deck') || strategyLower.includes('patio')) {
+        basePrompt = RENOVATION_PROMPTS.outdoor;
+      } else if (strategyLower.includes('landscap') || strategyLower.includes('garden') || strategyLower.includes('backyard') || strategyLower.includes('yard')) {
         basePrompt = RENOVATION_PROMPTS.landscaping;
       } else if (strategyLower.includes('floor')) {
         basePrompt = RENOVATION_PROMPTS.flooring;
