@@ -44,22 +44,37 @@ export default async function handler(req, res) {
     
     if (isDevelopment) {
       // DEVELOPMENT: Analyze site and camera position, then show brand new luxury development
-      fullPrompt = `Create a ${contextTitle.toLowerCase()} development on this property. CRITICAL: You must show the CORRECT SIDE of the building based on camera angle.
+      fullPrompt = `Create a ${contextTitle.toLowerCase()} development on this property.
 
-STEP 1 - WHERE IS THE STREET?
+🔴 STEP 1 - FIND THE PROPERTY BOUNDARY (MOST IMPORTANT):
+Look for ANY drawn boundary line on the image:
+- Red, yellow, blue, white, or ANY colored line/border marking the lot
+- Dotted lines, solid lines, highlighted areas
+- This is the EXACT area you must build within
+
+⚠️ CRITICAL RULES FOR BOUNDARY LINES:
+- ALL buildings must fit INSIDE the marked boundary
+- Driveways can extend to the street but buildings stay within the line  
+- Do NOT place any structure outside the boundary
+- For COMBINED LOTS: The boundary may include multiple parcels - use the ENTIRE marked area
+- For AERIAL VIEWS: The boundary line defines the development footprint
+
+If NO boundary is drawn, use visible fence lines and property edges.
+
+STEP 2 - WHERE IS THE STREET?
 Look for these clues to find the street:
 - Driveways (they connect TO the street)
 - Road surface, kerbs, footpaths
 - Power poles, street lights, mailboxes
 - How neighboring houses are oriented (their fronts face the street)
 
-STEP 2 - WHERE IS THE CAMERA?
+STEP 3 - WHERE IS THE CAMERA?
 - If AERIAL looking down: the street edge has driveways connecting to it
 - If street is at BOTTOM of image: camera is viewing from backyard/rear
 - If street is at TOP of image: camera is viewing from street
 - If street is LEFT or RIGHT: camera is viewing from side
 
-STEP 3 - SHOW THE CORRECT SIDE OF THE BUILDING:
+STEP 4 - SHOW THE CORRECT SIDE OF THE BUILDING:
 ⚠️ DO NOT automatically show the pretty facade toward the camera!
 
 - If viewing FROM THE REAR/BACKYARD: Show the BACK of the house (fences, back doors, clotheslines area, pool if any, rear landscaping, NO grand entrance)
@@ -68,11 +83,12 @@ STEP 3 - SHOW THE CORRECT SIDE OF THE BUILDING:
 
 The facade with the grand entry and garage doors ONLY faces the street. If camera is not on the street, you will NOT see the main facade.
 
-STEP 4 - DESIGN:
+STEP 5 - DESIGN:
 - REMOVE existing structure
 - NEW ${contextTitle} - luxury contemporary Australian architecture
 - Crisp white render, timber accents, Colorbond roof
 - Orient correctly based on steps above
+- FIT WITHIN the property boundary lines if marked
 
 DUPLEX SPECIFIC RULES:
 - If block is WIDE (15m+ frontage): Use TWO SEPARATE driveways, one for each dwelling
@@ -81,7 +97,12 @@ DUPLEX SPECIFIC RULES:
 - Side-by-side duplex OR front-back configuration based on block shape
 - Separate front entries for each dwelling
 
-REMEMBER: Pretty front facade = faces street ONLY. Camera might see the back or side!`;
+REMEMBER: 
+🔴 #1 PRIORITY: Build WITHIN any boundary lines drawn on the image - this is non-negotiable
+- Use the FULL area within the boundary for the development
+- Pretty front facade = faces street ONLY
+- Camera might see the back or side!
+- For combined lots/large sites: maximize the development potential within the boundary`;
     } else {
       // RENOVATION: Keep structure, cosmetic updates only
       fullPrompt = `Transform this space into a Three Birds Renovations masterpiece (2026 Trend Edition).
