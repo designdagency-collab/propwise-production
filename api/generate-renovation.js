@@ -44,35 +44,37 @@ export default async function handler(req, res) {
     
     if (isDevelopment) {
       // DEVELOPMENT: Analyze site and camera position, then show brand new luxury development
-      fullPrompt = `Analyze this property image and create a brand new contemporary Australian ${contextTitle.toLowerCase()} development.
+      fullPrompt = `Create a ${contextTitle.toLowerCase()} development on this property. CRITICAL: You must show the CORRECT SIDE of the building based on camera angle.
 
-STEP 1 - UNDERSTAND THE PHOTO:
-- Where is this photo taken FROM? (street, backyard, side, aerial, neighbor's property?)
-- The camera is NOT always on the street - determine the actual camera position
-- Look for clues: roads, footpaths, power lines, street signs, driveways, neighboring houses
+STEP 1 - WHERE IS THE STREET?
+Look for these clues to find the street:
+- Driveways (they connect TO the street)
+- Road surface, kerbs, footpaths
+- Power poles, street lights, mailboxes
+- How neighboring houses are oriented (their fronts face the street)
 
-STEP 2 - FIND THE STREET:
-- Identify where the actual STREET/ROAD is relative to the property
-- Look for: road surface, kerb, footpath, street trees, power poles, mailboxes
-- The street might be BEHIND the camera, to the SIDE, or visible in the image
-- If aerial view: identify the street frontage from road patterns
+STEP 2 - WHERE IS THE CAMERA?
+- If AERIAL looking down: the street edge has driveways connecting to it
+- If street is at BOTTOM of image: camera is viewing from backyard/rear
+- If street is at TOP of image: camera is viewing from street
+- If street is LEFT or RIGHT: camera is viewing from side
 
-STEP 3 - ORIENT THE DEVELOPMENT CORRECTLY:
-- The house facade MUST face toward the actual street (not necessarily toward camera)
-- Driveway must connect to the street logically
-- Front yard faces street, backyard is opposite the street
-- If photo is from backyard: show the BACK of the new house
-- If photo is from side: show the SIDE of the new house
+STEP 3 - SHOW THE CORRECT SIDE OF THE BUILDING:
+⚠️ DO NOT automatically show the pretty facade toward the camera!
 
-STEP 4 - DESIGN THE DEVELOPMENT:
-- REMOVE the existing structure completely
-- Show a NEW ${contextTitle} with luxury contemporary Australian architecture
-- Clean modern lines, large windows, quality materials
-- Crisp white render or weatherboard with timber/stone accents
-- Colorbond roofing in modern charcoal or monument
-- Premium finishes throughout
+- If viewing FROM THE REAR/BACKYARD: Show the BACK of the house (fences, back doors, clotheslines area, pool if any, rear landscaping, NO grand entrance)
+- If viewing FROM THE STREET: Show the FRONT facade (entry, garage doors, front landscaping)
+- If viewing FROM THE SIDE: Show the SIDE of the house (side fence, side windows)
 
-CRITICAL: Orient the building based on where the STREET actually is, NOT based on camera position.`;
+The facade with the grand entry and garage doors ONLY faces the street. If camera is not on the street, you will NOT see the main facade.
+
+STEP 4 - DESIGN:
+- REMOVE existing structure
+- NEW ${contextTitle} - luxury contemporary Australian architecture
+- Crisp white render, timber accents, Colorbond roof
+- Orient correctly based on steps above
+
+REMEMBER: Pretty front facade = faces street ONLY. Camera might see the back or side!`;
     } else {
       // RENOVATION: Keep structure, cosmetic updates only
       fullPrompt = `Transform this space into a Three Birds Renovations masterpiece (2026 Trend Edition).
