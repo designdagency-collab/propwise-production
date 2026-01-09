@@ -43,22 +43,34 @@ export default async function handler(req, res) {
     let fullPrompt;
     
     if (isDevelopment) {
-      // DEVELOPMENT: Remove existing building, show brand new luxury development
-      fullPrompt = `Remove the existing building and show a brand new contemporary Australian ${contextTitle.toLowerCase()} development on this site.
+      // DEVELOPMENT: Analyze site first, then show brand new luxury development
+      fullPrompt = `Analyze this property image and create a brand new contemporary Australian ${contextTitle.toLowerCase()} development.
 
-DESIGN BRIEF:
-- Luxury contemporary Australian architecture
+STEP 1 - ANALYZE THE SITE:
+- Identify where the STREET/ROAD is in the image
+- Determine the block orientation and shape
+- Note any slopes, trees, or features to work with
+- Identify the front boundary (street side)
+
+STEP 2 - ORIENT THE DEVELOPMENT:
+- Face the main entry and facade TOWARD the street
+- Place driveway connecting to the street
+- Position garages with logical street access
+- Ensure the building sits correctly on the block
+
+STEP 3 - DESIGN THE DEVELOPMENT:
+- REMOVE the existing structure completely
+- Show a NEW ${contextTitle} with luxury contemporary Australian architecture
 - Clean modern lines, large windows, quality materials
 - Crisp white render or weatherboard with timber/stone accents
 - Colorbond roofing in modern charcoal or monument
-- Landscaped gardens with native Australian plants
+- Landscaped front yard facing street, private backyard behind
 - Premium finishes throughout
 
-DEVELOPMENT REQUIREMENTS:
-- REMOVE the existing structure completely
-- Show a NEW building appropriate for: ${contextTitle}
+REQUIREMENTS:
+- Building must face the correct direction (toward street)
+- Driveway must connect logically to street access
 - Modern architectural style suitable for 2024-2026
-- Include driveways, garages, and landscaping
 - High-end architectural visualization quality
 - Magazine-worthy luxury development render`;
     } else {
