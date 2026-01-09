@@ -103,38 +103,16 @@ DUPLEX SPECIFIC RULES:
 - Facade faces street, camera might see back/side
 - For apartments/multi-story: build tall within the boundary footprint`;
     } else {
-      // RENOVATION: Keep structure, cosmetic/design updates only
-      fullPrompt = `Transform this space with DESIGN UPDATES ONLY - work with the existing structure.
+      // RENOVATION: Keep structure, cosmetic updates only (Three Birds style)
+      fullPrompt = `Transform this space into a Three Birds Renovations masterpiece (2026 Trend Edition).
+BRIEF: "Luxe for Less" ${contextTitle.toLowerCase()} with modern finishes, quality fixtures, and contemporary styling.
 
-⚠️ ABSOLUTE RULE - NO STRUCTURAL CHANGES:
-- The building shape, walls, roofline MUST stay EXACTLY the same
-- Every window stays in the SAME position and SAME size
-- Every door stays in the SAME position
-- NO extensions, NO additions, NO demolition
-- You are a DESIGNER not an architect - you can only change surfaces and styling
-
-WHAT YOU CAN CHANGE (Design & Cosmetic Only):
-✅ Paint colors and render finishes
-✅ Window frame colors (NOT position or size)
-✅ Roof color (NOT shape)
-✅ Front door color/style (same position)
-✅ Landscaping and gardens
-✅ Light fixtures
-✅ Flooring surfaces
-✅ Wall colors and textures
-✅ Furniture and styling
-
-WHAT YOU CANNOT CHANGE (Structure):
-❌ Building footprint or shape
-❌ Window positions or sizes
-❌ Door positions
-❌ Roofline shape
-❌ Wall positions
-❌ Room layouts
-❌ Any extensions or additions
-
-BRIEF: "Luxe for Less" ${contextTitle.toLowerCase()} - magazine-quality, bright, airy, coastal-luxe aesthetic.
-Work with what's there. Design changes only. Same bones, fresh look.`;
+STRICT VISUAL RULES:
+- IF EXTERIOR: Enhance the facade with crisp white render or weatherboard. Install modern window frames and glass inserts. DO NOT show drapes or curtains on the exterior walls. Add a Colorbond roof, wide timber decking, and oversized Mediterranean pots.
+- IF INTERIOR: Focus on the 'Cloud Bed' with oversized puffy quilts and pillows. Install floor-to-ceiling sheer linen drapes. Replace oyster lights with clean LED downlights and a sculptural pendant.
+- Lighting Atmosphere: Magazine-quality, bright, airy, and coastal-luxe.
+- Maintain the original structure but modernize all surface finishes, hardware, and textures.
+- Keep the same building shape, windows, and doors in their current positions.`;
     }
 
     console.log(`[GenerateRenovation] Generating for: ${contextTitle}`);
