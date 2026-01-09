@@ -124,97 +124,42 @@ Keep your response concise - just 2-3 sentences maximum.`;
   VALIDATION DISABLED FOR DEBUGGING */
 }
 
-// Strategy-specific prompts for renovations
-const RENOVATION_PROMPTS = {
-  kitchen: `Transform this kitchen into a luxurious modern Australian kitchen. 
-    Include: stone benchtops, integrated appliances, pendant lighting, 
-    soft-close cabinetry in a neutral palette, subway tile splashback, 
-    and engineered timber flooring. Magazine-quality, bright and airy.`,
+// Strategy-specific design briefs (Three Birds style - simple and focused)
+const RENOVATION_BRIEFS = {
+  kitchen: `Modern Australian kitchen with stone benchtops, integrated appliances, pendant lighting, neutral cabinetry, and engineered timber floors.`,
   
-  bathroom: `Transform this bathroom into a spa-like retreat. 
-    Include: freestanding bath or walk-in rain shower, floating vanity, 
-    large format tiles, brushed brass or matte black fixtures, 
-    frameless glass, and ambient LED lighting. Luxe hotel aesthetic.`,
+  bathroom: `Spa-like bathroom retreat with walk-in rain shower, floating vanity, large format tiles, matte black fixtures, and ambient LED lighting.`,
   
-  facade: `Transform this home's exterior facade into a modern Australian design. 
-    Include: crisp white render or weatherboard, Colorbond roofing, 
-    slim-line window frames, architectural timber accents, 
-    landscaped front yard with native plants, and statement front door. 
-    Magazine-quality street appeal.`,
+  facade: `Modern Australian facade with crisp white render, Colorbond roof, slim-line window frames, timber accents, and landscaped front garden.`,
   
-  landscaping: `Transform this outdoor space into a premium entertaining area. 
-    Include: timber or composite decking, outdoor kitchen/BBQ area, 
-    lush native plantings, architectural lighting, 
-    modern fencing, and seamless indoor-outdoor flow. 
-    Resort-style Australian landscape design.`,
+  landscaping: `Premium outdoor entertaining with timber decking, outdoor kitchen area, lush native plantings, and architectural lighting.`,
   
-  flooring: `Transform this interior with premium flooring throughout. 
-    Include: wide-plank engineered timber in a warm oak tone, 
-    consistent throughout living areas, with plush carpet in bedrooms. 
-    Modern skirting boards, and cohesive color palette. 
-    Light-filled and contemporary.`,
+  flooring: `Premium wide-plank engineered timber flooring in warm oak, modern skirting boards, light-filled contemporary interior.`,
   
-  energy: `Transform this property with energy efficiency upgrades. 
-    Add solar panels on the roof in an optimal configuration, 
-    show modern energy-efficient windows, LED lighting visible through windows,
-    and any visible improvements like insulation or updated roof materials.
-    Keep the home's character but show it as a modern, energy-efficient dwelling.
-    Magazine-quality exterior with clean solar panel installation.`,
+  energy: `Energy efficient home with solar panels on roof, modern double-glazed windows, LED downlights, sustainable upgrades.`,
   
-  outdoor: `Transform this outdoor space into a premium entertaining area. 
-    Include: quality decking or paved area, comfortable outdoor seating, 
-    modern outdoor lighting, lush plantings and greenery,
-    potential BBQ or outdoor kitchen area, shade structures or pergola.
-    Resort-style Australian outdoor living design.`,
+  outdoor: `Resort-style outdoor living with quality decking, comfortable seating area, modern lighting, lush greenery, and shade structure.`,
   
-  general: `Transform this space into a "Luxe for Less" renovation masterpiece. 
-    Include: modern neutral palette, quality fixtures and fittings, 
-    improved lighting with LED downlights, fresh paint, 
-    updated flooring, and contemporary styling. 
-    Bright, airy, and magazine-worthy.`
+  general: `"Luxe for Less" renovation with modern neutral palette, quality fixtures, LED downlights, fresh paint, and contemporary styling.`
 };
 
-// Development-specific prompts for property images (aerial, street, or general exterior)
-const DEVELOPMENT_PROMPTS = {
-  duplex: `Show this property transformed with a modern Australian duplex development. 
-    Add two contemporary dwellings with Colorbond roofing, 
-    rendered facades, landscaped front yards, and driveways.
-    Modern architectural style, clean lines, quality finishes.`,
+// Development-specific design briefs
+const DEVELOPMENT_BRIEFS = {
+  duplex: `Modern Australian duplex with two contemporary dwellings, Colorbond roofing, rendered facades, landscaped front yards.`,
   
-  townhouse: `Show this property transformed with modern townhouse development. 
-    Add 2-4 contemporary attached townhouses with individual entries,
-    mixed cladding materials, modern rooflines, and landscaping.
-    High-quality architectural render style.`,
+  townhouse: `Contemporary townhouse development with 2-4 attached dwellings, mixed cladding, modern rooflines, landscaped entries.`,
   
-  knockdown: `Show this property with a new contemporary home replacing any existing structure. 
-    Add a modern family home with clean architectural lines, 
-    large windows, double garage, and landscaped gardens.
-    Premium new build visualization.`,
+  knockdown: `New contemporary family home with clean architectural lines, large windows, double garage, landscaped gardens.`,
   
-  subdivision: `Show this land subdivided with multiple modern dwellings. 
-    Add 2-3 contemporary homes on separate lots,
-    individual driveways, quality landscaping between properties.
-    Town planning visualization style.`,
+  subdivision: `Subdivision with 2-3 modern homes on separate lots, individual driveways, quality landscaping.`,
   
-  grannyflat: `Show this property with a secondary dwelling/granny flat added. 
-    Add a compact modern 1-2 bedroom dwelling,
-    complementary design to existing house, private courtyard.
-    Integrated landscaping and separate entry.`,
+  grannyflat: `Secondary dwelling/granny flat addition - compact modern 1-2 bedroom dwelling with separate entry and private courtyard.`,
   
-  apartment: `Show this site with a boutique apartment development. 
-    Add a 3-4 story contemporary building with balconies,
-    quality facade materials, street landscaping.
-    Modern architectural render style.`,
+  apartment: `Boutique apartment building 3-4 stories with balconies, quality facade materials, street landscaping.`,
   
-  mixed: `Show this site with a mixed-use development. 
-    Add ground floor retail/commercial with apartments above,
-    modern facade, activated street frontage.
-    Urban development visualization.`,
+  mixed: `Mixed-use development with ground floor retail/commercial, apartments above, modern facade.`,
     
-  general: `Show this property with a modern development concept. 
-    Add contemporary residential buildings appropriate for the site,
-    quality landscaping, modern architectural style.
-    Clean visualization showing development potential.`
+  general: `Modern residential development appropriate for the site with contemporary architecture and quality landscaping.`
 };
 
 export default async function handler(req, res) {
@@ -263,68 +208,60 @@ export default async function handler(req, res) {
     let basePrompt;
     let contextTitle;
     
+    // Get the design brief based on type
+    let designBrief;
+    
     if (isDevelopment) {
       contextTitle = scenarioTitle || 'Development';
       const scenarioLower = contextTitle.toLowerCase();
       if (scenarioLower.includes('duplex')) {
-        basePrompt = DEVELOPMENT_PROMPTS.duplex;
+        designBrief = DEVELOPMENT_BRIEFS.duplex;
       } else if (scenarioLower.includes('townhouse') || scenarioLower.includes('town house')) {
-        basePrompt = DEVELOPMENT_PROMPTS.townhouse;
+        designBrief = DEVELOPMENT_BRIEFS.townhouse;
       } else if (scenarioLower.includes('knock') || scenarioLower.includes('rebuild') || scenarioLower.includes('new build')) {
-        basePrompt = DEVELOPMENT_PROMPTS.knockdown;
+        designBrief = DEVELOPMENT_BRIEFS.knockdown;
       } else if (scenarioLower.includes('subdiv')) {
-        basePrompt = DEVELOPMENT_PROMPTS.subdivision;
+        designBrief = DEVELOPMENT_BRIEFS.subdivision;
       } else if (scenarioLower.includes('granny') || scenarioLower.includes('secondary') || scenarioLower.includes('ancillary')) {
-        basePrompt = DEVELOPMENT_PROMPTS.grannyflat;
+        designBrief = DEVELOPMENT_BRIEFS.grannyflat;
       } else if (scenarioLower.includes('apartment') || scenarioLower.includes('unit')) {
-        basePrompt = DEVELOPMENT_PROMPTS.apartment;
+        designBrief = DEVELOPMENT_BRIEFS.apartment;
       } else if (scenarioLower.includes('mixed')) {
-        basePrompt = DEVELOPMENT_PROMPTS.mixed;
+        designBrief = DEVELOPMENT_BRIEFS.mixed;
       } else {
-        basePrompt = DEVELOPMENT_PROMPTS.general;
+        designBrief = DEVELOPMENT_BRIEFS.general;
       }
     } else {
       contextTitle = strategyTitle || 'Renovation';
       const strategyLower = contextTitle.toLowerCase();
       if (strategyLower.includes('kitchen')) {
-        basePrompt = RENOVATION_PROMPTS.kitchen;
+        designBrief = RENOVATION_BRIEFS.kitchen;
       } else if (strategyLower.includes('bath') || strategyLower.includes('ensuite')) {
-        basePrompt = RENOVATION_PROMPTS.bathroom;
+        designBrief = RENOVATION_BRIEFS.bathroom;
       } else if (strategyLower.includes('facade') || strategyLower.includes('exterior') || strategyLower.includes('street') || strategyLower.includes('curb')) {
-        basePrompt = RENOVATION_PROMPTS.facade;
+        designBrief = RENOVATION_BRIEFS.facade;
       } else if (strategyLower.includes('energy') || strategyLower.includes('solar') || strategyLower.includes('efficiency') || strategyLower.includes('sustainable')) {
-        basePrompt = RENOVATION_PROMPTS.energy;
+        designBrief = RENOVATION_BRIEFS.energy;
       } else if (strategyLower.includes('outdoor') || strategyLower.includes('living') || strategyLower.includes('entertainment') || strategyLower.includes('alfresco') || strategyLower.includes('deck') || strategyLower.includes('patio')) {
-        basePrompt = RENOVATION_PROMPTS.outdoor;
+        designBrief = RENOVATION_BRIEFS.outdoor;
       } else if (strategyLower.includes('landscap') || strategyLower.includes('garden') || strategyLower.includes('backyard') || strategyLower.includes('yard')) {
-        basePrompt = RENOVATION_PROMPTS.landscaping;
+        designBrief = RENOVATION_BRIEFS.landscaping;
       } else if (strategyLower.includes('floor')) {
-        basePrompt = RENOVATION_PROMPTS.flooring;
+        designBrief = RENOVATION_BRIEFS.flooring;
       } else {
-        basePrompt = RENOVATION_PROMPTS.general;
+        designBrief = RENOVATION_BRIEFS.general;
       }
     }
 
-    // Build the full prompt (Three Birds style)
-    const fullPrompt = `Transform this property image. ${basePrompt}
-
-Property: ${propertyAddress || 'Australian residential property'}
+    // Build the full prompt (Three Birds style - simple and effective)
+    const fullPrompt = `Transform this space into a premium Australian ${isDevelopment ? 'development' : 'renovation'} (2026 Trend Edition).
+BRIEF: ${designBrief}
 
 STRICT VISUAL RULES:
-- IF EXTERIOR: Enhance the facade with crisp white render or weatherboard. Install modern window frames. Add Colorbond roof and landscaped gardens. DO NOT show interior drapes on exterior.
-- IF INTERIOR: Focus on modern finishes, quality fixtures, LED downlights, and contemporary styling.
-- Lighting Atmosphere: Magazine-quality, bright, airy, and contemporary Australian.
-- Maintain the original structure and camera angle but modernize all surface finishes, hardware, and textures.
-- Do NOT add any text, watermarks, or labels.
-
-AUSTRALIAN DESIGN SAFETY RULES (CRITICAL):
-- NEVER place swimming pools in front yards - pools go in backyards only
-- NEVER show BBQs, outdoor kitchens, or entertainment areas in front yards
-- NEVER show air conditioning units visible from the street/front facade
-- ALL balconies and elevated decks MUST have safety railings/balustrades
-- NO large entertainment decking in front yards - front areas should have landscaping, paths, and driveways only
-- Outdoor entertaining areas belong in backyards or side courtyards, not street-facing areas
-- Front yards should feature: lawn/garden beds, driveway, entry path, and appropriate landscaping`;
+- IF EXTERIOR: Enhance the facade with crisp white render or weatherboard. Install modern window frames and glass inserts. DO NOT show drapes or curtains on the exterior walls. Add a Colorbond roof, wide timber decking, and landscaped gardens.
+- IF INTERIOR: Focus on modern finishes, quality fixtures, LED downlights, and contemporary styling. Install floor-to-ceiling sheer linen drapes if windows visible.
+- Lighting Atmosphere: Magazine-quality, bright, airy, and coastal-luxe.
+- Maintain the original structure but modernize all surface finishes, hardware, and textures.`;
 
     console.log(`[GenerateRenovation] Generating ${isDevelopment ? 'development' : 'renovation'} visualization for: ${contextTitle}`);
 
