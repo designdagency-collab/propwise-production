@@ -12,12 +12,13 @@ export class SupabaseService {
   
   constructor() {
     if (isSupabaseConfigured) {
+      console.log('[Supabase] Initializing client with URL:', supabaseUrl);
       this.supabase = createClient(supabaseUrl, supabaseAnonKey, {
         auth: {
           autoRefreshToken: true,
           persistSession: true,
           detectSessionInUrl: true,
-          flowType: 'implicit'  // Required to pass tokens via URL hash
+          flowType: 'pkce'  // Use PKCE flow which is more reliable
         }
       });
     } else {
@@ -440,14 +441,17 @@ export class SupabaseService {
     if (!this.supabase) {
       return { error: { message: 'Supabase not configured' } };
     }
-    // Use PKCE flow with our server-side callback handler
-    const { error } = await this.supabase.auth.signInWithOAuth({
+    console.log('[Auth] Starting Google OAuth...');
+    const { data, error } = await this.supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'https://upblock.ai/api/auth-callback',
-        skipBrowserRedirect: false
+        redirectTo: window.location.origin,
+        queryParams: {
+          prompt: 'select_account'  // Always show account picker
+        }
       }
     });
+    console.log('[Auth] signInWithOAuth result:', { data, error: error?.message });
     return { error };
   }
 
