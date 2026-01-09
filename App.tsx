@@ -236,7 +236,14 @@ const App: React.FC = () => {
 
   // Handle browser back/forward navigation
   useEffect(() => {
+    // Push initial state on first load so back button works correctly
+    if (!window.history.state) {
+      window.history.replaceState({ view: 'home' }, '', window.location.pathname + window.location.search);
+    }
+    
     const handlePopState = (event: PopStateEvent) => {
+      console.log('[Navigation] Popstate event:', event.state);
+      
       if (event.state?.view === 'results') {
         // Forward navigation - try to restore results from sessionStorage
         console.log('[Navigation] Forward to results, restoring from cache');
@@ -248,23 +255,30 @@ const App: React.FC = () => {
             setAddress(cachedAddress);
             setAppState(AppState.RESULTS);
             setIsValidAddress(true);
-            setIsCached(true); // Mark as cached since restored from sessionStorage
+            setIsCached(true);
+          } else {
+            // No cached results, go home
+            setAppState(AppState.IDLE);
+            setResults(null);
           }
         } catch (e) {
           console.warn('[Navigation] Could not restore results:', e);
+          setAppState(AppState.IDLE);
+          setResults(null);
         }
-      } else if (results !== null || appState === AppState.LIMIT_REACHED) {
-        // Back navigation - clear results and go to home
+      } else if (event.state?.view === 'home' || event.state?.view === 'limit' || !event.state) {
+        // Back to home or unknown state - clear results and go to home
         console.log('[Navigation] Back button pressed, returning to home');
         setResults(null);
         setAppState(AppState.IDLE);
         setError(null);
+        setIsValidAddress(false);
       }
     };
     
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [results, appState]);
+  }, []); // Empty dependency - only run once on mount
 
   // Check for referral code in URL on page load
   useEffect(() => {
@@ -1481,6 +1495,10 @@ const App: React.FC = () => {
           console.warn('[Navigation] Could not cache results:', e);
         }
         // Push history state so back button returns to home
+        // First ensure we have a home state to go back to
+        if (window.history.state?.view !== 'home') {
+          window.history.replaceState({ view: 'home' }, '', window.location.pathname);
+        }
         window.history.pushState({ view: 'results', address }, '', window.location.pathname);
         // Only consume credit on successful results
         // Check if this is a FREE re-search (searched within last 7 days)
