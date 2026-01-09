@@ -75,9 +75,13 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   const [dragOverCard, setDragOverCard] = useState<{ type: 'strategy' | 'development'; index: number } | null>(null);
   
   // Store generated visualizations for each card (persists until page refresh)
+  // Now supports multiple visualizations per card as an array
   const [generatedVisuals, setGeneratedVisuals] = useState<{
-    [key: string]: { beforeImage: string; afterImage: string; title: string; type: 'renovation' | 'development' };
+    [key: string]: Array<{ beforeImage: string; afterImage: string; title: string; type: 'renovation' | 'development' }>;
   }>({});
+  
+  // Track which visualization is being viewed in the gallery (for cards with multiple images)
+  const [activeVisualIndex, setActiveVisualIndex] = useState<{ [key: string]: number }>({});
   
   // Extract Australian state from address for state-aware approval badges
   const propertyState = useMemo(() => extractStateFromAddress(address), [address]);
@@ -419,114 +423,133 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
 
   // ========== RENOVATION/DEVELOPMENT VISUALIZER FUNCTIONS ==========
   
+  // Helper to read file as base64
+  const readFileAsBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+  
   const handleVisualizerUpload = useCallback(async (
     file: File, 
     type: 'strategy' | 'development',
     index: number,
     title: string
-  ) => {
+  ): Promise<void> => {
     // Read file as base64
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const base64Image = e.target?.result as string;
-      
-      // Start loading state
-      setVisualizerLoading({
-        active: true,
-        progress: 0,
-        message: type === 'development' 
-          ? 'Analyzing site for development rendering...' 
-          : 'Analyzing property for renovation...',
-        cardType: type,
-        cardIndex: index
+    const base64Image = await readFileAsBase64(file);
+    
+    // Start loading state
+    setVisualizerLoading({
+      active: true,
+      progress: 0,
+      message: type === 'development' 
+        ? 'Analyzing site for development rendering...' 
+        : 'Analyzing property for renovation...',
+      cardType: type,
+      cardIndex: index
+    });
+
+    // Simulate progress while API processes
+    const progressInterval = setInterval(() => {
+      setVisualizerLoading(prev => {
+        if (prev.progress >= 90) {
+          return { ...prev, progress: 90, message: 'Generating AI visualisation...' };
+        }
+        const increment = prev.progress < 30 ? 8 : prev.progress < 60 ? 5 : 2;
+        const messages = type === 'development'
+          ? ['Analyzing lot boundaries...', 'Designing building footprint...', 'Rendering development...', 'Adding architectural details...']
+          : ['Identifying renovation areas...', 'Applying design upgrades...', 'Rendering improvements...', 'Finalising visualisation...'];
+        const msgIndex = Math.min(Math.floor(prev.progress / 25), messages.length - 1);
+        return { ...prev, progress: prev.progress + increment, message: messages[msgIndex] };
+      });
+    }, 200);
+
+    try {
+      const response = await fetch('/api/generate-renovation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image: base64Image,
+          type: type === 'development' ? 'development' : 'renovation',
+          strategyTitle: type === 'strategy' ? title : undefined,
+          scenarioTitle: type === 'development' ? title : undefined,
+          propertyAddress: address
+        })
       });
 
-      // Simulate progress while API processes
-      const progressInterval = setInterval(() => {
-        setVisualizerLoading(prev => {
-          if (prev.progress >= 90) {
-            return { ...prev, progress: 90, message: 'Generating AI visualisation...' };
-          }
-          const increment = prev.progress < 30 ? 8 : prev.progress < 60 ? 5 : 2;
-          const messages = type === 'development'
-            ? ['Analyzing lot boundaries...', 'Designing building footprint...', 'Rendering development...', 'Adding architectural details...']
-            : ['Identifying renovation areas...', 'Applying design upgrades...', 'Rendering improvements...', 'Finalising visualisation...'];
-          const msgIndex = Math.min(Math.floor(prev.progress / 25), messages.length - 1);
-          return { ...prev, progress: prev.progress + increment, message: messages[msgIndex] };
-        });
-      }, 200);
+      clearInterval(progressInterval);
 
-      try {
-        const response = await fetch('/api/generate-renovation', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            image: base64Image,
-            type: type === 'development' ? 'development' : 'renovation',
-            strategyTitle: type === 'strategy' ? title : undefined,
-            scenarioTitle: type === 'development' ? title : undefined,
-            propertyAddress: address
-          })
-        });
-
-        clearInterval(progressInterval);
-
-        const result = await response.json();
-        
-        if (!response.ok) {
-          // Check if this is a validation failure (wrong image type)
-          if (result.validationFailed) {
-            setVisualizerLoading({ active: false, progress: 0, message: '' });
-            alert(`⚠️ Wrong Image Type\n\n${result.message}\n\nPlease upload a photo that matches this strategy.`);
-            return;
-          }
-          throw new Error(result.error || 'Failed to generate visualization');
-        }
-
-        // Complete progress
-        setVisualizerLoading(prev => ({ ...prev, progress: 100, message: 'Complete!' }));
-
-        // Small delay then open modal or show fallback
-        setTimeout(() => {
+      const result = await response.json();
+      
+      if (!response.ok) {
+        // Check if this is a validation failure (wrong image type)
+        if (result.validationFailed) {
           setVisualizerLoading({ active: false, progress: 0, message: '' });
-          
-          if (result.fallbackMode || !result.generatedImage) {
-            // Fallback mode - show description only
-            alert(`Image generation temporarily unavailable.\n\nAI Vision Analysis:\n${result.description || 'Unable to generate visualisation at this time.'}`);
-          } else {
-            // Save to generatedVisuals for thumbnail display
-            const visualKey = `${type}-${index}`;
-            setGeneratedVisuals(prev => ({
-              ...prev,
-              [visualKey]: {
-                beforeImage: base64Image,
-                afterImage: result.generatedImage,
-                title: title,
-                type: type === 'development' ? 'development' : 'renovation'
-              }
-            }));
-            
-            // Success - open modal with before/after
-            setVisualizerModal({
-              isOpen: true,
-              beforeImage: base64Image,
-              afterImage: result.generatedImage,
-              title: title,
-              type: type === 'development' ? 'development' : 'renovation',
-              description: result.description
-            });
-          }
-        }, 500);
-
-      } catch (error: any) {
-        clearInterval(progressInterval);
-        console.error('Visualizer error:', error);
-        setVisualizerLoading({ active: false, progress: 0, message: '' });
-        alert(`Failed to generate visualisation. Please try again.\n\nError: ${error.message}`);
+          alert(`⚠️ Wrong Image Type\n\n${result.message}\n\nPlease upload a photo that matches this strategy.`);
+          return;
+        }
+        throw new Error(result.error || 'Failed to generate visualization');
       }
-    };
-    reader.readAsDataURL(file);
-  }, [address]);
+
+      // Complete progress
+      setVisualizerLoading(prev => ({ ...prev, progress: 100, message: 'Complete!' }));
+
+      // Small delay then show result
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setVisualizerLoading({ active: false, progress: 0, message: '' });
+      
+      if (result.fallbackMode || !result.generatedImage) {
+        // Fallback mode - show description only
+        alert(`Image generation temporarily unavailable.\n\nAI Vision Analysis:\n${result.description || 'Unable to generate visualisation at this time.'}`);
+      } else {
+        // Save to generatedVisuals array for thumbnail display (supports multiple per card)
+        const visualKey = `${type}-${index}`;
+        const newVisual = {
+          beforeImage: base64Image,
+          afterImage: result.generatedImage,
+          title: title,
+          type: type === 'development' ? 'development' : 'renovation' as 'renovation' | 'development'
+        };
+        
+        setGeneratedVisuals(prev => {
+          const existing = prev[visualKey] || [];
+          return {
+            ...prev,
+            [visualKey]: [...existing, newVisual]
+          };
+        });
+        
+        // Update active index to show the new image
+        setActiveVisualIndex(prev => {
+          const existing = generatedVisuals[visualKey]?.length || 0;
+          return {
+            ...prev,
+            [visualKey]: existing
+          };
+        });
+        
+        // Success - open modal with before/after
+        setVisualizerModal({
+          isOpen: true,
+          beforeImage: base64Image,
+          afterImage: result.generatedImage,
+          title: title,
+          type: type === 'development' ? 'development' : 'renovation',
+          description: result.description
+        });
+      }
+
+    } catch (error: any) {
+      clearInterval(progressInterval);
+      console.error('Visualizer error:', error);
+      setVisualizerLoading({ active: false, progress: 0, message: '' });
+      alert(`Failed to generate visualisation. Please try again.\n\nError: ${error.message}`);
+    }
+  }, [address, generatedVisuals]);
 
   const handleDragOver = useCallback((e: React.DragEvent, type: 'strategy' | 'development', index: number) => {
     e.preventDefault();
@@ -545,41 +568,61 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
     e.stopPropagation();
     setDragOverCard(null);
     
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      const file = files[0];
-      if (file.type.startsWith('image/')) {
-        handleVisualizerUpload(file, type, index, title);
-      } else {
-        alert('Please drop an image file (JPG, PNG, etc.)');
-      }
+    const files = Array.from(e.dataTransfer.files);
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    
+    if (imageFiles.length === 0) {
+      alert('Please drop image files (JPG, PNG, etc.)');
+      return;
     }
+    
+    // Process multiple images sequentially to avoid rate limiting
+    const processImages = async () => {
+      for (const file of imageFiles) {
+        await handleVisualizerUpload(file, type, index, title);
+      }
+    };
+    processImages();
   }, [handleVisualizerUpload]);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>, type: 'strategy' | 'development', index: number, title: string) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleVisualizerUpload(file, type, index, title);
-    }
-    // Reset input so same file can be selected again
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    
+    // Process multiple images sequentially to avoid rate limiting
+    const processImages = async () => {
+      for (const file of files) {
+        if (file.type.startsWith('image/')) {
+          await handleVisualizerUpload(file, type, index, title);
+        }
+      }
+    };
+    processImages();
+    
+    // Reset input so same files can be selected again
     e.target.value = '';
   }, [handleVisualizerUpload]);
 
-  // Open modal from saved thumbnail
-  const handleThumbnailClick = useCallback((type: 'strategy' | 'development', index: number) => {
+  // Open modal from saved thumbnail - now supports array with gallery navigation
+  const handleThumbnailClick = useCallback((type: 'strategy' | 'development', index: number, visualIndex?: number) => {
     const visualKey = `${type}-${index}`;
-    const visual = generatedVisuals[visualKey];
-    if (visual) {
-      setVisualizerModal({
-        isOpen: true,
-        beforeImage: visual.beforeImage,
-        afterImage: visual.afterImage,
-        title: visual.title,
-        type: visual.type,
-        description: undefined
-      });
+    const visuals = generatedVisuals[visualKey];
+    if (visuals && visuals.length > 0) {
+      const idx = visualIndex ?? activeVisualIndex[visualKey] ?? 0;
+      const visual = visuals[idx];
+      if (visual) {
+        setActiveVisualIndex(prev => ({ ...prev, [visualKey]: idx }));
+        setVisualizerModal({
+          isOpen: true,
+          beforeImage: visual.beforeImage,
+          afterImage: visual.afterImage,
+          title: visual.title,
+          type: visual.type,
+          description: undefined
+        });
+      }
     }
-  }, [generatedVisuals]);
+  }, [generatedVisuals, activeVisualIndex]);
 
   // ========== END VISUALIZER FUNCTIONS ==========
 
@@ -1010,26 +1053,35 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                          </div>
                        )}
                      </div>
-                     {/* AI Visualization Thumbnail (if generated) */}
-                     {generatedVisuals[`strategy-${i}`] && (
-                       <button
-                         data-no-pdf="true"
-                         onClick={() => handleThumbnailClick('strategy', i)}
-                         className="relative w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden border-2 border-[#C9A961] shadow-md hover:shadow-lg hover:scale-105 transition-all group"
-                         title="View AI Visualisation"
-                       >
-                         <img 
-                           src={generatedVisuals[`strategy-${i}`].afterImage} 
-                           alt="AI Visualisation" 
-                           className="w-full h-full object-cover"
-                         />
-                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                           <i className="fa-solid fa-expand text-white opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                         </div>
-                         <div className="absolute bottom-0 left-0 right-0 bg-[#C9A961] py-0.5">
-                           <p className="text-[6px] font-bold text-white text-center uppercase tracking-wider">AI Reno</p>
-                         </div>
-                       </button>
+                     {/* AI Visualization Thumbnails (supports multiple) */}
+                     {generatedVisuals[`strategy-${i}`]?.length > 0 && (
+                       <div className="flex gap-1.5 flex-shrink-0">
+                         {generatedVisuals[`strategy-${i}`].map((visual, vIdx) => (
+                           <button
+                             key={vIdx}
+                             data-no-pdf="true"
+                             onClick={() => handleThumbnailClick('strategy', i, vIdx)}
+                             className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 shadow-md hover:shadow-lg hover:scale-105 transition-all group ${
+                               activeVisualIndex[`strategy-${i}`] === vIdx ? 'border-[#C9A961]' : 'border-slate-300'
+                             }`}
+                             title={`View AI Visualisation ${vIdx + 1}`}
+                           >
+                             <img 
+                               src={visual.afterImage} 
+                               alt={`AI Visualisation ${vIdx + 1}`} 
+                               className="w-full h-full object-cover"
+                             />
+                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                               <i className="fa-solid fa-expand text-white opacity-0 group-hover:opacity-100 transition-opacity text-xs"></i>
+                             </div>
+                             {generatedVisuals[`strategy-${i}`].length > 1 && (
+                               <div className="absolute top-0.5 right-0.5 bg-black/60 rounded-full w-4 h-4 flex items-center justify-center">
+                                 <span className="text-[8px] font-bold text-white">{vIdx + 1}</span>
+                               </div>
+                             )}
+                           </button>
+                         ))}
+                       </div>
                      )}
                   </div>
                   
@@ -1062,7 +1114,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                       <label className="block cursor-pointer">
                         <input 
                           type="file" 
-                          accept="image/*" 
+                          accept="image/*"
+                          multiple
                           className="hidden" 
                           onChange={(e) => handleFileSelect(e, 'strategy', i, strategy.title)}
                         />
@@ -1075,7 +1128,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                                 : 'AI Visualise Renovation'}
                             </span>
                           </div>
-                          <p className="text-[10px] text-[#4A4137]/30 mt-1">Drag photo or click to upload</p>
+                          <p className="text-[10px] text-[#4A4137]/30 mt-1">Drag photos or click to upload (multiple supported)</p>
                         </div>
                       </label>
                     )}
@@ -1171,26 +1224,35 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                          <p className="text-[9px] font-black text-[#4A4137]/50 uppercase tracking-widest mb-1">Est. Build Cost</p>
                          <p className="text-base font-bold text-[#4A4137]">{formatValue(scenario.estimatedCost?.low)} – {formatValue(scenario.estimatedCost?.high)}</p>
                       </div>
-                      {/* AI Visualization Thumbnail (if generated) */}
-                      {generatedVisuals[`development-${i}`] && (
-                        <button
-                          data-no-pdf="true"
-                          onClick={() => handleThumbnailClick('development', i)}
-                          className="relative w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden border-2 border-[#4A4137] shadow-md hover:shadow-lg hover:scale-105 transition-all group"
-                          title="View AI Development Render"
-                        >
-                          <img 
-                            src={generatedVisuals[`development-${i}`].afterImage} 
-                            alt="AI Development Render" 
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                            <i className="fa-solid fa-expand text-white opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                          </div>
-                          <div className="absolute bottom-0 left-0 right-0 bg-[#4A4137] py-0.5">
-                            <p className="text-[6px] font-bold text-white text-center uppercase tracking-wider">AI Render</p>
-                          </div>
-                        </button>
+                      {/* AI Visualization Thumbnails (supports multiple) */}
+                      {generatedVisuals[`development-${i}`]?.length > 0 && (
+                        <div className="flex gap-1.5 flex-shrink-0">
+                          {generatedVisuals[`development-${i}`].map((visual, vIdx) => (
+                            <button
+                              key={vIdx}
+                              data-no-pdf="true"
+                              onClick={() => handleThumbnailClick('development', i, vIdx)}
+                              className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 shadow-md hover:shadow-lg hover:scale-105 transition-all group ${
+                                activeVisualIndex[`development-${i}`] === vIdx ? 'border-[#4A4137]' : 'border-slate-300'
+                              }`}
+                              title={`View AI Development Render ${vIdx + 1}`}
+                            >
+                              <img 
+                                src={visual.afterImage} 
+                                alt={`AI Development Render ${vIdx + 1}`} 
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                <i className="fa-solid fa-expand text-white opacity-0 group-hover:opacity-100 transition-opacity text-xs"></i>
+                              </div>
+                              {generatedVisuals[`development-${i}`].length > 1 && (
+                                <div className="absolute top-0.5 right-0.5 bg-black/60 rounded-full w-4 h-4 flex items-center justify-center">
+                                  <span className="text-[8px] font-bold text-white">{vIdx + 1}</span>
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
                       )}
                    </div>
                    {scenario.estimatedNetProfit && (() => {
@@ -1258,7 +1320,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                        <label className="block cursor-pointer">
                          <input 
                            type="file" 
-                           accept="image/*" 
+                           accept="image/*"
+                           multiple
                            className="hidden" 
                            onChange={(e) => handleFileSelect(e, 'development', i, scenario.title)}
                          />
@@ -1271,7 +1334,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                                  : 'AI Visualise Development'}
                              </span>
                            </div>
-                           <p className="text-[10px] text-[#4A4137]/30 mt-1">Drop drone/aerial photo to render {scenario.title.toLowerCase()}</p>
+                           <p className="text-[10px] text-[#4A4137]/30 mt-1">Drop drone/aerial photos to render (multiple supported)</p>
                          </div>
                        </label>
                      )}
