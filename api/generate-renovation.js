@@ -43,36 +43,36 @@ export default async function handler(req, res) {
     let fullPrompt;
     
     if (isDevelopment) {
-      // DEVELOPMENT: Analyze site first, then show brand new luxury development
+      // DEVELOPMENT: Analyze site and camera position, then show brand new luxury development
       fullPrompt = `Analyze this property image and create a brand new contemporary Australian ${contextTitle.toLowerCase()} development.
 
-STEP 1 - ANALYZE THE SITE:
-- Identify where the STREET/ROAD is in the image
-- Determine the block orientation and shape
-- Note any slopes, trees, or features to work with
-- Identify the front boundary (street side)
+STEP 1 - UNDERSTAND THE PHOTO:
+- Where is this photo taken FROM? (street, backyard, side, aerial, neighbor's property?)
+- The camera is NOT always on the street - determine the actual camera position
+- Look for clues: roads, footpaths, power lines, street signs, driveways, neighboring houses
 
-STEP 2 - ORIENT THE DEVELOPMENT:
-- Face the main entry and facade TOWARD the street
-- Place driveway connecting to the street
-- Position garages with logical street access
-- Ensure the building sits correctly on the block
+STEP 2 - FIND THE STREET:
+- Identify where the actual STREET/ROAD is relative to the property
+- Look for: road surface, kerb, footpath, street trees, power poles, mailboxes
+- The street might be BEHIND the camera, to the SIDE, or visible in the image
+- If aerial view: identify the street frontage from road patterns
 
-STEP 3 - DESIGN THE DEVELOPMENT:
+STEP 3 - ORIENT THE DEVELOPMENT CORRECTLY:
+- The house facade MUST face toward the actual street (not necessarily toward camera)
+- Driveway must connect to the street logically
+- Front yard faces street, backyard is opposite the street
+- If photo is from backyard: show the BACK of the new house
+- If photo is from side: show the SIDE of the new house
+
+STEP 4 - DESIGN THE DEVELOPMENT:
 - REMOVE the existing structure completely
 - Show a NEW ${contextTitle} with luxury contemporary Australian architecture
 - Clean modern lines, large windows, quality materials
 - Crisp white render or weatherboard with timber/stone accents
 - Colorbond roofing in modern charcoal or monument
-- Landscaped front yard facing street, private backyard behind
 - Premium finishes throughout
 
-REQUIREMENTS:
-- Building must face the correct direction (toward street)
-- Driveway must connect logically to street access
-- Modern architectural style suitable for 2024-2026
-- High-end architectural visualization quality
-- Magazine-worthy luxury development render`;
+CRITICAL: Orient the building based on where the STREET actually is, NOT based on camera position.`;
     } else {
       // RENOVATION: Keep structure, cosmetic updates only
       fullPrompt = `Transform this space into a Three Birds Renovations masterpiece (2026 Trend Edition).
