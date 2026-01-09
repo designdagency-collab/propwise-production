@@ -16,7 +16,8 @@ export class SupabaseService {
         auth: {
           autoRefreshToken: true,
           persistSession: true,
-          detectSessionInUrl: true
+          detectSessionInUrl: true,
+          flowType: 'implicit'  // Required to pass tokens via URL hash
         }
       });
     } else {
