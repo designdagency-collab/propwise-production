@@ -48,6 +48,12 @@ const VALIDATION_RULES = {
 
 // Validate that uploaded image matches the strategy type
 async function validateImage(ai, base64Data, validationType) {
+  // TEMPORARILY DISABLED - skip all validation to debug generation issues
+  // Re-enable once generation is confirmed working
+  console.log(`[GenerateRenovation] Validation SKIPPED (temporarily disabled) for type: ${validationType}`);
+  return { valid: true };
+  
+  /* VALIDATION DISABLED FOR DEBUGGING
   // Skip validation for general renovations
   if (!validationType || validationType === 'general') {
     return { valid: true };
@@ -117,6 +123,7 @@ Keep your response concise - just 2-3 sentences maximum.`;
     // If validation fails due to error, allow the request to proceed
     return { valid: true, error: err.message };
   }
+  VALIDATION DISABLED FOR DEBUGGING */
 }
 
 // Strategy-specific prompts for renovations
@@ -340,6 +347,9 @@ AUSTRALIAN DESIGN SAFETY RULES (CRITICAL):
 
     // ========== GENERATE VISUALIZATION ==========
     // Generate image using gemini-2.5-flash-image (same as Three Birds)
+    console.log(`[GenerateRenovation] Calling Gemini API with model: gemini-2.5-flash-image`);
+    console.log(`[GenerateRenovation] Image data length: ${base64Data.length} characters`);
+    
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: {
@@ -361,6 +371,14 @@ AUSTRALIAN DESIGN SAFETY RULES (CRITICAL):
         }
       }
     });
+
+    console.log(`[GenerateRenovation] Response received, candidates: ${response.candidates?.length || 0}`);
+    if (response.candidates?.[0]?.content?.parts) {
+      console.log(`[GenerateRenovation] Response parts: ${response.candidates[0].content.parts.length}`);
+      response.candidates[0].content.parts.forEach((part, i) => {
+        console.log(`[GenerateRenovation] Part ${i}: hasInlineData=${!!part.inlineData}, hasText=${!!part.text}`);
+      });
+    }
 
     // Extract the generated image from the response (same pattern as Three Birds)
     let generatedImage = null;
@@ -391,9 +409,16 @@ AUSTRALIAN DESIGN SAFETY RULES (CRITICAL):
 
   } catch (error) {
     console.error('[GenerateRenovation] Error:', error);
+    console.error('[GenerateRenovation] Error name:', error.name);
+    console.error('[GenerateRenovation] Error message:', error.message);
+    console.error('[GenerateRenovation] Error stack:', error.stack);
+    if (error.response) {
+      console.error('[GenerateRenovation] Error response:', JSON.stringify(error.response, null, 2));
+    }
     return res.status(500).json({ 
       error: 'Failed to generate visualisation',
-      message: error.message 
+      message: error.message,
+      details: error.name || 'Unknown error'
     });
   }
 }
