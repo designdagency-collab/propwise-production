@@ -1,9 +1,7 @@
-// API endpoint for AI-powered renovation and development visualization
+// API endpoint for AI-powered renovation and development visualisation
 // Uses @google/genai with gemini-2.5-flash-image model (same as Three Birds)
 
 import { GoogleGenAI } from "@google/genai";
-
-const getAI = () => new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '' });
 
 // ========== IMAGE VALIDATION RULES ==========
 // Each strategy type requires a specific kind of photo
@@ -231,13 +229,26 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Validate API key first
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error('[GenerateRenovation] GEMINI_API_KEY not configured');
+      return res.status(500).json({ 
+        error: 'API configuration error',
+        message: 'Server is not properly configured. Please contact support.'
+      });
+    }
+
     const { image, type, strategyTitle, scenarioTitle, propertyAddress } = req.body;
 
     if (!image) {
       return res.status(400).json({ error: 'No image provided' });
     }
 
-    // Determine if this is a renovation or development visualization
+    // Initialize AI client with validated API key
+    const ai = new GoogleGenAI({ apiKey });
+
+    // Determine if this is a renovation or development visualisation
     const isDevelopment = type === 'development';
     
     // Get the appropriate prompt based on context
@@ -307,9 +318,6 @@ AUSTRALIAN DESIGN SAFETY RULES (CRITICAL):
 
     // Extract base64 data from data URL
     const base64Data = image.includes(',') ? image.split(',')[1] : image;
-
-    // Initialize AI (same pattern as Three Birds)
-    const ai = getAI();
 
     // ========== VALIDATE IMAGE MATCHES STRATEGY TYPE ==========
     // Determine validation type based on strategy/scenario title
