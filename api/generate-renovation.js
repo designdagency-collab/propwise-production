@@ -44,64 +44,58 @@ export default async function handler(req, res) {
     
     if (isDevelopment) {
       // DEVELOPMENT: Analyze site and camera position, then show brand new luxury development
-      fullPrompt = `⚠️⚠️⚠️ BEFORE ANYTHING ELSE - LOOK FOR A BOUNDARY BOX/LINE ⚠️⚠️⚠️
+      fullPrompt = `🚨🚨🚨 CRITICAL: BOUNDARY LINES DETECTED 🚨🚨🚨
 
-There may be a RECTANGLE, SQUARE, or OUTLINE drawn on this image marking the property boundary.
-- Look for: colored lines, boxes, rectangles, highlighted areas, borders
-- Colors could be: red, yellow, blue, white, green, or any color
-- It might be: solid line, dotted line, or shaded area
+THIS IMAGE HAS PROPERTY BOUNDARY LINES DRAWN ON IT.
+- Look carefully: there are WHITE/CREAM colored lines forming a SHAPE on this aerial view
+- These lines mark the EXACT property boundary
+- The lines may be: rectangles, irregular polygons, or outlined areas
 
-🚨 IF YOU SEE A BOUNDARY BOX/LINE:
-- The building FOOTPRINT (base/ground floor) must fit WITHIN the marked area
-- Do NOT extend the building footprint beyond the drawn lines
-- You CAN build UP (height) - multi-story buildings are fine
-- The boundary defines the land area, not height restrictions
-- Fill the marked area with the development footprint
+⛔ ABSOLUTE RULE - NON-NEGOTIABLE:
+The new building FOOTPRINT must be SMALLER than or EQUAL to the marked boundary area.
+- DO NOT let any part of the building extend beyond the boundary lines
+- The building must fit COMPLETELY INSIDE the drawn shape
+- If the boundary is small, build a SMALLER building that fits
+- If the boundary shows combined lots, you can build larger but STILL WITHIN the lines
+- SHRINK the building if needed to fit - NEVER exceed the boundary
+- Leave some SETBACK space from the boundary lines (don't build right to the edge)
 
-NOTE ON 3D PERSPECTIVE: When building tall structures, the 3D building will naturally COVER some of the 2D boundary lines drawn on the ground (the lines "behind" the building from camera view). This is OK - the building obscures those lines. But the VISIBLE boundary lines (front/sides you can still see) must still show the building respects them.
+✅ WHAT IS ALLOWED:
+- Building UP (height/stories) - multi-story is fine within the footprint
+- Using 70-85% of the marked area (leave setbacks from edges)
+- Contemporary design that works within the space constraint
 
 Now create a ${contextTitle.toLowerCase()} development:
 
-STEP 2 - WHERE IS THE STREET?
-Look for these clues to find the street:
-- Driveways (they connect TO the street)
-- Road surface, kerbs, footpaths
-- Power poles, street lights, mailboxes
-- How neighboring houses are oriented (their fronts face the street)
+SITE ANALYSIS:
+1. Identify the BOUNDARY LINES first (white/colored lines marking property edge)
+2. Measure mentally: how big is the boundary? Build SMALLER than that.
+3. Find the STREET (driveways connect to it, power poles, neighboring house orientations)
+4. Determine CAMERA POSITION relative to street
 
-STEP 3 - WHERE IS THE CAMERA?
-- If AERIAL looking down: the street edge has driveways connecting to it
-- If street is at BOTTOM of image: camera is viewing from backyard/rear
-- If street is at TOP of image: camera is viewing from street
-- If street is LEFT or RIGHT: camera is viewing from side
+BUILDING ORIENTATION:
+- Main facade with entry/garage faces the STREET
+- If viewing from rear: show BACK of building (fences, rear doors, pool area)
+- If viewing from side: show SIDE of building
+- DO NOT show front facade if camera is not on street side
 
-STEP 4 - SHOW THE CORRECT SIDE OF THE BUILDING:
-⚠️ DO NOT automatically show the pretty facade toward the camera!
-
-- If viewing FROM THE REAR/BACKYARD: Show the BACK of the house (fences, back doors, clotheslines area, pool if any, rear landscaping, NO grand entrance)
-- If viewing FROM THE STREET: Show the FRONT facade (entry, garage doors, front landscaping)
-- If viewing FROM THE SIDE: Show the SIDE of the house (side fence, side windows)
-
-The facade with the grand entry and garage doors ONLY faces the street. If camera is not on the street, you will NOT see the main facade.
-
-STEP 5 - DESIGN:
-- REMOVE existing structure
+DESIGN BRIEF:
+- REMOVE existing structures completely
 - NEW ${contextTitle} - luxury contemporary Australian architecture
 - Crisp white render, timber accents, Colorbond roof
-- Orient correctly based on steps above
-- FIT WITHIN the property boundary lines if marked
+- Make the building PROPORTIONAL to fit the boundary
+- SMALLER boundary = SMALLER building footprint
 
-DUPLEX SPECIFIC RULES:
-- If block is WIDE (15m+ frontage): Use TWO SEPARATE driveways, one for each dwelling
-- If block is NARROW: Use ONE SHARED driveway down the middle or side
-- Each dwelling needs its own garage (single or double)
-- Side-by-side duplex OR front-back configuration based on block shape
-- Separate front entries for each dwelling
+DUPLEX RULES:
+- Wide block (15m+): Two separate driveways
+- Narrow block: One shared driveway
+- Each dwelling gets own garage and separate entry
 
-🚨 FINAL CHECK:
-- Is there a boundary box/line drawn? Keep footprint INSIDE it. Height is OK.
-- Facade faces street, camera might see back/side
-- For apartments/multi-story: build tall within the boundary footprint`;
+🔴 FINAL CHECK - MOST IMPORTANT:
+1. Does the building footprint fit ENTIRELY within the boundary lines? If NO, SHRINK IT.
+2. Is any wall, corner, or edge extending past the boundary? If YES, pull it back INSIDE.
+3. Can you still see the boundary lines around the building edges? Good - that means it fits.
+4. The building should look CONTAINED within the property lines, not overflowing them.`;
     } else {
       // RENOVATION: Keep structure, cosmetic updates only (Three Birds style)
       fullPrompt = `Transform this space into a Three Birds Renovations masterpiece (2026 Trend Edition).
