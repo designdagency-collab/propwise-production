@@ -505,6 +505,14 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
     index: number,
     title: string
   ): Promise<void> => {
+    // Limit uplift strategies to 2 visualisations per card
+    const visualKey = `${type}-${index}`;
+    const existingCount = generatedVisuals[visualKey]?.length || 0;
+    if (type === 'strategy' && existingCount >= 2) {
+      alert('You\'ve reached the limit of 2 AI visualisations for this strategy. Try a different uplift strategy!');
+      return;
+    }
+    
     // Compress image before upload (max 1920px width, 80% quality)
     let base64Image: string;
     try {
@@ -1200,6 +1208,16 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                           {visualizerLoading.message}
                         </p>
                       </div>
+                    ) : (generatedVisuals[`strategy-${i}`]?.length || 0) >= 2 ? (
+                      <div className="p-4 text-center">
+                        <div className="flex items-center justify-center gap-2 text-[#4A4137]/30">
+                          <i className="fa-solid fa-check-circle text-emerald-500"></i>
+                          <span className="text-xs font-bold uppercase tracking-wider">
+                            Limit Reached (2/2)
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-[#4A4137]/30 mt-1">View your visualisations above</p>
+                      </div>
                     ) : (
                       <label className="block cursor-pointer">
                         <input 
@@ -1215,10 +1233,10 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                             <span className="text-xs font-bold uppercase tracking-wider">
                               {dragOverCard?.type === 'strategy' && dragOverCard?.index === i 
                                 ? 'Drop image here' 
-                                : 'AI Visualise Renovation'}
+                                : `AI Visualise (${generatedVisuals[`strategy-${i}`]?.length || 0}/2)`}
                             </span>
                           </div>
-                          <p className="text-[10px] text-[#4A4137]/30 mt-1">Drag photos or click to upload (multiple supported)</p>
+                          <p className="text-[10px] text-[#4A4137]/30 mt-1">Drag photo or click to upload</p>
                         </div>
                       </label>
                     )}
