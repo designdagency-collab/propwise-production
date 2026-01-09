@@ -494,7 +494,15 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
 
       clearInterval(progressInterval);
 
-      const result = await response.json();
+      // Handle non-JSON responses gracefully
+      let result;
+      const responseText = await response.text();
+      try {
+        result = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Response parse error:', parseError, 'Response:', responseText.substring(0, 200));
+        throw new Error(responseText.substring(0, 100) || 'Server returned invalid response');
+      }
       
       if (!response.ok) {
         // Check if this is a validation failure (wrong image type)
@@ -503,7 +511,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
           alert(`⚠️ Wrong Image Type\n\n${result.message}\n\nPlease upload a photo that matches this strategy.`);
           return;
         }
-        throw new Error(result.error || 'Failed to generate visualization');
+        throw new Error(result.error || result.message || 'Failed to generate visualization');
       }
 
       // Complete progress

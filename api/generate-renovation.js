@@ -59,32 +59,60 @@ STRICT VISUAL RULES:
     // Extract base64 data
     const base64Data = image.includes(',') ? image.split(',')[1] : image;
 
+    // Check image size - reduce if too large
+    const imageSizeKB = Math.round(base64Data.length * 0.75 / 1024);
+    console.log(`[GenerateRenovation] Image size: ${imageSizeKB}KB`);
+    
+    if (imageSizeKB > 4000) {
+      console.error('[GenerateRenovation] Image too large:', imageSizeKB, 'KB');
+      return res.status(400).json({ error: 'Image too large. Please use a smaller image (under 4MB).' });
+    }
+
     // Generate image (exact Three Birds pattern)
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              mimeType: 'image/jpeg',
-              data: base64Data
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image',
+        contents: {
+          parts: [
+            {
+              inlineData: {
+                mimeType: 'image/jpeg',
+                data: base64Data
+              }
+            },
+            {
+              text: fullPrompt
             }
-          },
-          {
-            text: fullPrompt
+          ]
+        },
+        config: {
+          imageConfig: {
+            aspectRatio: "16:9"
           }
-        ]
-      },
-      config: {
-        imageConfig: {
-          aspectRatio: "16:9"
         }
-      }
-    });
+      });
+    } catch (apiError) {
+      console.error('[GenerateRenovation] API Error:', apiError.message);
+      console.error('[GenerateRenovation] API Error details:', JSON.stringify(apiError, null, 2));
+      return res.status(500).json({ 
+        error: 'AI service error',
+        message: apiError.message || 'Failed to connect to AI service'
+      });
+    }
+
+    console.log('[GenerateRenovation] Response type:', typeof response);
+    console.log('[GenerateRenovation] Response keys:', response ? Object.keys(response) : 'null');
 
     // Extract generated image (exact Three Birds pattern)
     let generatedImage = null;
-    for (const part of response.candidates?.[0]?.content?.parts || []) {
+    
+    if (!response || !response.candidates || !response.candidates[0]) {
+      console.error('[GenerateRenovation] Invalid response structure:', JSON.stringify(response).substring(0, 500));
+      return res.status(500).json({ error: 'Invalid response from AI. Please try again.' });
+    }
+
+    for (const part of response.candidates[0]?.content?.parts || []) {
       if (part.inlineData) {
         generatedImage = `data:image/png;base64,${part.inlineData.data}`;
         break;
@@ -92,8 +120,13 @@ STRICT VISUAL RULES:
     }
 
     if (!generatedImage) {
-      console.error('[GenerateRenovation] No image in response');
-      return res.status(500).json({ error: 'Failed to generate image. Please try again.' });
+      console.error('[GenerateRenovation] No image in response parts');
+      // Check if there's text in response (might be an error message)
+      const textPart = response.candidates[0]?.content?.parts?.find(p => p.text);
+      if (textPart) {
+        console.error('[GenerateRenovation] Response text:', textPart.text);
+      }
+      return res.status(500).json({ error: 'AI did not generate an image. Please try a different photo.' });
     }
 
     console.log(`[GenerateRenovation] Success for: ${contextTitle}`);
