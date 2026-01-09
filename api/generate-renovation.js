@@ -69,8 +69,9 @@ async function validateImage(ai, base64Data, validationType) {
 Keep your response concise - just 2-3 sentences maximum.`;
 
   try {
+    // Use gemini-2.0-flash-exp for validation (confirmed to work with this SDK)
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.0-flash-exp',
       contents: {
         parts: [
           { inlineData: { mimeType: 'image/jpeg', data: base64Data } },
@@ -79,7 +80,20 @@ Keep your response concise - just 2-3 sentences maximum.`;
       }
     });
 
-    const analysis = (response.text || '').toLowerCase();
+    // Extract text from response - handle different response formats
+    let analysisText = '';
+    if (response.text) {
+      analysisText = response.text;
+    } else if (response.candidates?.[0]?.content?.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.text) {
+          analysisText = part.text;
+          break;
+        }
+      }
+    }
+    
+    const analysis = analysisText.toLowerCase();
     console.log(`[GenerateRenovation] Image analysis: ${analysis.substring(0, 200)}...`);
 
     // Check if any of the required keywords are present in the analysis
@@ -89,14 +103,14 @@ Keep your response concise - just 2-3 sentences maximum.`;
       console.log(`[GenerateRenovation] Validation FAILED - expected ${rule.description}`);
       return {
         valid: false,
-        analysis: response.text,
+        analysis: analysisText,
         expected: rule.description,
         errorMessage: rule.errorMessage
       };
     }
 
     console.log(`[GenerateRenovation] Validation PASSED`);
-    return { valid: true, analysis: response.text };
+    return { valid: true, analysis: analysisText };
 
   } catch (err) {
     console.error(`[GenerateRenovation] Validation error:`, err.message);
