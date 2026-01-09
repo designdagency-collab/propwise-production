@@ -445,12 +445,12 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
       const progressInterval = setInterval(() => {
         setVisualizerLoading(prev => {
           if (prev.progress >= 90) {
-            return { ...prev, progress: 90, message: 'Generating AI visualization...' };
+            return { ...prev, progress: 90, message: 'Generating AI visualisation...' };
           }
           const increment = prev.progress < 30 ? 8 : prev.progress < 60 ? 5 : 2;
           const messages = type === 'development'
             ? ['Analyzing lot boundaries...', 'Designing building footprint...', 'Rendering development...', 'Adding architectural details...']
-            : ['Identifying renovation areas...', 'Applying design upgrades...', 'Rendering improvements...', 'Finalizing visualization...'];
+            : ['Identifying renovation areas...', 'Applying design upgrades...', 'Rendering improvements...', 'Finalising visualisation...'];
           const msgIndex = Math.min(Math.floor(prev.progress / 25), messages.length - 1);
           return { ...prev, progress: prev.progress + increment, message: messages[msgIndex] };
         });
@@ -492,7 +492,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
           
           if (result.fallbackMode || !result.generatedImage) {
             // Fallback mode - show description only
-            alert(`Image generation temporarily unavailable.\n\nAI Vision Analysis:\n${result.description || 'Unable to generate visualization at this time.'}`);
+            alert(`Image generation temporarily unavailable.\n\nAI Vision Analysis:\n${result.description || 'Unable to generate visualisation at this time.'}`);
           } else {
             // Save to generatedVisuals for thumbnail display
             const visualKey = `${type}-${index}`;
@@ -522,7 +522,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         clearInterval(progressInterval);
         console.error('Visualizer error:', error);
         setVisualizerLoading({ active: false, progress: 0, message: '' });
-        alert(`Failed to generate visualization. Please try again.\n\nError: ${error.message}`);
+        alert(`Failed to generate visualisation. Please try again.\n\nError: ${error.message}`);
       }
     };
     reader.readAsDataURL(file);
@@ -1016,11 +1016,11 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                          data-no-pdf="true"
                          onClick={() => handleThumbnailClick('strategy', i)}
                          className="relative w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden border-2 border-[#C9A961] shadow-md hover:shadow-lg hover:scale-105 transition-all group"
-                         title="View AI Visualization"
+                         title="View AI Visualisation"
                        >
                          <img 
                            src={generatedVisuals[`strategy-${i}`].afterImage} 
-                           alt="AI Visualization" 
+                           alt="AI Visualisation" 
                            className="w-full h-full object-cover"
                          />
                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
@@ -1072,7 +1072,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                             <span className="text-xs font-bold uppercase tracking-wider">
                               {dragOverCard?.type === 'strategy' && dragOverCard?.index === i 
                                 ? 'Drop image here' 
-                                : 'AI Visualize Renovation'}
+                                : 'AI Visualise Renovation'}
                             </span>
                           </div>
                           <p className="text-[10px] text-[#4A4137]/30 mt-1">Drag photo or click to upload</p>
@@ -1268,7 +1268,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                              <span className="text-xs font-bold uppercase tracking-wider">
                                {dragOverCard?.type === 'development' && dragOverCard?.index === i 
                                  ? 'Drop aerial/drone image' 
-                                 : 'AI Visualize Development'}
+                                 : 'AI Visualise Development'}
                              </span>
                            </div>
                            <p className="text-[10px] text-[#4A4137]/30 mt-1">Drop drone/aerial photo to render {scenario.title.toLowerCase()}</p>

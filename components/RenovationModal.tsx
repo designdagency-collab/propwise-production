@@ -65,7 +65,7 @@ const RenovationModal: React.FC<RenovationModalProps> = ({
   const handleDownload = () => {
     const link = document.createElement('a');
     link.href = afterImage;
-    link.download = `upblock-${type}-visualization.png`;
+    link.download = `upblock-${type}-visualisation.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -91,7 +91,7 @@ const RenovationModal: React.FC<RenovationModalProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-bold text-[#3A342D]">
-                {type === 'development' ? 'Development Visualization' : 'Renovation Visualization'}
+                {type === 'development' ? 'Development Visualisation' : 'Renovation Visualisation'}
               </h2>
               <p className="text-sm text-[#C9A961] font-semibold">{title}</p>
             </div>
@@ -174,7 +174,7 @@ const RenovationModal: React.FC<RenovationModalProps> = ({
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
             <p className="text-xs text-neutral-400 italic">
               <i className="fa-solid fa-shield-halved mr-1"></i>
-              AI-generated visualization. Original image not stored.
+              AI-generated visualisation. Original image not stored.
             </p>
             
             <div className="flex gap-3">

@@ -372,13 +372,13 @@ AUSTRALIAN DESIGN SAFETY RULES (CRITICAL):
       generatedImage,
       type: isDevelopment ? 'development' : 'renovation',
       context: contextTitle,
-      description: `AI-generated ${isDevelopment ? 'development' : 'renovation'} visualization for ${contextTitle}`
+      description: `AI-generated ${isDevelopment ? 'development' : 'renovation'} visualisation for ${contextTitle}`
     });
 
   } catch (error) {
     console.error('[GenerateRenovation] Error:', error);
     return res.status(500).json({ 
-      error: 'Failed to generate visualization',
+      error: 'Failed to generate visualisation',
       message: error.message 
     });
   }
