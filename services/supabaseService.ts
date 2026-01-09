@@ -17,7 +17,7 @@ export class SupabaseService {
           autoRefreshToken: true,
           persistSession: true,
           detectSessionInUrl: true, // Let Supabase handle OAuth tokens
-          flowType: 'implicit' // Ensure implicit flow for Google OAuth
+          // Use default PKCE flow (implicit is deprecated)
         }
       });
     } else {
