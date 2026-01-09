@@ -434,12 +434,45 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
 
   // ========== RENOVATION/DEVELOPMENT VISUALIZER FUNCTIONS ==========
   
-  // Helper to read file as base64
-  const readFileAsBase64 = (file: File): Promise<string> => {
+  // Helper to compress and resize image before upload
+  const compressImage = (file: File, maxWidth: number = 1920, quality: number = 0.8): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target?.result as string);
-      reader.onerror = reject;
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          // Calculate new dimensions
+          let { width, height } = img;
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          
+          // Create canvas and draw resized image
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Could not get canvas context'));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Convert to compressed JPEG
+          const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+          
+          // Log compression results
+          const originalSize = Math.round(file.size / 1024);
+          const compressedSize = Math.round(compressedBase64.length * 0.75 / 1024);
+          console.log(`[ImageCompress] ${originalSize}KB → ${compressedSize}KB (${Math.round(compressedSize/originalSize*100)}%)`);
+          
+          resolve(compressedBase64);
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
       reader.readAsDataURL(file);
     });
   };
@@ -450,19 +483,35 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
     index: number,
     title: string
   ): Promise<void> => {
-    // Read file as base64
-    const base64Image = await readFileAsBase64(file);
+    // Compress image before upload (max 1920px width, 80% quality)
+    let base64Image: string;
+    try {
+      base64Image = await compressImage(file, 1920, 0.8);
+    } catch (compressError) {
+      console.error('Image compression failed:', compressError);
+      alert('Failed to process image. Please try a different photo.');
+      return;
+    }
     
     // Start loading state
     setVisualizerLoading({
       active: true,
-      progress: 0,
-      message: type === 'development' 
-        ? 'Analyzing site for development rendering...' 
-        : 'Analyzing property for renovation...',
+      progress: 5,
+      message: 'Optimising image...',
       cardType: type,
       cardIndex: index
     });
+    
+    // Quick update to show analysis starting
+    setTimeout(() => {
+      setVisualizerLoading(prev => ({
+        ...prev,
+        progress: 10,
+        message: type === 'development' 
+          ? 'Analyzing site for development rendering...' 
+          : 'Analyzing property for renovation...'
+      }));
+    }, 300);
 
     // Simulate progress while API processes
     const progressInterval = setInterval(() => {
