@@ -112,7 +112,18 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
     if (val === undefined || val === null || val === '') return 'TBA';
     if (typeof val === 'string' && val.trim() !== '') return val;
     if (typeof val === 'number') {
-      return prefix + new Intl.NumberFormat('en-AU', { maximumFractionDigits: 0 }).format(val);
+      const absVal = Math.abs(val);
+      const sign = val < 0 ? '-' : '';
+      // Format as k for thousands, M for millions
+      if (absVal >= 1000000) {
+        const millions = absVal / 1000000;
+        return sign + prefix + (millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)) + 'M';
+      } else if (absVal >= 1000) {
+        const thousands = absVal / 1000;
+        return sign + prefix + (thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(0)) + 'k';
+      } else {
+        return sign + prefix + new Intl.NumberFormat('en-AU', { maximumFractionDigits: 0 }).format(absVal);
+      }
     }
     return 'TBA';
   };
