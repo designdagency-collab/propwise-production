@@ -48,11 +48,17 @@ export default async function handler(req, res) {
     const fullPrompt = `Transform this space into a Three Birds Renovations masterpiece (2026 Trend Edition).
 BRIEF: ${designBrief}
 
-STRICT VISUAL RULES:
-- IF EXTERIOR: Enhance the facade with crisp white render or weatherboard. Install modern window frames and glass inserts. DO NOT show drapes or curtains on the exterior walls. Add a Colorbond roof, wide timber decking, and oversized Mediterranean pots.
-- IF INTERIOR: Focus on the 'Cloud Bed' with oversized puffy quilts and pillows. Install floor-to-ceiling sheer linen drapes. Replace oyster lights with clean LED downlights and a sculptural pendant.
+CRITICAL - PRESERVE STRUCTURE:
+- DO NOT change the building structure, shape, roofline, or layout
+- Keep the EXACT same windows, doors, and architectural features in the same positions
+- Only update surface finishes, paint, textures, fixtures, and styling
+- The "bones" of the building must remain identical
+
+VISUAL RULES:
+- IF EXTERIOR: Update render/paint to crisp white, modern window frames, fresh Colorbond roof color, updated landscaping. Keep same building shape.
+- IF INTERIOR: Update wall colors, flooring, light fixtures, window treatments, furniture styling. Keep same room layout.
 - Lighting Atmosphere: Magazine-quality, bright, airy, and coastal-luxe.
-- Maintain the original structure but modernize all surface finishes, hardware, and textures.`;
+- This is a COSMETIC renovation only - no structural changes.`;
 
     console.log(`[GenerateRenovation] Generating for: ${contextTitle}`);
 
