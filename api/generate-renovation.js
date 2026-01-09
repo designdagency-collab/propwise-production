@@ -52,10 +52,11 @@ There may be a RECTANGLE, SQUARE, or OUTLINE drawn on this image marking the pro
 - It might be: solid line, dotted line, or shaded area
 
 🚨 IF YOU SEE A BOUNDARY BOX/LINE:
-- BUILD ONLY INSIDE THAT BOX/BOUNDARY
-- The building footprint must fit WITHIN the marked area
-- Do NOT extend beyond the drawn lines
-- Fill the marked area with the development
+- The building FOOTPRINT (base/ground floor) must fit WITHIN the marked area
+- Do NOT extend the building footprint beyond the drawn lines
+- You CAN build UP (height) - multi-story buildings are fine
+- The boundary defines the land area, not height restrictions
+- Fill the marked area with the development footprint
 
 Now create a ${contextTitle.toLowerCase()} development:
 
@@ -96,9 +97,9 @@ DUPLEX SPECIFIC RULES:
 - Separate front entries for each dwelling
 
 🚨 FINAL CHECK:
-- Is there a boundary box/line drawn? BUILD INSIDE IT ONLY.
+- Is there a boundary box/line drawn? Keep footprint INSIDE it. Height is OK.
 - Facade faces street, camera might see back/side
-- Fill the boundary area with appropriate development`;
+- For apartments/multi-story: build tall within the boundary footprint`;
     } else {
       // RENOVATION: Keep structure, cosmetic updates only
       fullPrompt = `Transform this space into a Three Birds Renovations masterpiece (2026 Trend Edition).
