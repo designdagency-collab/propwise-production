@@ -43,59 +43,40 @@ export default async function handler(req, res) {
     let fullPrompt;
     
     if (isDevelopment) {
-      // DEVELOPMENT: Analyze site and camera position, then show brand new luxury development
-      fullPrompt = `🚨🚨🚨 CRITICAL: BOUNDARY LINES DETECTED 🚨🚨🚨
+      // DEVELOPMENT: Strict boundary-respecting development
+      fullPrompt = `STEP 1 - FIND THE BOUNDARY LINES FIRST:
+Look at this aerial image. There are WHITE or CREAM colored lines drawn on it forming a shape (rectangle, square, or polygon). These lines show the PROPERTY BOUNDARY.
 
-THIS IMAGE HAS PROPERTY BOUNDARY LINES DRAWN ON IT.
-- Look carefully: there are WHITE/CREAM colored lines forming a SHAPE on this aerial view
-- These lines mark the EXACT property boundary
-- The lines may be: rectangles, irregular polygons, or outlined areas
+STEP 2 - MEASURE THE BOUNDARY SIZE:
+The boundary in this image appears to be a SMALL to MEDIUM residential lot (approximately 600-1500 sqm based on the houses visible).
 
-⛔ ABSOLUTE RULE - NON-NEGOTIABLE:
-The new building FOOTPRINT must be SMALLER than or EQUAL to the marked boundary area.
-- DO NOT let any part of the building extend beyond the boundary lines
-- The building must fit COMPLETELY INSIDE the drawn shape
-- If the boundary is small, build a SMALLER building that fits
-- If the boundary shows combined lots, you can build larger but STILL WITHIN the lines
-- SHRINK the building if needed to fit - NEVER exceed the boundary
-- Leave some SETBACK space from the boundary lines (don't build right to the edge)
+⛔⛔⛔ CRITICAL SIZE CONSTRAINT ⛔⛔⛔
+Your new building MUST BE SMALL ENOUGH TO FIT INSIDE THOSE WHITE LINES.
+- If the boundary shows space for 2-3 houses, build a SMALL development (duplex or townhouse)
+- DO NOT build a massive apartment complex on a small lot
+- The building footprint should use only 50-70% of the boundary area (leave setbacks)
+- BUILD SMALL - you can go UP in height but NOT OUT past the boundary
 
-✅ WHAT IS ALLOWED:
-- Building UP (height/stories) - multi-story is fine within the footprint
-- Using 70-85% of the marked area (leave setbacks from edges)
-- Contemporary design that works within the space constraint
+WHAT TO CREATE: ${contextTitle}
+- Remove existing buildings
+- Build a NEW contemporary Australian development
+- SCALE: Match the building size to the boundary size
+- Small boundary = small building (duplex/townhouse)
+- Large boundary = can be bigger (but still within lines)
 
-Now create a ${contextTitle.toLowerCase()} development:
+DESIGN STYLE:
+- Crisp white render with timber accents
+- Modern flat or skillion roof with solar panels
+- Contemporary glazing and balconies with railings
+- Street-facing entry and garage
 
-SITE ANALYSIS:
-1. Identify the BOUNDARY LINES first (white/colored lines marking property edge)
-2. Measure mentally: how big is the boundary? Build SMALLER than that.
-3. Find the STREET (driveways connect to it, power poles, neighboring house orientations)
-4. Determine CAMERA POSITION relative to street
+🚨 SIZE CHECK - BEFORE YOU GENERATE:
+1. The white boundary lines should be VISIBLE around your building (not hidden under it)
+2. The building should NOT extend past any boundary line
+3. If in doubt, make the building SMALLER
+4. Think: "Would this building actually fit on a typical suburban lot of this size?"
 
-BUILDING ORIENTATION:
-- Main facade with entry/garage faces the STREET
-- If viewing from rear: show BACK of building (fences, rear doors, pool area)
-- If viewing from side: show SIDE of building
-- DO NOT show front facade if camera is not on street side
-
-DESIGN BRIEF:
-- REMOVE existing structures completely
-- NEW ${contextTitle} - luxury contemporary Australian architecture
-- Crisp white render, timber accents, Colorbond roof
-- Make the building PROPORTIONAL to fit the boundary
-- SMALLER boundary = SMALLER building footprint
-
-DUPLEX RULES:
-- Wide block (15m+): Two separate driveways
-- Narrow block: One shared driveway
-- Each dwelling gets own garage and separate entry
-
-🔴 FINAL CHECK - MOST IMPORTANT:
-1. Does the building footprint fit ENTIRELY within the boundary lines? If NO, SHRINK IT.
-2. Is any wall, corner, or edge extending past the boundary? If YES, pull it back INSIDE.
-3. Can you still see the boundary lines around the building edges? Good - that means it fits.
-4. The building should look CONTAINED within the property lines, not overflowing them.`;
+Generate a realistic, proportionally-sized ${contextTitle.toLowerCase()} that fits WITHIN the marked boundary.`;
     } else {
       // RENOVATION: Keep structure, cosmetic updates only (Three Birds style)
       fullPrompt = `Transform this space into a Three Birds Renovations masterpiece (2026 Trend Edition).
