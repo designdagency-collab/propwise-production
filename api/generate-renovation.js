@@ -44,22 +44,20 @@ export default async function handler(req, res) {
     
     if (isDevelopment) {
       // DEVELOPMENT: Analyze site and camera position, then show brand new luxury development
-      fullPrompt = `Create a ${contextTitle.toLowerCase()} development on this property.
+      fullPrompt = `⚠️⚠️⚠️ BEFORE ANYTHING ELSE - LOOK FOR A BOUNDARY BOX/LINE ⚠️⚠️⚠️
 
-🔴 STEP 1 - FIND THE PROPERTY BOUNDARY (MOST IMPORTANT):
-Look for ANY drawn boundary line on the image:
-- Red, yellow, blue, white, or ANY colored line/border marking the lot
-- Dotted lines, solid lines, highlighted areas
-- This is the EXACT area you must build within
+There may be a RECTANGLE, SQUARE, or OUTLINE drawn on this image marking the property boundary.
+- Look for: colored lines, boxes, rectangles, highlighted areas, borders
+- Colors could be: red, yellow, blue, white, green, or any color
+- It might be: solid line, dotted line, or shaded area
 
-⚠️ CRITICAL RULES FOR BOUNDARY LINES:
-- ALL buildings must fit INSIDE the marked boundary
-- Driveways can extend to the street but buildings stay within the line  
-- Do NOT place any structure outside the boundary
-- For COMBINED LOTS: The boundary may include multiple parcels - use the ENTIRE marked area
-- For AERIAL VIEWS: The boundary line defines the development footprint
+🚨 IF YOU SEE A BOUNDARY BOX/LINE:
+- BUILD ONLY INSIDE THAT BOX/BOUNDARY
+- The building footprint must fit WITHIN the marked area
+- Do NOT extend beyond the drawn lines
+- Fill the marked area with the development
 
-If NO boundary is drawn, use visible fence lines and property edges.
+Now create a ${contextTitle.toLowerCase()} development:
 
 STEP 2 - WHERE IS THE STREET?
 Look for these clues to find the street:
@@ -97,12 +95,10 @@ DUPLEX SPECIFIC RULES:
 - Side-by-side duplex OR front-back configuration based on block shape
 - Separate front entries for each dwelling
 
-REMEMBER: 
-🔴 #1 PRIORITY: Build WITHIN any boundary lines drawn on the image - this is non-negotiable
-- Use the FULL area within the boundary for the development
-- Pretty front facade = faces street ONLY
-- Camera might see the back or side!
-- For combined lots/large sites: maximize the development potential within the boundary`;
+🚨 FINAL CHECK:
+- Is there a boundary box/line drawn? BUILD INSIDE IT ONLY.
+- Facade faces street, camera might see back/side
+- Fill the boundary area with appropriate development`;
     } else {
       // RENOVATION: Keep structure, cosmetic updates only
       fullPrompt = `Transform this space into a Three Birds Renovations masterpiece (2026 Trend Edition).
