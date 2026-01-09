@@ -101,21 +101,38 @@ DUPLEX SPECIFIC RULES:
 - Facade faces street, camera might see back/side
 - For apartments/multi-story: build tall within the boundary footprint`;
     } else {
-      // RENOVATION: Keep structure, cosmetic updates only
-      fullPrompt = `Transform this space into a Three Birds Renovations masterpiece (2026 Trend Edition).
-BRIEF: "Luxe for Less" ${contextTitle.toLowerCase()} with modern finishes, quality fixtures, and contemporary styling.
+      // RENOVATION: Keep structure, cosmetic/design updates only
+      fullPrompt = `Transform this space with DESIGN UPDATES ONLY - work with the existing structure.
 
-CRITICAL - PRESERVE STRUCTURE:
-- DO NOT change the building structure, shape, roofline, or layout
-- Keep the EXACT same windows, doors, and architectural features in the same positions
-- Only update surface finishes, paint, textures, fixtures, and styling
-- The "bones" of the building must remain identical
+⚠️ ABSOLUTE RULE - NO STRUCTURAL CHANGES:
+- The building shape, walls, roofline MUST stay EXACTLY the same
+- Every window stays in the SAME position and SAME size
+- Every door stays in the SAME position
+- NO extensions, NO additions, NO demolition
+- You are a DESIGNER not an architect - you can only change surfaces and styling
 
-VISUAL RULES:
-- IF EXTERIOR: Update render/paint to crisp white, modern window frames, fresh Colorbond roof color, updated landscaping. Keep same building shape.
-- IF INTERIOR: Update wall colors, flooring, light fixtures, window treatments, furniture styling. Keep same room layout.
-- Lighting Atmosphere: Magazine-quality, bright, airy, and coastal-luxe.
-- This is a COSMETIC renovation only - no structural changes.`;
+WHAT YOU CAN CHANGE (Design & Cosmetic Only):
+✅ Paint colors and render finishes
+✅ Window frame colors (NOT position or size)
+✅ Roof color (NOT shape)
+✅ Front door color/style (same position)
+✅ Landscaping and gardens
+✅ Light fixtures
+✅ Flooring surfaces
+✅ Wall colors and textures
+✅ Furniture and styling
+
+WHAT YOU CANNOT CHANGE (Structure):
+❌ Building footprint or shape
+❌ Window positions or sizes
+❌ Door positions
+❌ Roofline shape
+❌ Wall positions
+❌ Room layouts
+❌ Any extensions or additions
+
+BRIEF: "Luxe for Less" ${contextTitle.toLowerCase()} - magazine-quality, bright, airy, coastal-luxe aesthetic.
+Work with what's there. Design changes only. Same bones, fresh look.`;
     }
 
     console.log(`[GenerateRenovation] Generating for: ${contextTitle}`);

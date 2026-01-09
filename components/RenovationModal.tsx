@@ -74,7 +74,7 @@ const RenovationModal: React.FC<RenovationModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center pt-16 pb-4">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/80 backdrop-blur-sm"
@@ -82,7 +82,7 @@ const RenovationModal: React.FC<RenovationModalProps> = ({
       />
       
       {/* Modal Content */}
-      <div className="relative w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto bg-white rounded-[1.5rem] shadow-2xl">
+      <div className="relative w-full max-w-4xl mx-4 max-h-[calc(100vh-5rem)] overflow-y-auto bg-white rounded-[1.5rem] shadow-2xl">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-neutral-100 px-5 py-4 flex items-center justify-between rounded-t-[1.5rem]">
           <div className="flex items-center gap-3">
