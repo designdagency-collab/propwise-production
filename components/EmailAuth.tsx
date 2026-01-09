@@ -103,10 +103,13 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ onSuccess, onCancel, onShowTerms,
     setIsGoogleLoading(true);
     
     try {
+      // Set flag so we know to check for session when returning from OAuth
+      sessionStorage.setItem('oauth_in_progress', 'true');
       const { error } = await supabaseService.signInWithGoogle();
       if (error) throw error;
       // Redirect happens automatically
     } catch (err: any) {
+      sessionStorage.removeItem('oauth_in_progress');
       setError(err.message || 'Failed to sign in with Google');
       setIsGoogleLoading(false);
     }
