@@ -368,16 +368,34 @@ const App: React.FC = () => {
       return;
     }
 
-    const hasOAuthCallback = window.location.hash.includes('access_token');
-    // Also detect if we just came from OAuth by checking referrer or sessionStorage flag
-    const cameFromOAuth = document.referrer.includes('supabase.co') || 
-                          document.referrer.includes('auth.upblock.ai') ||
-                          document.referrer.includes('accounts.google.com') ||
-                          sessionStorage.getItem('oauth_in_progress') === 'true';
+    // Comprehensive OAuth detection
+    const urlHash = window.location.hash;
+    const urlSearch = window.location.search;
+    const hasAccessToken = urlHash.includes('access_token');
+    const hasCode = urlSearch.includes('code=');
+    const hasError = urlHash.includes('error') || urlSearch.includes('error');
+    const referrer = document.referrer;
+    const oauthFlag = sessionStorage.getItem('oauth_in_progress') === 'true';
+    
+    console.log('[Auth] URL Debug:', { 
+      hash: urlHash.substring(0, 100), 
+      search: urlSearch.substring(0, 100),
+      referrer: referrer.substring(0, 100),
+      hasAccessToken, 
+      hasCode, 
+      hasError,
+      oauthFlag
+    });
+
+    const hasOAuthCallback = hasAccessToken || hasCode;
+    const cameFromOAuth = referrer.includes('supabase.co') || 
+                          referrer.includes('auth.upblock.ai') ||
+                          referrer.includes('accounts.google.com') ||
+                          oauthFlag;
     console.log('[Auth] Initializing - hasOAuthCallback:', hasOAuthCallback, 'cameFromOAuth:', cameFromOAuth);
     
     // Clear the OAuth flag
-    if (cameFromOAuth) {
+    if (cameFromOAuth || hasOAuthCallback) {
       sessionStorage.removeItem('oauth_in_progress');
     }
     
@@ -423,16 +441,29 @@ const App: React.FC = () => {
         
         if (session?.user) {
           await handleSessionLogin(session, 'getSession');
-        } else if (cameFromOAuth) {
-          // We came from OAuth but no session - try again after a short delay (cookie propagation)
-          console.log('[Auth] Came from OAuth but no session, retrying in 500ms...');
-          setTimeout(async () => {
-            const { data: { session: retrySession } } = await supabaseService.supabase!.auth.getSession();
-            console.log('[Auth] Retry getSession result:', { hasSession: !!retrySession, email: retrySession?.user?.email });
+        } else if (cameFromOAuth || hasOAuthCallback) {
+          // We came from OAuth but no session - try multiple times with increasing delays
+          console.log('[Auth] Came from OAuth but no session, retrying...');
+          
+          const retryGetSession = async (attempt: number, maxAttempts: number) => {
+            const { data: { session: retrySession }, error } = await supabaseService.supabase!.auth.getSession();
+            console.log(`[Auth] Retry ${attempt}/${maxAttempts} getSession:`, { 
+              hasSession: !!retrySession, 
+              email: retrySession?.user?.email,
+              error: error?.message 
+            });
+            
             if (retrySession?.user) {
-              await handleSessionLogin(retrySession, 'getSession-retry');
+              await handleSessionLogin(retrySession, `getSession-retry-${attempt}`);
+            } else if (attempt < maxAttempts) {
+              // Try again with exponential backoff
+              setTimeout(() => retryGetSession(attempt + 1, maxAttempts), 500 * attempt);
+            } else {
+              console.log('[Auth] OAuth flow completed but no session established after retries');
             }
-          }, 500);
+          };
+          
+          setTimeout(() => retryGetSession(1, 5), 300);
         }
       } catch (err: any) {
         console.error('[Auth] getSession error:', err?.message);
