@@ -394,7 +394,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
       {/* ============================================
           FINAL CTA + FOOTER
           ============================================ */}
-      <footer className="bg-[#FAF9F6] border-t border-[#E8E6E3]">
+      <footer className="bg-white">
         {/* CTA Section */}
         <div className="py-16 px-6">
           <div className="max-w-4xl mx-auto">
