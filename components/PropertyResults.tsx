@@ -330,28 +330,25 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         });
       };
       
-      // Compress all visualization images
+      // Compress only the AI-generated afterImage (beforeImage is discarded in PDF)
       for (const [key, visuals] of Object.entries(generatedVisuals)) {
         if (!visuals || !Array.isArray(visuals)) continue;
         
         const compressedArray = [];
         for (const visual of visuals) {
-          if (!visual.beforeImage || !visual.afterImage) continue;
+          if (!visual.afterImage) continue;
           
           try {
-            const [compressedBefore, compressedAfter] = await Promise.all([
-              compressBase64Image(visual.beforeImage),
-              compressBase64Image(visual.afterImage)
-            ]);
+            const compressedAfter = await compressBase64Image(visual.afterImage);
             
             compressedArray.push({
               ...visual,
-              beforeImage: compressedBefore,
+              beforeImage: '', // Not used in PDF
               afterImage: compressedAfter
             });
           } catch (e) {
             console.warn('[PDF] Failed to compress visual:', e);
-            compressedArray.push(visual); // Use original if compression fails
+            compressedArray.push({ ...visual, beforeImage: '' });
           }
         }
         

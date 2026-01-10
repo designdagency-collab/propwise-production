@@ -682,7 +682,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
       {hasVisualizations && (
         <>
           {allVisualizations.length === 1 ? (
-            // SINGLE IMAGE: Full page layout
+            // SINGLE IMAGE: Full page layout - AI generated only
             <PdfPage pageNum={5} totalPages={totalPages}>
               <div className="pdf-section">
                 <h2 className="pdf-section-title">
@@ -699,23 +699,13 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                     <span className="pdf-visual-strategy-name">{allVisualizations[0].strategyName}</span>
                   </div>
                   
-                  <div className="pdf-visual-comparison">
-                    <div className="pdf-visual-image-container">
-                      <img 
-                        src={allVisualizations[0].visual.beforeImage} 
-                        alt="Original property"
-                        className="pdf-visual-image"
-                      />
-                      <span className="pdf-visual-label pdf-visual-label-before">Before</span>
-                    </div>
-                    <div className="pdf-visual-image-container">
-                      <img 
-                        src={allVisualizations[0].visual.afterImage} 
-                        alt="AI visualization"
-                        className="pdf-visual-image"
-                      />
-                      <span className="pdf-visual-label pdf-visual-label-after">AI Concept</span>
-                    </div>
+                  <div className="pdf-visual-single-image">
+                    <img 
+                      src={allVisualizations[0].visual.afterImage} 
+                      alt="AI visualization"
+                      className="pdf-visual-image-large"
+                    />
+                    <span className="pdf-visual-label pdf-visual-label-after">AI Concept</span>
                   </div>
                   
                   <p className="pdf-visual-disclaimer">
@@ -725,7 +715,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
               </div>
             </PdfPage>
           ) : (
-            // MULTIPLE IMAGES: Grid layout, 2 per page
+            // MULTIPLE IMAGES: Grid layout - AI generated only, 2 per page
             <>
               {Array.from({ length: visualizationPages }).map((_, pageIndex) => {
                 const startIdx = pageIndex * 2;
@@ -754,24 +744,13 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                               <span className="pdf-visual-strategy-name">{item.strategyName}</span>
                             </div>
                             
-                            <div className="pdf-visual-comparison-small">
-                              <div className="pdf-visual-image-container-small">
-                                <img 
-                                  src={item.visual.beforeImage} 
-                                  alt="Original"
-                                  className="pdf-visual-image"
-                                />
-                                <span className="pdf-visual-label-small">Before</span>
-                              </div>
-                              <div className="pdf-visual-arrow">→</div>
-                              <div className="pdf-visual-image-container-small">
-                                <img 
-                                  src={item.visual.afterImage} 
-                                  alt="AI visualization"
-                                  className="pdf-visual-image"
-                                />
-                                <span className="pdf-visual-label-small pdf-visual-label-after-small">AI Concept</span>
-                              </div>
+                            <div className="pdf-visual-single-card">
+                              <img 
+                                src={item.visual.afterImage} 
+                                alt="AI visualization"
+                                className="pdf-visual-image"
+                              />
+                              <span className="pdf-visual-label-small pdf-visual-label-after-small">AI Concept</span>
                             </div>
                           </div>
                         ))}
@@ -1495,39 +1474,40 @@ export const getPdfDocumentStyles = () => `
     letter-spacing: -0.3px;
   }
   
-  .pdf-visual-comparison {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-  
-  .pdf-visual-image-container {
+  .pdf-visual-single-image {
     position: relative;
     border-radius: 12px;
     overflow: hidden;
     border: 1px solid #E5E2DD;
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 16px;
+  }
+  
+  .pdf-visual-image-large {
+    width: 100%;
+    height: 380px;
+    object-fit: cover;
+    display: block;
   }
   
   .pdf-visual-image {
     width: 100%;
-    height: 220px;
+    height: 180px;
     object-fit: cover;
     display: block;
   }
   
   .pdf-visual-label {
     position: absolute;
-    bottom: 10px;
-    left: 10px;
-    padding: 5px 12px;
-    font-size: 9px;
+    bottom: 12px;
+    left: 12px;
+    padding: 6px 14px;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-radius: 6px;
-    background: rgba(0,0,0,0.7);
+    background: #C9A961;
     color: #fff;
   }
   
@@ -1549,9 +1529,9 @@ export const getPdfDocumentStyles = () => `
   
   /* Multiple visuals grid */
   .pdf-visuals-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
     margin-top: 16px;
   }
   
@@ -1562,43 +1542,25 @@ export const getPdfDocumentStyles = () => `
     border: 1px solid #E5E2DD;
   }
   
-  .pdf-visual-comparison-small {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 10px;
-  }
-  
-  .pdf-visual-image-container-small {
+  .pdf-visual-single-card {
     position: relative;
-    flex: 1;
     border-radius: 10px;
     overflow: hidden;
     border: 1px solid #E5E2DD;
-  }
-  
-  .pdf-visual-image-container-small .pdf-visual-image {
-    height: 140px;
-  }
-  
-  .pdf-visual-arrow {
-    font-size: 20px;
-    color: #C9A961;
-    font-weight: 700;
-    flex-shrink: 0;
+    margin-top: 10px;
   }
   
   .pdf-visual-label-small {
     position: absolute;
     bottom: 6px;
     left: 6px;
-    padding: 3px 8px;
+    padding: 4px 10px;
     font-size: 7px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     border-radius: 4px;
-    background: rgba(0,0,0,0.7);
+    background: #C9A961;
     color: #fff;
   }
   
