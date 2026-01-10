@@ -40,6 +40,29 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const sliderRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
 
+  // Demo typing effect
+  const triggerDemoTyping = () => {
+    // Scroll to top first
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Wait for scroll to complete, then start typing
+    setTimeout(() => {
+      if (address) return; // Don't override if user already typed something
+      
+      const demoAddress = "42 Example St, Sydney NSW 2000";
+      let currentIndex = 0;
+      
+      const typeInterval = setInterval(() => {
+        if (currentIndex <= demoAddress.length) {
+          onAddressChange(demoAddress.slice(0, currentIndex));
+          currentIndex++;
+        } else {
+          clearInterval(typeInterval);
+        }
+      }, 50); // 50ms per character
+    }, 800); // Wait for scroll
+  };
+
   const handleSliderMove = useCallback((clientX: number) => {
     if (!sliderRef.current) return;
     const rect = sliderRef.current.getBoundingClientRect();
@@ -368,7 +391,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
           {/* CTA */}
           <div className="text-center mt-10">
             <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onClick={triggerDemoTyping}
               className="group bg-[#3A342D] text-white px-8 py-4 rounded-xl font-bold hover:bg-[#C9A961] transition-all inline-flex items-center gap-3 shadow-lg text-sm uppercase tracking-wider"
             >
               <span>Generate Your Report</span>
@@ -458,7 +481,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
               Ready to Discover <span className="text-[#C9A961]">Hidden Potential?</span>
             </h2>
             <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onClick={triggerDemoTyping}
               className="group bg-[#C9A961] text-white px-8 py-4 rounded-xl font-bold hover:bg-[#3A342D] transition-all inline-flex items-center gap-3 shadow-lg text-sm uppercase tracking-wider"
             >
               <span>Search an Address</span>
