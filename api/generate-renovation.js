@@ -98,6 +98,9 @@ DESIGN STYLE:
 3. Does the building fit WITHIN the white boundary lines?
 4. Would this building's orientation make sense on a real suburban street?
 
+🧹 WATERMARK REMOVAL:
+If the original image has any watermarks, logos, text overlays, or branding from real estate agencies, mapping services, or photography companies - REMOVE THEM COMPLETELY from the generated image. The output should be clean with no watermarks.
+
 Generate a realistic, proportionally-sized ${contextTitle.toLowerCase()} that fits WITHIN the marked boundary with CORRECT street orientation.`;
     } else {
       // RENOVATION: Strategy-specific prompts
@@ -242,6 +245,9 @@ DESIGN STYLE: Three Birds Renovations / coastal-luxe Australian
 🚨 CRITICAL: The STRUCTURE must be IDENTICAL to the original photo. Only make changes that are DIRECTLY RELEVANT to "${contextTitle}".
 If the original has 3 windows, the result has 3 windows in the same positions.
 If the original has a pitched roof, the result has the same pitched roof.
+
+🧹 WATERMARK REMOVAL:
+If the original image has any watermarks, logos, text overlays, or branding from real estate agencies, mapping services, or photography companies - REMOVE THEM COMPLETELY from the generated image. The output should be clean with no watermarks.
 
 Generate a beautifully updated version focusing ONLY on ${contextTitle.toLowerCase()}, keeping everything else identical.`;
     }
