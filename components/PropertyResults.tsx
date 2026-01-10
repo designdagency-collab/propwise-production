@@ -297,7 +297,71 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
       
       console.log('[PDF] Final mapDataUrl:', mapDataUrl ? 'present (' + mapDataUrl.length + ' chars)' : 'null');
 
-      // 2. Render the dedicated PDF component to HTML
+      // 2. Compress visualization images for PDF (reduce payload size)
+      // AI images can be 1-2MB each, need to shrink for Vercel's 4.5MB limit
+      console.log('[PDF] Compressing visualization images...');
+      
+      const compressedVisuals: typeof generatedVisuals = {};
+      
+      const compressBase64Image = async (base64: string, maxWidth: number = 800, quality: number = 0.7): Promise<string> => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.onerror = () => resolve(base64); // Fallback to original if compression fails
+          img.src = base64;
+        });
+      };
+      
+      // Compress all visualization images
+      for (const [key, visuals] of Object.entries(generatedVisuals)) {
+        if (!visuals || !Array.isArray(visuals)) continue;
+        
+        const compressedArray = [];
+        for (const visual of visuals) {
+          if (!visual.beforeImage || !visual.afterImage) continue;
+          
+          try {
+            const [compressedBefore, compressedAfter] = await Promise.all([
+              compressBase64Image(visual.beforeImage),
+              compressBase64Image(visual.afterImage)
+            ]);
+            
+            compressedArray.push({
+              ...visual,
+              beforeImage: compressedBefore,
+              afterImage: compressedAfter
+            });
+          } catch (e) {
+            console.warn('[PDF] Failed to compress visual:', e);
+            compressedArray.push(visual); // Use original if compression fails
+          }
+        }
+        
+        if (compressedArray.length > 0) {
+          compressedVisuals[key] = compressedArray;
+        }
+      }
+      
+      console.log('[PDF] Compressed', Object.keys(compressedVisuals).length, 'visualization keys');
+
+      // 3. Render the dedicated PDF component to HTML
       // This is the key change: we render a clean, print-first component
       // instead of cloning the messy live UI DOM
       console.log('[PDF] Rendering PDF template...');
@@ -307,11 +371,11 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
           data={data} 
           address={data.address} 
           mapImageUrl={mapDataUrl || undefined}
-          generatedVisuals={generatedVisuals}
+          generatedVisuals={compressedVisuals}
         />
       );
 
-      // 3. Build complete HTML document
+      // 4. Build complete HTML document
       const htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -331,7 +395,14 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
 
       const filename = `upblock-${data.address.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
 
-      // 4. Generate PDF via Puppeteer API
+      // 5. Generate PDF via Puppeteer API
+      const htmlSizeKB = Math.round(htmlContent.length / 1024);
+      console.log('[PDF] HTML size:', htmlSizeKB, 'KB');
+      
+      if (htmlSizeKB > 4000) {
+        console.warn('[PDF] HTML payload is large:', htmlSizeKB, 'KB - may exceed limits');
+      }
+      
       console.log('[PDF] Sending to Puppeteer API...');
       
       const response = await fetch('/api/generate-pdf', {
