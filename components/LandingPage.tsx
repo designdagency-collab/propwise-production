@@ -479,11 +479,15 @@ const LandingPage: React.FC<LandingPageProps> = ({
               <span>© {new Date().getFullYear()} upblock.ai</span>
             </div>
           </div>
-          <p className="mt-3 text-[10px] text-white/30 text-center max-w-2xl mx-auto">
-            For research purposes only. Not financial, legal, or professional advice. All estimates are AI-generated and should be verified independently.
-          </p>
         </div>
       </footer>
+      
+      {/* Disclaimer - White area at bottom */}
+      <div className="bg-white py-4 px-6">
+        <p className="text-[10px] text-[#9B9590] text-center max-w-2xl mx-auto">
+          For research purposes only. Not financial, legal, or professional advice. All estimates are AI-generated and should be verified independently.
+        </p>
+      </div>
     </div>
   );
 };
