@@ -43,56 +43,175 @@ export default async function handler(req, res) {
     let fullPrompt;
     
     if (isDevelopment) {
-      // DEVELOPMENT: Strict boundary-respecting development
-      fullPrompt = `STEP 1 - FIND THE BOUNDARY LINES FIRST:
-Look at this aerial image. There are WHITE or CREAM colored lines drawn on it forming a shape (rectangle, square, or polygon). These lines show the PROPERTY BOUNDARY.
+      // DEVELOPMENT: Strict boundary-respecting development with ORIENTATION DETECTION
+      fullPrompt = `STEP 1 - FIND THE BOUNDARY LINES:
+Look at this image. There are WHITE or CREAM colored lines drawn on it forming a shape (rectangle, square, or polygon). These lines show the PROPERTY BOUNDARY.
 
-STEP 2 - MEASURE THE BOUNDARY SIZE:
-The boundary in this image appears to be a SMALL to MEDIUM residential lot (approximately 600-1500 sqm based on the houses visible).
+STEP 2 - DETERMINE STREET DIRECTION (CRITICAL):
+⛔⛔⛔ BEFORE PLACING ANY BUILDING, YOU MUST IDENTIFY WHICH SIDE IS THE STREET ⛔⛔⛔
 
-⛔⛔⛔ CRITICAL SIZE CONSTRAINT ⛔⛔⛔
+Look for these clues to find the STREET SIDE:
+- Existing road, footpath, kerb, or bitumen = STREET SIDE
+- Power lines or street lights along one edge = STREET SIDE  
+- Neighboring houses with garages and front doors facing that direction = STREET SIDE
+- Mailboxes, driveways connecting to a road = STREET SIDE
+
+The REAR of the property is:
+- Where you see backyard fences
+- Where neighboring backyards are visible
+- Open grassy areas with no road access
+
+📷 CAMERA PERSPECTIVE CHECK:
+- If this is a GROUND-LEVEL photo taken from a backyard looking toward street → the STREET is AWAY from the camera
+- If this is AERIAL/satellite view → look for roads on one edge
+- The garage and main entry MUST face the PUBLIC ROAD, not the rear yard
+
+STEP 3 - SIZE CONSTRAINT:
 Your new building MUST BE SMALL ENOUGH TO FIT INSIDE THOSE WHITE LINES.
 - If the boundary shows space for 2-3 houses, build a SMALL development (duplex or townhouse)
 - DO NOT build a massive apartment complex on a small lot
 - The building footprint should use only 50-70% of the boundary area (leave setbacks)
-- BUILD SMALL - you can go UP in height but NOT OUT past the boundary
 
 WHAT TO CREATE: ${contextTitle}
-- Remove existing buildings
+- Remove existing buildings inside the boundary
 - Build a NEW contemporary Australian development
 - SCALE: Match the building size to the boundary size
-- Small boundary = small building (duplex/townhouse)
-- Large boundary = can be bigger (but still within lines)
+
+⛔⛔⛔ ORIENTATION RULES - DO NOT BREAK THESE ⛔⛔⛔
+1. Garage doors and driveways MUST face the STREET (public road)
+2. DO NOT put garage or driveway at the rear of the property
+3. DO NOT face the main entry toward neighboring backyards
+4. Garages and driveways ONLY connect to public roads
+5. The front facade faces the street, the rear faces the backyard
+6. If unsure which way is street, look for existing driveways on neighboring properties
 
 DESIGN STYLE:
 - Crisp white render with timber accents
 - Modern flat or skillion roof with solar panels
 - Contemporary glazing and balconies with railings
-- Street-facing entry and garage
+- Street-facing entry and garage (FACING THE ROAD)
+- Rear private courtyard or garden
 
-🚨 SIZE CHECK - BEFORE YOU GENERATE:
-1. The white boundary lines should be VISIBLE around your building (not hidden under it)
-2. The building should NOT extend past any boundary line
-3. If in doubt, make the building SMALLER
-4. Think: "Would this building actually fit on a typical suburban lot of this size?"
+🚨 FINAL CHECK BEFORE GENERATING:
+1. Is the garage facing the STREET (not the backyard)?
+2. Is the driveway connecting to the ROAD (not crossing into rear)?
+3. Does the building fit WITHIN the white boundary lines?
+4. Would this building's orientation make sense on a real suburban street?
 
-Generate a realistic, proportionally-sized ${contextTitle.toLowerCase()} that fits WITHIN the marked boundary.`;
+Generate a realistic, proportionally-sized ${contextTitle.toLowerCase()} that fits WITHIN the marked boundary with CORRECT street orientation.`;
     } else {
-      // RENOVATION: Keep structure, cosmetic updates only (Three Birds style)
-      fullPrompt = `You are renovating an EXISTING building. This is a ${contextTitle.toLowerCase()}.
+      // RENOVATION: Strategy-specific prompts
+      const strategyLower = (strategyTitle || '').toLowerCase();
+      
+      // Define strategy-specific instructions
+      let strategyInstructions = '';
+      let allowedChanges = '';
+      
+      if (strategyLower.includes('kitchen')) {
+        strategyInstructions = `FOCUS: Kitchen Modernisation
+This is an INTERIOR kitchen renovation. Transform the existing kitchen into a modern, high-end cooking space.`;
+        allowedChanges = `
+WHAT TO CHANGE (kitchen specific):
+- Cabinetry: Replace with handleless shaker or flat-panel in white, grey, or natural timber
+- Benchtops: Install Caesarstone, marble-look engineered stone, or timber
+- Splashback: Add subway tiles, herringbone pattern, or feature tiles
+- Appliances: Show modern stainless steel or integrated appliances
+- Lighting: Add pendant lights over island, LED strip under cabinets
+- Hardware: Modern matte black or brushed brass tapware and handles
+- Island bench: Add or upgrade with waterfall edge
+- Flooring: Timber-look tiles or engineered timber (if visible)
 
-⛔⛔⛔ ABSOLUTE RULES - DO NOT BREAK THESE ⛔⛔⛔
-1. KEEP THE EXACT SAME BUILDING - same shape, same walls, same roof line, same footprint
-2. KEEP ALL WINDOWS in their EXACT current positions and sizes
-3. KEEP ALL DOORS in their EXACT current positions
-4. DO NOT add new windows, doors, or openings
-5. DO NOT remove any windows, doors, or walls
-6. DO NOT change the roof shape or building silhouette
-7. DO NOT extend or modify the building structure in ANY way
+DO NOT CHANGE: Wall positions, window locations, ceiling height, room shape`;
+      } else if (strategyLower.includes('bathroom')) {
+        strategyInstructions = `FOCUS: Bathroom Update
+This is an INTERIOR bathroom renovation. Transform into a spa-like retreat.`;
+        allowedChanges = `
+WHAT TO CHANGE (bathroom specific):
+- Tiles: Large format tiles, terrazzo, or marble-look porcelain
+- Vanity: Floating timber or stone vanity with vessel basin
+- Shower: Frameless glass, rainfall showerhead, matte black fixtures
+- Tapware: Replace with matte black, brushed brass, or chrome
+- Mirror: Large backlit mirror or round feature mirror
+- Lighting: Wall sconces, LED strip lighting
+- Storage: Built-in niches, mirrored cabinets
+- Bath: Freestanding bath if space permits
 
+DO NOT CHANGE: Room layout, window positions, door location`;
+      } else if (strategyLower.includes('deck') || strategyLower.includes('outdoor') || strategyLower.includes('entertaining') || strategyLower.includes('alfresco')) {
+        strategyInstructions = `FOCUS: Outdoor Entertaining Deck
+Add or upgrade an outdoor entertaining area attached to the house.`;
+        allowedChanges = `
+WHAT TO CHANGE (outdoor entertaining specific):
+- Add a timber or composite deck (Merbau, Spotted Gum, or ModWood)
+- Install a pergola or roofed alfresco with timber or steel frame
+- Add outdoor kitchen: BBQ, stone benchtop, bar fridge space
+- Include comfortable outdoor lounge and dining furniture
+- Add festoon lighting or integrated LED downlights
+- Install privacy screening: timber slats, plants, or louvres
+- Include ceiling fan if covered
+- Add built-in bench seating or fire pit area
+- Landscape immediate surroundings with low-maintenance plants
+
+DO NOT CHANGE: House structure, existing windows, doors, or walls
+The deck should CONNECT to the house and complement its style`;
+      } else if (strategyLower.includes('solar') || strategyLower.includes('panel')) {
+        strategyInstructions = `FOCUS: Solar Panel Installation
+Add solar panels to the existing roof. This is a ROOF-ONLY change.`;
+        allowedChanges = `
+WHAT TO CHANGE (solar specific):
+- Add black-framed solar panels to the roof (modern all-black panels preferred)
+- Panels should be neatly arranged in rows on north or west-facing roof sections
+- Include a Tesla Powerwall or battery storage unit on side of house (if visible)
+- Show panels on the largest, most sun-exposed roof area
+
+⛔⛔⛔ DO NOT CHANGE ANYTHING ELSE ⛔⛔⛔
+- DO NOT change paint colors
+- DO NOT change landscaping
+- DO NOT change windows, doors, or facade
+- DO NOT change roof shape or roof color
+- ONLY add solar panels to the existing roof
+- The house should look IDENTICAL except for solar panels`;
+      } else if (strategyLower.includes('landscap') || strategyLower.includes('garden') || strategyLower.includes('curb')) {
+        strategyInstructions = `FOCUS: Landscaping & Garden Design
+Upgrade the outdoor landscape and gardens while keeping the house structure identical.`;
+        allowedChanges = `
+WHAT TO CHANGE (landscaping specific):
+- Plant selection: Native Australian plants, ornamental grasses, hedging
+- Garden beds: Defined edges with corten steel or timber
+- Lawn: Fresh green lawn or low-maintenance artificial turf
+- Paths: Stepping stones, paved walkways, gravel paths
+- Trees: Feature trees like Magnolia, Frangipani, or Ornamental Pear
+- Mulch: Fresh brown or black mulch in garden beds
+- Lighting: Garden uplights, path markers, feature lighting
+- Planters: Large Mediterranean pots with topiary or olive trees
+- Driveway: Exposed aggregate, pavers, or concrete if visible
+
+DO NOT CHANGE: House structure, windows, doors, roof, paint colors
+Only the landscaping and outdoor areas should be transformed`;
+      } else if (strategyLower.includes('facade') || strategyLower.includes('exterior') || strategyLower.includes('render') || strategyLower.includes('paint')) {
+        strategyInstructions = `FOCUS: Facade Refresh
+Update the exterior appearance with paint, render, and cosmetic improvements.`;
+        allowedChanges = `
+WHAT TO CHANGE (facade specific):
+- Paint/Render: Fresh white, soft grey, or warm greige render
+- Roof: Colorbond in Monument, Surfmist, Basalt, or terracotta tiles
+- Window frames: Repaint to black or white aluminum look
+- Front door: Statement door in black, timber, or feature color
+- Gutters and fascia: Match roof or contrast in white
+- Lighting: Modern wall-mounted entry lights
+- House numbers: Contemporary large format numbers
+- Fencing: Modern front fence if visible
+
+DO NOT CHANGE: Building shape, window positions, door positions, roof line
+Only surface finishes and colors should change`;
+      } else {
+        // Generic renovation fallback
+        strategyInstructions = `FOCUS: General Cosmetic Renovation
+Apply a modern, coastal-luxe Australian aesthetic to the existing building.`;
+        allowedChanges = `
 WHAT YOU CAN CHANGE (cosmetic only):
 - Paint colors and render finishes (prefer crisp white or soft grey)
-- Roof material (Colorbond in Monument, Surfmist, or Basalt)
+- Roof material/color (Colorbond in Monument, Surfmist, or Basalt)
 - Window frames color (black or white aluminum)
 - Front door style and color
 - Landscaping, garden beds, and plants
@@ -100,19 +219,31 @@ WHAT YOU CAN CHANGE (cosmetic only):
 - Fencing and gates
 - Lighting fixtures
 - Deck/patio surfaces (timber or composite decking)
-- Gutters and fascia color
+- Gutters and fascia color`;
+      }
+      
+      fullPrompt = `You are renovating an EXISTING building. ${strategyInstructions}
+
+⛔⛔⛔ ABSOLUTE RULES - DO NOT BREAK THESE ⛔⛔⛔
+1. KEEP THE EXACT SAME BUILDING - same shape, same walls, same roof line, same footprint
+2. KEEP ALL WINDOWS in their EXACT current positions and sizes. DO NOT add, remove, or resize windows.
+3. KEEP ALL DOORS in their EXACT current positions. DO NOT add, remove, or resize doors.
+4. DO NOT add new openings or structural modifications.
+5. DO NOT remove any existing walls or structural elements.
+6. DO NOT change the roof shape or building silhouette.
+7. DO NOT extend or modify the building structure in ANY way (no extensions, no new levels).
+${allowedChanges}
 
 DESIGN STYLE: Three Birds Renovations / coastal-luxe Australian
 - Modern, bright, airy aesthetic
-- Mediterranean pots with greenery
 - Clean lines, quality finishes
 - Magazine-worthy presentation
 
-🚨 CRITICAL: The STRUCTURE must be IDENTICAL to the original photo. Only surface finishes change.
+🚨 CRITICAL: The STRUCTURE must be IDENTICAL to the original photo. Only make changes that are DIRECTLY RELEVANT to "${contextTitle}".
 If the original has 3 windows, the result has 3 windows in the same positions.
 If the original has a pitched roof, the result has the same pitched roof.
 
-Generate a beautifully renovated version that keeps the EXACT same building but with premium finishes.`;
+Generate a beautifully updated version focusing ONLY on ${contextTitle.toLowerCase()}, keeping everything else identical.`;
     }
 
     console.log(`[GenerateRenovation] Generating for: ${contextTitle}`);
