@@ -344,3 +344,8 @@ Generate a beautifully updated version focusing ONLY on ${contextTitle.toLowerCa
     });
   }
 }
+
+// Increase timeout for AI image generation (Gemini needs 30-60s)
+export const config = {
+  maxDuration: 60,
+};
