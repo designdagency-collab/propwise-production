@@ -448,11 +448,11 @@ const LandingPage: React.FC<LandingPageProps> = ({
       {/* ============================================
           FINAL CTA + FOOTER
           ============================================ */}
-      <footer className="bg-[#3A342D] mt-20">
+      <footer className="bg-[#1A1A1A] mt-20">
         {/* CTA Section */}
         <div className="py-16 px-6 text-center relative overflow-hidden">
           {/* Background accents */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#C9A961]/10 rounded-full blur-3xl -mr-48 -mt-48"></div>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#C9A961]/5 rounded-full blur-3xl -mr-48 -mt-48"></div>
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#C9A961]/5 rounded-full blur-2xl -ml-32 -mb-32"></div>
           
           <div className="relative z-10 max-w-2xl mx-auto space-y-6">
@@ -461,7 +461,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             </h2>
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="group bg-[#C9A961] text-[#3A342D] px-8 py-4 rounded-xl font-bold hover:bg-white transition-all inline-flex items-center gap-3 shadow-lg text-sm uppercase tracking-wider"
+              className="group bg-[#C9A961] text-[#1A1A1A] px-8 py-4 rounded-xl font-bold hover:bg-white transition-all inline-flex items-center gap-3 shadow-lg text-sm uppercase tracking-wider"
             >
               <span>Search an Address</span>
               <i className="fa-solid fa-arrow-up group-hover:-translate-y-1 transition-transform"></i>
