@@ -313,8 +313,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         return true;
       };
       
-      // Compress to ~30-50KB per image to stay under Vercel's 4.5MB limit
-      const compressBase64Image = async (base64: string, maxWidth: number = 500, quality: number = 0.4): Promise<string> => {
+      // Compress to smaller dimensions with higher quality for sharper images
+      const compressBase64Image = async (base64: string, maxWidth: number = 400, quality: number = 0.7): Promise<string> => {
         return new Promise((resolve, reject) => {
           if (!isValidBase64Image(base64)) {
             console.error('[PDF] Invalid base64 image format');
