@@ -50,10 +50,20 @@ const Icons = {
 // ============================================================================
 // TYPES
 // ============================================================================
+interface VisualizationData {
+  beforeImage: string;
+  afterImage: string;
+  title: string;
+  type: 'renovation' | 'development';
+}
+
 interface PdfReportProps {
   data: PropertyData;
   address: string;
   mapImageUrl?: string;
+  generatedVisuals?: {
+    [key: string]: VisualizationData[];
+  };
 }
 
 // ============================================================================
@@ -192,7 +202,7 @@ const PdfPage: React.FC<{ children: React.ReactNode; pageNum: number; totalPages
 // ============================================================================
 // MAIN PDF REPORT COMPONENT
 // ============================================================================
-const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => {
+const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, generatedVisuals = {} }) => {
   // Extract Australian state from address for state-aware approval badges
   const propertyState = extractStateFromAddress(address);
   
@@ -212,7 +222,44 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
   
   const hasWatchOuts = data.watchOuts && data.watchOuts.length > 0;
   
-  const totalPages = 4; // Fixed layout for consistency
+  // Collect all visualizations with their strategy references
+  const allVisualizations: Array<{
+    visual: VisualizationData;
+    strategyName: string;
+    strategyType: 'strategy' | 'development';
+  }> = [];
+  
+  Object.entries(generatedVisuals).forEach(([key, visuals]) => {
+    const [type, indexStr] = key.split('-');
+    const index = parseInt(indexStr, 10);
+    
+    visuals.forEach(visual => {
+      let strategyName = visual.title;
+      
+      // Try to get the actual strategy name from the data
+      if (type === 'strategy' && data.valueAddStrategies?.[index]) {
+        strategyName = data.valueAddStrategies[index].title || visual.title;
+      } else if (type === 'development' && data.developmentScenarios?.[index]) {
+        strategyName = data.developmentScenarios[index].title || visual.title;
+      }
+      
+      allVisualizations.push({
+        visual,
+        strategyName,
+        strategyType: type as 'strategy' | 'development'
+      });
+    });
+  });
+  
+  const hasVisualizations = allVisualizations.length > 0;
+  
+  // Calculate pages needed for visualizations
+  // Single image = 1 page (large), Multiple = 2 per page
+  const visualizationPages = hasVisualizations 
+    ? (allVisualizations.length === 1 ? 1 : Math.ceil(allVisualizations.length / 2))
+    : 0;
+  
+  const totalPages = 4 + visualizationPages; // Base 4 pages + visualization pages
 
   // Calculate post-improvement range
   const baseline = data.valueSnapshot?.indicativeMidpoint || 0;
@@ -617,6 +664,121 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => 
           </div>
         )}
       </PdfPage>
+
+      {/* ================================================================
+          PAGE 5+: AI VISUALIZATIONS (Only if visuals exist)
+          ================================================================ */}
+      {hasVisualizations && (
+        <>
+          {allVisualizations.length === 1 ? (
+            // SINGLE IMAGE: Full page layout
+            <PdfPage pageNum={5} totalPages={totalPages}>
+              <div className="pdf-section">
+                <h2 className="pdf-section-title">
+                  <span className="pdf-icon">{Icons.home}</span>
+                  AI Visualizations
+                </h2>
+                <p className="pdf-section-subtitle">AI-generated concept imagery for property potential</p>
+                
+                <div className="pdf-visual-single">
+                  <div className="pdf-visual-strategy-ref">
+                    <span className="pdf-visual-strategy-badge">
+                      {allVisualizations[0].strategyType === 'development' ? '🏗️' : '🔨'}
+                    </span>
+                    <span className="pdf-visual-strategy-name">{allVisualizations[0].strategyName}</span>
+                  </div>
+                  
+                  <div className="pdf-visual-comparison">
+                    <div className="pdf-visual-image-container">
+                      <img 
+                        src={allVisualizations[0].visual.beforeImage} 
+                        alt="Original property"
+                        className="pdf-visual-image"
+                      />
+                      <span className="pdf-visual-label pdf-visual-label-before">Before</span>
+                    </div>
+                    <div className="pdf-visual-image-container">
+                      <img 
+                        src={allVisualizations[0].visual.afterImage} 
+                        alt="AI visualization"
+                        className="pdf-visual-image"
+                      />
+                      <span className="pdf-visual-label pdf-visual-label-after">AI Concept</span>
+                    </div>
+                  </div>
+                  
+                  <p className="pdf-visual-disclaimer">
+                    AI-generated concept only. Actual results may vary. Consult qualified professionals for accurate designs and costings.
+                  </p>
+                </div>
+              </div>
+            </PdfPage>
+          ) : (
+            // MULTIPLE IMAGES: Grid layout, 2 per page
+            <>
+              {Array.from({ length: visualizationPages }).map((_, pageIndex) => {
+                const startIdx = pageIndex * 2;
+                const pageVisuals = allVisualizations.slice(startIdx, startIdx + 2);
+                
+                return (
+                  <PdfPage key={`visual-page-${pageIndex}`} pageNum={5 + pageIndex} totalPages={totalPages}>
+                    <div className="pdf-section">
+                      {pageIndex === 0 && (
+                        <>
+                          <h2 className="pdf-section-title">
+                            <span className="pdf-icon">{Icons.home}</span>
+                            AI Visualizations
+                          </h2>
+                          <p className="pdf-section-subtitle">AI-generated concept imagery for property potential</p>
+                        </>
+                      )}
+                      
+                      <div className="pdf-visuals-grid">
+                        {pageVisuals.map((item, idx) => (
+                          <div key={idx} className="pdf-visual-card">
+                            <div className="pdf-visual-strategy-ref">
+                              <span className="pdf-visual-strategy-badge">
+                                {item.strategyType === 'development' ? '🏗️' : '🔨'}
+                              </span>
+                              <span className="pdf-visual-strategy-name">{item.strategyName}</span>
+                            </div>
+                            
+                            <div className="pdf-visual-comparison-small">
+                              <div className="pdf-visual-image-container-small">
+                                <img 
+                                  src={item.visual.beforeImage} 
+                                  alt="Original"
+                                  className="pdf-visual-image"
+                                />
+                                <span className="pdf-visual-label-small">Before</span>
+                              </div>
+                              <div className="pdf-visual-arrow">→</div>
+                              <div className="pdf-visual-image-container-small">
+                                <img 
+                                  src={item.visual.afterImage} 
+                                  alt="AI visualization"
+                                  className="pdf-visual-image"
+                                />
+                                <span className="pdf-visual-label-small pdf-visual-label-after-small">AI Concept</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {pageIndex === visualizationPages - 1 && (
+                        <p className="pdf-visual-disclaimer">
+                          AI-generated concepts only. Actual results may vary. Consult qualified professionals for accurate designs and costings.
+                        </p>
+                      )}
+                    </div>
+                  </PdfPage>
+                );
+              })}
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 };
@@ -1293,6 +1455,144 @@ export const getPdfDocumentStyles = () => `
     font-size: 10px;
     background: #fafafa;
     border-radius: 8px;
+  }
+
+  /* ===== AI VISUALIZATIONS ===== */
+  .pdf-visual-single {
+    margin-top: 16px;
+  }
+  
+  .pdf-visual-strategy-ref {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #FAFAF8 0%, #F5F3F0 100%);
+    border-radius: 10px;
+    border: 1px solid #E5E2DD;
+  }
+  
+  .pdf-visual-strategy-badge {
+    font-size: 16px;
+  }
+  
+  .pdf-visual-strategy-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #3A342D;
+    letter-spacing: -0.3px;
+  }
+  
+  .pdf-visual-comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .pdf-visual-image-container {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #E5E2DD;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  
+  .pdf-visual-image {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    display: block;
+  }
+  
+  .pdf-visual-label {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    padding: 5px 12px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+  }
+  
+  .pdf-visual-label-after {
+    background: #C9A961;
+    color: #fff;
+  }
+  
+  .pdf-visual-disclaimer {
+    font-size: 8px;
+    color: #888;
+    font-style: italic;
+    text-align: center;
+    padding: 12px;
+    background: #FAFAF8;
+    border-radius: 8px;
+    border: 1px solid #E5E2DD;
+  }
+  
+  /* Multiple visuals grid */
+  .pdf-visuals-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 16px;
+  }
+  
+  .pdf-visual-card {
+    padding: 14px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #E5E2DD;
+  }
+  
+  .pdf-visual-comparison-small {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+  }
+  
+  .pdf-visual-image-container-small {
+    position: relative;
+    flex: 1;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #E5E2DD;
+  }
+  
+  .pdf-visual-image-container-small .pdf-visual-image {
+    height: 140px;
+  }
+  
+  .pdf-visual-arrow {
+    font-size: 20px;
+    color: #C9A961;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  
+  .pdf-visual-label-small {
+    position: absolute;
+    bottom: 6px;
+    left: 6px;
+    padding: 3px 8px;
+    font-size: 7px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 4px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+  }
+  
+  .pdf-visual-label-after-small {
+    background: #C9A961;
   }
 
   /* ===== PRINT MEDIA ===== */

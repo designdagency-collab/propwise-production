@@ -307,6 +307,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
           data={data} 
           address={data.address} 
           mapImageUrl={mapDataUrl || undefined}
+          generatedVisuals={generatedVisuals}
         />
       );
 
