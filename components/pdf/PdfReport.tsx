@@ -684,26 +684,23 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
           {allVisualizations.length === 1 ? (
             // SINGLE IMAGE: Full page layout - AI generated only
             <PdfPage pageNum={5} totalPages={totalPages}>
-              <div className="pdf-section">
+              <div className="pdf-section" style={{ background: '#fff' }}>
                 <h2 className="pdf-section-title">
                   <span className="pdf-icon">{Icons.home}</span>
                   AI Visualizations
                 </h2>
                 <p className="pdf-section-subtitle">AI-generated concept imagery for property potential</p>
                 
-                <div className="pdf-visual-single" style={{ marginTop: '16px', background: '#fff', border: '1px solid #E5E2DD', borderRadius: '12px', padding: '16px' }}>
-                  <div className="pdf-visual-strategy-ref" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <span className="pdf-visual-strategy-badge" style={{ fontSize: '14px' }}>
-                      {allVisualizations[0].strategyType === 'development' ? '🏗️' : '🔨'}
-                    </span>
-                    <span className="pdf-visual-strategy-name" style={{ fontSize: '12px', fontWeight: 700, color: '#3A342D' }}>{allVisualizations[0].strategyName}</span>
-                  </div>
+                <div style={{ marginTop: '16px', background: '#fff', border: '1px solid #E5E2DD', borderRadius: '12px', padding: '16px' }}>
+                  <p style={{ fontSize: '12px', fontWeight: 700, color: '#3A342D', marginBottom: '12px' }}>
+                    {allVisualizations[0].strategyType === 'development' ? '🏗️' : '🔨'} {allVisualizations[0].strategyName}
+                  </p>
                   
-                  <div className="pdf-visual-single-image" style={{ position: 'relative', width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD', background: '#fff' }}>
+                  <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD', background: '#fff' }}>
                     <img 
                       src={allVisualizations[0].visual.afterImage} 
                       alt="AI visualization"
-                      style={{ width: '100%', height: 'auto', display: 'block' }}
+                      style={{ width: '100%', height: 'auto', display: 'block', background: '#fff' }}
                     />
                     <span style={{ position: 'absolute', bottom: '10px', left: '10px', padding: '5px 12px', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '4px', background: '#C9A961', color: '#fff' }}>AI Concept</span>
                   </div>
@@ -723,7 +720,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                 
                 return (
                   <PdfPage key={`visual-page-${pageIndex}`} pageNum={5 + pageIndex} totalPages={totalPages}>
-                    <div className="pdf-section">
+                    <div className="pdf-section" style={{ background: '#fff' }}>
                       {pageIndex === 0 && (
                         <>
                           <h2 className="pdf-section-title">
@@ -734,21 +731,18 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                         </>
                       )}
                       
-                      <div className="pdf-visuals-stack" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px', background: '#fff' }}>
                         {pageVisuals.map((item, idx) => (
-                          <div key={idx} className="pdf-visual-item" style={{ background: '#fff', border: '1px solid #E5E2DD', borderRadius: '12px', padding: '16px', marginBottom: '16px' }}>
-                            <div className="pdf-visual-strategy-ref" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                              <span className="pdf-visual-strategy-badge" style={{ fontSize: '14px' }}>
-                                {item.strategyType === 'development' ? '🏗️' : '🔨'}
-                              </span>
-                              <span className="pdf-visual-strategy-name" style={{ fontSize: '12px', fontWeight: 700, color: '#3A342D' }}>{item.strategyName}</span>
-                            </div>
+                          <div key={idx} style={{ background: '#fff', border: '1px solid #E5E2DD', borderRadius: '12px', padding: '16px' }}>
+                            <p style={{ fontSize: '12px', fontWeight: 700, color: '#3A342D', marginBottom: '12px' }}>
+                              {item.strategyType === 'development' ? '🏗️' : '🔨'} {item.strategyName}
+                            </p>
                             
-                            <div style={{ position: 'relative', width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD', background: '#fff' }}>
+                            <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD', background: '#fff' }}>
                               <img 
                                 src={item.visual.afterImage} 
                                 alt="AI visualization"
-                                style={{ width: '100%', height: 'auto', display: 'block' }}
+                                style={{ width: '100%', height: 'auto', display: 'block', background: '#fff' }}
                               />
                               <span style={{ position: 'absolute', bottom: '10px', left: '10px', padding: '5px 12px', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '4px', background: '#C9A961', color: '#fff' }}>AI Concept</span>
                             </div>
