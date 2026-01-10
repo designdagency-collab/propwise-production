@@ -468,7 +468,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
         {/* Footer Links */}
         <div className="py-10 px-6 border-t border-[#E8E6E3]">
           <div className="max-w-6xl mx-auto flex flex-col items-center gap-6">
-            <img src="/upblock.ai-logo.png" alt="upblock.ai" className="h-10" />
+            <img src="/upblock.ai-logo.png" alt="upblock.ai" className="h-16 sm:h-20" />
             <div className="flex items-center gap-6 text-sm text-[#6B6560]">
               <a href="#" className="hover:text-[#3A342D] transition-colors">Privacy</a>
               <a href="#" className="hover:text-[#3A342D] transition-colors">Terms</a>
