@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 interface Suggestion {
   description: string;
@@ -37,22 +37,35 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const [sliderPos, setSliderPos] = useState(50);
   const sliderRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
-  
-  // Tab state for Renovation vs Development
-  const [activeTab, setActiveTab] = useState<'renovation' | 'development'>('renovation');
 
-  const handleSliderMove = (clientX: number) => {
-    if (!sliderRef.current || !isDragging.current) return;
+  const handleSliderMove = useCallback((clientX: number) => {
+    if (!sliderRef.current) return;
     const rect = sliderRef.current.getBoundingClientRect();
     const x = clientX - rect.left;
     const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
     setSliderPos(percentage);
   };
 
-  const handleMouseDown = () => { isDragging.current = true; };
-  const handleMouseUp = () => { isDragging.current = false; };
-  const handleMouseMove = (e: React.MouseEvent) => handleSliderMove(e.clientX);
-  const handleTouchMove = (e: React.TouchEvent) => handleSliderMove(e.touches[0].clientX);
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current) return;
+    handleSliderMove(e.clientX);
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging.current) return;
+    handleSliderMove(e.touches[0].clientX);
+  };
+
+  // Global listeners for smooth dragging even outside the slider area
+  useEffect(() => {
+    const handleUp = () => { isDragging.current = false; };
+    window.addEventListener('mouseup', handleUp);
+    window.addEventListener('touchend', handleUp);
+    return () => {
+      window.removeEventListener('mouseup', handleUp);
+      window.removeEventListener('touchend', handleUp);
+    };
+  }, []);
 
   return (
     <div className="space-y-0">
@@ -178,18 +191,15 @@ const LandingPage: React.FC<LandingPageProps> = ({
             <div 
               ref={sliderRef}
               className="relative aspect-[16/10] sm:aspect-[16/9] rounded-2xl sm:rounded-3xl overflow-hidden cursor-col-resize select-none shadow-2xl"
-              onMouseDown={handleMouseDown}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
+              onMouseDown={() => { isDragging.current = true; }}
+              onTouchStart={() => { isDragging.current = true; }}
               onMouseMove={handleMouseMove}
-              onTouchStart={handleMouseDown}
-              onTouchEnd={handleMouseUp}
               onTouchMove={handleTouchMove}
             >
               {/* After Image (Background) */}
               <img 
-                src={activeTab === 'renovation' ? '/Image-2.png' : '/DualOcc2.png'} 
-                alt={activeTab === 'renovation' ? 'After renovation' : 'Dual occupancy development'}
+                src="/DualOcc2.png" 
+                alt="Dual occupancy development"
                 className="absolute inset-0 w-full h-full object-cover"
               />
               
@@ -199,8 +209,8 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
               >
                 <img 
-                  src={activeTab === 'renovation' ? '/Image-1.png' : '/DualOcc1.png'} 
-                  alt={activeTab === 'renovation' ? 'Original property' : 'Original site'}
+                  src="/DualOcc1.png" 
+                  alt="Original site"
                   className="absolute inset-0 w-full h-full object-cover"
                 />
               </div>
