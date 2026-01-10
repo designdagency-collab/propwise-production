@@ -946,37 +946,6 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
          )}
       </div>
 
-      {/* PORTFOLIO SELL-OUT SUMMARY - Best Strategy Uplift */}
-      {data.portfolioSelloutSummary && (
-        <div 
-          data-pdf-callout 
-          data-pdf-no-break 
-          className="w-full h-[400px] bg-[#5D544A] rounded-[3rem] text-white shadow-xl relative overflow-hidden group flex items-center"
-        >
-           <div className="absolute top-0 right-0 w-64 h-64 bg-[#D6A270]/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-[#D6A270]/20 transition-all duration-1000"></div>
-           <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12 p-8 md:p-12 w-full">
-              <div className="flex-shrink-0 w-20 h-20 bg-[#D6A270] rounded-3xl flex items-center justify-center text-3xl shadow-lg">
-                 <i className="fa-solid fa-sack-dollar"></i>
-              </div>
-              <div className="flex-grow space-y-4 text-center md:text-left">
-                 <div>
-                    <span className="text-[11px] sm:text-[10px] font-black text-[#D6A270] uppercase tracking-[0.3em] mb-1 block">Best Strategy Uplift</span>
-                    <h3 className="text-xl sm:text-2xl font-bold tracking-tight">{data.portfolioSelloutSummary.bestStrategyByProfit}</h3>
-                 </div>
-                 <div className="flex flex-col md:flex-row items-center gap-6">
-                    <div className="space-y-1">
-                       <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Indicative Predicted Profit From Sale</p>
-                       <p className="text-2xl sm:text-3xl font-black text-[#D6A270]">
-                          {formatValue(data.portfolioSelloutSummary.estimatedNetProfitRange?.low)} – {formatValue(data.portfolioSelloutSummary.estimatedNetProfitRange?.high)}
-                       </p>
-                    </div>
-                 </div>
-                 <p className="text-sm text-white/60 leading-relaxed max-w-xl italic">"{data.portfolioSelloutSummary.selloutExplanation}"</p>
-              </div>
-           </div>
-        </div>
-      )}
-
       {/* COMMUNITY & LIFESTYLE */}
       {(filteredProximity.length > 0) || data.localAreaIntel || data.localMarketVibe ? (
         <section className="space-y-6 pdf-no-break">
@@ -1110,6 +1079,37 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
            )}
         </section>
       ) : null}
+
+      {/* PORTFOLIO SELL-OUT SUMMARY - Best Strategy Uplift */}
+      {data.portfolioSelloutSummary && (
+        <div 
+          data-pdf-callout 
+          data-pdf-no-break 
+          className="w-full h-[400px] bg-[#5D544A] rounded-[3rem] text-white shadow-xl relative overflow-hidden group flex items-center"
+        >
+           <div className="absolute top-0 right-0 w-64 h-64 bg-[#D6A270]/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-[#D6A270]/20 transition-all duration-1000"></div>
+           <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12 p-8 md:p-12 w-full">
+              <div className="flex-shrink-0 w-20 h-20 bg-[#D6A270] rounded-3xl flex items-center justify-center text-3xl shadow-lg">
+                 <i className="fa-solid fa-sack-dollar"></i>
+              </div>
+              <div className="flex-grow space-y-4 text-center md:text-left">
+                 <div>
+                    <span className="text-[11px] sm:text-[10px] font-black text-[#D6A270] uppercase tracking-[0.3em] mb-1 block">Best Strategy Uplift</span>
+                    <h3 className="text-xl sm:text-2xl font-bold tracking-tight">{data.portfolioSelloutSummary.bestStrategyByProfit}</h3>
+                 </div>
+                 <div className="flex flex-col md:flex-row items-center gap-6">
+                    <div className="space-y-1">
+                       <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest">Indicative Predicted Profit From Sale</p>
+                       <p className="text-2xl sm:text-3xl font-black text-[#D6A270]">
+                          {formatValue(data.portfolioSelloutSummary.estimatedNetProfitRange?.low)} – {formatValue(data.portfolioSelloutSummary.estimatedNetProfitRange?.high)}
+                       </p>
+                    </div>
+                 </div>
+                 <p className="text-sm text-white/60 leading-relaxed max-w-xl italic">"{data.portfolioSelloutSummary.selloutExplanation}"</p>
+              </div>
+           </div>
+        </div>
+      )}
 
       {/* VALUE-ADD STRATEGIES */}
       {data.valueAddStrategies && data.valueAddStrategies.length > 0 && (
