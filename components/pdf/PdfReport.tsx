@@ -691,22 +691,21 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                 </h2>
                 <p className="pdf-section-subtitle">AI-generated concept imagery for property potential</p>
                 
-                <div style={{ marginTop: '16px', background: '#fff', border: '1px solid #E5E2DD', borderRadius: '12px', padding: '16px' }}>
+                <div style={{ marginTop: '16px', background: '#ffffff', border: '1px solid #E5E2DD', borderRadius: '12px', padding: '16px' }}>
                   <p style={{ fontSize: '12px', fontWeight: 700, color: '#3A342D', marginBottom: '12px' }}>
                     {allVisualizations[0].strategyType === 'development' ? '🏗️' : '🔨'} {allVisualizations[0].strategyName}
                   </p>
                   
-                  <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD', background: '#fff' }}>
+                  <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD' }}>
                     <img 
                       src={allVisualizations[0].visual.afterImage} 
                       alt="AI visualization"
-                      style={{ width: '100%', height: 'auto', display: 'block', background: '#fff' }}
+                      style={{ width: '100%', height: 'auto', display: 'block' }}
                     />
-                    <span style={{ position: 'absolute', bottom: '10px', left: '10px', padding: '5px 12px', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '4px', background: '#C9A961', color: '#fff' }}>AI Concept</span>
                   </div>
                   
-                  <p className="pdf-visual-disclaimer">
-                    AI-generated concept only. Actual results may vary. Consult qualified professionals for accurate designs and costings.
+                  <p style={{ fontSize: '8px', color: '#888', fontStyle: 'italic', textAlign: 'center', marginTop: '12px' }}>
+                    AI-generated concept only. Actual results may vary. Consult qualified professionals.
                   </p>
                 </div>
               </div>
@@ -731,28 +730,27 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                         </>
                       )}
                       
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px', background: '#fff' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px', background: '#ffffff' }}>
                         {pageVisuals.map((item, idx) => (
-                          <div key={idx} style={{ background: '#fff', border: '1px solid #E5E2DD', borderRadius: '12px', padding: '16px' }}>
+                          <div key={idx} style={{ background: '#ffffff', border: '1px solid #E5E2DD', borderRadius: '12px', padding: '16px' }}>
                             <p style={{ fontSize: '12px', fontWeight: 700, color: '#3A342D', marginBottom: '12px' }}>
                               {item.strategyType === 'development' ? '🏗️' : '🔨'} {item.strategyName}
                             </p>
                             
-                            <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD', background: '#fff' }}>
+                            <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD' }}>
                               <img 
                                 src={item.visual.afterImage} 
                                 alt="AI visualization"
-                                style={{ width: '100%', height: 'auto', display: 'block', background: '#fff' }}
+                                style={{ width: '100%', height: 'auto', display: 'block' }}
                               />
-                              <span style={{ position: 'absolute', bottom: '10px', left: '10px', padding: '5px 12px', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '4px', background: '#C9A961', color: '#fff' }}>AI Concept</span>
                             </div>
                           </div>
                         ))}
                       </div>
                       
                       {pageIndex === visualizationPages - 1 && (
-                        <p className="pdf-visual-disclaimer">
-                          AI-generated concepts only. Actual results may vary. Consult qualified professionals for accurate designs and costings.
+                        <p style={{ fontSize: '8px', color: '#888', fontStyle: 'italic', textAlign: 'center', marginTop: '12px' }}>
+                          AI-generated concepts only. Actual results may vary. Consult qualified professionals.
                         </p>
                       )}
                     </div>
