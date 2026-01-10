@@ -906,7 +906,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         <div 
           data-pdf-callout 
           data-pdf-no-break 
-          className="w-full h-[400px] bg-[#4A4137] rounded-[3rem] text-white shadow-xl relative overflow-hidden group flex items-center"
+          className="w-full h-[400px] bg-[#5D544A] rounded-[3rem] text-white shadow-xl relative overflow-hidden group flex items-center"
         >
            <div className="absolute top-0 right-0 w-64 h-64 bg-[#D6A270]/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-[#D6A270]/20 transition-all duration-1000"></div>
            <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12 p-8 md:p-12 w-full">
