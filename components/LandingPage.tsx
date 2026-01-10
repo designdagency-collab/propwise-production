@@ -405,10 +405,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
       {/* ============================================
           FEATURES GRID - Condensed
           ============================================ */}
-      <section className="py-20 px-6 bg-white">
+      <section className="py-20 px-6" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#3A342D] tracking-tight mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" style={{ color: 'var(--text-primary)' }}>
               Everything in One Report
             </h2>
           </div>
@@ -422,14 +422,18 @@ const LandingPage: React.FC<LandingPageProps> = ({
               { icon: 'fa-city', title: 'Development Options', color: '#EC4899' },
               { icon: 'fa-eye', title: 'Risk Alerts', color: '#EF4444' },
             ].map((feature, i) => (
-              <div key={i} className="flex items-center gap-4 p-4 sm:p-5 rounded-2xl border border-[#E8E6E3] bg-[#F5F5F5]/50 hover:border-[#C9A961]/30 hover:shadow-md transition-all">
+              <div 
+                key={i} 
+                className="flex items-center gap-4 p-4 sm:p-5 rounded-2xl border hover:shadow-md transition-all"
+                style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
+              >
                 <div 
                   className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${feature.color}15` }}
+                  style={{ backgroundColor: `${feature.color}20` }}
                 >
                   <i className={`fa-solid ${feature.icon} text-sm sm:text-base`} style={{ color: feature.color }}></i>
                 </div>
-                <span className="font-bold text-[#3A342D] text-sm sm:text-base">{feature.title}</span>
+                <span className="font-bold text-sm sm:text-base" style={{ color: 'var(--text-primary)' }}>{feature.title}</span>
               </div>
             ))}
           </div>
@@ -439,10 +443,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
       {/* ============================================
           HOW IT WORKS - Simple
           ============================================ */}
-      <section className="py-20 px-6 bg-white">
+      <section className="py-20 px-6" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#3A342D] tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
               How It Works
             </h2>
           </div>
@@ -455,15 +459,18 @@ const LandingPage: React.FC<LandingPageProps> = ({
             ].map((step, i) => (
               <div key={i} className="text-center space-y-4">
                 <div className="relative inline-block">
-                  <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-lg border border-[#E8E6E3]">
+                  <div 
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-lg border"
+                    style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
+                  >
                     <i className={`fa-solid ${step.icon} text-2xl text-[#C9A961]`}></i>
                   </div>
                   <span className="absolute -top-2 -right-2 w-7 h-7 bg-[#C9A961] rounded-full text-white text-xs font-bold flex items-center justify-center shadow-md">
                     {step.num}
                   </span>
                 </div>
-                <h3 className="font-bold text-[#3A342D] text-lg">{step.title}</h3>
-                <p className="text-sm text-[#6B6560]">{step.desc}</p>
+                <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>{step.title}</h3>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{step.desc}</p>
               </div>
             ))}
           </div>
