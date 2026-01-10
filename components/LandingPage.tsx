@@ -448,42 +448,38 @@ const LandingPage: React.FC<LandingPageProps> = ({
       {/* ============================================
           FINAL CTA + FOOTER
           ============================================ */}
-      <footer className="bg-white">
+      <footer className="bg-[#3A342D] mt-20">
         {/* CTA Section */}
-        <div className="py-16 px-6">
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-[#3A342D] rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden">
-              {/* Background accents */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9A961]/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#C9A961]/5 rounded-full blur-2xl -ml-24 -mb-24"></div>
-              
-              <div className="relative z-10 space-y-6">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
-                  Ready to Discover <span className="text-[#C9A961]">Hidden Potential?</span>
-                </h2>
-                <button
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="group bg-[#C9A961] text-[#3A342D] px-8 py-4 rounded-xl font-bold hover:bg-white transition-all inline-flex items-center gap-3 shadow-lg text-sm uppercase tracking-wider"
-                >
-                  <span>Search an Address</span>
-                  <i className="fa-solid fa-arrow-up group-hover:-translate-y-1 transition-transform"></i>
-                </button>
-              </div>
-            </div>
+        <div className="py-16 px-6 text-center relative overflow-hidden">
+          {/* Background accents */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#C9A961]/10 rounded-full blur-3xl -mr-48 -mt-48"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#C9A961]/5 rounded-full blur-2xl -ml-32 -mb-32"></div>
+          
+          <div className="relative z-10 max-w-2xl mx-auto space-y-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
+              Ready to Discover <span className="text-[#C9A961]">Hidden Potential?</span>
+            </h2>
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="group bg-[#C9A961] text-[#3A342D] px-8 py-4 rounded-xl font-bold hover:bg-white transition-all inline-flex items-center gap-3 shadow-lg text-sm uppercase tracking-wider"
+            >
+              <span>Search an Address</span>
+              <i className="fa-solid fa-arrow-up group-hover:-translate-y-1 transition-transform"></i>
+            </button>
           </div>
         </div>
         
         {/* Footer Links */}
-        <div className="py-8 px-6 border-t border-[#E8E6E3]">
+        <div className="py-6 px-6 border-t border-white/10">
           <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <img src="/upblock.ai-logo.png" alt="upblock.ai" className="h-6 opacity-80" />
-            <div className="flex items-center gap-6 text-xs text-[#6B6560]">
-              <a href="#" className="hover:text-[#3A342D] transition-colors">Privacy</a>
-              <a href="#" className="hover:text-[#3A342D] transition-colors">Terms</a>
+            <img src="/upblock.ai-logo.png" alt="upblock.ai" className="h-5 brightness-0 invert opacity-60" />
+            <div className="flex items-center gap-6 text-xs text-white/50">
+              <a href="#" className="hover:text-white transition-colors">Privacy</a>
+              <a href="#" className="hover:text-white transition-colors">Terms</a>
               <span>© {new Date().getFullYear()} upblock.ai</span>
             </div>
           </div>
-          <p className="mt-4 text-[10px] text-[#9B9590] text-center max-w-2xl mx-auto">
+          <p className="mt-3 text-[10px] text-white/30 text-center max-w-2xl mx-auto">
             For research purposes only. Not financial, legal, or professional advice. All estimates are AI-generated and should be verified independently.
           </p>
         </div>
