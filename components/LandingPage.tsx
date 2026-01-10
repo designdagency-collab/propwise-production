@@ -198,7 +198,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             >
               {/* After Image (Background) */}
               <img 
-                src="/reno2.png" 
+                src="/Reno-2.png" 
                 alt="AI visualized renovation"
                 className="absolute inset-0 w-full h-full object-cover"
               />
@@ -209,7 +209,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
               >
                 <img 
-                  src="/reno1.png" 
+                  src="/Reno-1.png" 
                   alt="Original property"
                   className="absolute inset-0 w-full h-full object-cover"
                 />
