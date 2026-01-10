@@ -303,7 +303,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
       
       const compressedVisuals: typeof generatedVisuals = {};
       
-      const compressBase64Image = async (base64: string, maxWidth: number = 800, quality: number = 0.7): Promise<string> => {
+      // Compress to ~50-80KB per image to allow up to 5 visualizations (10 images)
+      const compressBase64Image = async (base64: string, maxWidth: number = 600, quality: number = 0.5): Promise<string> => {
         return new Promise((resolve) => {
           const img = new Image();
           img.onload = () => {
