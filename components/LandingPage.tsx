@@ -98,7 +98,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
           HERO SECTION - Search First
           ============================================ */}
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden pt-20">
-        <div className="absolute inset-0 bg-white"></div>
+        <div className="absolute inset-0" style={{ backgroundColor: 'var(--bg-primary)' }}></div>
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#C9A961]/5 rounded-full blur-3xl -mr-48 -mt-48"></div>
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#B8C5A0]/5 rounded-full blur-3xl -ml-32 -mb-32"></div>
         
@@ -108,20 +108,20 @@ const LandingPage: React.FC<LandingPageProps> = ({
             <span>AI-Powered Property Intelligence</span>
           </div>
           
-          <h1 className="text-[3rem] sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.05] text-[#3A342D]">
+          <h1 className="text-[3rem] sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.05]" style={{ color: 'var(--text-primary)' }}>
             Discover Hidden Equity<br/>
             <span className="text-[#C9A961]">In Any Property</span>
           </h1>
           
-          <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed text-[#6B6560] font-medium">
-            Uncover value-add potential, comparable sales, and planning insights for any <strong className="text-[#3A342D]">Australian</strong> address — powered by AI.
+          <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium" style={{ color: 'var(--text-muted)' }}>
+            Uncover value-add potential, comparable sales, and planning insights for any <strong style={{ color: 'var(--text-primary)' }}>Australian</strong> address — powered by AI.
           </p>
           
           {/* SEARCH BAR */}
           <div className="max-w-2xl mx-auto pt-2">
             <form onSubmit={onSearch} className="relative group">
               <div className="absolute -inset-1 bg-[#C9A961] rounded-[2rem] blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
-              <div className="relative flex items-center p-2 rounded-[2rem] shadow-xl border bg-white border-[#E8E6E3]">
+              <div className="relative flex items-center p-2 rounded-[2rem] shadow-xl border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
                 <div className="flex-grow flex items-center px-6">
                   <input
                     type="text"
@@ -129,7 +129,8 @@ const LandingPage: React.FC<LandingPageProps> = ({
                     onChange={(e) => onAddressChange(e.target.value)}
                     onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                     placeholder="Enter any Australian address..."
-                    className="w-full py-3 sm:py-4 bg-transparent text-base sm:text-lg font-medium focus:outline-none text-[#3A342D] placeholder:text-[#9B9590]"
+                    className="w-full py-3 sm:py-4 bg-transparent text-base sm:text-lg font-medium focus:outline-none"
+                    style={{ color: 'var(--text-primary)' }}
                     autoComplete="off"
                   />
                 </div>
@@ -155,7 +156,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
               </div>
               
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute left-0 right-0 mt-2 rounded-2xl shadow-xl border overflow-hidden z-50 bg-white border-[#E8E6E3]">
+                <div className="absolute left-0 right-0 mt-2 rounded-2xl shadow-xl border overflow-hidden z-50" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
                   {suggestions.map((suggestion, index) => (
                     <button
                       key={index}
@@ -165,9 +166,9 @@ const LandingPage: React.FC<LandingPageProps> = ({
                     >
                       <i className="fa-solid fa-location-dot text-[#C9A961] text-sm flex-shrink-0"></i>
                       <div className="min-w-0">
-                        <p className="font-medium truncate text-[#3A342D]">{suggestion.mainText}</p>
+                        <p className="font-medium truncate" style={{ color: 'var(--text-primary)' }}>{suggestion.mainText}</p>
                         {suggestion.secondaryText && (
-                          <p className="text-sm truncate text-[#9B9590]">{suggestion.secondaryText}</p>
+                          <p className="text-sm truncate" style={{ color: 'var(--text-muted)' }}>{suggestion.secondaryText}</p>
                         )}
                       </div>
                     </button>
@@ -176,7 +177,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
               )}
             </form>
             
-            <p className="text-xs text-[#9B9590] mt-4 font-medium">
+            <p className="text-xs mt-4 font-medium" style={{ color: 'var(--text-muted)' }}>
               No sign-up required • Free instant report
             </p>
           </div>
@@ -190,7 +191,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
       {/* ============================================
           AI VISUALIZER - BIG SHOWCASE
           ============================================ */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6 bg-white relative overflow-hidden">
+      <section className="py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)' }}>
         {/* Background accents */}
         <div className="absolute top-0 left-0 w-96 h-96 bg-[#C9A961]/5 rounded-full blur-3xl -ml-48 -mt-48"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#B8C5A0]/5 rounded-full blur-3xl -mr-48 -mb-48"></div>
@@ -202,10 +203,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
               <i className="fa-solid fa-wand-magic-sparkles mr-2"></i>
               AI Property Visualizer
             </span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#3A342D] tracking-tight mb-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4" style={{ color: 'var(--text-primary)' }}>
               Picture the Potential
             </h2>
-            <p className="text-[#6B6560] max-w-xl mx-auto text-sm sm:text-base">
+            <p className="max-w-xl mx-auto text-sm sm:text-base" style={{ color: 'var(--text-muted)' }}>
               Drag the slider to see AI-generated transformations — from cosmetic renovations to full development builds
             </p>
           </div>
@@ -241,10 +242,11 @@ const LandingPage: React.FC<LandingPageProps> = ({
               
               {/* Slider Line */}
               <div 
-                className="absolute top-0 bottom-0 w-1 bg-white shadow-2xl z-10"
+                className="absolute top-0 bottom-0 w-1 shadow-2xl z-10"
+                style={{ backgroundColor: 'var(--bg-card)' }}
                 style={{ left: `${sliderPos}%`, transform: 'translateX(-50%)' }}
               >
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 bg-white rounded-full shadow-2xl flex items-center justify-center border-4 border-[#C9A961]">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-2xl flex items-center justify-center border-4 border-[#C9A961]" style={{ backgroundColor: 'var(--bg-card)' }}>
                   <i className="fa-solid fa-arrows-left-right text-[#C9A961] text-base sm:text-lg"></i>
                 </div>
               </div>
@@ -260,7 +262,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             
             {/* Drag hint */}
             <div className="text-center mt-4">
-              <span className="inline-flex items-center gap-2 text-[#6B6560] text-sm px-5 py-2.5 rounded-full">
+              <span className="inline-flex items-center gap-2 text-sm px-5 py-2.5 rounded-full" style={{ color: 'var(--text-muted)' }}>
                 <i className="fa-solid fa-hand-pointer text-[#C9A961]"></i>
                 Drag slider to compare
               </span>
@@ -268,7 +270,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
           </div>
           
           {/* Feature bullets */}
-          <div className="flex flex-wrap justify-center gap-6 mt-6 text-sm text-[#6B6560]">
+          <div className="flex flex-wrap justify-center gap-6 mt-6 text-sm" style={{ color: 'var(--text-muted)' }}>
             <div className="flex items-center gap-2">
               <i className="fa-solid fa-check text-[#C9A961]"></i>
               <span>Upload any photo</span>
@@ -288,17 +290,17 @@ const LandingPage: React.FC<LandingPageProps> = ({
       {/* ============================================
           SAMPLE REPORT PREVIEW
           ============================================ */}
-      <section className="py-20 px-6 bg-white overflow-hidden">
+      <section className="py-20 px-6 overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <span className="inline-block px-4 py-1 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
               <i className="fa-solid fa-file-pdf mr-2"></i>
               Sample Report
             </span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#3A342D] tracking-tight mb-3">
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3" style={{ color: 'var(--text-primary)' }}>
               Your Complete Property Intelligence
             </h2>
-            <p className="text-[#6B6560] max-w-xl mx-auto">
+            <p className="max-w-xl mx-auto" style={{ color: 'var(--text-muted)' }}>
               Every report includes AI-powered insights, development potential, and actionable strategies
             </p>
           </div>
@@ -306,85 +308,85 @@ const LandingPage: React.FC<LandingPageProps> = ({
           {/* Mock Report Preview - Matching PDF Style */}
           <div className="relative max-w-4xl mx-auto">
             {/* Background cards for depth */}
-            <div className="absolute top-6 left-4 right-4 h-full bg-[#E8E6E3] rounded-[2rem] opacity-40"></div>
-            <div className="absolute top-3 left-2 right-2 h-full bg-[#E8E6E3] rounded-[2rem] opacity-60"></div>
+            <div className="absolute top-6 left-4 right-4 h-full rounded-[2rem] opacity-40" style={{ backgroundColor: 'var(--bg-secondary)' }}></div>
+            <div className="absolute top-3 left-2 right-2 h-full rounded-[2rem] opacity-60" style={{ backgroundColor: 'var(--bg-secondary)' }}></div>
             
             {/* Main Report Card */}
-            <div className="relative bg-white rounded-[2rem] sm:rounded-[3rem] shadow-2xl border border-[#E8E6E3] overflow-hidden">
+            <div className="relative rounded-[2rem] sm:rounded-[3rem] shadow-2xl border overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
               {/* Report Header */}
-              <div className="p-6 sm:p-10 border-b border-[#E8E6E3]">
+              <div className="p-6 sm:p-10 border-b" style={{ borderColor: 'var(--border-color)' }}>
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest">
                     Property Strategy Guide
                   </div>
-                  <div className="flex gap-4 text-[#6B6560] text-sm font-bold">
+                  <div className="flex gap-4 text-sm font-bold" style={{ color: 'var(--text-muted)' }}>
                     <span><i className="fa-solid fa-bed text-[#C9A961] mr-1.5"></i> 3</span>
                     <span><i className="fa-solid fa-bath text-[#C9A961] mr-1.5"></i> 2</span>
                     <span><i className="fa-solid fa-car text-[#C9A961] mr-1.5"></i> 2</span>
                   </div>
                 </div>
                 
-                <h3 className="text-2xl sm:text-4xl font-bold text-[#3A342D] tracking-tighter leading-tight mb-2 font-address">
+                <h3 className="text-2xl sm:text-4xl font-bold tracking-tighter leading-tight mb-2 font-address" style={{ color: 'var(--text-primary)' }}>
                   42 Example St, Sydney NSW 2000
                 </h3>
-                <p className="text-[#6B6560] text-sm font-medium">House • Land • 680 m²</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>House • Land • 680 m²</p>
               </div>
               
               {/* Uplift Strategies Preview */}
               <div className="p-6 sm:p-10 space-y-4">
-                <h4 className="text-xs font-black uppercase tracking-widest text-[#9B9590] mb-4">
+                <h4 className="text-xs font-black uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>
                   <i className="fa-solid fa-hammer text-[#B8C5A0] mr-2"></i>
                   Uplift & Value-Add Strategies
                 </h4>
                 
                 {/* Strategy Card 1 */}
-                <div className="p-5 rounded-2xl border border-[#E8E6E3] hover:border-[#C9A961]/30 transition-all">
+                <div className="p-5 rounded-2xl border transition-all" style={{ borderColor: 'var(--border-color)' }}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h5 className="font-bold text-[#3A342D]">Cosmetic Renovation</h5>
+                        <h5 className="font-bold" style={{ color: 'var(--text-primary)' }}>Cosmetic Renovation</h5>
                         <span className="px-2 py-0.5 bg-[#B8C5A0]/10 text-[#B8C5A0] rounded text-[9px] font-bold uppercase">Low Effort</span>
                       </div>
-                      <p className="text-[#6B6560] text-xs">Kitchen update, bathroom refresh, new flooring throughout</p>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Kitchen update, bathroom refresh, new flooring throughout</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-[9px] text-[#9B9590] uppercase tracking-wider">Potential Uplift</p>
+                      <p className="text-[9px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Potential Uplift</p>
                       <p className="font-black text-[#B8C5A0]">$150K – $200K</p>
                     </div>
                   </div>
                 </div>
                 
                 {/* Strategy Card 2 */}
-                <div className="p-5 rounded-2xl border border-[#E8E6E3] hover:border-[#C9A961]/30 transition-all">
+                <div className="p-5 rounded-2xl border transition-all" style={{ borderColor: 'var(--border-color)' }}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h5 className="font-bold text-[#3A342D]">Dual Occupancy</h5>
+                        <h5 className="font-bold" style={{ color: 'var(--text-primary)' }}>Dual Occupancy</h5>
                         <span className="px-2 py-0.5 bg-[#C9A961]/10 text-[#C9A961] rounded text-[9px] font-bold uppercase">High Effort</span>
                       </div>
-                      <p className="text-[#6B6560] text-xs">Subdivide and construct second dwelling at rear</p>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Subdivide and construct second dwelling at rear</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-[9px] text-[#9B9590] uppercase tracking-wider">Indicative Net Profit</p>
+                      <p className="text-[9px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Indicative Net Profit</p>
                       <p className="font-black text-[#C9A961]">$400K – $600K</p>
                     </div>
                   </div>
                 </div>
                 
                 {/* Zoning Badge */}
-                <div className="flex items-center gap-4 p-4 bg-[#F5F5F5] rounded-xl mt-6">
-                  <div className="w-12 h-12 bg-[#3A342D] rounded-xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-white font-black text-sm">R2</span>
+                <div className="flex items-center gap-4 p-4 rounded-xl mt-6" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--text-primary)' }}>
+                    <span className="font-black text-sm" style={{ color: 'var(--bg-primary)' }}>R2</span>
                   </div>
                   <div>
-                    <p className="font-bold text-[#3A342D] text-sm">Low Density Residential</p>
-                    <p className="text-[#6B6560] text-xs">Dual occupancy permitted • 680m² exceeds minimum lot size</p>
+                    <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>Low Density Residential</p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Dual occupancy permitted • 680m² exceeds minimum lot size</p>
                   </div>
                 </div>
               </div>
               
               {/* Fade overlay */}
-              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none" style={{ background: 'linear-gradient(to top, var(--bg-card), transparent)' }}></div>
             </div>
           </div>
           
@@ -397,7 +399,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
               <span>Generate Your Report</span>
               <i className="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
             </button>
-            <p className="text-xs text-[#9B9590] mt-3">30 second analysis • No credit card required</p>
+            <p className="text-xs mt-3" style={{ color: 'var(--text-muted)' }}>30 second analysis • No credit card required</p>
           </div>
         </div>
       </section>
@@ -480,11 +482,11 @@ const LandingPage: React.FC<LandingPageProps> = ({
       {/* ============================================
           FINAL CTA + FOOTER
           ============================================ */}
-      <footer className="bg-white mt-20 border-t border-[#E8E6E3]">
+      <footer className="mt-20" style={{ backgroundColor: 'var(--bg-secondary)' }}>
         {/* CTA Section */}
         <div className="py-16 px-6 text-center">
           <div className="max-w-2xl mx-auto space-y-6">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#3A342D] tracking-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
               Ready to Discover <span className="text-[#C9A961]">Hidden Potential?</span>
             </h2>
             <button
@@ -498,19 +500,19 @@ const LandingPage: React.FC<LandingPageProps> = ({
         </div>
         
         {/* Footer Links */}
-        <div className="pt-10 px-6 border-t border-[#E8E6E3]">
+        <div className="pt-10 px-6">
           <div className="max-w-6xl mx-auto flex flex-col items-center gap-6">
             <img src="/upblock.ai-logo.png" alt="upblock.ai" className="h-16 sm:h-20" />
-            <div className="flex items-center gap-6 text-sm text-[#6B6560]">
-              <a href="#" className="hover:text-[#3A342D] transition-colors">Privacy</a>
-              <a href="#" className="hover:text-[#3A342D] transition-colors">Terms</a>
+            <div className="flex items-center gap-6 text-sm" style={{ color: 'var(--text-muted)' }}>
+              <a href="#" className="hover:opacity-70 transition-opacity">Privacy</a>
+              <a href="#" className="hover:opacity-70 transition-opacity">Terms</a>
               <span>© {new Date().getFullYear()} upblock.ai</span>
             </div>
           </div>
         </div>
         {/* Disclaimer at absolute bottom */}
         <div className="pb-4 pt-8 px-6">
-          <p className="text-[10px] text-[#9B9590] text-center max-w-2xl mx-auto">
+          <p className="text-[10px] text-center max-w-2xl mx-auto" style={{ color: 'var(--text-muted)' }}>
             For research purposes only. Not financial, legal, or professional advice. All estimates are AI-generated and should be verified independently.
           </p>
         </div>
