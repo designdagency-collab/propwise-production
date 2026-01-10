@@ -313,8 +313,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         return true;
       };
       
-      // Compress to ~50-80KB per image to allow up to 5 visualizations
-      const compressBase64Image = async (base64: string, maxWidth: number = 600, quality: number = 0.5): Promise<string> => {
+      // Compress to ~30-50KB per image to stay under Vercel's 4.5MB limit
+      const compressBase64Image = async (base64: string, maxWidth: number = 500, quality: number = 0.4): Promise<string> => {
         return new Promise((resolve, reject) => {
           if (!isValidBase64Image(base64)) {
             console.error('[PDF] Invalid base64 image format');
@@ -419,7 +419,27 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
       }
       
       console.log('[PDF] Compressed', Object.keys(compressedVisuals).length, 'visualization keys');
-      console.log('[PDF] Total visuals:', Object.values(compressedVisuals).reduce((sum, arr) => sum + arr.length, 0));
+      const totalVisuals = Object.values(compressedVisuals).reduce((sum, arr) => sum + arr.length, 0);
+      console.log('[PDF] Total visuals:', totalVisuals);
+      
+      // Limit to max 5 visualizations to avoid payload too large errors
+      const MAX_VISUALS = 5;
+      if (totalVisuals > MAX_VISUALS) {
+        console.warn('[PDF] Too many visualizations, limiting to', MAX_VISUALS);
+        let count = 0;
+        const limitedVisuals: typeof compressedVisuals = {};
+        
+        for (const [key, visuals] of Object.entries(compressedVisuals)) {
+          if (count >= MAX_VISUALS) break;
+          const remaining = MAX_VISUALS - count;
+          limitedVisuals[key] = visuals.slice(0, remaining);
+          count += limitedVisuals[key].length;
+        }
+        
+        Object.keys(compressedVisuals).forEach(key => delete compressedVisuals[key]);
+        Object.assign(compressedVisuals, limitedVisuals);
+        console.log('[PDF] Limited to', count, 'visualizations');
+      }
 
       // 3. Render the dedicated PDF component to HTML
       // This is the key change: we render a clean, print-first component
