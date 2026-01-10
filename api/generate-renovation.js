@@ -79,15 +79,40 @@ DESIGN STYLE:
 Generate a realistic, proportionally-sized ${contextTitle.toLowerCase()} that fits WITHIN the marked boundary.`;
     } else {
       // RENOVATION: Keep structure, cosmetic updates only (Three Birds style)
-      fullPrompt = `Transform this space into a Three Birds Renovations masterpiece (2026 Trend Edition).
-BRIEF: "Luxe for Less" ${contextTitle.toLowerCase()} with modern finishes, quality fixtures, and contemporary styling.
+      fullPrompt = `You are renovating an EXISTING building. This is a ${contextTitle.toLowerCase()}.
 
-STRICT VISUAL RULES:
-- IF EXTERIOR: Enhance the facade with crisp white render or weatherboard. Install modern window frames and glass inserts. DO NOT show drapes or curtains on the exterior walls. Add a Colorbond roof, wide timber decking, and oversized Mediterranean pots.
-- IF INTERIOR: Focus on the 'Cloud Bed' with oversized puffy quilts and pillows. Install floor-to-ceiling sheer linen drapes. Replace oyster lights with clean LED downlights and a sculptural pendant.
-- Lighting Atmosphere: Magazine-quality, bright, airy, and coastal-luxe.
-- Maintain the original structure but modernize all surface finishes, hardware, and textures.
-- Keep the same building shape, windows, and doors in their current positions.`;
+⛔⛔⛔ ABSOLUTE RULES - DO NOT BREAK THESE ⛔⛔⛔
+1. KEEP THE EXACT SAME BUILDING - same shape, same walls, same roof line, same footprint
+2. KEEP ALL WINDOWS in their EXACT current positions and sizes
+3. KEEP ALL DOORS in their EXACT current positions
+4. DO NOT add new windows, doors, or openings
+5. DO NOT remove any windows, doors, or walls
+6. DO NOT change the roof shape or building silhouette
+7. DO NOT extend or modify the building structure in ANY way
+
+WHAT YOU CAN CHANGE (cosmetic only):
+- Paint colors and render finishes (prefer crisp white or soft grey)
+- Roof material (Colorbond in Monument, Surfmist, or Basalt)
+- Window frames color (black or white aluminum)
+- Front door style and color
+- Landscaping, garden beds, and plants
+- Driveway and path surfaces
+- Fencing and gates
+- Lighting fixtures
+- Deck/patio surfaces (timber or composite decking)
+- Gutters and fascia color
+
+DESIGN STYLE: Three Birds Renovations / coastal-luxe Australian
+- Modern, bright, airy aesthetic
+- Mediterranean pots with greenery
+- Clean lines, quality finishes
+- Magazine-worthy presentation
+
+🚨 CRITICAL: The STRUCTURE must be IDENTICAL to the original photo. Only surface finishes change.
+If the original has 3 windows, the result has 3 windows in the same positions.
+If the original has a pitched roof, the result has the same pitched roof.
+
+Generate a beautifully renovated version that keeps the EXACT same building but with premium finishes.`;
     }
 
     console.log(`[GenerateRenovation] Generating for: ${contextTitle}`);

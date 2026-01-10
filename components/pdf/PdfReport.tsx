@@ -229,27 +229,38 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
     strategyType: 'strategy' | 'development';
   }> = [];
   
-  Object.entries(generatedVisuals).forEach(([key, visuals]) => {
-    const [type, indexStr] = key.split('-');
-    const index = parseInt(indexStr, 10);
-    
-    visuals.forEach(visual => {
-      let strategyName = visual.title;
+  // Safely iterate over generatedVisuals with null checks
+  if (generatedVisuals && typeof generatedVisuals === 'object') {
+    Object.entries(generatedVisuals).forEach(([key, visuals]) => {
+      if (!key || !visuals || !Array.isArray(visuals)) return;
       
-      // Try to get the actual strategy name from the data
-      if (type === 'strategy' && data.valueAddStrategies?.[index]) {
-        strategyName = data.valueAddStrategies[index].title || visual.title;
-      } else if (type === 'development' && data.developmentScenarios?.[index]) {
-        strategyName = data.developmentScenarios[index].title || visual.title;
-      }
+      const parts = key.split('-');
+      if (parts.length < 2) return;
       
-      allVisualizations.push({
-        visual,
-        strategyName,
-        strategyType: type as 'strategy' | 'development'
+      const [type, indexStr] = parts;
+      const index = parseInt(indexStr, 10);
+      if (isNaN(index)) return;
+      
+      visuals.forEach(visual => {
+        if (!visual || !visual.beforeImage || !visual.afterImage) return;
+        
+        let strategyName = visual.title || 'Visualization';
+        
+        // Try to get the actual strategy name from the data
+        if (type === 'strategy' && data.valueAddStrategies?.[index]) {
+          strategyName = data.valueAddStrategies[index].title || visual.title || 'Value-Add Strategy';
+        } else if (type === 'development' && data.developmentScenarios?.[index]) {
+          strategyName = data.developmentScenarios[index].title || visual.title || 'Development Scenario';
+        }
+        
+        allVisualizations.push({
+          visual,
+          strategyName,
+          strategyType: type as 'strategy' | 'development'
+        });
       });
     });
-  });
+  }
   
   const hasVisualizations = allVisualizations.length > 0;
   
