@@ -73,7 +73,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
           HERO SECTION - Search First
           ============================================ */}
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden pt-20">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#FAF9F6] via-[#FAF9F6] to-white"></div>
+        <div className="absolute inset-0 bg-white"></div>
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#C9A961]/5 rounded-full blur-3xl -mr-48 -mt-48"></div>
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#B8C5A0]/5 rounded-full blur-3xl -ml-32 -mb-32"></div>
         
@@ -187,7 +187,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
           
           {/* BIG Slider */}
           <div className="relative max-w-5xl mx-auto">
-            <div className="absolute -inset-2 sm:-inset-4 bg-[#FAF9F6] rounded-[2rem] sm:rounded-[3rem] border border-[#E8E6E3]"></div>
+            <div className="absolute -inset-2 sm:-inset-4 bg-[#F5F5F5] rounded-[2rem] sm:rounded-[3rem] border border-[#E8E6E3]"></div>
             <div 
               ref={sliderRef}
               className="relative aspect-[16/10] sm:aspect-[16/9] rounded-2xl sm:rounded-3xl overflow-hidden cursor-col-resize select-none shadow-2xl"
@@ -236,7 +236,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             
             {/* Drag hint */}
             <div className="text-center mt-6">
-              <span className="inline-flex items-center gap-2 text-[#6B6560] text-sm bg-[#FAF9F6] border border-[#E8E6E3] px-5 py-2.5 rounded-full">
+              <span className="inline-flex items-center gap-2 text-[#6B6560] text-sm bg-[#F5F5F5] border border-[#E8E6E3] px-5 py-2.5 rounded-full">
                 <i className="fa-solid fa-hand-pointer text-[#C9A961]"></i>
                 Drag slider to compare
               </span>
@@ -264,7 +264,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
       {/* ============================================
           SAMPLE REPORT PREVIEW
           ============================================ */}
-      <section className="py-20 px-6 bg-[#FAF9F6]">
+      <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <span className="inline-block px-4 py-1 bg-[#B8C5A0]/10 text-[#B8C5A0] rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
@@ -301,19 +301,19 @@ const LandingPage: React.FC<LandingPageProps> = ({
               
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-                <div className="bg-[#FAF9F6] rounded-2xl p-4">
+                <div className="bg-[#F5F5F5] rounded-2xl p-4">
                   <p className="text-[8px] font-bold text-[#9B9590] uppercase tracking-widest mb-1">Estimated Value</p>
                   <p className="text-xl sm:text-2xl font-black text-[#B8C5A0]">$1.2M</p>
                 </div>
-                <div className="bg-[#FAF9F6] rounded-2xl p-4">
+                <div className="bg-[#F5F5F5] rounded-2xl p-4">
                   <p className="text-[8px] font-bold text-[#9B9590] uppercase tracking-widest mb-1">Post-Improvements</p>
                   <p className="text-xl sm:text-2xl font-black text-[#C9A961]">$1.4M – $1.5M</p>
                 </div>
-                <div className="bg-[#FAF9F6] rounded-2xl p-4">
+                <div className="bg-[#F5F5F5] rounded-2xl p-4">
                   <p className="text-[8px] font-bold text-[#9B9590] uppercase tracking-widest mb-1">Growth (12mo)</p>
                   <p className="text-xl sm:text-2xl font-black text-[#3A342D]">4.2%</p>
                 </div>
-                <div className="bg-[#FAF9F6] rounded-2xl p-4">
+                <div className="bg-[#F5F5F5] rounded-2xl p-4">
                   <p className="text-[8px] font-bold text-[#9B9590] uppercase tracking-widest mb-1">Upblock Score</p>
                   <p className="text-xl sm:text-2xl font-black text-[#C9A961]">76<span className="text-sm text-[#9B9590] font-medium">/100</span></p>
                 </div>
@@ -343,7 +343,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
               { icon: 'fa-city', title: 'Development Options', color: '#EC4899' },
               { icon: 'fa-eye', title: 'Risk Alerts', color: '#EF4444' },
             ].map((feature, i) => (
-              <div key={i} className="flex items-center gap-4 p-4 sm:p-5 rounded-2xl border border-[#E8E6E3] bg-[#FAF9F6]/50 hover:border-[#C9A961]/30 hover:shadow-md transition-all">
+              <div key={i} className="flex items-center gap-4 p-4 sm:p-5 rounded-2xl border border-[#E8E6E3] bg-[#F5F5F5]/50 hover:border-[#C9A961]/30 hover:shadow-md transition-all">
                 <div 
                   className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: `${feature.color}15` }}
@@ -360,7 +360,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
       {/* ============================================
           HOW IT WORKS - Simple
           ============================================ */}
-      <section className="py-20 px-6 bg-[#FAF9F6]">
+      <section className="py-20 px-6 bg-white">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-[#3A342D] tracking-tight">
