@@ -172,32 +172,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
             </p>
           </div>
           
-          {/* Tabs */}
-          <div className="flex justify-center gap-3 mb-8">
-            <button
-              onClick={() => { setActiveTab('renovation'); setSliderPos(50); }}
-              className={`py-3 px-6 rounded-2xl text-sm font-bold uppercase tracking-wider transition-all ${
-                activeTab === 'renovation' 
-                  ? 'bg-[#C9A961] text-white shadow-lg shadow-[#C9A961]/20' 
-                  : 'bg-[#FAF9F6] text-[#6B6560] hover:bg-[#C9A961]/10 hover:text-[#3A342D] border border-[#E8E6E3]'
-              }`}
-            >
-              <i className="fa-solid fa-paint-roller mr-2"></i>
-              Renovation
-            </button>
-            <button
-              onClick={() => { setActiveTab('development'); setSliderPos(50); }}
-              className={`py-3 px-6 rounded-2xl text-sm font-bold uppercase tracking-wider transition-all ${
-                activeTab === 'development' 
-                  ? 'bg-[#C9A961] text-white shadow-lg shadow-[#C9A961]/20' 
-                  : 'bg-[#FAF9F6] text-[#6B6560] hover:bg-[#C9A961]/10 hover:text-[#3A342D] border border-[#E8E6E3]'
-              }`}
-            >
-              <i className="fa-solid fa-city mr-2"></i>
-              Development
-            </button>
-          </div>
-          
           {/* BIG Slider */}
           <div className="relative max-w-5xl mx-auto">
             <div className="absolute -inset-2 sm:-inset-4 bg-[#FAF9F6] rounded-[2rem] sm:rounded-[3rem] border border-[#E8E6E3]"></div>
