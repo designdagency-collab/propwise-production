@@ -382,43 +382,45 @@ const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* ============================================
-          FINAL CTA
+          FINAL CTA + FOOTER
           ============================================ */}
-      <section className="py-20 px-6 bg-[#3A342D]">
-        <div className="max-w-3xl mx-auto text-center space-y-8">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight">
-            Ready to Discover<br/>
-            <span className="text-[#C9A961]">Hidden Potential?</span>
-          </h2>
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="group bg-[#C9A961] text-[#3A342D] px-10 py-5 rounded-2xl font-bold hover:bg-white transition-all flex items-center gap-3 shadow-lg mx-auto text-sm uppercase tracking-widest"
-          >
-            <span>Search an Address</span>
-            <i className="fa-solid fa-arrow-up group-hover:-translate-y-1 transition-transform"></i>
-          </button>
-          <p className="text-xs text-white/40">
-            For research purposes only • Not financial advice
-          </p>
+      <footer className="bg-[#FAF9F6] border-t border-[#E8E6E3]">
+        {/* CTA Section */}
+        <div className="py-16 px-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-[#3A342D] rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden">
+              {/* Background accents */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#C9A961]/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#C9A961]/5 rounded-full blur-2xl -ml-24 -mb-24"></div>
+              
+              <div className="relative z-10 space-y-6">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
+                  Ready to Discover <span className="text-[#C9A961]">Hidden Potential?</span>
+                </h2>
+                <button
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="group bg-[#C9A961] text-[#3A342D] px-8 py-4 rounded-xl font-bold hover:bg-white transition-all inline-flex items-center gap-3 shadow-lg text-sm uppercase tracking-wider"
+                >
+                  <span>Search an Address</span>
+                  <i className="fa-solid fa-arrow-up group-hover:-translate-y-1 transition-transform"></i>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </section>
-
-      {/* ============================================
-          FOOTER
-          ============================================ */}
-      <footer className="py-10 px-6 bg-[#2D2A26] border-t border-white/5">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <img src="/upblock.ai-logo.png" alt="upblock.ai" className="h-7" />
-            <div className="flex items-center gap-6 text-xs text-white/40">
-              <a href="#" className="hover:text-white transition-colors">Privacy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms</a>
+        
+        {/* Footer Links */}
+        <div className="py-8 px-6 border-t border-[#E8E6E3]">
+          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <img src="/upblock.ai-logo.png" alt="upblock.ai" className="h-6 opacity-80" />
+            <div className="flex items-center gap-6 text-xs text-[#6B6560]">
+              <a href="#" className="hover:text-[#3A342D] transition-colors">Privacy</a>
+              <a href="#" className="hover:text-[#3A342D] transition-colors">Terms</a>
               <span>© {new Date().getFullYear()} upblock.ai</span>
             </div>
           </div>
-          <p className="mt-6 text-[9px] text-white/20 text-center max-w-2xl mx-auto">
-            Disclaimer: upblock.ai provides indicative property information for research purposes only. 
-            This is not financial, legal, or professional advice. All estimates are AI-generated and should be verified independently.
+          <p className="mt-4 text-[10px] text-[#9B9590] text-center max-w-2xl mx-auto">
+            For research purposes only. Not financial, legal, or professional advice. All estimates are AI-generated and should be verified independently.
           </p>
         </div>
       </footer>
