@@ -1836,6 +1836,7 @@ const App: React.FC = () => {
                     isLocating={isLocating}
                     onDetectLocation={detectLocation}
                     isMobile={isMobileDevice()}
+                    onShowPricing={() => setShowPricing(true)}
                   />
                 </div>
               )}

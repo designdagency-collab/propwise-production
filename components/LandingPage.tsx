@@ -18,6 +18,7 @@ interface LandingPageProps {
   isLocating: boolean;
   onDetectLocation: () => void;
   isMobile: boolean;
+  onShowPricing: () => void;
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ 
@@ -31,7 +32,8 @@ const LandingPage: React.FC<LandingPageProps> = ({
   isValidAddress,
   isLocating,
   onDetectLocation,
-  isMobile
+  isMobile,
+  onShowPricing
 }) => {
   // Before/After slider state
   const [sliderPos, setSliderPos] = useState(50);
@@ -366,10 +368,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
           {/* CTA */}
           <div className="text-center mt-10">
             <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onClick={onShowPricing}
               className="group bg-[#3A342D] text-white px-8 py-4 rounded-xl font-bold hover:bg-[#C9A961] transition-all inline-flex items-center gap-3 shadow-lg text-sm uppercase tracking-wider"
             >
-              <span>Generate Your Report</span>
+              <span>View Pricing</span>
               <i className="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
             </button>
             <p className="text-xs text-[#9B9590] mt-3">30 second analysis • No credit card required</p>
