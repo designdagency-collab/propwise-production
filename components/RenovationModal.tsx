@@ -144,53 +144,72 @@ const RenovationModal: React.FC<RenovationModalProps> = ({
           </button>
         </div>
 
-        {/* Before/After Slider */}
+        {/* Image Display - Slider only if we have a before image */}
         <div className="p-4">
-          <div 
-            ref={containerRef}
-            className="relative w-full aspect-video overflow-hidden rounded-2xl shadow-xl cursor-col-resize select-none bg-neutral-900"
-            onMouseDown={() => { isResizing.current = true; }}
-            onTouchStart={() => { isResizing.current = true; }}
-            onMouseMove={onMouseMove}
-            onTouchMove={onTouchMove}
-          >
-            {/* After Image (AI Generated) - Full width background */}
-            <img 
-              src={afterImage} 
-              alt="After" 
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-
-            {/* Before Image (Original - Clipped from right) */}
+          {beforeImage ? (
+            // Before/After Slider (when original image is available)
             <div 
-              className="absolute inset-0 overflow-hidden"
-              style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
+              ref={containerRef}
+              className="relative w-full aspect-video overflow-hidden rounded-2xl shadow-xl cursor-col-resize select-none bg-neutral-900"
+              onMouseDown={() => { isResizing.current = true; }}
+              onTouchStart={() => { isResizing.current = true; }}
+              onMouseMove={onMouseMove}
+              onTouchMove={onTouchMove}
             >
+              {/* After Image (AI Generated) - Full width background */}
               <img 
-                src={beforeImage} 
-                alt="Before" 
+                src={afterImage} 
+                alt="After" 
                 className="absolute inset-0 w-full h-full object-cover"
               />
-            </div>
 
-            {/* Slider Bar */}
-            <div 
-              className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg cursor-col-resize z-10"
-              style={{ left: `${sliderPos}%`, transform: 'translateX(-50%)' }}
-            >
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-xl flex items-center justify-center border-2 border-[#C9A961]">
-                <i className="fa-solid fa-arrows-left-right text-[#C9A961] text-sm"></i>
+              {/* Before Image (Original - Clipped from right) */}
+              <div 
+                className="absolute inset-0 overflow-hidden"
+                style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
+              >
+                <img 
+                  src={beforeImage} 
+                  alt="Before" 
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Slider Bar */}
+              <div 
+                className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg cursor-col-resize z-10"
+                style={{ left: `${sliderPos}%`, transform: 'translateX(-50%)' }}
+              >
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-xl flex items-center justify-center border-2 border-[#C9A961]">
+                  <i className="fa-solid fa-arrows-left-right text-[#C9A961] text-sm"></i>
+                </div>
+              </div>
+
+              {/* Drag hint */}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-md pointer-events-none z-20">
+                <span className="text-neutral-600 text-[10px] font-semibold flex items-center gap-1.5">
+                  <i className="fa-solid fa-hand-pointer text-[#C9A961]"></i>
+                  Drag to compare
+                </span>
               </div>
             </div>
-
-            {/* Drag hint */}
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-md pointer-events-none z-20">
-              <span className="text-neutral-600 text-[10px] font-semibold flex items-center gap-1.5">
-                <i className="fa-solid fa-hand-pointer text-[#C9A961]"></i>
-                Drag to compare
-              </span>
+          ) : (
+            // AI Generated Image only (cached results - no original available)
+            <div className="relative w-full aspect-video overflow-hidden rounded-2xl shadow-xl bg-neutral-900">
+              <img 
+                src={afterImage} 
+                alt="AI Generated" 
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              {/* Cached indicator */}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-md pointer-events-none z-20">
+                <span className="text-neutral-600 text-[10px] font-semibold flex items-center gap-1.5">
+                  <i className="fa-solid fa-wand-magic-sparkles text-[#C9A961]"></i>
+                  AI Generated Concept
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Description & Actions */}
