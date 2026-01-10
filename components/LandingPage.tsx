@@ -299,7 +299,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                   </div>
                 </div>
                 
-                <h3 className="text-2xl sm:text-3xl font-bold text-[#3A342D] tracking-tight leading-tight mb-2">
+                <h3 className="text-2xl sm:text-4xl font-bold text-[#3A342D] tracking-tighter leading-tight mb-2 font-address">
                   42 Example St, Sydney NSW 2000
                 </h3>
                 <p className="text-[#6B6560] text-sm font-medium">House • Land • 680 m²</p>
