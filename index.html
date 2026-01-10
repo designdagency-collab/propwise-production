@@ -37,6 +37,25 @@
     
     <title>upblock.ai – AI Property Insights | Zoning, Sales & Value Scenarios</title>
     <script>
+      // Theme initialization - MUST run before page renders to prevent flash
+      // Defaults to LIGHT mode for new users/incognito (no saved preference)
+      (function() {
+        try {
+          var saved = localStorage.getItem('prop_theme');
+          // Only enable dark mode if explicitly saved as 'dark'
+          // New users, incognito, or any other case = light mode
+          if (saved === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {
+          // localStorage not available (some incognito modes) = light mode
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
+    <script>
       // Fix Safari viewport zoom issue after redirects (OAuth, payment, etc.)
       (function() {
         var isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
