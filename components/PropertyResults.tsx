@@ -313,8 +313,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         return true;
       };
       
-      // Compress to smaller dimensions with higher quality for sharper images
-      const compressBase64Image = async (base64: string, maxWidth: number = 400, quality: number = 0.7): Promise<string> => {
+      // Compress and crop to target aspect ratio for consistent PDF layout
+      // targetRatio: 16/9 = 1.78 (landscape), 4/3 = 1.33, 3/2 = 1.5
+      const compressBase64Image = async (base64: string, maxWidth: number = 500, quality: number = 0.7, targetRatio: number = 16/9): Promise<string> => {
         return new Promise((resolve, reject) => {
           if (!isValidBase64Image(base64)) {
             console.error('[PDF] Invalid base64 image format');
@@ -329,16 +330,29 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
           img.onload = () => {
             try {
               const canvas = document.createElement('canvas');
-              let width = img.width;
-              let height = img.height;
               
-              if (width > maxWidth) {
-                height = (height * maxWidth) / width;
-                width = maxWidth;
+              // Calculate center crop to achieve target aspect ratio
+              const imgRatio = img.width / img.height;
+              let srcX = 0, srcY = 0, srcW = img.width, srcH = img.height;
+              
+              if (imgRatio > targetRatio) {
+                // Image is wider than target - crop sides
+                srcW = img.height * targetRatio;
+                srcX = (img.width - srcW) / 2;
+                console.log('[PDF] Cropping sides to achieve', targetRatio.toFixed(2), 'ratio');
+              } else if (imgRatio < targetRatio) {
+                // Image is taller than target - crop top/bottom
+                srcH = img.width / targetRatio;
+                srcY = (img.height - srcH) / 2;
+                console.log('[PDF] Cropping top/bottom to achieve', targetRatio.toFixed(2), 'ratio');
               }
               
-              canvas.width = width;
-              canvas.height = height;
+              // Calculate output dimensions
+              let outWidth = maxWidth;
+              let outHeight = maxWidth / targetRatio;
+              
+              canvas.width = outWidth;
+              canvas.height = outHeight;
               
               const ctx = canvas.getContext('2d');
               if (!ctx) {
@@ -347,11 +361,12 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                 return;
               }
               
-              ctx.drawImage(img, 0, 0, width, height);
+              // Draw cropped and scaled image
+              ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, outWidth, outHeight);
               
               const compressed = canvas.toDataURL('image/jpeg', quality);
               const compressedSize = Math.round(compressed.length / 1024);
-              console.log('[PDF] Compressed to:', compressedSize, 'KB (', Math.round((compressedSize/originalSize)*100), '% of original)');
+              console.log('[PDF] Compressed to:', compressedSize, 'KB (', Math.round((compressedSize/originalSize)*100), '% of original)', 'Output:', outWidth, 'x', Math.round(outHeight));
               
               if (!isValidBase64Image(compressed)) {
                 console.error('[PDF] Compression produced invalid result, using original');

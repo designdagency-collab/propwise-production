@@ -699,12 +699,12 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                     <span className="pdf-visual-strategy-name" style={{ fontSize: '13px', fontWeight: 700, color: '#3A342D', letterSpacing: '-0.3px' }}>{allVisualizations[0].strategyName}</span>
                   </div>
                   
-                  <div className="pdf-visual-single-image" style={{ position: 'relative', width: '100%', height: '500px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E2DD', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', background: '#F5F5F5' }}>
+                  <div className="pdf-visual-single-image" style={{ position: 'relative', width: '100%', height: '500px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E2DD', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
                     <img 
                       src={allVisualizations[0].visual.afterImage} 
                       alt="AI visualization"
                       className="pdf-visual-image-large"
-                      style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                     />
                     <span className="pdf-visual-label pdf-visual-label-after" style={{ position: 'absolute', bottom: '12px', left: '12px', padding: '6px 14px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '6px', background: '#C9A961', color: '#fff' }}>AI Concept</span>
                   </div>
@@ -745,12 +745,12 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                               <span className="pdf-visual-strategy-name" style={{ fontSize: '13px', fontWeight: 700, color: '#3A342D', letterSpacing: '-0.3px' }}>{item.strategyName}</span>
                             </div>
                             
-                            <div className="pdf-visual-image-container" style={{ position: 'relative', width: '100%', height: '280px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #E5E2DD', background: '#F5F5F5' }}>
+                            <div className="pdf-visual-image-container" style={{ position: 'relative', width: '100%', height: '280px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #E5E2DD' }}>
                               <img 
                                 src={item.visual.afterImage} 
                                 alt="AI visualization"
                                 className="pdf-visual-image-medium"
-                                style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                               />
                               <span className="pdf-visual-label pdf-visual-label-after" style={{ position: 'absolute', bottom: '12px', left: '12px', padding: '6px 14px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '6px', background: '#C9A961', color: '#fff' }}>AI Concept</span>
                             </div>
@@ -1485,13 +1485,12 @@ export const getPdfDocumentStyles = () => `
     margin-bottom: 16px;
     width: 100%;
     height: 500px;
-    background: #F5F5F5;
   }
   
   .pdf-visual-single-image img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
     display: block;
   }
   
@@ -1512,7 +1511,7 @@ export const getPdfDocumentStyles = () => `
   .pdf-visual-image-medium {
     width: 100%;
     height: 280px;
-    object-fit: contain;
+    object-fit: cover;
     display: block;
     border-radius: 10px;
   }
@@ -1538,13 +1537,12 @@ export const getPdfDocumentStyles = () => `
     overflow: hidden;
     width: 100%;
     height: 280px;
-    background: #F5F5F5;
   }
   
   .pdf-visual-image-container img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
     display: block;
   }
   
