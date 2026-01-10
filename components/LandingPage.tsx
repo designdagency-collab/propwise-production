@@ -187,7 +187,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
           
           {/* BIG Slider */}
           <div className="relative max-w-5xl mx-auto">
-            <div className="absolute -inset-2 sm:-inset-4 bg-[#F5F5F5] rounded-[2rem] sm:rounded-[3rem] border border-[#E8E6E3]"></div>
             <div 
               ref={sliderRef}
               className="relative aspect-[16/10] sm:aspect-[16/9] rounded-2xl sm:rounded-3xl overflow-hidden cursor-col-resize select-none shadow-2xl"
@@ -235,8 +234,8 @@ const LandingPage: React.FC<LandingPageProps> = ({
             </div>
             
             {/* Drag hint */}
-            <div className="text-center mt-6">
-              <span className="inline-flex items-center gap-2 text-[#6B6560] text-sm bg-[#F5F5F5] border border-[#E8E6E3] px-5 py-2.5 rounded-full">
+            <div className="text-center mt-4">
+              <span className="inline-flex items-center gap-2 text-[#6B6560] text-sm px-5 py-2.5 rounded-full">
                 <i className="fa-solid fa-hand-pointer text-[#C9A961]"></i>
                 Drag slider to compare
               </span>
@@ -244,7 +243,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
           </div>
           
           {/* Feature bullets */}
-          <div className="flex flex-wrap justify-center gap-6 mt-12 text-sm text-[#6B6560]">
+          <div className="flex flex-wrap justify-center gap-6 mt-6 text-sm text-[#6B6560]">
             <div className="flex items-center gap-2">
               <i className="fa-solid fa-check text-[#C9A961]"></i>
               <span>Upload any photo</span>
@@ -264,61 +263,118 @@ const LandingPage: React.FC<LandingPageProps> = ({
       {/* ============================================
           SAMPLE REPORT PREVIEW
           ============================================ */}
-      <section className="py-20 px-6 bg-white">
+      <section className="py-20 px-6 bg-white overflow-hidden">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
-            <span className="inline-block px-4 py-1 bg-[#B8C5A0]/10 text-[#B8C5A0] rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
+            <span className="inline-block px-4 py-1 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
+              <i className="fa-solid fa-file-lines mr-2"></i>
               Sample Report
             </span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#3A342D] tracking-tight mb-4">
-              What You'll Discover
+            <h2 className="text-3xl sm:text-4xl font-bold text-[#3A342D] tracking-tight mb-3">
+              Your Complete Property Intelligence
             </h2>
+            <p className="text-[#6B6560] max-w-xl mx-auto">
+              Every report includes AI-powered insights, development potential, and actionable strategies
+            </p>
           </div>
           
-          {/* Mock Report Card */}
+          {/* Mock Report Preview - Stacked/Layered Effect */}
           <div className="relative max-w-4xl mx-auto">
-            <div className="absolute -inset-4 bg-gradient-to-r from-[#C9A961]/10 via-[#B8C5A0]/10 to-[#C9A961]/10 rounded-[3rem] blur-2xl"></div>
-            <div className="relative bg-white rounded-[2rem] p-6 sm:p-10 shadow-2xl border border-[#E8E6E3]">
-              {/* Header */}
-              <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-                <div className="flex items-center gap-3">
-                  <span className="px-3 py-1.5 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[9px] font-bold uppercase tracking-widest">
-                    Property Strategy Guide
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-[#9B9590] text-sm">
-                  <span><i className="fa-solid fa-bed mr-1"></i> 3</span>
-                  <span><i className="fa-solid fa-bath mr-1"></i> 1</span>
-                  <span><i className="fa-solid fa-car mr-1"></i> 1</span>
+            {/* Background cards for depth */}
+            <div className="absolute top-6 left-4 right-4 h-full bg-[#E8E6E3] rounded-[2rem] opacity-40"></div>
+            <div className="absolute top-3 left-2 right-2 h-full bg-[#E8E6E3] rounded-[2rem] opacity-60"></div>
+            
+            {/* Main Report Card */}
+            <div className="relative bg-white rounded-[2rem] shadow-2xl border border-[#E8E6E3] overflow-hidden">
+              {/* Report Header */}
+              <div className="bg-gradient-to-r from-[#3A342D] to-[#4A443D] p-6 sm:p-8">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <span className="inline-block px-3 py-1 bg-[#C9A961] text-[#3A342D] rounded-full text-[9px] font-bold uppercase tracking-widest mb-3">
+                      Property Strategy Guide
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                      42 Example St, Sydney NSW 2000
+                    </h3>
+                    <p className="text-white/60 text-sm mt-1">House • Land • 680 m² • 3 bed • 1 bath • 1 car</p>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 text-center">
+                    <p className="text-[9px] text-white/60 uppercase tracking-widest mb-1">Upblock Score</p>
+                    <p className="text-2xl font-black text-[#C9A961]">76<span className="text-sm text-white/40">/100</span></p>
+                  </div>
                 </div>
               </div>
               
-              {/* Address */}
-              <h3 className="text-2xl sm:text-3xl font-bold text-[#3A342D] tracking-tight mb-1">
-                42 Example St, Sydney NSW 2000
-              </h3>
-              <p className="text-[#6B6560] text-sm mb-6">House • Land • 680 m²</p>
-              
-              {/* Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-                <div className="bg-[#F5F5F5] rounded-2xl p-4">
-                  <p className="text-[8px] font-bold text-[#9B9590] uppercase tracking-widest mb-1">Estimated Value</p>
-                  <p className="text-xl sm:text-2xl font-black text-[#B8C5A0]">$1.2M</p>
+              {/* Key Metrics */}
+              <div className="grid grid-cols-3 divide-x divide-[#E8E6E3] border-b border-[#E8E6E3]">
+                <div className="p-4 sm:p-6 text-center">
+                  <p className="text-[9px] font-bold text-[#9B9590] uppercase tracking-widest mb-1">Current Value</p>
+                  <p className="text-xl sm:text-2xl font-black text-[#3A342D]">$1.2M</p>
                 </div>
-                <div className="bg-[#F5F5F5] rounded-2xl p-4">
-                  <p className="text-[8px] font-bold text-[#9B9590] uppercase tracking-widest mb-1">Post-Improvements</p>
-                  <p className="text-xl sm:text-2xl font-black text-[#C9A961]">$1.4M – $1.5M</p>
+                <div className="p-4 sm:p-6 text-center bg-[#C9A961]/5">
+                  <p className="text-[9px] font-bold text-[#9B9590] uppercase tracking-widest mb-1">Potential Value</p>
+                  <p className="text-xl sm:text-2xl font-black text-[#C9A961]">$1.5M</p>
                 </div>
-                <div className="bg-[#F5F5F5] rounded-2xl p-4">
-                  <p className="text-[8px] font-bold text-[#9B9590] uppercase tracking-widest mb-1">Growth (12mo)</p>
-                  <p className="text-xl sm:text-2xl font-black text-[#3A342D]">4.2%</p>
-                </div>
-                <div className="bg-[#F5F5F5] rounded-2xl p-4">
-                  <p className="text-[8px] font-bold text-[#9B9590] uppercase tracking-widest mb-1">Upblock Score</p>
-                  <p className="text-xl sm:text-2xl font-black text-[#C9A961]">76<span className="text-sm text-[#9B9590] font-medium">/100</span></p>
+                <div className="p-4 sm:p-6 text-center">
+                  <p className="text-[9px] font-bold text-[#9B9590] uppercase tracking-widest mb-1">Equity Uplift</p>
+                  <p className="text-xl sm:text-2xl font-black text-[#B8C5A0]">+$300K</p>
                 </div>
               </div>
+              
+              {/* Report Sections Preview */}
+              <div className="p-6 sm:p-8 space-y-4">
+                {/* Strategy Preview */}
+                <div className="flex items-center gap-4 p-4 bg-[#F5F5F5] rounded-xl">
+                  <div className="w-10 h-10 bg-[#B8C5A0] rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i className="fa-solid fa-lightbulb text-white"></i>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-[#3A342D] text-sm">Best Strategy: Cosmetic Renovation</p>
+                    <p className="text-[#6B6560] text-xs truncate">Kitchen update, bathroom refresh, new flooring...</p>
+                  </div>
+                  <span className="px-3 py-1 bg-[#B8C5A0]/10 text-[#B8C5A0] rounded-full text-[10px] font-bold">+$180K</span>
+                </div>
+                
+                {/* Zoning Preview */}
+                <div className="flex items-center gap-4 p-4 bg-[#F5F5F5] rounded-xl">
+                  <div className="w-10 h-10 bg-[#C9A961] rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i className="fa-solid fa-city text-white"></i>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-[#3A342D] text-sm">Development Potential: Dual Occupancy</p>
+                    <p className="text-[#6B6560] text-xs truncate">R2 Low Density zoning allows subdivision...</p>
+                  </div>
+                  <span className="px-3 py-1 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold">Eligible</span>
+                </div>
+                
+                {/* Risk Preview */}
+                <div className="flex items-center gap-4 p-4 bg-[#F5F5F5] rounded-xl">
+                  <div className="w-10 h-10 bg-[#E8846B] rounded-lg flex items-center justify-center flex-shrink-0">
+                    <i className="fa-solid fa-triangle-exclamation text-white"></i>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-[#3A342D] text-sm">Risk Alert: Heritage Overlay</p>
+                    <p className="text-[#6B6560] text-xs truncate">Property is within heritage conservation area...</p>
+                  </div>
+                  <span className="px-3 py-1 bg-[#E8846B]/10 text-[#E8846B] rounded-full text-[10px] font-bold">Check</span>
+                </div>
+              </div>
+              
+              {/* Fade overlay suggesting more content */}
+              <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none"></div>
             </div>
+          </div>
+          
+          {/* CTA */}
+          <div className="text-center mt-10">
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="group bg-[#3A342D] text-white px-8 py-4 rounded-xl font-bold hover:bg-[#C9A961] transition-all inline-flex items-center gap-3 shadow-lg text-sm uppercase tracking-wider"
+            >
+              <span>Generate Your Report</span>
+              <i className="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            </button>
+            <p className="text-xs text-[#9B9590] mt-3">30 second analysis • No credit card required</p>
           </div>
         </div>
       </section>
