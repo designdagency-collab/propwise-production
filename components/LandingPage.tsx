@@ -38,6 +38,9 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const [sliderPos, setSliderPos] = useState(50);
   const sliderRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
+  
+  // Tab state for Renovation vs Development examples
+  const [activeTab, setActiveTab] = useState<'renovation' | 'development'>('renovation');
 
   const handleSliderMove = (clientX: number) => {
     if (!sliderRef.current || !isDragging.current) return;
@@ -173,27 +176,27 @@ const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* ============================================
-          AI VISUALIZER - LIVE DEMO
+          AI VISUALIZER - LIVE DEMO WITH TABS
           ============================================ */}
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <span className="inline-block px-4 py-1 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest">
-                AI Renovation Visualizer
+                AI Property Visualizer
               </span>
               <h2 className="text-3xl sm:text-4xl font-bold text-[#3A342D] tracking-tight">
                 Picture the Potential
               </h2>
               <p className="text-[#6B6560] leading-relaxed">
-                Upload a photo of any property and see AI-generated renovation scenarios in seconds. Drag the slider to compare before and after — experience the transformation yourself.
+                Upload a photo of any property and see AI-generated scenarios in seconds. From cosmetic renovations to full development builds — drag the slider to experience the transformation.
               </p>
               <ul className="space-y-3">
                 {[
                   'Kitchen & bathroom renovations',
-                  'Facade and exterior updates',
-                  'Development scenarios (duplex, townhouses)',
-                  'Landscaping transformations'
+                  'Facade and exterior makeovers',
+                  'Dual occupancy & duplex developments',
+                  'Townhouse & multi-dwelling builds'
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-3 text-[#3A342D]">
                     <span className="w-5 h-5 bg-[#C9A961]/10 rounded-full flex items-center justify-center flex-shrink-0">
@@ -205,10 +208,36 @@ const LandingPage: React.FC<LandingPageProps> = ({
               </ul>
             </div>
             
-            {/* LIVE Before/After Slider */}
+            {/* LIVE Before/After Slider with Tabs */}
             <div className="relative">
               <div className="absolute -inset-4 bg-[#3A342D] rounded-[2rem] blur-2xl opacity-10"></div>
               <div className="relative bg-[#3A342D] rounded-[2rem] p-4 shadow-2xl">
+                {/* Tabs */}
+                <div className="flex gap-2 mb-4">
+                  <button
+                    onClick={() => { setActiveTab('renovation'); setSliderPos(50); }}
+                    className={`flex-1 py-2 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                      activeTab === 'renovation' 
+                        ? 'bg-[#C9A961] text-white' 
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                  >
+                    <i className="fa-solid fa-paint-roller mr-2"></i>
+                    Renovation
+                  </button>
+                  <button
+                    onClick={() => { setActiveTab('development'); setSliderPos(50); }}
+                    className={`flex-1 py-2 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                      activeTab === 'development' 
+                        ? 'bg-[#C9A961] text-white' 
+                        : 'bg-white/10 text-white/60 hover:bg-white/20'
+                    }`}
+                  >
+                    <i className="fa-solid fa-city mr-2"></i>
+                    Development
+                  </button>
+                </div>
+                
                 <div 
                   ref={sliderRef}
                   className="relative aspect-[4/3] rounded-xl overflow-hidden cursor-col-resize select-none"
@@ -220,21 +249,21 @@ const LandingPage: React.FC<LandingPageProps> = ({
                   onTouchEnd={handleMouseUp}
                   onTouchMove={handleTouchMove}
                 >
-                  {/* After Image (Background) - AI Renovation */}
+                  {/* After Image (Background) */}
                   <img 
-                    src="/Image-2.png" 
-                    alt="After renovation"
+                    src={activeTab === 'renovation' ? '/Image-2.png' : '/DualOcc2.png'} 
+                    alt={activeTab === 'renovation' ? 'After renovation' : 'Dual occupancy development'}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                   
-                  {/* Before Image (Clipped) - Original */}
+                  {/* Before Image (Clipped) */}
                   <div 
                     className="absolute inset-0 overflow-hidden"
                     style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
                   >
                     <img 
-                      src="/Image-1.png" 
-                      alt="Before renovation"
+                      src={activeTab === 'renovation' ? '/Image-1.png' : '/DualOcc1.png'} 
+                      alt={activeTab === 'renovation' ? 'Original property' : 'Original site'}
                       className="absolute inset-0 w-full h-full object-cover"
                     />
                   </div>
