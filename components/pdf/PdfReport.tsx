@@ -1481,6 +1481,15 @@ export const getPdfDocumentStyles = () => `
     border: 1px solid #E5E2DD;
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     margin-bottom: 16px;
+    width: 100%;
+    height: 500px;
+  }
+  
+  .pdf-visual-single-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
   
   .pdf-visual-image-large {
@@ -1524,6 +1533,15 @@ export const getPdfDocumentStyles = () => `
     position: relative;
     border-radius: 10px;
     overflow: hidden;
+    width: 100%;
+    height: 280px;
+  }
+  
+  .pdf-visual-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
   
   .pdf-visual-label {

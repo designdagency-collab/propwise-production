@@ -56,23 +56,52 @@ export default async function handler(req, res) {
 
     // Set content
     console.log('[PDF] Setting page content...');
+    console.log('[PDF] HTML length:', html.length, 'bytes');
+    
     await page.setContent(html, {
       waitUntil: ['load', 'domcontentloaded', 'networkidle0'],
       timeout: 30000,
     });
 
-    // Wait for all images to load
-    await page.evaluate(async () => {
+    // Wait for all images to load and log their status
+    const imageStatus = await page.evaluate(async () => {
       const images = Array.from(document.images);
+      const results = [];
+      
       await Promise.all(
-        images.map(img => {
-          if (img.complete) return Promise.resolve();
+        images.map((img, idx) => {
           return new Promise(resolve => {
-            img.onload = img.onerror = resolve;
+            const srcPreview = img.src ? img.src.substring(0, 50) + '...' : 'NO SRC';
+            
+            if (img.complete && img.naturalWidth > 0) {
+              results.push({ idx, status: 'loaded', width: img.naturalWidth, height: img.naturalHeight, src: srcPreview });
+              resolve();
+            } else if (img.complete) {
+              results.push({ idx, status: 'failed', src: srcPreview });
+              resolve();
+            } else {
+              img.onload = () => {
+                results.push({ idx, status: 'loaded', width: img.naturalWidth, height: img.naturalHeight, src: srcPreview });
+                resolve();
+              };
+              img.onerror = () => {
+                results.push({ idx, status: 'error', src: srcPreview });
+                resolve();
+              };
+            }
           });
         })
       );
+      
+      return { total: images.length, results };
     });
+    
+    console.log('[PDF] Images found:', imageStatus.total);
+    if (imageStatus.results.length > 0) {
+      imageStatus.results.forEach(r => {
+        console.log(`[PDF] Image ${r.idx}: ${r.status}`, r.width ? `(${r.width}x${r.height})` : '', r.src);
+      });
+    }
 
     // Wait for fonts to be ready
     await page.evaluateHandle('document.fonts.ready');

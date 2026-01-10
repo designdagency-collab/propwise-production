@@ -300,43 +300,97 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
       // 2. Compress visualization images for PDF (reduce payload size)
       // AI images can be 1-2MB each, need to shrink for Vercel's 4.5MB limit
       console.log('[PDF] Compressing visualization images...');
+      console.log('[PDF] generatedVisuals keys:', Object.keys(generatedVisuals));
       
       const compressedVisuals: typeof generatedVisuals = {};
       
-      // Compress to ~50-80KB per image to allow up to 5 visualizations (10 images)
+      // Validate base64 string is properly formatted
+      const isValidBase64Image = (str: string): boolean => {
+        if (!str || typeof str !== 'string') return false;
+        if (!str.startsWith('data:image/')) return false;
+        const base64Part = str.split(',')[1];
+        if (!base64Part || base64Part.length < 100) return false;
+        return true;
+      };
+      
+      // Compress to ~50-80KB per image to allow up to 5 visualizations
       const compressBase64Image = async (base64: string, maxWidth: number = 600, quality: number = 0.5): Promise<string> => {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
+          if (!isValidBase64Image(base64)) {
+            console.error('[PDF] Invalid base64 image format');
+            reject(new Error('Invalid base64 format'));
+            return;
+          }
+          
+          const originalSize = Math.round(base64.length / 1024);
+          console.log('[PDF] Compressing image, original size:', originalSize, 'KB');
+          
           const img = new Image();
           img.onload = () => {
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-            
-            if (width > maxWidth) {
-              height = (height * maxWidth) / width;
-              width = maxWidth;
+            try {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              
+              if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+              }
+              
+              canvas.width = width;
+              canvas.height = height;
+              
+              const ctx = canvas.getContext('2d');
+              if (!ctx) {
+                console.error('[PDF] Failed to get canvas context');
+                resolve(base64); // Fallback to original
+                return;
+              }
+              
+              ctx.drawImage(img, 0, 0, width, height);
+              
+              const compressed = canvas.toDataURL('image/jpeg', quality);
+              const compressedSize = Math.round(compressed.length / 1024);
+              console.log('[PDF] Compressed to:', compressedSize, 'KB (', Math.round((compressedSize/originalSize)*100), '% of original)');
+              
+              if (!isValidBase64Image(compressed)) {
+                console.error('[PDF] Compression produced invalid result, using original');
+                resolve(base64);
+                return;
+              }
+              
+              resolve(compressed);
+            } catch (canvasError) {
+              console.error('[PDF] Canvas error:', canvasError);
+              resolve(base64); // Fallback to original
             }
-            
-            canvas.width = width;
-            canvas.height = height;
-            
-            const ctx = canvas.getContext('2d');
-            ctx?.drawImage(img, 0, 0, width, height);
-            
-            resolve(canvas.toDataURL('image/jpeg', quality));
           };
-          img.onerror = () => resolve(base64); // Fallback to original if compression fails
+          img.onerror = (err) => {
+            console.error('[PDF] Image load error:', err);
+            resolve(base64); // Fallback to original if load fails
+          };
           img.src = base64;
         });
       };
       
       // Compress only the AI-generated afterImage (beforeImage is discarded in PDF)
       for (const [key, visuals] of Object.entries(generatedVisuals)) {
-        if (!visuals || !Array.isArray(visuals)) continue;
+        if (!visuals || !Array.isArray(visuals)) {
+          console.log('[PDF] Skipping invalid key:', key);
+          continue;
+        }
         
+        console.log('[PDF] Processing key:', key, 'with', visuals.length, 'visuals');
         const compressedArray = [];
-        for (const visual of visuals) {
-          if (!visual.afterImage) continue;
+        
+        for (let i = 0; i < visuals.length; i++) {
+          const visual = visuals[i];
+          if (!visual.afterImage) {
+            console.warn('[PDF] Visual', i, 'has no afterImage, skipping');
+            continue;
+          }
+          
+          console.log('[PDF] Processing visual', i, '- afterImage length:', visual.afterImage.length);
           
           try {
             const compressedAfter = await compressBase64Image(visual.afterImage);
@@ -346,18 +400,26 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
               beforeImage: '', // Not used in PDF
               afterImage: compressedAfter
             });
+            console.log('[PDF] Visual', i, 'compressed successfully');
           } catch (e) {
-            console.warn('[PDF] Failed to compress visual:', e);
-            compressedArray.push({ ...visual, beforeImage: '' });
+            console.warn('[PDF] Failed to compress visual', i, ':', e);
+            // Use original image if compression fails
+            compressedArray.push({ 
+              ...visual, 
+              beforeImage: '',
+              afterImage: visual.afterImage // Keep original afterImage
+            });
           }
         }
         
         if (compressedArray.length > 0) {
           compressedVisuals[key] = compressedArray;
+          console.log('[PDF] Added', compressedArray.length, 'visuals for key:', key);
         }
       }
       
       console.log('[PDF] Compressed', Object.keys(compressedVisuals).length, 'visualization keys');
+      console.log('[PDF] Total visuals:', Object.values(compressedVisuals).reduce((sum, arr) => sum + arr.length, 0));
 
       // 3. Render the dedicated PDF component to HTML
       // This is the key change: we render a clean, print-first component
