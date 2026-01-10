@@ -901,11 +901,15 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         </div>
       </div>
 
-      {/* PORTFOLIO SELL-OUT SUMMARY - Best Strategy Uplift */}
+      {/* PORTFOLIO SELL-OUT SUMMARY - Best Strategy Uplift (Map-sized position) */}
       {data.portfolioSelloutSummary && (
-        <div data-pdf-callout data-pdf-no-break className="bg-[#4A4137] p-8 md:p-12 rounded-[3.5rem] text-white shadow-xl relative overflow-hidden group">
+        <div 
+          data-pdf-callout 
+          data-pdf-no-break 
+          className="w-full h-[400px] bg-[#4A4137] rounded-[3rem] text-white shadow-xl relative overflow-hidden group flex items-center"
+        >
            <div className="absolute top-0 right-0 w-64 h-64 bg-[#D6A270]/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-[#D6A270]/20 transition-all duration-1000"></div>
-           <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12">
+           <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12 p-8 md:p-12 w-full">
               <div className="flex-shrink-0 w-20 h-20 bg-[#D6A270] rounded-3xl flex items-center justify-center text-3xl shadow-lg">
                  <i className="fa-solid fa-sack-dollar"></i>
               </div>
@@ -927,51 +931,6 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
            </div>
         </div>
       )}
-
-      {/* MAP SECTION - Embedded Google Maps */}
-      <div 
-        data-map="true" 
-        data-pdf-no-break
-        className="w-full h-[400px] rounded-[3rem] overflow-hidden shadow-lg border relative" 
-        style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
-      >
-         {mapUrl ? (
-           <>
-             <div className="absolute inset-0 bg-slate-200/50 animate-pulse z-0"></div>
-             <iframe
-               key={encodedAddress} // Force re-render when address changes
-               title="Property Location Map"
-               width="100%"
-               height="100%"
-               frameBorder="0"
-               scrolling="no"
-               marginHeight={0}
-               marginWidth={0}
-               src={mapUrl}
-               className="relative z-10"
-               loading="lazy"
-               referrerPolicy="no-referrer-when-downgrade"
-             ></iframe>
-             {/* Fallback link overlay */}
-             <a 
-               href={googleMapsLink}
-               target="_blank"
-               rel="noopener noreferrer"
-               className="absolute bottom-4 right-4 z-20 px-4 py-2 bg-white/90 backdrop-blur rounded-full text-sm font-bold text-[#3A342D] hover:bg-white transition-colors shadow-lg flex items-center gap-2"
-             >
-               <i className="fa-solid fa-external-link text-xs"></i>
-               Open in Google Maps
-             </a>
-           </>
-         ) : (
-           <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
-             <div className="text-center text-gray-500">
-               <i className="fa-solid fa-map-location-dot text-4xl mb-2 text-gray-300"></i>
-               <p className="text-sm">Map unavailable</p>
-             </div>
-           </div>
-         )}
-      </div>
 
       {/* COMMUNITY & LIFESTYLE */}
       {(filteredProximity.length > 0) || data.localAreaIntel || data.localMarketVibe ? (
@@ -1106,6 +1065,51 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
            )}
         </section>
       ) : null}
+
+      {/* MAP SECTION - Embedded Google Maps (swapped position) */}
+      <div 
+        data-map="true" 
+        data-pdf-no-break
+        className="w-full h-[400px] rounded-[3rem] overflow-hidden shadow-lg border relative" 
+        style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
+      >
+         {mapUrl ? (
+           <>
+             <div className="absolute inset-0 bg-slate-200/50 animate-pulse z-0"></div>
+             <iframe
+               key={encodedAddress} // Force re-render when address changes
+               title="Property Location Map"
+               width="100%"
+               height="100%"
+               frameBorder="0"
+               scrolling="no"
+               marginHeight={0}
+               marginWidth={0}
+               src={mapUrl}
+               className="relative z-10"
+               loading="lazy"
+               referrerPolicy="no-referrer-when-downgrade"
+             ></iframe>
+             {/* Fallback link overlay */}
+             <a 
+               href={googleMapsLink}
+               target="_blank"
+               rel="noopener noreferrer"
+               className="absolute bottom-4 right-4 z-20 px-4 py-2 bg-white/90 backdrop-blur rounded-full text-sm font-bold text-[#3A342D] hover:bg-white transition-colors shadow-lg flex items-center gap-2"
+             >
+               <i className="fa-solid fa-external-link text-xs"></i>
+               Open in Google Maps
+             </a>
+           </>
+         ) : (
+           <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+             <div className="text-center text-gray-500">
+               <i className="fa-solid fa-map-location-dot text-4xl mb-2 text-gray-300"></i>
+               <p className="text-sm">Map unavailable</p>
+             </div>
+           </div>
+         )}
+      </div>
 
       {/* VALUE-ADD STRATEGIES */}
       {data.valueAddStrategies && data.valueAddStrategies.length > 0 && (
