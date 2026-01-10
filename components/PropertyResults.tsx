@@ -399,6 +399,10 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                 return;
               }
               
+              // Fill with white background (JPEG doesn't support transparency - prevents dark fills)
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, outWidth, outHeight);
+              
               // Draw cropped and scaled image
               ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, outWidth, outHeight);
               
@@ -684,6 +688,11 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
             reject(new Error('Could not get canvas context'));
             return;
           }
+          
+          // Fill with white background (JPEG doesn't support transparency - prevents dark fills)
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, width, height);
+          
           ctx.drawImage(img, 0, 0, width, height);
           
           // Convert to compressed JPEG
