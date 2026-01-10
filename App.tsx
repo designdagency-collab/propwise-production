@@ -71,12 +71,6 @@ const App: React.FC = () => {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [isValidAddress, setIsValidAddress] = useState(false); // Must select from autocomplete
   const autocompleteRef = useRef<HTMLDivElement>(null);
-  const searchSectionRef = useRef<HTMLDivElement>(null);
-  
-  // Scroll to search section (for landing page CTAs)
-  const scrollToSearch = useCallback(() => {
-    searchSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Plan and credits - initialized from cache for instant display
@@ -1827,96 +1821,112 @@ const App: React.FC = () => {
         <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           {appState === AppState.IDLE && (
             <>
-              {/* Landing Page Sections */}
-              <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24">
-                <LandingPage onScrollToSearch={scrollToSearch} />
-              </div>
-              
-              {/* Search Section - scrolled to from landing page CTAs */}
-              <div ref={searchSectionRef} className="max-w-4xl mx-auto text-center py-12 md:py-24 space-y-12 scroll-mt-24">
-                <div className="inline-flex items-center gap-2 px-4 py-2 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
-                  <i className="fa-solid fa-bolt"></i>
-                  <span>AI-Powered Property Intelligence</span>
+              {/* LOGGED OUT: Full Landing Page with integrated search */}
+              {!isLoggedIn && (
+                <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24">
+                  <LandingPage 
+                    address={address}
+                    onAddressChange={handleAddressChange}
+                    onSearch={handleSearch}
+                    onSelectSuggestion={handleSelectSuggestion}
+                    suggestions={suggestions}
+                    showSuggestions={showSuggestions}
+                    setShowSuggestions={setShowSuggestions}
+                    isValidAddress={isValidAddress}
+                    isLocating={isLocating}
+                    onDetectLocation={detectLocation}
+                    isMobile={isMobileDevice()}
+                  />
                 </div>
-                <h1 className="text-[3.25rem] sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.05]" style={{ color: 'var(--text-primary)' }}>
-                  Overpriced… <br/> <span className="text-[#C9A961] opacity-90">Or A Hidden Bargain?</span>
-                </h1>
-                <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium" style={{ color: 'var(--text-muted)' }}>
-                  Zoning, comparable sales, and value-uplift potential for any <strong className="font-bold">Australian</strong> address — in under 60 seconds.
-                </p>
-                
-                <div className="max-w-2xl mx-auto" ref={autocompleteRef}>
-                 <form onSubmit={handleSearch} className="relative group">
-                  <div className="absolute -inset-1 bg-[#C9A961] rounded-[2rem] blur opacity-5 group-hover:opacity-10 transition duration-1000"></div>
-                  <div className="relative flex items-center p-2 rounded-[2rem] shadow-xl border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                    <div className="flex-grow flex items-center px-6">
-                      <input
-                        type="text"
-                        value={address}
-                        onChange={(e) => handleAddressChange(e.target.value)}
-                        onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                        placeholder="Enter street address..."
-                        className="w-full py-3 sm:py-4 bg-transparent text-base sm:text-lg font-medium focus:outline-none"
-                        style={{ color: 'var(--text-primary)' }}
-                        autoComplete="off"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2 pr-2">
-                      {/* GPS Location button - only show on mobile devices */}
-                      {isMobileDevice() && (
-                        <button
-                          type="button"
-                          onClick={detectLocation}
-                          disabled={isLocating}
-                          className="w-12 h-12 text-[#B8C5A0] hover:text-[#C9A961] transition-all disabled:opacity-50"
-                          title="Use my current location"
-                        >
-                          <i className={`fa-solid ${isLocating ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'}`}></i>
-                        </button>
-                      )}
-                      <button
-                        type="submit"
-                        disabled={!isValidAddress}
-                        className="bg-[#C9A961] text-white px-6 sm:px-8 h-11 sm:h-12 rounded-xl font-bold hover:bg-[#3A342D] transition-all flex items-center gap-2 shadow-sm disabled:opacity-30 uppercase tracking-widest text-[11px] sm:text-[10px]"
-                        title={!isValidAddress ? "Select an address from the dropdown" : ""}
-                      >
-                        Audit Block
-                      </button>
-                    </div>
+              )}
+              
+              {/* LOGGED IN: Original simple search page */}
+              {isLoggedIn && (
+                <div className="max-w-4xl mx-auto text-center py-12 md:py-24 space-y-12">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
+                    <i className="fa-solid fa-bolt"></i>
+                    <span>AI-Powered Property Intelligence</span>
                   </div>
+                  <h1 className="text-[3.25rem] sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.05]" style={{ color: 'var(--text-primary)' }}>
+                    Overpriced… <br/> <span className="text-[#C9A961] opacity-90">Or A Hidden Bargain?</span>
+                  </h1>
+                  <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium" style={{ color: 'var(--text-muted)' }}>
+                    Zoning, comparable sales, and value-uplift potential for any <strong className="font-bold">Australian</strong> address — in under 60 seconds.
+                  </p>
                   
-                  {/* Address Autocomplete Dropdown */}
-                  {showSuggestions && suggestions.length > 0 && (
-                    <div 
-                      className="absolute left-0 right-0 mt-2 rounded-2xl shadow-xl border overflow-hidden z-50"
-                      style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
-                    >
-                      {suggestions.map((suggestion, index) => (
+                  <div className="max-w-2xl mx-auto" ref={autocompleteRef}>
+                   <form onSubmit={handleSearch} className="relative group">
+                    <div className="absolute -inset-1 bg-[#C9A961] rounded-[2rem] blur opacity-5 group-hover:opacity-10 transition duration-1000"></div>
+                    <div className="relative flex items-center p-2 rounded-[2rem] shadow-xl border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+                      <div className="flex-grow flex items-center px-6">
+                        <input
+                          type="text"
+                          value={address}
+                          onChange={(e) => handleAddressChange(e.target.value)}
+                          onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                          placeholder="Enter street address..."
+                          className="w-full py-3 sm:py-4 bg-transparent text-base sm:text-lg font-medium focus:outline-none"
+                          style={{ color: 'var(--text-primary)' }}
+                          autoComplete="off"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 pr-2">
+                        {/* GPS Location button - only show on mobile devices */}
+                        {isMobileDevice() && (
+                          <button
+                            type="button"
+                            onClick={detectLocation}
+                            disabled={isLocating}
+                            className="w-12 h-12 text-[#B8C5A0] hover:text-[#C9A961] transition-all disabled:opacity-50"
+                            title="Use my current location"
+                          >
+                            <i className={`fa-solid ${isLocating ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'}`}></i>
+                          </button>
+                        )}
                         <button
-                          key={index}
-                          type="button"
-                          onClick={() => handleSelectSuggestion(suggestion)}
-                          className="w-full px-6 py-3 text-left hover:bg-[#C9A961]/10 transition-colors flex items-center gap-3 border-b last:border-b-0"
-                          style={{ borderColor: 'var(--border-color)' }}
+                          type="submit"
+                          disabled={!isValidAddress}
+                          className="bg-[#C9A961] text-white px-6 sm:px-8 h-11 sm:h-12 rounded-xl font-bold hover:bg-[#3A342D] transition-all flex items-center gap-2 shadow-sm disabled:opacity-30 uppercase tracking-widest text-[11px] sm:text-[10px]"
+                          title={!isValidAddress ? "Select an address from the dropdown" : ""}
                         >
-                          <i className="fa-solid fa-location-dot text-[#C9A961] text-sm flex-shrink-0"></i>
-                          <div className="min-w-0">
-                            <p className="font-medium truncate" style={{ color: 'var(--text-primary)' }}>
-                              {suggestion.mainText}
-                            </p>
-                            {suggestion.secondaryText && (
-                              <p className="text-sm truncate" style={{ color: 'var(--text-muted)' }}>
-                                {suggestion.secondaryText}
-                              </p>
-                            )}
-                          </div>
+                          Audit Block
                         </button>
-                      ))}
+                      </div>
                     </div>
-                  )}
-                </form>
-              </div>
-              </div>
+                    
+                    {/* Address Autocomplete Dropdown */}
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div 
+                        className="absolute left-0 right-0 mt-2 rounded-2xl shadow-xl border overflow-hidden z-50"
+                        style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
+                      >
+                        {suggestions.map((suggestion, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => handleSelectSuggestion(suggestion)}
+                            className="w-full px-6 py-3 text-left hover:bg-[#C9A961]/10 transition-colors flex items-center gap-3 border-b last:border-b-0"
+                            style={{ borderColor: 'var(--border-color)' }}
+                          >
+                            <i className="fa-solid fa-location-dot text-[#C9A961] text-sm flex-shrink-0"></i>
+                            <div className="min-w-0">
+                              <p className="font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                                {suggestion.mainText}
+                              </p>
+                              {suggestion.secondaryText && (
+                                <p className="text-sm truncate" style={{ color: 'var(--text-muted)' }}>
+                                  {suggestion.secondaryText}
+                                </p>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </form>
+                </div>
+                </div>
+              )}
             </>
           )}
 

@@ -1,58 +1,156 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 
-interface LandingPageProps {
-  onScrollToSearch: () => void;
+interface Suggestion {
+  description: string;
+  mainText: string;
+  secondaryText: string;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onScrollToSearch }) => {
+interface LandingPageProps {
+  // Search functionality
+  address: string;
+  onAddressChange: (value: string) => void;
+  onSearch: (e: React.FormEvent) => void;
+  onSelectSuggestion: (suggestion: Suggestion) => void;
+  suggestions: Suggestion[];
+  showSuggestions: boolean;
+  setShowSuggestions: (show: boolean) => void;
+  isValidAddress: boolean;
+  isLocating: boolean;
+  onDetectLocation: () => void;
+  isMobile: boolean;
+}
+
+const LandingPage: React.FC<LandingPageProps> = ({ 
+  address,
+  onAddressChange,
+  onSearch,
+  onSelectSuggestion,
+  suggestions,
+  showSuggestions,
+  setShowSuggestions,
+  isValidAddress,
+  isLocating,
+  onDetectLocation,
+  isMobile
+}) => {
+  // Before/After slider state
+  const [sliderPos, setSliderPos] = useState(50);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+
+  const handleSliderMove = (clientX: number) => {
+    if (!sliderRef.current || !isDragging.current) return;
+    const rect = sliderRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    setSliderPos(percentage);
+  };
+
+  const handleMouseDown = () => { isDragging.current = true; };
+  const handleMouseUp = () => { isDragging.current = false; };
+  const handleMouseMove = (e: React.MouseEvent) => handleSliderMove(e.clientX);
+  const handleTouchMove = (e: React.TouchEvent) => handleSliderMove(e.touches[0].clientX);
+
   return (
     <div className="space-y-0">
       {/* ============================================
-          HERO SECTION - Above the fold
+          HERO SECTION - Search is the star
           ============================================ */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[100vh] flex items-center justify-center overflow-hidden pt-20">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#FAF9F6] via-[#FAF9F6] to-white"></div>
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#C9A961]/5 rounded-full blur-3xl -mr-48 -mt-48"></div>
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#B8C5A0]/5 rounded-full blur-3xl -ml-32 -mb-32"></div>
         
-        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center space-y-8">
+        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center space-y-8">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest border border-[#C9A961]/20">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C9A961] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#C9A961]"></span>
-            </span>
-            <span>Trusted by 2,000+ Aussie Property Researchers</span>
+            <i className="fa-solid fa-bolt"></i>
+            <span>AI-Powered Property Intelligence</span>
           </div>
           
           {/* Main headline */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.05] text-[#3A342D]">
-            Research Any Property<br/>
-            <span className="text-[#C9A961]">In Under 60 Seconds</span>
+          <h1 className="text-[3.25rem] sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.05] text-[#3A342D]">
+            Discover Hidden Equity<br/>
+            <span className="text-[#C9A961]">In Any Property</span>
           </h1>
           
           {/* Subheadline */}
-          <p className="text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed text-[#6B6560] font-medium">
-            Indicative values, comparable sales, zoning intel, and uplift scenarios for any <strong className="text-[#3A342D]">Australian</strong> address. AI-assisted insights to inform your property decisions.
+          <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed text-[#6B6560] font-medium">
+            Uncover value-add potential, comparable sales, and planning insights for any <strong className="text-[#3A342D]">Australian</strong> address — powered by AI.
           </p>
           
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <button
-              onClick={onScrollToSearch}
-              className="group bg-[#C9A961] text-white px-8 py-4 rounded-2xl font-bold hover:bg-[#3A342D] transition-all flex items-center gap-3 shadow-lg shadow-[#C9A961]/20 text-sm uppercase tracking-widest"
-            >
-              <span>Get Free Report</span>
-              <i className="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
-            </button>
-            <p className="text-xs text-[#9B9590] font-medium">
-              No sign-up required • Instant results
+          {/* SEARCH BAR - The Star of the Show */}
+          <div className="max-w-2xl mx-auto pt-4">
+            <form onSubmit={onSearch} className="relative group">
+              <div className="absolute -inset-1 bg-[#C9A961] rounded-[2rem] blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
+              <div className="relative flex items-center p-2 rounded-[2rem] shadow-xl border bg-white border-[#E8E6E3]">
+                <div className="flex-grow flex items-center px-6">
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => onAddressChange(e.target.value)}
+                    onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                    placeholder="Enter any Australian address..."
+                    className="w-full py-3 sm:py-4 bg-transparent text-base sm:text-lg font-medium focus:outline-none text-[#3A342D] placeholder:text-[#9B9590]"
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="flex items-center gap-2 pr-2">
+                  {/* GPS Location button - only show on mobile */}
+                  {isMobile && (
+                    <button
+                      type="button"
+                      onClick={onDetectLocation}
+                      disabled={isLocating}
+                      className="w-12 h-12 text-[#B8C5A0] hover:text-[#C9A961] transition-all disabled:opacity-50"
+                      title="Use my current location"
+                    >
+                      <i className={`fa-solid ${isLocating ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'}`}></i>
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={!isValidAddress}
+                    className="bg-[#C9A961] text-white px-6 sm:px-8 h-11 sm:h-12 rounded-xl font-bold hover:bg-[#3A342D] transition-all flex items-center gap-2 shadow-sm disabled:opacity-30 uppercase tracking-widest text-[11px] sm:text-[10px]"
+                    title={!isValidAddress ? "Select an address from the dropdown" : ""}
+                  >
+                    Audit Block
+                  </button>
+                </div>
+              </div>
+              
+              {/* Address Autocomplete Dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute left-0 right-0 mt-2 rounded-2xl shadow-xl border overflow-hidden z-50 bg-white border-[#E8E6E3]">
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => onSelectSuggestion(suggestion)}
+                      className="w-full px-6 py-3 text-left hover:bg-[#C9A961]/10 transition-colors flex items-center gap-3 border-b last:border-b-0 border-[#E8E6E3]"
+                    >
+                      <i className="fa-solid fa-location-dot text-[#C9A961] text-sm flex-shrink-0"></i>
+                      <div className="min-w-0">
+                        <p className="font-medium truncate text-[#3A342D]">{suggestion.mainText}</p>
+                        {suggestion.secondaryText && (
+                          <p className="text-sm truncate text-[#9B9590]">{suggestion.secondaryText}</p>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </form>
+            
+            <p className="text-xs text-[#9B9590] mt-4 font-medium">
+              No sign-up required • Free instant report • Research any address
             </p>
           </div>
           
           {/* Trust indicators */}
-          <div className="flex flex-wrap items-center justify-center gap-6 pt-8 text-xs text-[#9B9590] font-medium">
+          <div className="flex flex-wrap items-center justify-center gap-6 pt-6 text-xs text-[#9B9590] font-medium">
             <div className="flex items-center gap-2">
               <i className="fa-solid fa-shield-check text-[#B8C5A0]"></i>
               <span>Privacy-first</span>
@@ -75,16 +173,121 @@ const LandingPage: React.FC<LandingPageProps> = ({ onScrollToSearch }) => {
       </section>
 
       {/* ============================================
-          SAMPLE REPORT PREVIEW
+          AI VISUALIZER - LIVE DEMO
           ============================================ */}
       <section className="py-20 px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <span className="inline-block px-4 py-1 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest">
+                AI Renovation Visualizer
+              </span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#3A342D] tracking-tight">
+                Picture the Potential
+              </h2>
+              <p className="text-[#6B6560] leading-relaxed">
+                Upload a photo of any property and see AI-generated renovation scenarios in seconds. Drag the slider to compare before and after — experience the transformation yourself.
+              </p>
+              <ul className="space-y-3">
+                {[
+                  'Kitchen & bathroom renovations',
+                  'Facade and exterior updates',
+                  'Development scenarios (duplex, townhouses)',
+                  'Landscaping transformations'
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3 text-[#3A342D]">
+                    <span className="w-5 h-5 bg-[#C9A961]/10 rounded-full flex items-center justify-center flex-shrink-0">
+                      <i className="fa-solid fa-check text-[#C9A961] text-[10px]"></i>
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            {/* LIVE Before/After Slider */}
+            <div className="relative">
+              <div className="absolute -inset-4 bg-[#3A342D] rounded-[2rem] blur-2xl opacity-10"></div>
+              <div className="relative bg-[#3A342D] rounded-[2rem] p-4 shadow-2xl">
+                <div 
+                  ref={sliderRef}
+                  className="relative aspect-[4/3] rounded-xl overflow-hidden cursor-col-resize select-none"
+                  onMouseDown={handleMouseDown}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onMouseMove={handleMouseMove}
+                  onTouchStart={handleMouseDown}
+                  onTouchEnd={handleMouseUp}
+                  onTouchMove={handleTouchMove}
+                >
+                  {/* After Image (Background) */}
+                  <img 
+                    src="/demo-after.jpg" 
+                    alt="After renovation"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback gradient if image not found
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                  {/* Fallback gradient for after */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#B8C5A0]/30 to-[#C9A961]/30 flex items-center justify-center">
+                    <span className="text-white/60 text-sm font-medium bg-black/20 px-4 py-2 rounded-full">After</span>
+                  </div>
+                  
+                  {/* Before Image (Clipped) */}
+                  <div 
+                    className="absolute inset-0 overflow-hidden"
+                    style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
+                  >
+                    <img 
+                      src="/demo-before.jpg" 
+                      alt="Before renovation"
+                      className="absolute inset-0 w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                    {/* Fallback gradient for before */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#6B6560]/50 to-[#3A342D]/50 flex items-center justify-center">
+                      <span className="text-white/60 text-sm font-medium bg-black/20 px-4 py-2 rounded-full">Before</span>
+                    </div>
+                  </div>
+                  
+                  {/* Slider Line */}
+                  <div 
+                    className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg z-10"
+                    style={{ left: `${sliderPos}%`, transform: 'translateX(-50%)' }}
+                  >
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-xl flex items-center justify-center border-2 border-[#C9A961]">
+                      <i className="fa-solid fa-arrows-left-right text-[#C9A961] text-sm"></i>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="text-center mt-4">
+                  <span className="inline-flex items-center gap-2 text-white/60 text-xs bg-white/10 px-4 py-2 rounded-full">
+                    <i className="fa-solid fa-hand-pointer text-[#C9A961]"></i>
+                    Drag to compare before & after
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================
+          SAMPLE REPORT PREVIEW
+          ============================================ */}
+      <section className="py-20 px-6 bg-gradient-to-b from-white to-[#FAF9F6]">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <span className="inline-block px-4 py-1 bg-[#B8C5A0]/10 text-[#B8C5A0] rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
               Sample Report
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold text-[#3A342D] tracking-tight mb-4">
-              See What You'll Get
+              See What You'll Discover
             </h2>
             <p className="text-[#6B6560] max-w-xl mx-auto">
               Comprehensive property intelligence at your fingertips
@@ -157,76 +360,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onScrollToSearch }) => {
       </section>
 
       {/* ============================================
-          AI VISUALIZER SHOWCASE
-          ============================================ */}
-      <section className="py-20 px-6 bg-gradient-to-b from-white to-[#FAF9F6]">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <span className="inline-block px-4 py-1 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest">
-                AI Renovation Visualizer
-              </span>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#3A342D] tracking-tight">
-                Picture the Potential
-              </h2>
-              <p className="text-[#6B6560] leading-relaxed">
-                Upload a photo of any property and see AI-generated renovation scenarios in seconds. Explore facade makeovers, interior updates, and development possibilities.
-              </p>
-              <ul className="space-y-3">
-                {[
-                  'Kitchen & bathroom renovations',
-                  'Facade and exterior updates',
-                  'Development scenarios (duplex, townhouses)',
-                  'Landscaping transformations'
-                ].map((item, i) => (
-                  <li key={i} className="flex items-center gap-3 text-[#3A342D]">
-                    <span className="w-5 h-5 bg-[#C9A961]/10 rounded-full flex items-center justify-center flex-shrink-0">
-                      <i className="fa-solid fa-check text-[#C9A961] text-[10px]"></i>
-                    </span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={onScrollToSearch}
-                className="inline-flex items-center gap-2 text-[#C9A961] font-bold hover:gap-3 transition-all"
-              >
-                Try it now <i className="fa-solid fa-arrow-right"></i>
-              </button>
-            </div>
-            
-            {/* Visual mockup */}
-            <div className="relative">
-              <div className="absolute -inset-4 bg-[#3A342D] rounded-[2rem] blur-2xl opacity-10"></div>
-              <div className="relative bg-[#3A342D] rounded-[2rem] p-4 shadow-2xl">
-                <div className="aspect-video bg-gradient-to-br from-[#5D544A] to-[#3A342D] rounded-xl flex items-center justify-center relative overflow-hidden">
-                  {/* Before side */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1/2 bg-[#6B6560]/30 flex items-center justify-center">
-                    <span className="text-white/40 text-sm font-medium">Before</span>
-                  </div>
-                  {/* After side */}
-                  <div className="absolute right-0 top-0 bottom-0 w-1/2 bg-[#C9A961]/20 flex items-center justify-center">
-                    <span className="text-white/60 text-sm font-medium">After</span>
-                  </div>
-                  {/* Slider */}
-                  <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white/80 z-10"></div>
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center z-20">
-                    <i className="fa-solid fa-arrows-left-right text-[#C9A961] text-sm"></i>
-                  </div>
-                </div>
-                <div className="text-center mt-4">
-                  <span className="inline-flex items-center gap-2 text-white/60 text-xs">
-                    <i className="fa-solid fa-hand-pointer text-[#C9A961]"></i>
-                    Drag to compare
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================
           RISK ALERTS / THINGS TO WATCH
           ============================================ */}
       <section className="py-20 px-6 bg-[#FAF9F6]">
@@ -274,12 +407,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onScrollToSearch }) => {
               <p className="text-[#6B6560] leading-relaxed">
                 Every report highlights potential issues worth investigating — heritage overlays, easements, flood zones, bushfire risk, and more. Research smarter, not harder.
               </p>
-              <button
-                onClick={onScrollToSearch}
-                className="inline-flex items-center gap-2 text-[#EF4444] font-bold hover:gap-3 transition-all"
-              >
-                Check an address <i className="fa-solid fa-arrow-right"></i>
-              </button>
             </div>
           </div>
         </div>
@@ -297,22 +424,16 @@ const LandingPage: React.FC<LandingPageProps> = ({ onScrollToSearch }) => {
             <h2 className="text-3xl sm:text-4xl font-bold text-[#3A342D] tracking-tight mb-4">
               Everything You Need to Research
             </h2>
-            <p className="text-[#6B6560] max-w-xl mx-auto">
-              Comprehensive property intelligence in one report
-            </p>
           </div>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: 'fa-dollar-sign', title: 'Indicative Value Range', desc: 'AI-estimated value based on comparable sales and market data', color: '#B8C5A0' },
+              { icon: 'fa-dollar-sign', title: 'Indicative Value Range', desc: 'AI-estimated value based on comparable sales', color: '#B8C5A0' },
               { icon: 'fa-chart-line', title: 'Comparable Sales', desc: 'Recent nearby sales to inform your research', color: '#C9A961' },
-              { icon: 'fa-map', title: 'Zoning & Planning', desc: 'Local planning controls, overlays, and development potential', color: '#3B82F6' },
-              { icon: 'fa-hammer', title: 'Uplift Strategies', desc: 'Renovation and improvement scenarios with cost estimates', color: '#8B5CF6' },
-              { icon: 'fa-city', title: 'Development Scenarios', desc: 'Subdivision, duplex, and multi-dwelling possibilities', color: '#EC4899' },
-              { icon: 'fa-eye', title: 'Risk Considerations', desc: 'Heritage, easements, flood zones, and other factors', color: '#EF4444' },
-              { icon: 'fa-school', title: 'Local Amenities', desc: 'Schools, transport, shops, and community facilities', color: '#10B981' },
-              { icon: 'fa-wand-magic-sparkles', title: 'AI Visualizer', desc: 'See renovation potential with AI-generated images', color: '#F59E0B' },
-              { icon: 'fa-file-pdf', title: 'PDF Export', desc: 'Download professional reports to share', color: '#6B7280' },
+              { icon: 'fa-map', title: 'Zoning & Planning', desc: 'Local planning controls and overlays', color: '#3B82F6' },
+              { icon: 'fa-hammer', title: 'Uplift Strategies', desc: 'Renovation scenarios with cost estimates', color: '#8B5CF6' },
+              { icon: 'fa-city', title: 'Development Scenarios', desc: 'Subdivision and multi-dwelling options', color: '#EC4899' },
+              { icon: 'fa-wand-magic-sparkles', title: 'AI Visualizer', desc: 'See renovation potential with AI images', color: '#F59E0B' },
             ].map((feature, i) => (
               <div key={i} className="group p-6 rounded-2xl border border-[#E8E6E3] hover:border-[#C9A961]/30 hover:shadow-lg transition-all bg-[#FAF9F6]/50">
                 <div 
@@ -345,9 +466,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onScrollToSearch }) => {
           
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { num: '1', title: 'Enter an Address', desc: 'Type any Australian street address into the search bar', icon: 'fa-location-dot' },
-              { num: '2', title: 'AI Analyses Data', desc: 'We aggregate data from multiple sources in seconds', icon: 'fa-microchip' },
-              { num: '3', title: 'Get Your Report', desc: 'Review comprehensive insights and export as PDF', icon: 'fa-file-chart-column' },
+              { num: '1', title: 'Enter an Address', desc: 'Type any Australian street address', icon: 'fa-location-dot' },
+              { num: '2', title: 'AI Analyses Data', desc: 'We aggregate multiple sources in seconds', icon: 'fa-microchip' },
+              { num: '3', title: 'Get Your Report', desc: 'Review insights and export as PDF', icon: 'fa-file-chart-column' },
             ].map((step, i) => (
               <div key={i} className="text-center space-y-4">
                 <div className="relative inline-block">
@@ -363,16 +484,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onScrollToSearch }) => {
               </div>
             ))}
           </div>
-          
-          <div className="text-center mt-12">
-            <button
-              onClick={onScrollToSearch}
-              className="group bg-[#3A342D] text-white px-8 py-4 rounded-2xl font-bold hover:bg-[#C9A961] transition-all flex items-center gap-3 shadow-lg mx-auto text-sm uppercase tracking-widest"
-            >
-              <span>Try It Now — Free</span>
-              <i className="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
-            </button>
-          </div>
         </div>
       </section>
 
@@ -383,17 +494,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onScrollToSearch }) => {
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight">
             Stop Guessing.<br/>
-            <span className="text-[#C9A961]">Start Researching.</span>
+            <span className="text-[#C9A961]">Start Discovering.</span>
           </h2>
           <p className="text-lg text-white/60 max-w-xl mx-auto">
-            Join thousands of Australians using AI-powered insights to inform their property decisions.
+            Uncover hidden equity and make informed property decisions with AI-powered insights.
           </p>
           <button
-            onClick={onScrollToSearch}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="group bg-[#C9A961] text-[#3A342D] px-10 py-5 rounded-2xl font-bold hover:bg-white transition-all flex items-center gap-3 shadow-lg mx-auto text-sm uppercase tracking-widest"
           >
-            <span>Get Your Free Report</span>
-            <i className="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+            <span>Search an Address Now</span>
+            <i className="fa-solid fa-arrow-up group-hover:-translate-y-1 transition-transform"></i>
           </button>
           <p className="text-xs text-white/40">
             For research purposes only. Not financial advice. Indicative estimates only.
@@ -418,7 +529,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onScrollToSearch }) => {
             </div>
             
             <p className="text-xs text-white/30">
-              © {new Date().getFullYear()} upblock.ai • AI-powered property intelligence
+              © {new Date().getFullYear()} upblock.ai
             </p>
           </div>
           
@@ -436,4 +547,3 @@ const LandingPage: React.FC<LandingPageProps> = ({ onScrollToSearch }) => {
 };
 
 export default LandingPage;
-
