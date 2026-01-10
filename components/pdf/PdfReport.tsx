@@ -1531,7 +1531,7 @@ export const getPdfDocumentStyles = () => `
   .pdf-visuals-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 10px;
     margin-top: 16px;
   }
   
