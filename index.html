@@ -243,9 +243,157 @@
 }
 </script>
 <link rel="stylesheet" href="/index.css">
+    
+    <!-- Structured Data - JSON-LD for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "upblock.ai",
+      "url": "https://upblock.ai",
+      "logo": "https://upblock.ai/og-image.png",
+      "description": "AI-powered property intelligence for Australian real estate. Get instant insights on zoning, development potential, comparable sales, and value-add strategies.",
+      "sameAs": [],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "availableLanguage": "English"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "upblock.ai",
+      "url": "https://upblock.ai",
+      "description": "AI-powered property intelligence for Australian real estate",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://upblock.ai/?address={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "upblock.ai",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "AI-powered property intelligence platform for Australian real estate. Analyze zoning, development potential, comparable sales, and value-add strategies for any Australian address.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "AUD",
+        "description": "Free tier available"
+      }
+    }
+    </script>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">
+        <!-- SEO Fallback Content - Visible to crawlers before React hydrates. React will replace this. -->
+        <div id="seo-fallback" style="max-width: 1200px; margin: 0 auto; padding: 100px 24px 60px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #3A342D;">
+            <header style="text-align: center; margin-bottom: 64px;">
+                <img src="/upblock.ai-logo.png" alt="upblock.ai logo" style="height: 48px; margin-bottom: 32px;">
+                <h1 style="font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700; line-height: 1.1; margin-bottom: 20px;">
+                    Discover Hidden Equity<br>
+                    <span style="color: #C9A961;">In Any Australian Property</span>
+                </h1>
+                <p style="font-size: 1.125rem; color: #6B6560; max-width: 640px; margin: 0 auto; line-height: 1.6;">
+                    AI-powered property intelligence for Australian real estate. Get instant insights on zoning, development potential, comparable sales, and value-add strategies.
+                </p>
+            </header>
+            
+            <main>
+                <section style="margin-bottom: 56px;">
+                    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 16px;">
+                        What is upblock.ai?
+                    </h2>
+                    <p style="color: #6B6560; line-height: 1.7; margin-bottom: 16px;">
+                        upblock.ai is an AI-powered property research platform designed for Australian homeowners, investors, and property professionals. Enter any Australian address and receive a comprehensive property intelligence report in seconds — no signup required.
+                    </p>
+                    <p style="color: #6B6560; line-height: 1.7;">
+                        Our platform analyzes zoning regulations, planning overlays, comparable sales data, and development potential to help you identify hidden opportunities and make smarter property decisions.
+                    </p>
+                </section>
+                
+                <section style="margin-bottom: 56px;">
+                    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 16px;">
+                        Key Features
+                    </h2>
+                    <ul style="color: #6B6560; line-height: 2; padding-left: 24px;">
+                        <li><strong>Zoning Analysis</strong> – Understand what you can build based on local council regulations</li>
+                        <li><strong>Development Potential</strong> – Discover subdivision, dual occupancy, and multi-dwelling opportunities</li>
+                        <li><strong>Comparable Sales</strong> – View recent sales data for similar properties in the area</li>
+                        <li><strong>Value-Add Strategies</strong> – Get AI-generated recommendations for renovation and development uplift</li>
+                        <li><strong>AI Property Visualizer</strong> – See AI-rendered transformations of your property</li>
+                        <li><strong>Risk Alerts</strong> – Identify flood zones, bushfire risk, heritage overlays, and easements</li>
+                        <li><strong>PDF Reports</strong> – Download comprehensive reports to share with advisors and team members</li>
+                    </ul>
+                </section>
+                
+                <section style="margin-bottom: 56px;">
+                    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 16px;">
+                        How It Works
+                    </h2>
+                    <ol style="color: #6B6560; line-height: 2; padding-left: 24px;">
+                        <li><strong>Enter an Address</strong> – Type any Australian property address into the search bar</li>
+                        <li><strong>AI Analysis</strong> – Our AI analyzes zoning, planning data, comparable sales, and market conditions</li>
+                        <li><strong>Get Your Report</strong> – Receive a detailed property intelligence report in under 30 seconds</li>
+                        <li><strong>Take Action</strong> – Use the insights to identify opportunities and make informed decisions</li>
+                    </ol>
+                </section>
+                
+                <section style="margin-bottom: 56px;">
+                    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 16px;">
+                        Who Uses upblock.ai?
+                    </h2>
+                    <ul style="color: #6B6560; line-height: 2; padding-left: 24px;">
+                        <li><strong>Property Investors</strong> – Find undervalued properties with development potential</li>
+                        <li><strong>Homeowners</strong> – Discover hidden equity and value-add opportunities in your home</li>
+                        <li><strong>Buyers Agents</strong> – Quickly assess properties for clients with comprehensive data</li>
+                        <li><strong>Developers</strong> – Identify sites with subdivision or multi-dwelling potential</li>
+                        <li><strong>Real Estate Agents</strong> – Add value to listings with detailed property insights</li>
+                    </ul>
+                </section>
+                
+                <section style="margin-bottom: 56px;">
+                    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 16px;">
+                        Australian Property Intelligence Coverage
+                    </h2>
+                    <p style="color: #6B6560; line-height: 1.7; margin-bottom: 16px;">
+                        upblock.ai covers all Australian states and territories including New South Wales (NSW), Victoria (VIC), Queensland (QLD), Western Australia (WA), South Australia (SA), Tasmania (TAS), Northern Territory (NT), and the Australian Capital Territory (ACT).
+                    </p>
+                    <p style="color: #6B6560; line-height: 1.7;">
+                        Our data sources include local council planning portals, state government databases, and real estate market data to provide comprehensive property insights across Sydney, Melbourne, Brisbane, Perth, Adelaide, Hobart, Darwin, Canberra, and regional areas.
+                    </p>
+                </section>
+                
+                <section>
+                    <p style="color: #9B9590; line-height: 1.7; font-size: 0.875rem; font-style: italic; border-top: 1px solid #E8E6E3; padding-top: 24px;">
+                        <strong>Disclaimer:</strong> upblock.ai provides indicative property insights for research purposes only. All information is AI-generated and should be verified independently with qualified professionals. This is not financial, legal, or professional advice. Estimates and scenarios are indicative only and do not constitute property valuations.
+                    </p>
+                </section>
+            </main>
+            
+            <footer style="margin-top: 48px; text-align: center;">
+                <p style="color: #9B9590; font-size: 0.875rem;">
+                    © 2026 upblock.ai – AI Property Insights for Australian Real Estate
+                </p>
+                <nav style="margin-top: 16px;">
+                    <a href="/" style="color: #6B6560; text-decoration: none; margin: 0 12px;">Home</a>
+                    <a href="/pricing" style="color: #6B6560; text-decoration: none; margin: 0 12px;">Pricing</a>
+                    <a href="/terms" style="color: #6B6560; text-decoration: none; margin: 0 12px;">Terms</a>
+                </nav>
+            </footer>
+        </div>
+    </div>
 <script type="module" src="/index.tsx"></script>
 </body>
 </html>
