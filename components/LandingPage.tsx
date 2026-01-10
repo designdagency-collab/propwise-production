@@ -457,7 +457,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             {[
               { num: '1', title: 'Enter Address', desc: 'Type any Australian address', icon: 'fa-location-dot' },
               { num: '2', title: 'AI Analysis', desc: 'We process multiple data sources', icon: 'fa-microchip' },
-              { num: '3', title: 'Get Report', desc: 'Instant insights, exportable PDF', icon: 'fa-file-chart-column' },
+              { num: '3', title: 'Get Report', desc: 'Instant insights, exportable PDF', icon: 'fa-file-lines' },
             ].map((step, i) => (
               <div key={i} className="text-center space-y-4">
                 <div className="relative inline-block">
