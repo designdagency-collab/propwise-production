@@ -1818,27 +1818,25 @@ const App: React.FC = () => {
           userId={userProfile?.id}
         />
       ) : (
-        <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <main className={!isLoggedIn && appState === AppState.IDLE ? "" : "pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"}>
           {appState === AppState.IDLE && (
             <>
               {/* LOGGED OUT: Full Landing Page with integrated search */}
               {!isLoggedIn && (
-                <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24">
-                  <LandingPage 
-                    address={address}
-                    onAddressChange={handleAddressChange}
-                    onSearch={handleSearch}
-                    onSelectSuggestion={handleSelectSuggestion}
-                    suggestions={suggestions}
-                    showSuggestions={showSuggestions}
-                    setShowSuggestions={setShowSuggestions}
-                    isValidAddress={isValidAddress}
-                    isLocating={isLocating}
-                    onDetectLocation={detectLocation}
-                    isMobile={isMobileDevice()}
-                    onShowPricing={() => setShowPricing(true)}
-                  />
-                </div>
+                <LandingPage 
+                  address={address}
+                  onAddressChange={handleAddressChange}
+                  onSearch={handleSearch}
+                  onSelectSuggestion={handleSelectSuggestion}
+                  suggestions={suggestions}
+                  showSuggestions={showSuggestions}
+                  setShowSuggestions={setShowSuggestions}
+                  isValidAddress={isValidAddress}
+                  isLocating={isLocating}
+                  onDetectLocation={detectLocation}
+                  isMobile={isMobileDevice()}
+                  onShowPricing={() => setShowPricing(true)}
+                />
               )}
               
               {/* LOGGED IN: Original simple search page */}
