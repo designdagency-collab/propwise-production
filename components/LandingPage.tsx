@@ -152,7 +152,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
       {/* ============================================
           AI VISUALIZER - BIG SHOWCASE
           ============================================ */}
-      <section className="py-16 sm:py-24 px-4 sm:px-6 bg-[#3A342D] relative overflow-hidden">
+      <section className="py-16 sm:py-24 px-4 sm:px-6 bg-white relative overflow-hidden">
         {/* Background accents */}
         <div className="absolute top-0 left-0 w-96 h-96 bg-[#C9A961]/5 rounded-full blur-3xl -ml-48 -mt-48"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#B8C5A0]/5 rounded-full blur-3xl -mr-48 -mb-48"></div>
@@ -160,14 +160,14 @@ const LandingPage: React.FC<LandingPageProps> = ({
         <div className="relative z-10 max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-10 sm:mb-12">
-            <span className="inline-block px-4 py-1.5 bg-[#C9A961]/20 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
+            <span className="inline-block px-4 py-1.5 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
               <i className="fa-solid fa-wand-magic-sparkles mr-2"></i>
               AI Property Visualizer
             </span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight mb-4">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#3A342D] tracking-tight mb-4">
               Picture the Potential
             </h2>
-            <p className="text-white/60 max-w-xl mx-auto text-sm sm:text-base">
+            <p className="text-[#6B6560] max-w-xl mx-auto text-sm sm:text-base">
               Drag the slider to see AI-generated transformations — from cosmetic renovations to full development builds
             </p>
           </div>
@@ -179,7 +179,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
               className={`py-3 px-6 rounded-2xl text-sm font-bold uppercase tracking-wider transition-all ${
                 activeTab === 'renovation' 
                   ? 'bg-[#C9A961] text-white shadow-lg shadow-[#C9A961]/20' 
-                  : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
+                  : 'bg-[#FAF9F6] text-[#6B6560] hover:bg-[#C9A961]/10 hover:text-[#3A342D] border border-[#E8E6E3]'
               }`}
             >
               <i className="fa-solid fa-paint-roller mr-2"></i>
@@ -190,7 +190,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
               className={`py-3 px-6 rounded-2xl text-sm font-bold uppercase tracking-wider transition-all ${
                 activeTab === 'development' 
                   ? 'bg-[#C9A961] text-white shadow-lg shadow-[#C9A961]/20' 
-                  : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
+                  : 'bg-[#FAF9F6] text-[#6B6560] hover:bg-[#C9A961]/10 hover:text-[#3A342D] border border-[#E8E6E3]'
               }`}
             >
               <i className="fa-solid fa-city mr-2"></i>
@@ -200,7 +200,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
           
           {/* BIG Slider */}
           <div className="relative max-w-5xl mx-auto">
-            <div className="absolute -inset-2 sm:-inset-4 bg-white/5 rounded-[2rem] sm:rounded-[3rem]"></div>
+            <div className="absolute -inset-2 sm:-inset-4 bg-[#FAF9F6] rounded-[2rem] sm:rounded-[3rem] border border-[#E8E6E3]"></div>
             <div 
               ref={sliderRef}
               className="relative aspect-[16/10] sm:aspect-[16/9] rounded-2xl sm:rounded-3xl overflow-hidden cursor-col-resize select-none shadow-2xl"
@@ -252,7 +252,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             
             {/* Drag hint */}
             <div className="text-center mt-6">
-              <span className="inline-flex items-center gap-2 text-white/50 text-sm bg-white/10 px-5 py-2.5 rounded-full">
+              <span className="inline-flex items-center gap-2 text-[#6B6560] text-sm bg-[#FAF9F6] border border-[#E8E6E3] px-5 py-2.5 rounded-full">
                 <i className="fa-solid fa-hand-pointer text-[#C9A961]"></i>
                 Drag slider to compare
               </span>
@@ -260,7 +260,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
           </div>
           
           {/* Feature bullets */}
-          <div className="flex flex-wrap justify-center gap-6 mt-12 text-sm text-white/60">
+          <div className="flex flex-wrap justify-center gap-6 mt-12 text-sm text-[#6B6560]">
             <div className="flex items-center gap-2">
               <i className="fa-solid fa-check text-[#C9A961]"></i>
               <span>Upload any photo</span>
