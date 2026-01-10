@@ -242,7 +242,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
       if (isNaN(index)) return;
       
       visuals.forEach(visual => {
-        if (!visual || !visual.beforeImage || !visual.afterImage) return;
+        if (!visual || !visual.afterImage) return; // Only check afterImage (beforeImage is discarded)
         
         let strategyName = visual.title || 'Visualization';
         
