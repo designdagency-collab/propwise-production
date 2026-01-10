@@ -9,7 +9,6 @@ import TermsAndConditions from './components/TermsAndConditions';
 import AccountSettings from './components/AccountSettings';
 import InviteFriendsModal from './components/InviteFriendsModal';
 import { AdminPage } from './components/AdminPage';
-import LandingPage from './components/LandingPage';
 import { geminiService } from './services/geminiService';
 import { stripeService } from './services/stripeService';
 import { supabaseService } from './services/supabaseService';
@@ -71,12 +70,6 @@ const App: React.FC = () => {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [isValidAddress, setIsValidAddress] = useState(false); // Must select from autocomplete
   const autocompleteRef = useRef<HTMLDivElement>(null);
-  const searchSectionRef = useRef<HTMLDivElement>(null);
-  
-  // Scroll to search section (for landing page CTAs)
-  const scrollToSearch = useCallback(() => {
-    searchSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Plan and credits - initialized from cache for instant display
@@ -1826,26 +1819,19 @@ const App: React.FC = () => {
       ) : (
         <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           {appState === AppState.IDLE && (
-            <>
-              {/* Landing Page Sections */}
-              <div className="-mx-4 sm:-mx-6 lg:-mx-8 -mt-24">
-                <LandingPage onScrollToSearch={scrollToSearch} />
+            <div className="max-w-4xl mx-auto text-center py-12 md:py-24 space-y-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
+                <i className="fa-solid fa-bolt"></i>
+                <span>AI-Powered Property Intelligence</span>
               </div>
+              <h1 className="text-[3.25rem] sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.05]" style={{ color: 'var(--text-primary)' }}>
+                Overpriced… <br/> <span className="text-[#C9A961] opacity-90">Or A Hidden Bargain?</span>
+              </h1>
+              <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium" style={{ color: 'var(--text-muted)' }}>
+                Zoning, comparable sales, and value-uplift potential for any <strong className="font-bold">Australian</strong> address — in under 60 seconds.
+              </p>
               
-              {/* Search Section - scrolled to from landing page CTAs */}
-              <div ref={searchSectionRef} className="max-w-4xl mx-auto text-center py-12 md:py-24 space-y-12 scroll-mt-24">
-                <div className="inline-flex items-center gap-2 px-4 py-2 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
-                  <i className="fa-solid fa-bolt"></i>
-                  <span>AI-Powered Property Intelligence</span>
-                </div>
-                <h1 className="text-[3.25rem] sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.05]" style={{ color: 'var(--text-primary)' }}>
-                  Overpriced… <br/> <span className="text-[#C9A961] opacity-90">Or A Hidden Bargain?</span>
-                </h1>
-                <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium" style={{ color: 'var(--text-muted)' }}>
-                  Zoning, comparable sales, and value-uplift potential for any <strong className="font-bold">Australian</strong> address — in under 60 seconds.
-                </p>
-                
-                <div className="max-w-2xl mx-auto" ref={autocompleteRef}>
+              <div className="max-w-2xl mx-auto" ref={autocompleteRef}>
                  <form onSubmit={handleSearch} className="relative group">
                   <div className="absolute -inset-1 bg-[#C9A961] rounded-[2rem] blur opacity-5 group-hover:opacity-10 transition duration-1000"></div>
                   <div className="relative flex items-center p-2 rounded-[2rem] shadow-xl border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
@@ -1916,8 +1902,7 @@ const App: React.FC = () => {
                   )}
                 </form>
               </div>
-              </div>
-            </>
+            </div>
           )}
 
           {appState === AppState.LOADING && (
