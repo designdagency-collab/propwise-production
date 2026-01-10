@@ -699,14 +699,13 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                     <span className="pdf-visual-strategy-name" style={{ fontSize: '12px', fontWeight: 700, color: '#3A342D' }}>{allVisualizations[0].strategyName}</span>
                   </div>
                   
-                  <div className="pdf-visual-single-image" style={{ position: 'relative', width: '100%', height: '450px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD' }}>
+                  <div className="pdf-visual-single-image" style={{ position: 'relative', width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD', background: '#fff' }}>
                     <img 
                       src={allVisualizations[0].visual.afterImage} 
                       alt="AI visualization"
-                      className="pdf-visual-image-large"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      style={{ width: '100%', height: 'auto', display: 'block' }}
                     />
-                    <span className="pdf-visual-label pdf-visual-label-after" style={{ position: 'absolute', bottom: '10px', left: '10px', padding: '5px 12px', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '4px', background: '#C9A961', color: '#fff' }}>AI Concept</span>
+                    <span style={{ position: 'absolute', bottom: '10px', left: '10px', padding: '5px 12px', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '4px', background: '#C9A961', color: '#fff' }}>AI Concept</span>
                   </div>
                   
                   <p className="pdf-visual-disclaimer">
@@ -745,14 +744,13 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                               <span className="pdf-visual-strategy-name" style={{ fontSize: '12px', fontWeight: 700, color: '#3A342D' }}>{item.strategyName}</span>
                             </div>
                             
-                            <div className="pdf-visual-image-container" style={{ position: 'relative', width: '100%', height: '260px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD' }}>
+                            <div style={{ position: 'relative', width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD', background: '#fff' }}>
                               <img 
                                 src={item.visual.afterImage} 
                                 alt="AI visualization"
-                                className="pdf-visual-image-medium"
-                                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                style={{ width: '100%', height: 'auto', display: 'block' }}
                               />
-                              <span className="pdf-visual-label pdf-visual-label-after" style={{ position: 'absolute', bottom: '10px', left: '10px', padding: '5px 12px', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '4px', background: '#C9A961', color: '#fff' }}>AI Concept</span>
+                              <span style={{ position: 'absolute', bottom: '10px', left: '10px', padding: '5px 12px', fontSize: '9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '4px', background: '#C9A961', color: '#fff' }}>AI Concept</span>
                             </div>
                           </div>
                         ))}
