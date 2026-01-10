@@ -93,7 +93,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   }, []);
 
   return (
-    <div className="space-y-0">
+    <div className="space-y-0" style={{ backgroundColor: 'var(--bg-primary)' }}>
       {/* ============================================
           HERO SECTION - Search First
           ============================================ */}
@@ -482,7 +482,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
       {/* ============================================
           FINAL CTA + FOOTER
           ============================================ */}
-      <footer className="mt-20" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+      <footer className="mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
         {/* CTA Section */}
         <div className="py-16 px-6 text-center">
           <div className="max-w-2xl mx-auto space-y-6">
