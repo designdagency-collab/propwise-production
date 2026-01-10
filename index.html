@@ -296,8 +296,10 @@
     </script>
 </head>
 <body>
+    <!-- Hide SEO content immediately for JS-enabled browsers (real users), crawlers don't execute this -->
+    <script>document.write('<style>#seo-fallback{display:none!important}</style>')</script>
     <div id="root">
-        <!-- SEO Fallback Content - Visible to crawlers before React hydrates. React will replace this. -->
+        <!-- SEO Fallback Content - Visible to crawlers (no JS), hidden from users (JS hides it) -->
         <div id="seo-fallback" style="max-width: 1200px; margin: 0 auto; padding: 100px 24px 60px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #3A342D;">
             <header style="text-align: center; margin-bottom: 64px;">
                 <img src="/upblock.ai-logo.png" alt="upblock.ai logo" style="height: 48px; margin-bottom: 32px;">
