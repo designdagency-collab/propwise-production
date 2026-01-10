@@ -16,6 +16,41 @@ import { billingService, calculateCreditState, getRemainingCredits, canAudit } f
 import { fingerprintService, checkDeviceSearchLimit, recordDeviceSearch } from './services/fingerprintService';
 import { AppState, PropertyData, PlanType, CreditState } from './types';
 
+// Helper functions for optimistic profile caching (instant header on refresh)
+const PROFILE_CACHE_KEY = 'upblock_user_cache';
+
+const getCachedProfile = (): { profile: any; isAdmin: boolean } | null => {
+  try {
+    const cached = sessionStorage.getItem(PROFILE_CACHE_KEY);
+    if (cached) {
+      const data = JSON.parse(cached);
+      // Validate cache has required fields
+      if (data.profile?.id && data.profile?.email) {
+        return data;
+      }
+    }
+  } catch (e) {
+    console.warn('[Cache] Failed to read profile cache:', e);
+  }
+  return null;
+};
+
+const setCachedProfile = (profile: any, isAdmin: boolean) => {
+  try {
+    sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify({ profile, isAdmin }));
+  } catch (e) {
+    console.warn('[Cache] Failed to cache profile:', e);
+  }
+};
+
+const clearCachedProfile = () => {
+  try {
+    sessionStorage.removeItem(PROFILE_CACHE_KEY);
+  } catch (e) {
+    console.warn('[Cache] Failed to clear profile cache:', e);
+  }
+};
+
 const App: React.FC = () => {
   const [address, setAddress] = useState('');
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
@@ -37,12 +72,29 @@ const App: React.FC = () => {
   const autocompleteRef = useRef<HTMLDivElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Plan and credits - loaded from Supabase profile (no localStorage)
-  const [plan, setPlan] = useState<PlanType>('FREE_TRIAL');
+  // Plan and credits - initialized from cache for instant display
+  const [plan, setPlan] = useState<PlanType>(() => {
+    const cached = getCachedProfile();
+    if (cached?.profile) {
+      const state = calculateCreditState(cached.profile);
+      return state.plan;
+    }
+    return 'FREE_TRIAL';
+  });
   
-  // Credit state - calculated from Supabase profile
-  const [creditState, setCreditState] = useState<CreditState>(() => calculateCreditState(null));
-  const [remainingCredits, setRemainingCredits] = useState(0);
+  // Credit state - calculated from Supabase profile, initialized from cache
+  const [creditState, setCreditState] = useState<CreditState>(() => {
+    const cached = getCachedProfile();
+    return calculateCreditState(cached?.profile || null);
+  });
+  const [remainingCredits, setRemainingCredits] = useState(() => {
+    const cached = getCachedProfile();
+    if (cached?.profile) {
+      const state = calculateCreditState(cached.profile);
+      return getRemainingCredits(state);
+    }
+    return 0;
+  });
   
   // Device fingerprint state (for anonymous users)
   // Initialize from localStorage cache for instant display, then verify with Supabase
@@ -66,7 +118,8 @@ const App: React.FC = () => {
   const [showTerms, setShowTerms] = useState(false);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const [showPhoneRecovery, setShowPhoneRecovery] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  // Initialize from cache for instant header display
+  const [userProfile, setUserProfile] = useState<any>(() => getCachedProfile()?.profile || null);
   const [searchHistory, setSearchHistory] = useState<{ address: string; created_at: string }[]>([]);
   
   // Referral system state
@@ -82,10 +135,13 @@ const App: React.FC = () => {
   
   // Admin dashboard state
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   
-  // Auth state - derived from Supabase session (no localStorage)
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // Initialize from cache for instant header display (optimistic UX)
+  const cachedData = getCachedProfile();
+  const [isAdmin, setIsAdmin] = useState(() => cachedData?.isAdmin || false);
+  
+  // Auth state - initialized from cache for instant display, verified by Supabase
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!cachedData?.profile);
   const [isLoginMode, setIsLoginMode] = useState(false); // true = login, false = signup
   
   // Flag to prevent LIMIT_REACHED immediately after signup (race condition fix)
@@ -460,10 +516,23 @@ const App: React.FC = () => {
               setTimeout(() => retryGetSession(attempt + 1, maxAttempts), 500 * attempt);
             } else {
               console.log('[Auth] OAuth flow completed but no session established after retries');
+              // Clear stale cache if session couldn't be established
+              clearCachedProfile();
+              setIsLoggedIn(false);
+              setUserProfile(null);
             }
           };
           
           setTimeout(() => retryGetSession(1, 5), 300);
+        } else {
+          // No session and no OAuth - clear any stale cached data
+          if (getCachedProfile()) {
+            console.log('[Auth] No session but cache exists - clearing stale cache');
+            clearCachedProfile();
+            setIsLoggedIn(false);
+            setUserProfile(null);
+            setIsAdmin(false);
+          }
         }
       } catch (err: any) {
         console.error('[Auth] getSession error:', err?.message);
@@ -514,6 +583,7 @@ const App: React.FC = () => {
           }
         } else if (event === 'SIGNED_OUT') {
           console.log('[Auth] Sign out event received');
+          clearCachedProfile(); // Clear cache for instant UI update
           setIsLoggedIn(false);
           setUserProfile(null);
           setShowAdminDashboard(false);
@@ -640,7 +710,11 @@ const App: React.FC = () => {
         setUserProfile(profile);
         
         // Check admin status
-        setIsAdmin(profile.is_admin === true);
+        const adminStatus = profile.is_admin === true;
+        setIsAdmin(adminStatus);
+        
+        // Cache profile for instant header display on refresh
+        setCachedProfile(profile, adminStatus);
         
         // Use billingService for consistent credit calculation (single source of truth)
         const state = calculateCreditState(profile);
@@ -939,6 +1013,9 @@ const App: React.FC = () => {
 
   const handleLogout = async () => {
     console.log('Logout clicked');
+    
+    // Clear cached profile first (for instant UI update on next refresh)
+    clearCachedProfile();
     
     // Clear React state
     setIsLoggedIn(false);
