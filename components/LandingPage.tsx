@@ -44,7 +44,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
     const x = clientX - rect.left;
     const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
     setSliderPos(percentage);
-  };
+  }, []);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging.current) return;
