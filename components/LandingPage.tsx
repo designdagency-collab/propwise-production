@@ -483,6 +483,11 @@ const LandingPage: React.FC<LandingPageProps> = ({
           FINAL CTA + FOOTER
           ============================================ */}
       <footer className="mt-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        {/* Divider line above CTA */}
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="border-t" style={{ borderColor: 'var(--border-color)' }}></div>
+        </div>
+        
         {/* CTA Section */}
         <div className="py-16 px-6 text-center">
           <div className="max-w-2xl mx-auto space-y-6">
@@ -497,6 +502,11 @@ const LandingPage: React.FC<LandingPageProps> = ({
               <i className="fa-solid fa-arrow-up group-hover:-translate-y-1 transition-transform"></i>
             </button>
           </div>
+        </div>
+        
+        {/* Divider line below CTA */}
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="border-t" style={{ borderColor: 'var(--border-color)' }}></div>
         </div>
         
         {/* Footer Links */}
