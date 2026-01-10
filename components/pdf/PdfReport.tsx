@@ -1169,8 +1169,8 @@ export const getPdfDocumentStyles = () => `
     color: #276749;
   }
   .pdf-cash-position {
-    background: #3A342D;
-    border-color: #3A342D;
+    background: #1B365D;
+    border-color: #1B365D;
   }
   .pdf-cash-position .pdf-rental-label {
     color: #A8A8A8;
