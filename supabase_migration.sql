@@ -373,3 +373,49 @@ ALTER TABLE billing_calibration ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Service role full access billing_calibration" ON billing_calibration;
 CREATE POLICY "Service role full access billing_calibration" ON billing_calibration FOR ALL USING (true);
 
+-- ============================================
+-- VISUALIZATION CACHE TABLE
+-- Stores AI-generated visualizations per user per property
+-- Prevents abuse by caching generated images
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS visualization_cache (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  address_key TEXT NOT NULL,           -- normalized lowercase address
+  strategy_key TEXT NOT NULL,          -- e.g., "strategy_0" or "development_1"
+  strategy_name TEXT NOT NULL,         -- human readable name
+  strategy_type TEXT NOT NULL,         -- 'renovation' or 'development'
+  generated_image TEXT NOT NULL,       -- base64 or URL of AI-generated image
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  -- Unique constraint: one visualization per user per property per strategy
+  UNIQUE(user_id, address_key, strategy_key)
+);
+
+-- Indexes for fast lookups
+CREATE INDEX IF NOT EXISTS idx_visualization_cache_user ON visualization_cache(user_id);
+CREATE INDEX IF NOT EXISTS idx_visualization_cache_address ON visualization_cache(address_key);
+CREATE INDEX IF NOT EXISTS idx_visualization_cache_user_address ON visualization_cache(user_id, address_key);
+CREATE INDEX IF NOT EXISTS idx_visualization_cache_created ON visualization_cache(created_at);
+
+-- RLS policies
+ALTER TABLE visualization_cache ENABLE ROW LEVEL SECURITY;
+
+-- Users can only see their own visualizations
+DROP POLICY IF EXISTS "Users can view own visualizations" ON visualization_cache;
+CREATE POLICY "Users can view own visualizations" ON visualization_cache
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- Users can insert their own visualizations
+DROP POLICY IF EXISTS "Users can insert own visualizations" ON visualization_cache;
+CREATE POLICY "Users can insert own visualizations" ON visualization_cache
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Service role full access (for API)
+DROP POLICY IF EXISTS "Service role full access visualization_cache" ON visualization_cache;
+CREATE POLICY "Service role full access visualization_cache" ON visualization_cache FOR ALL USING (true);
+
+-- Auto-cleanup old visualizations (optional, run via cron)
+-- DELETE FROM visualization_cache WHERE created_at < NOW() - INTERVAL '30 days';
+

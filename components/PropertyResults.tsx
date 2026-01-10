@@ -17,6 +17,7 @@ import {
 import { computeUpblockScore, mapPropertyDataToScoreInputs, ScoreResult } from '../src/utils/upblockScore';
 import { UpblockScoreCard } from '../src/components/UpblockScoreCard';
 import RenovationModal from './RenovationModal';
+import { supabaseService } from '../services/supabaseService';
 
 interface PropertyResultsProps {
   data: PropertyData;
@@ -94,6 +95,43 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   // Track which visualization is being viewed in the gallery (for cards with multiple images)
   const [activeVisualIndex, setActiveVisualIndex] = useState<{ [key: string]: number }>({});
   
+  // Load cached visualizations from Supabase on mount (per user per property)
+  useEffect(() => {
+    const loadCachedVisualizations = async () => {
+      try {
+        const token = await supabaseService.getAccessToken();
+        if (!token) {
+          console.log('[Visuals] No auth token, skipping cache load');
+          return;
+        }
+
+        console.log('[Visuals] Loading cached visualizations for:', address.substring(0, 30));
+        const response = await fetch(`/api/visualization-cache?address=${encodeURIComponent(address)}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const { visualizations, count } = await response.json();
+          if (count > 0 && visualizations) {
+            console.log(`[Visuals] Loaded ${count} cached visualizations from database`);
+            setGeneratedVisuals(prev => {
+              // Merge with any sessionStorage visuals, preferring database
+              return { ...prev, ...visualizations };
+            });
+          }
+        }
+      } catch (err) {
+        console.warn('[Visuals] Could not load cached visualizations:', err);
+      }
+    };
+
+    loadCachedVisualizations();
+  }, [address]);
+
   // Save visuals to sessionStorage when they change
   useEffect(() => {
     if (Object.keys(generatedVisuals).length > 0) {
@@ -787,6 +825,35 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
             [visualKey]: [...existing, newVisual]
           };
         });
+
+        // Save to Supabase (per user per property) to prevent abuse
+        try {
+          const token = await supabaseService.getAccessToken();
+          if (token) {
+            fetch('/api/visualization-cache', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                address: address,
+                strategyKey: visualKey,
+                strategyName: title,
+                strategyType: type === 'development' ? 'development' : 'renovation',
+                generatedImage: result.generatedImage
+              })
+            }).then(res => {
+              if (res.ok) {
+                console.log('[Visuals] Saved visualization to database');
+              }
+            }).catch(err => {
+              console.warn('[Visuals] Could not save to database:', err);
+            });
+          }
+        } catch (cacheErr) {
+          console.warn('[Visuals] Cache save error:', cacheErr);
+        }
         
         // Update active index to show the new image
         setActiveVisualIndex(prev => {
