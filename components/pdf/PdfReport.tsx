@@ -265,8 +265,10 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
   const hasVisualizations = allVisualizations.length > 0;
   
   // Calculate pages needed for visualizations
-  // Each visualization gets its own page for maximum impact (500px height)
-  const visualizationPages = hasVisualizations ? allVisualizations.length : 0;
+  // 2 visualizations per page (280px height each)
+  const visualizationPages = hasVisualizations 
+    ? Math.ceil(allVisualizations.length / 2)
+    : 0;
   
   const totalPages = 4 + visualizationPages; // Base 4 pages + visualization pages
 
@@ -713,45 +715,56 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
               </div>
             </PdfPage>
           ) : (
-            // MULTIPLE IMAGES: One per page for maximum impact (500px height each)
+            // MULTIPLE IMAGES: 2 per page with 280px height each
             <>
-              {allVisualizations.map((item, visualIndex) => (
-                <PdfPage key={`visual-page-${visualIndex}`} pageNum={5 + visualIndex} totalPages={totalPages}>
-                  <div className="pdf-section">
-                    {visualIndex === 0 && (
-                      <>
-                        <h2 className="pdf-section-title">
-                          <span className="pdf-icon">{Icons.home}</span>
-                          AI Visualizations
-                        </h2>
-                        <p className="pdf-section-subtitle">AI-generated concept imagery for property potential</p>
-                      </>
-                    )}
-                    
-                    <div className="pdf-visual-single">
-                      <div className="pdf-visual-strategy-ref">
-                        <span className="pdf-visual-strategy-badge">
-                          {item.strategyType === 'development' ? '🏗️' : '🔨'}
-                        </span>
-                        <span className="pdf-visual-strategy-name">{item.strategyName}</span>
+              {Array.from({ length: visualizationPages }).map((_, pageIndex) => {
+                const startIdx = pageIndex * 2;
+                const pageVisuals = allVisualizations.slice(startIdx, startIdx + 2);
+                
+                return (
+                  <PdfPage key={`visual-page-${pageIndex}`} pageNum={5 + pageIndex} totalPages={totalPages}>
+                    <div className="pdf-section">
+                      {pageIndex === 0 && (
+                        <>
+                          <h2 className="pdf-section-title">
+                            <span className="pdf-icon">{Icons.home}</span>
+                            AI Visualizations
+                          </h2>
+                          <p className="pdf-section-subtitle">AI-generated concept imagery for property potential</p>
+                        </>
+                      )}
+                      
+                      <div className="pdf-visuals-stack">
+                        {pageVisuals.map((item, idx) => (
+                          <div key={idx} className="pdf-visual-item">
+                            <div className="pdf-visual-strategy-ref">
+                              <span className="pdf-visual-strategy-badge">
+                                {item.strategyType === 'development' ? '🏗️' : '🔨'}
+                              </span>
+                              <span className="pdf-visual-strategy-name">{item.strategyName}</span>
+                            </div>
+                            
+                            <div className="pdf-visual-image-container">
+                              <img 
+                                src={item.visual.afterImage} 
+                                alt="AI visualization"
+                                className="pdf-visual-image-medium"
+                              />
+                              <span className="pdf-visual-label pdf-visual-label-after">AI Concept</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                       
-                      <div className="pdf-visual-single-image">
-                        <img 
-                          src={item.visual.afterImage} 
-                          alt="AI visualization"
-                          className="pdf-visual-image-large"
-                        />
-                        <span className="pdf-visual-label pdf-visual-label-after">AI Concept</span>
-                      </div>
-                      
-                      <p className="pdf-visual-disclaimer">
-                        AI-generated concept only. Actual results may vary. Consult qualified professionals for accurate designs and costings.
-                      </p>
+                      {pageIndex === visualizationPages - 1 && (
+                        <p className="pdf-visual-disclaimer">
+                          AI-generated concepts only. Actual results may vary. Consult qualified professionals for accurate designs and costings.
+                        </p>
+                      )}
                     </div>
-                  </div>
-                </PdfPage>
-              ))}
+                  </PdfPage>
+                );
+              })}
             </>
           )}
         </>
@@ -1482,6 +1495,35 @@ export const getPdfDocumentStyles = () => `
     height: 180px;
     object-fit: cover;
     display: block;
+  }
+  
+  .pdf-visual-image-medium {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    display: block;
+    border-radius: 10px;
+  }
+  
+  /* Stack layout for 2 per page */
+  .pdf-visuals-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 12px;
+  }
+  
+  .pdf-visual-item {
+    background: #FAFAF8;
+    border: 1px solid #E5E2DD;
+    border-radius: 12px;
+    padding: 12px;
+  }
+  
+  .pdf-visual-image-container {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
   }
   
   .pdf-visual-label {
