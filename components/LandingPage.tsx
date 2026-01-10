@@ -468,7 +468,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
         </div>
         
         {/* Footer Links */}
-        <div className="py-10 px-6 border-t border-[#E8E6E3]">
+        <div className="pt-10 px-6 border-t border-[#E8E6E3]">
           <div className="max-w-6xl mx-auto flex flex-col items-center gap-6">
             <img src="/upblock.ai-logo.png" alt="upblock.ai" className="h-16 sm:h-20" />
             <div className="flex items-center gap-6 text-sm text-[#6B6560]">
@@ -476,10 +476,13 @@ const LandingPage: React.FC<LandingPageProps> = ({
               <a href="#" className="hover:text-[#3A342D] transition-colors">Terms</a>
               <span>© {new Date().getFullYear()} upblock.ai</span>
             </div>
-            <p className="text-[10px] text-[#9B9590] text-center max-w-2xl">
-              For research purposes only. Not financial, legal, or professional advice. All estimates are AI-generated and should be verified independently.
-            </p>
           </div>
+        </div>
+        {/* Disclaimer at absolute bottom */}
+        <div className="pb-4 pt-8 px-6">
+          <p className="text-[10px] text-[#9B9590] text-center max-w-2xl mx-auto">
+            For research purposes only. Not financial, legal, or professional advice. All estimates are AI-generated and should be verified independently.
+          </p>
         </div>
       </footer>
     </div>
