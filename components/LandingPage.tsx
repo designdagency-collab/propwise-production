@@ -267,7 +267,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <span className="inline-block px-4 py-1 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
-              <i className="fa-solid fa-file-lines mr-2"></i>
+              <i className="fa-solid fa-file-pdf mr-2"></i>
               Sample Report
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold text-[#3A342D] tracking-tight mb-3">
@@ -278,90 +278,88 @@ const LandingPage: React.FC<LandingPageProps> = ({
             </p>
           </div>
           
-          {/* Mock Report Preview - Stacked/Layered Effect */}
+          {/* Mock Report Preview - Matching PDF Style */}
           <div className="relative max-w-4xl mx-auto">
             {/* Background cards for depth */}
             <div className="absolute top-6 left-4 right-4 h-full bg-[#E8E6E3] rounded-[2rem] opacity-40"></div>
             <div className="absolute top-3 left-2 right-2 h-full bg-[#E8E6E3] rounded-[2rem] opacity-60"></div>
             
             {/* Main Report Card */}
-            <div className="relative bg-white rounded-[2rem] shadow-2xl border border-[#E8E6E3] overflow-hidden">
+            <div className="relative bg-white rounded-[2rem] sm:rounded-[3rem] shadow-2xl border border-[#E8E6E3] overflow-hidden">
               {/* Report Header */}
-              <div className="bg-gradient-to-r from-[#3A342D] to-[#4A443D] p-6 sm:p-8">
-                <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="p-6 sm:p-10 border-b border-[#E8E6E3]">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest">
+                    Property Strategy Guide
+                  </div>
+                  <div className="flex gap-4 text-[#6B6560] text-sm font-bold">
+                    <span><i className="fa-solid fa-bed text-[#C9A961] mr-1.5"></i> 3</span>
+                    <span><i className="fa-solid fa-bath text-[#C9A961] mr-1.5"></i> 2</span>
+                    <span><i className="fa-solid fa-car text-[#C9A961] mr-1.5"></i> 2</span>
+                  </div>
+                </div>
+                
+                <h3 className="text-2xl sm:text-3xl font-bold text-[#3A342D] tracking-tight leading-tight mb-2">
+                  42 Example St, Sydney NSW 2000
+                </h3>
+                <p className="text-[#6B6560] text-sm font-medium">House • Land • 680 m²</p>
+              </div>
+              
+              {/* Uplift Strategies Preview */}
+              <div className="p-6 sm:p-10 space-y-4">
+                <h4 className="text-xs font-black uppercase tracking-widest text-[#9B9590] mb-4">
+                  <i className="fa-solid fa-hammer text-[#B8C5A0] mr-2"></i>
+                  Uplift & Value-Add Strategies
+                </h4>
+                
+                {/* Strategy Card 1 */}
+                <div className="p-5 rounded-2xl border border-[#E8E6E3] hover:border-[#C9A961]/30 transition-all">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h5 className="font-bold text-[#3A342D]">Cosmetic Renovation</h5>
+                        <span className="px-2 py-0.5 bg-[#B8C5A0]/10 text-[#B8C5A0] rounded text-[9px] font-bold uppercase">Low Effort</span>
+                      </div>
+                      <p className="text-[#6B6560] text-xs">Kitchen update, bathroom refresh, new flooring throughout</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-[9px] text-[#9B9590] uppercase tracking-wider">Potential Uplift</p>
+                      <p className="font-black text-[#B8C5A0]">$150K – $200K</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Strategy Card 2 */}
+                <div className="p-5 rounded-2xl border border-[#E8E6E3] hover:border-[#C9A961]/30 transition-all">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h5 className="font-bold text-[#3A342D]">Dual Occupancy</h5>
+                        <span className="px-2 py-0.5 bg-[#C9A961]/10 text-[#C9A961] rounded text-[9px] font-bold uppercase">High Effort</span>
+                      </div>
+                      <p className="text-[#6B6560] text-xs">Subdivide and construct second dwelling at rear</p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-[9px] text-[#9B9590] uppercase tracking-wider">Net Profit</p>
+                      <p className="font-black text-[#C9A961]">$400K – $600K</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Zoning Badge */}
+                <div className="flex items-center gap-4 p-4 bg-[#F5F5F5] rounded-xl mt-6">
+                  <div className="w-12 h-12 bg-[#3A342D] rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-black text-sm">R2</span>
+                  </div>
                   <div>
-                    <span className="inline-block px-3 py-1 bg-[#C9A961] text-[#3A342D] rounded-full text-[9px] font-bold uppercase tracking-widest mb-3">
-                      Property Strategy Guide
-                    </span>
-                    <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                      42 Example St, Sydney NSW 2000
-                    </h3>
-                    <p className="text-white/60 text-sm mt-1">House • Land • 680 m² • 3 bed • 1 bath • 1 car</p>
-                  </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 text-center">
-                    <p className="text-[9px] text-white/60 uppercase tracking-widest mb-1">Upblock Score</p>
-                    <p className="text-2xl font-black text-[#C9A961]">76<span className="text-sm text-white/40">/100</span></p>
+                    <p className="font-bold text-[#3A342D] text-sm">Low Density Residential</p>
+                    <p className="text-[#6B6560] text-xs">Dual occupancy permitted • 680m² exceeds minimum lot size</p>
                   </div>
                 </div>
               </div>
               
-              {/* Key Metrics */}
-              <div className="grid grid-cols-3 divide-x divide-[#E8E6E3] border-b border-[#E8E6E3]">
-                <div className="p-4 sm:p-6 text-center">
-                  <p className="text-[9px] font-bold text-[#9B9590] uppercase tracking-widest mb-1">Current Value</p>
-                  <p className="text-xl sm:text-2xl font-black text-[#3A342D]">$1.2M</p>
-                </div>
-                <div className="p-4 sm:p-6 text-center bg-[#C9A961]/5">
-                  <p className="text-[9px] font-bold text-[#9B9590] uppercase tracking-widest mb-1">Potential Value</p>
-                  <p className="text-xl sm:text-2xl font-black text-[#C9A961]">$1.5M</p>
-                </div>
-                <div className="p-4 sm:p-6 text-center">
-                  <p className="text-[9px] font-bold text-[#9B9590] uppercase tracking-widest mb-1">Equity Uplift</p>
-                  <p className="text-xl sm:text-2xl font-black text-[#B8C5A0]">+$300K</p>
-                </div>
-              </div>
-              
-              {/* Report Sections Preview */}
-              <div className="p-6 sm:p-8 space-y-4">
-                {/* Strategy Preview */}
-                <div className="flex items-center gap-4 p-4 bg-[#F5F5F5] rounded-xl">
-                  <div className="w-10 h-10 bg-[#B8C5A0] rounded-lg flex items-center justify-center flex-shrink-0">
-                    <i className="fa-solid fa-lightbulb text-white"></i>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-[#3A342D] text-sm">Best Strategy: Cosmetic Renovation</p>
-                    <p className="text-[#6B6560] text-xs truncate">Kitchen update, bathroom refresh, new flooring...</p>
-                  </div>
-                  <span className="px-3 py-1 bg-[#B8C5A0]/10 text-[#B8C5A0] rounded-full text-[10px] font-bold">+$180K</span>
-                </div>
-                
-                {/* Zoning Preview */}
-                <div className="flex items-center gap-4 p-4 bg-[#F5F5F5] rounded-xl">
-                  <div className="w-10 h-10 bg-[#C9A961] rounded-lg flex items-center justify-center flex-shrink-0">
-                    <i className="fa-solid fa-city text-white"></i>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-[#3A342D] text-sm">Development Potential: Dual Occupancy</p>
-                    <p className="text-[#6B6560] text-xs truncate">R2 Low Density zoning allows subdivision...</p>
-                  </div>
-                  <span className="px-3 py-1 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold">Eligible</span>
-                </div>
-                
-                {/* Risk Preview */}
-                <div className="flex items-center gap-4 p-4 bg-[#F5F5F5] rounded-xl">
-                  <div className="w-10 h-10 bg-[#E8846B] rounded-lg flex items-center justify-center flex-shrink-0">
-                    <i className="fa-solid fa-triangle-exclamation text-white"></i>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-[#3A342D] text-sm">Risk Alert: Heritage Overlay</p>
-                    <p className="text-[#6B6560] text-xs truncate">Property is within heritage conservation area...</p>
-                  </div>
-                  <span className="px-3 py-1 bg-[#E8846B]/10 text-[#E8846B] rounded-full text-[10px] font-bold">Check</span>
-                </div>
-              </div>
-              
-              {/* Fade overlay suggesting more content */}
-              <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none"></div>
+              {/* Fade overlay */}
+              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
             </div>
           </div>
           
