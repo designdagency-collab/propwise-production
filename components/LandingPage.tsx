@@ -368,10 +368,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
           {/* CTA */}
           <div className="text-center mt-10">
             <button
-              onClick={onShowPricing}
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className="group bg-[#3A342D] text-white px-8 py-4 rounded-xl font-bold hover:bg-[#C9A961] transition-all inline-flex items-center gap-3 shadow-lg text-sm uppercase tracking-wider"
             >
-              <span>View Pricing</span>
+              <span>Generate Your Report</span>
               <i className="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
             </button>
             <p className="text-xs text-[#9B9590] mt-3">30 second analysis • No credit card required</p>
