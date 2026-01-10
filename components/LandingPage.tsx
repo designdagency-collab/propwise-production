@@ -220,38 +220,23 @@ const LandingPage: React.FC<LandingPageProps> = ({
                   onTouchEnd={handleMouseUp}
                   onTouchMove={handleTouchMove}
                 >
-                  {/* After Image (Background) */}
+                  {/* After Image (Background) - AI Renovation */}
                   <img 
-                    src="/demo-after.jpg" 
+                    src="/Image-2.png" 
                     alt="After renovation"
                     className="absolute inset-0 w-full h-full object-cover"
-                    onError={(e) => {
-                      // Fallback gradient if image not found
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
                   />
-                  {/* Fallback gradient for after */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#B8C5A0]/30 to-[#C9A961]/30 flex items-center justify-center">
-                    <span className="text-white/60 text-sm font-medium bg-black/20 px-4 py-2 rounded-full">After</span>
-                  </div>
                   
-                  {/* Before Image (Clipped) */}
+                  {/* Before Image (Clipped) - Original */}
                   <div 
                     className="absolute inset-0 overflow-hidden"
                     style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
                   >
                     <img 
-                      src="/demo-before.jpg" 
+                      src="/Image-1.png" 
                       alt="Before renovation"
                       className="absolute inset-0 w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
                     />
-                    {/* Fallback gradient for before */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#6B6560]/50 to-[#3A342D]/50 flex items-center justify-center">
-                      <span className="text-white/60 text-sm font-medium bg-black/20 px-4 py-2 rounded-full">Before</span>
-                    </div>
                   </div>
                   
                   {/* Slider Line */}
