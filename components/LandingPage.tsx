@@ -340,7 +340,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                       <p className="text-[#6B6560] text-xs">Subdivide and construct second dwelling at rear</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <p className="text-[9px] text-[#9B9590] uppercase tracking-wider">Net Profit</p>
+                      <p className="text-[9px] text-[#9B9590] uppercase tracking-wider">Indicative Net Profit</p>
                       <p className="font-black text-[#C9A961]">$400K – $600K</p>
                     </div>
                   </div>
