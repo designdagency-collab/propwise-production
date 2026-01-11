@@ -1518,11 +1518,11 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
               {data.rentalPosition?.estimatedWeeklyRent ? formatValue(data.rentalPosition.estimatedWeeklyRent * 52) : 'Indicative only'}
             </p>
           </div>
-          <div className="p-10 rounded-[3rem] border shadow-sm relative group" style={{ backgroundColor: '#1B365D', borderColor: '#1B365D' }}>
+          <div className="p-10 rounded-[3rem] border shadow-sm relative group" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-color)' }}>
             <div className="flex items-center justify-between mb-4">
-              <p className="text-[9px] font-black text-white/80 uppercase tracking-[0.1em] max-w-[180px]">INDICATIVE WEEKLY CASH POSITION</p>
-              <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center cursor-help">
-                <i className="fa-solid fa-info text-[9px] text-white/60"></i>
+              <p className="text-[9px] font-black text-[#3A342D] uppercase tracking-[0.1em] max-w-[180px]">INDICATIVE WEEKLY CASH POSITION</p>
+              <div className="w-6 h-6 rounded-full bg-slate-200/50 flex items-center justify-center cursor-help">
+                <i className="fa-solid fa-info text-[9px] text-[#3A342D]"></i>
               </div>
             </div>
             <div className="space-y-1">
