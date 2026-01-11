@@ -453,6 +453,23 @@ MANDATORY MODULES:
 
 1. VALUE-ADD STRATEGIES
 - Return 5–8 strategies (internal/renovation focused).
+- ⚠️ CRITICAL: Use REALISTIC Australian renovation costs. DO NOT inflate costs.
+
+AUSTRALIAN RENOVATION COST BENCHMARKS (use these ranges):
+- Kitchen renovation: $15,000 - $60,000 (NOT $200k+)
+- Bathroom renovation: $15,000 - $40,000
+- Kitchen + Bathroom combo: $30,000 - $80,000
+- Paint refresh (interior): $3,000 - $15,000
+- Flooring replacement: $5,000 - $25,000
+- Landscaping/garden: $5,000 - $30,000
+- Minor cosmetic refresh: $5,000 - $20,000
+- Outdoor deck/entertaining: $15,000 - $50,000
+- Facade/exterior refresh: $10,000 - $40,000
+- Full interior renovation (whole house): $80,000 - $200,000
+- Granny flat/secondary dwelling: $100,000 - $200,000
+
+⛔ DO NOT use development-level costs ($300k+) for simple renovations.
+Only knockdown rebuilds, extensions, or multi-dwelling projects should exceed $200k.
 
 2. DEVELOPMENT SCENARIOS (CRITICAL FOR COMBINED LOTS & LARGE SITES)
 - Analyze up to 3 scenarios: Knockdown Rebuild, Duplex, and Townhouse/Multi-dwelling.
