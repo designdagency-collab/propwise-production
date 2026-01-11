@@ -95,6 +95,44 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   // Track which visualization is being viewed in the gallery (for cards with multiple images)
   const [activeVisualIndex, setActiveVisualIndex] = useState<{ [key: string]: number }>({});
   
+  // Track which visualizations are selected for PDF export (default: all selected)
+  // Key format: "strategy-0-0" or "development-1-0" (type-cardIndex-visualIndex)
+  const [pdfSelectedVisuals, setPdfSelectedVisuals] = useState<Set<string>>(new Set());
+  
+  // Toggle a visualization's PDF selection
+  const togglePdfSelection = (key: string) => {
+    setPdfSelectedVisuals(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
+  
+  // Auto-select new visualizations for PDF when they're generated
+  useEffect(() => {
+    const allVisualKeys: string[] = [];
+    Object.entries(generatedVisuals).forEach(([cardKey, visuals]) => {
+      visuals.forEach((_, vIdx) => {
+        allVisualKeys.push(`${cardKey}-${vIdx}`);
+      });
+    });
+    
+    // Add any new visualizations to the selection
+    setPdfSelectedVisuals(prev => {
+      const next = new Set(prev);
+      allVisualKeys.forEach(key => {
+        if (!prev.has(key)) {
+          next.add(key);
+        }
+      });
+      return next;
+    });
+  }, [generatedVisuals]);
+  
   // Load cached visualizations from Supabase on mount (per user per property)
   useEffect(() => {
     const loadCachedVisualizations = async () => {
@@ -431,6 +469,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
       };
       
       // Compress only the AI-generated afterImage (beforeImage is discarded in PDF)
+      // Filter by PDF selection (pdfSelectedVisuals)
       for (const [key, visuals] of Object.entries(generatedVisuals)) {
         if (!visuals || !Array.isArray(visuals)) {
           console.log('[PDF] Skipping invalid key:', key);
@@ -442,6 +481,14 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         
         for (let i = 0; i < visuals.length; i++) {
           const visual = visuals[i];
+          const pdfKey = `${key}-${i}`;
+          
+          // Check if this visual is selected for PDF
+          if (!pdfSelectedVisuals.has(pdfKey)) {
+            console.log('[PDF] Skipping visual', pdfKey, '- not selected for PDF');
+            continue;
+          }
+          
           if (!visual.afterImage) {
             console.warn('[PDF] Visual', i, 'has no afterImage, skipping');
             continue;
@@ -1401,31 +1448,49 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                      {/* AI Visualization Thumbnails (supports multiple) */}
                      {generatedVisuals[`strategy-${i}`]?.length > 0 && (
                        <div className="flex gap-1.5 flex-shrink-0">
-                         {generatedVisuals[`strategy-${i}`].map((visual, vIdx) => (
-                           <button
-                             key={vIdx}
-                             data-no-pdf="true"
-                             onClick={() => handleThumbnailClick('strategy', i, vIdx)}
-                             className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 shadow-md hover:shadow-lg hover:scale-105 transition-all group ${
-                               activeVisualIndex[`strategy-${i}`] === vIdx ? 'border-[#C9A961]' : 'border-slate-300'
-                             }`}
-                             title={`View AI Visualisation ${vIdx + 1}`}
-                           >
-                             <img 
-                               src={visual.afterImage} 
-                               alt={`AI Visualisation ${vIdx + 1}`} 
-                               className="w-full h-full object-cover"
-                             />
-                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                               <i className="fa-solid fa-expand text-white opacity-0 group-hover:opacity-100 transition-opacity text-xs"></i>
+                         {generatedVisuals[`strategy-${i}`].map((visual, vIdx) => {
+                           const pdfKey = `strategy-${i}-${vIdx}`;
+                           const isSelectedForPdf = pdfSelectedVisuals.has(pdfKey);
+                           return (
+                             <div key={vIdx} className="relative">
+                               <button
+                                 data-no-pdf="true"
+                                 onClick={() => handleThumbnailClick('strategy', i, vIdx)}
+                                 className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 shadow-md hover:shadow-lg hover:scale-105 transition-all group ${
+                                   activeVisualIndex[`strategy-${i}`] === vIdx ? 'border-[#C9A961]' : 'border-slate-300'
+                                 }`}
+                                 title={`View AI Visualisation ${vIdx + 1}`}
+                               >
+                                 <img 
+                                   src={visual.afterImage} 
+                                   alt={`AI Visualisation ${vIdx + 1}`} 
+                                   className="w-full h-full object-cover"
+                                 />
+                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                   <i className="fa-solid fa-expand text-white opacity-0 group-hover:opacity-100 transition-opacity text-xs"></i>
+                                 </div>
+                                 {generatedVisuals[`strategy-${i}`].length > 1 && (
+                                   <div className="absolute top-0.5 right-0.5 bg-black/60 rounded-full w-4 h-4 flex items-center justify-center">
+                                     <span className="text-[8px] font-bold text-white">{vIdx + 1}</span>
+                                   </div>
+                                 )}
+                               </button>
+                               {/* PDF Selection Checkbox */}
+                               <button
+                                 data-no-pdf="true"
+                                 onClick={(e) => { e.stopPropagation(); togglePdfSelection(pdfKey); }}
+                                 className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all z-10 ${
+                                   isSelectedForPdf 
+                                     ? 'bg-[#C9A961] border-[#C9A961] text-white' 
+                                     : 'bg-white border-slate-300 text-transparent hover:border-[#C9A961]'
+                                 }`}
+                                 title={isSelectedForPdf ? 'Included in PDF (click to exclude)' : 'Excluded from PDF (click to include)'}
+                               >
+                                 <i className="fa-solid fa-check text-[8px]"></i>
+                               </button>
                              </div>
-                             {generatedVisuals[`strategy-${i}`].length > 1 && (
-                               <div className="absolute top-0.5 right-0.5 bg-black/60 rounded-full w-4 h-4 flex items-center justify-center">
-                                 <span className="text-[8px] font-bold text-white">{vIdx + 1}</span>
-                               </div>
-                             )}
-                           </button>
-                         ))}
+                           );
+                         })}
                        </div>
                      )}
                   </div>
@@ -1582,31 +1647,49 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                       {/* AI Visualization Thumbnails (supports multiple) */}
                       {generatedVisuals[`development-${i}`]?.length > 0 && (
                         <div className="flex gap-1.5 flex-shrink-0">
-                          {generatedVisuals[`development-${i}`].map((visual, vIdx) => (
-                            <button
-                              key={vIdx}
-                              data-no-pdf="true"
-                              onClick={() => handleThumbnailClick('development', i, vIdx)}
-                              className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 shadow-md hover:shadow-lg hover:scale-105 transition-all group ${
-                                activeVisualIndex[`development-${i}`] === vIdx ? 'border-[#4A4137]' : 'border-slate-300'
-                              }`}
-                              title={`View AI Development Render ${vIdx + 1}`}
-                            >
-                              <img 
-                                src={visual.afterImage} 
-                                alt={`AI Development Render ${vIdx + 1}`} 
-                                className="w-full h-full object-cover"
-                              />
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                <i className="fa-solid fa-expand text-white opacity-0 group-hover:opacity-100 transition-opacity text-xs"></i>
+                          {generatedVisuals[`development-${i}`].map((visual, vIdx) => {
+                            const pdfKey = `development-${i}-${vIdx}`;
+                            const isSelectedForPdf = pdfSelectedVisuals.has(pdfKey);
+                            return (
+                              <div key={vIdx} className="relative">
+                                <button
+                                  data-no-pdf="true"
+                                  onClick={() => handleThumbnailClick('development', i, vIdx)}
+                                  className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 shadow-md hover:shadow-lg hover:scale-105 transition-all group ${
+                                    activeVisualIndex[`development-${i}`] === vIdx ? 'border-[#4A4137]' : 'border-slate-300'
+                                  }`}
+                                  title={`View AI Development Render ${vIdx + 1}`}
+                                >
+                                  <img 
+                                    src={visual.afterImage} 
+                                    alt={`AI Development Render ${vIdx + 1}`} 
+                                    className="w-full h-full object-cover"
+                                  />
+                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                    <i className="fa-solid fa-expand text-white opacity-0 group-hover:opacity-100 transition-opacity text-xs"></i>
+                                  </div>
+                                  {generatedVisuals[`development-${i}`].length > 1 && (
+                                    <div className="absolute top-0.5 right-0.5 bg-black/60 rounded-full w-4 h-4 flex items-center justify-center">
+                                      <span className="text-[8px] font-bold text-white">{vIdx + 1}</span>
+                                    </div>
+                                  )}
+                                </button>
+                                {/* PDF Selection Checkbox */}
+                                <button
+                                  data-no-pdf="true"
+                                  onClick={(e) => { e.stopPropagation(); togglePdfSelection(pdfKey); }}
+                                  className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all z-10 ${
+                                    isSelectedForPdf 
+                                      ? 'bg-[#4A4137] border-[#4A4137] text-white' 
+                                      : 'bg-white border-slate-300 text-transparent hover:border-[#4A4137]'
+                                  }`}
+                                  title={isSelectedForPdf ? 'Included in PDF (click to exclude)' : 'Excluded from PDF (click to include)'}
+                                >
+                                  <i className="fa-solid fa-check text-[8px]"></i>
+                                </button>
                               </div>
-                              {generatedVisuals[`development-${i}`].length > 1 && (
-                                <div className="absolute top-0.5 right-0.5 bg-black/60 rounded-full w-4 h-4 flex items-center justify-center">
-                                  <span className="text-[8px] font-bold text-white">{vIdx + 1}</span>
-                                </div>
-                              )}
-                            </button>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                    </div>
