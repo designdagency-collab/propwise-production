@@ -1474,7 +1474,7 @@ export const getPdfDocumentStyles = () => `
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     margin-bottom: 16px;
     width: 100%;
-    height: 500px;
+    height: 485px;
   }
   
   .pdf-visual-single-image img {
@@ -1486,21 +1486,21 @@ export const getPdfDocumentStyles = () => `
   
   .pdf-visual-image-large {
     width: 100%;
-    height: 500px;
+    height: 485px;
     object-fit: cover;
     display: block;
   }
   
   .pdf-visual-image {
     width: 100%;
-    height: 180px;
+    height: 165px;
     object-fit: cover;
     display: block;
   }
   
   .pdf-visual-image-medium {
     width: 100%;
-    height: 280px;
+    height: 265px;
     object-fit: cover;
     display: block;
     border-radius: 10px;
@@ -1526,7 +1526,7 @@ export const getPdfDocumentStyles = () => `
     border-radius: 10px;
     overflow: hidden;
     width: 100%;
-    height: 280px;
+    height: 265px;
   }
   
   .pdf-visual-image-container img {
