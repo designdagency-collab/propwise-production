@@ -112,19 +112,32 @@ Generate a realistic, proportionally-sized ${contextTitle.toLowerCase()} that fi
       
       if (strategyLower.includes('kitchen')) {
         strategyInstructions = `FOCUS: Kitchen Modernisation
-This is an INTERIOR kitchen renovation. Transform the existing kitchen into a modern, high-end cooking space.`;
+This is an INTERIOR kitchen renovation. Transform the existing kitchen into a modern, high-end cooking space.
+
+⚠️ CRITICAL SPACE ANALYSIS - BEFORE ADDING ANYTHING:
+1. MEASURE the visible floor space in the photo
+2. Identify wall-to-wall distances and existing walkways
+3. Note where appliances, sinks, and cooktops currently are
+4. Check if there's ACTUALLY room for additional elements`;
         allowedChanges = `
 WHAT TO CHANGE (kitchen specific):
 - Cabinetry: Replace with handleless shaker or flat-panel in white, grey, or natural timber
 - Benchtops: Install Caesarstone, marble-look engineered stone, or timber
 - Splashback: Add subway tiles, herringbone pattern, or feature tiles
 - Appliances: Show modern stainless steel or integrated appliances
-- Lighting: Add pendant lights over island, LED strip under cabinets
+- Lighting: Add pendant lights (if island exists), LED strip under cabinets
 - Hardware: Modern matte black or brushed brass tapware and handles
-- Island bench: Add or upgrade with waterfall edge
 - Flooring: Timber-look tiles or engineered timber (if visible)
 
-DO NOT CHANGE: Wall positions, window locations, ceiling height, room shape`;
+🚫 ISLAND BENCH RULES (CRITICAL):
+- ONLY add an island if there is MINIMUM 1 metre clearance on ALL sides
+- If the kitchen is a GALLEY style (two parallel benches), DO NOT add an island
+- If wall-to-wall distance is less than 3 metres, DO NOT add an island
+- If there's already limited floor space visible, DO NOT add an island
+- If in doubt, upgrade EXISTING benchtops instead of adding new ones
+- A waterfall edge is ONLY appropriate on an EXISTING island, not a new one in a tight space
+
+DO NOT CHANGE: Wall positions, window locations, ceiling height, room shape, overall kitchen footprint`;
       } else if (strategyLower.includes('bathroom')) {
         strategyInstructions = `FOCUS: Bathroom Update
 This is an INTERIOR bathroom renovation. Transform into a spa-like retreat.`;
