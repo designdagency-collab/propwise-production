@@ -10,17 +10,20 @@ const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
 // Format: "123.45" (in AUD)
 const manualAccountBalance = process.env.GOOGLE_CLOUD_ACCOUNT_BALANCE;
 
-// Cost estimates based on actual Google AI pricing (Jan 2026)
-// Property insights uses gemini-3-flash-preview (text)
-// - Input: $0.075/1M tokens, Output: $0.30/1M tokens
-// - Average search: ~5000 input tokens, ~2000 output tokens
-// - Per search: (5000/1M * 0.075) + (2000/1M * 0.30) = $0.00097 ≈ $0.001
-const COST_PER_TEXT_SEARCH = 0.001;
+// Cost estimates calibrated against actual Google Cloud billing
+// These are ESTIMATES - set GOOGLE_CLOUD_ACCOUNT_BALANCE for exact amount
+//
+// Property insights uses gemini-3-flash-preview (text + structured output)
+// - Includes long prompts with property data, zoning rules, etc.
+// - Average: ~15K input tokens, ~5K output tokens
+// - Per search: ~$0.035 (calibrated from actual usage)
+const COST_PER_TEXT_SEARCH = 0.035;
 
 // Renovation visualizations use gemini-2.5-flash-image (image generation)
-// - Imagen 3 pricing: $0.03 per image (standard)
-// - Each visualization is one image generation
-const COST_PER_IMAGE_GENERATION = 0.03;
+// - Includes image input (before photo) + generation
+// - Image input costs + generation costs
+// - Per image: ~$0.50 (calibrated from actual usage)
+const COST_PER_IMAGE_GENERATION = 0.50;
 
 export default async function handler(req, res) {
   // CORS
