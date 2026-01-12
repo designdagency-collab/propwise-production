@@ -744,11 +744,35 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                 </h3>
                 <div className="flex items-center gap-3">
                   {billing?.accountPayable !== undefined && (
-                    <div className="text-right bg-red-50 px-4 py-2 rounded-xl">
+                    <div className="text-right bg-red-50 px-4 py-2 rounded-xl relative group">
                       <p className="text-[10px] uppercase tracking-widest text-gray-500">
                         Account Payable {billing.isActualBalance ? '' : '(est)'}
                       </p>
                       <p className="text-xl font-black text-red-600">{formatCurrency(billing.accountPayable)}</p>
+                      <button
+                        onClick={() => {
+                          const newBalance = prompt('Enter actual Google Cloud balance (from console.cloud.google.com/billing):', billing.accountPayable?.toString() || '0');
+                          if (newBalance !== null) {
+                            const amount = parseFloat(newBalance);
+                            if (!isNaN(amount) && amount >= 0) {
+                              supabaseService.authenticatedFetch('/api/admin/billing', {
+                                method: 'POST',
+                                body: JSON.stringify({ actualBalance: amount })
+                              }).then(res => {
+                                if (res.ok) {
+                                  fetchData(true);
+                                } else {
+                                  alert('Failed to update balance');
+                                }
+                              });
+                            }
+                          }
+                        }}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-white border rounded-full text-[10px] text-gray-500 hover:text-[#C9A961] hover:border-[#C9A961] transition-colors"
+                        title="Update actual balance"
+                      >
+                        <i className="fa-solid fa-pen"></i>
+                      </button>
                     </div>
                   )}
                   {billing?.googleCloud && (

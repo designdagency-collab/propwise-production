@@ -40,7 +40,7 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  if (req.method !== 'GET') {
+  if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
@@ -73,6 +73,44 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Access denied. Admin only.' });
   }
 
+  // POST: Update actual balance
+  if (req.method === 'POST') {
+    try {
+      const { actualBalance } = req.body;
+      
+      if (actualBalance === undefined || actualBalance === null) {
+        return res.status(400).json({ error: 'actualBalance is required' });
+      }
+
+      const balance = parseFloat(actualBalance);
+      if (isNaN(balance) || balance < 0) {
+        return res.status(400).json({ error: 'Invalid balance amount' });
+      }
+
+      // Upsert the actual balance
+      const { error: updateError } = await supabase
+        .from('billing_calibration')
+        .upsert({
+          id: 'main',
+          actual_balance: balance,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
+
+      if (updateError) {
+        console.error('[AdminBilling] Update error:', updateError);
+        return res.status(500).json({ error: 'Failed to update balance' });
+      }
+
+      console.log('[AdminBilling] Actual balance updated to:', balance);
+      return res.status(200).json({ success: true, actualBalance: balance });
+
+    } catch (error) {
+      console.error('[AdminBilling] POST error:', error);
+      return res.status(500).json({ error: 'Failed to update balance' });
+    }
+  }
+
+  // GET: Fetch billing data
   try {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -151,14 +189,25 @@ export default async function handler(req, res) {
     const totalCalls = currentMonthSearchCount + currentMonthImageCount;
     const blendedCostPerCall = totalCalls > 0 ? currentMonthEstimate / totalCalls : COST_PER_TEXT_SEARCH;
 
+    // Get stored actual balance from database
+    const { data: balanceData } = await supabase
+      .from('billing_calibration')
+      .select('actual_balance')
+      .eq('id', 'main')
+      .maybeSingle();
+
     // Account payable: priority order:
-    // 1. Manual override from env var
-    // 2. Actual from Google Cloud API
-    // 3. Our estimate
+    // 1. Database stored actual balance (editable from dashboard)
+    // 2. Manual override from env var
+    // 3. Actual from Google Cloud API
+    // 4. Our estimate
     let accountPayable = totalEstimate;
     let isActualBalance = false;
     
-    if (manualAccountBalance) {
+    if (balanceData?.actual_balance !== null && balanceData?.actual_balance !== undefined) {
+      accountPayable = parseFloat(balanceData.actual_balance);
+      isActualBalance = true;
+    } else if (manualAccountBalance) {
       accountPayable = parseFloat(manualAccountBalance);
       isActualBalance = true;
     } else if (googleCloudCosts?.currentMonth !== null && googleCloudCosts?.currentMonth !== undefined) {

@@ -363,9 +363,13 @@ CREATE TABLE IF NOT EXISTS billing_calibration (
   calibration_factor DECIMAL(10, 4) DEFAULT 1.0,
   last_actual_cost DECIMAL(10, 4),
   last_search_count INTEGER,
+  actual_balance DECIMAL(10, 2),  -- Manual entry of actual Google Cloud balance
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Add actual_balance column if table already exists
+ALTER TABLE billing_calibration ADD COLUMN IF NOT EXISTS actual_balance DECIMAL(10, 2);
 
 -- Allow service role full access
 ALTER TABLE billing_calibration ENABLE ROW LEVEL SECURITY;
