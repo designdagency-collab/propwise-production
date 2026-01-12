@@ -6,6 +6,10 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const billingAccountId = process.env.GOOGLE_CLOUD_BILLING_ACCOUNT_ID;
 const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
 
+// Optional: Set actual account balance from Google Cloud Console for accuracy
+// Format: "123.45" (in AUD)
+const manualAccountBalance = process.env.GOOGLE_CLOUD_ACCOUNT_BALANCE;
+
 // Cost estimates based on actual Google AI pricing (Jan 2026)
 // Property insights uses gemini-3-flash-preview (text)
 // - Input: $0.075/1M tokens, Output: $0.30/1M tokens
@@ -144,8 +148,16 @@ export default async function handler(req, res) {
     const totalCalls = currentMonthSearchCount + currentMonthImageCount;
     const blendedCostPerCall = totalCalls > 0 ? currentMonthEstimate / totalCalls : COST_PER_TEXT_SEARCH;
 
+    // Account payable: use manual override if set, otherwise use estimate
+    const accountPayable = manualAccountBalance 
+      ? parseFloat(manualAccountBalance) 
+      : totalEstimate;
+    const isActualBalance = !!manualAccountBalance;
+
     const billing = {
       configured: true,
+      accountPayable: Math.round(accountPayable * 100) / 100,
+      isActualBalance,
       currentMonth: {
         estimated: currentMonthEstimate,
         actual: googleCloudCosts?.currentMonth || null,

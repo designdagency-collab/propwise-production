@@ -117,6 +117,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   // Billing state
   const [billing, setBilling] = useState<{
     configured: boolean;
+    accountPayable?: number;
+    isActualBalance?: boolean;
     currentMonth?: { estimated: number; actual?: number; searches: number; images?: number; period: string };
     lastMonth?: { estimated: number; searches: number; images?: number };
     allTime?: { estimated: number; searches: number; images?: number };
@@ -740,12 +742,22 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                   <i className="fa-solid fa-server mr-2 text-red-500"></i>
                   API Costs (Gemini AI)
                 </h3>
-                {billing?.googleCloud && (
-                  <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
-                    <i className="fa-solid fa-check-circle mr-1"></i>
-                    {billing.googleCloud.accountName}
-                  </span>
-                )}
+                <div className="flex items-center gap-3">
+                  {billing?.accountPayable !== undefined && (
+                    <div className="text-right bg-red-50 px-4 py-2 rounded-xl">
+                      <p className="text-[10px] uppercase tracking-widest text-gray-500">
+                        Account Payable {billing.isActualBalance ? '' : '(est)'}
+                      </p>
+                      <p className="text-xl font-black text-red-600">{formatCurrency(billing.accountPayable)}</p>
+                    </div>
+                  )}
+                  {billing?.googleCloud && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                      <i className="fa-solid fa-check-circle mr-1"></i>
+                      {billing.googleCloud.accountName}
+                    </span>
+                  )}
+                </div>
               </div>
               {billing ? (
                 billing.configured ? (
