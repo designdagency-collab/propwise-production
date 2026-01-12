@@ -117,14 +117,16 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
   // Billing state
   const [billing, setBilling] = useState<{
     configured: boolean;
-    currentMonth?: { estimated: number; actual?: number; searches: number; period: string };
-    lastMonth?: { estimated: number; searches: number };
-    allTime?: { estimated: number; searches: number };
+    currentMonth?: { estimated: number; actual?: number; searches: number; images?: number; period: string };
+    lastMonth?: { estimated: number; searches: number; images?: number };
+    allTime?: { estimated: number; searches: number; images?: number };
     googleCloud?: { accountName: string; status: string; currentMonth?: number; currentBalance?: number } | null;
     projectedMonthly?: number;
     dailyAverage?: number;
     costPerSearch?: number;
-    calibrationFactor?: number;
+    costPerImage?: number;
+    blendedCostPerCall?: number;
+    breakdown?: { textCost: number; imageCost: number };
     note?: string;
     error?: string;
     message?: string;
@@ -756,14 +758,18 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                         <p className="text-xs text-gray-500 mt-1">
                           This Month {billing.currentMonth?.actual ? '' : '(est)'}
                         </p>
-                        <p className="text-[10px] text-gray-400">{billing.currentMonth?.searches || 0} searches</p>
+                        <p className="text-[10px] text-gray-400">
+                          {billing.currentMonth?.searches || 0} searches, {billing.currentMonth?.images || 0} images
+                        </p>
                       </div>
                       <div className="text-center p-4 bg-gray-50 rounded-xl">
                         <p className="text-2xl font-black text-[#3A342D]">
                           {formatCurrency(billing.lastMonth?.estimated || 0)}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">Last Month</p>
-                        <p className="text-[10px] text-gray-400">{billing.lastMonth?.searches || 0} searches</p>
+                        <p className="text-[10px] text-gray-400">
+                          {billing.lastMonth?.searches || 0} searches, {billing.lastMonth?.images || 0} images
+                        </p>
                       </div>
                       <div className="text-center p-4 bg-amber-50 rounded-xl">
                         <p className="text-2xl font-black text-amber-600">
@@ -776,20 +782,46 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                           {formatCurrency(billing.allTime?.estimated || 0)}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">All-Time Cost</p>
-                        <p className="text-[10px] text-gray-400">{billing.allTime?.searches || 0} total searches</p>
+                        <p className="text-[10px] text-gray-400">
+                          {billing.allTime?.searches || 0} searches, {billing.allTime?.images || 0} images
+                        </p>
                       </div>
                     </div>
+                    
+                    {/* Cost Breakdown */}
+                    {billing.breakdown && (
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="p-3 bg-blue-50/50 rounded-xl flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <i className="fa-solid fa-message text-blue-500"></i>
+                            <span className="text-xs text-gray-600">Text API</span>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-blue-600">{formatCurrency(billing.breakdown.textCost)}</p>
+                            <p className="text-[10px] text-gray-400">${billing.costPerSearch}/search</p>
+                          </div>
+                        </div>
+                        <div className="p-3 bg-purple-50/50 rounded-xl flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <i className="fa-solid fa-image text-purple-500"></i>
+                            <span className="text-xs text-gray-600">Image Gen</span>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-purple-600">{formatCurrency(billing.breakdown.imageCost)}</p>
+                            <p className="text-[10px] text-gray-400">${billing.costPerImage}/image</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t">
                       <span>
                         <i className="fa-solid fa-calculator mr-1"></i>
-                        ${billing.costPerSearch?.toFixed(4) || '0.0085'}/search
-                        {billing.calibrationFactor && billing.calibrationFactor !== 1 && (
-                          <span className="ml-2 text-green-600">
-                            (calibrated {billing.calibrationFactor}×)
-                          </span>
-                        )}
+                        Blended: ${billing.blendedCostPerCall?.toFixed(4) || '0.01'}/call
                       </span>
-                      <span className="text-gray-400">{billing.note}</span>
+                      <span className="text-gray-400 text-[10px] max-w-[50%] truncate" title={billing.note}>
+                        {billing.note}
+                      </span>
                     </div>
                   </>
                 ) : (
