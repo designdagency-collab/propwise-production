@@ -35,6 +35,25 @@ interface PropertyResultsProps {
   onConfirmData?: () => void;
 }
 
+// Whitelist of strategies that support AI visualization
+const VISUALIZER_ALLOWED_STRATEGIES = [
+  'kitchen',      // Kitchen renovation
+  'bathroom',     // Bathroom update
+  'facade',       // Curb appeal
+  'exterior',     // Exterior refresh
+  'render',       // Facade render
+  'paint',        // Exterior paint
+  'curb',         // Curb appeal
+  'landscap',     // Landscaping
+  'garden',       // Garden design
+];
+
+// Check if a strategy title is allowed for visualization
+const isVisualizerAllowed = (strategyTitle: string): boolean => {
+  const titleLower = (strategyTitle || '').toLowerCase();
+  return VISUALIZER_ALLOWED_STRATEGIES.some(allowed => titleLower.includes(allowed));
+};
+
 const PropertyResults: React.FC<PropertyResultsProps> = ({ 
   data, 
   address, 
@@ -820,9 +839,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
     }, 200);
 
     try {
-      const response = await fetch('/api/generate-renovation', {
+      // Use authenticated fetch to send auth token
+      const response = await supabaseService.authenticatedFetch('/api/generate-renovation', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image: base64Image,
           type: type === 'development' ? 'development' : 'renovation',
@@ -849,6 +868,18 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         if (result.validationFailed) {
           setVisualizerLoading({ active: false, progress: 0, message: '' });
           alert(`⚠️ Wrong Image Type\n\n${result.message}\n\nPlease upload a photo that matches this strategy.`);
+          return;
+        }
+        // Check if strategy not allowed
+        if (result.strategyNotAllowed) {
+          setVisualizerLoading({ active: false, progress: 0, message: '' });
+          alert(`⚠️ Visualization Not Available\n\n${result.message}`);
+          return;
+        }
+        // Check if auth required
+        if (response.status === 401) {
+          setVisualizerLoading({ active: false, progress: 0, message: '' });
+          alert(`🔒 Sign Up Required\n\n${result.message || 'Please sign up or log in to use AI visualizations.'}`);
           return;
         }
         throw new Error(result.error || result.message || 'Failed to generate visualization');
@@ -1495,64 +1526,66 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                      )}
                   </div>
                   
-                  {/* AI Renovation Visualizer Drop Zone */}
-                  <div 
-                    data-no-pdf="true"
-                    className={`mt-4 pt-4 border-t border-dashed transition-all ${
-                      dragOverCard?.type === 'strategy' && dragOverCard?.index === i 
-                        ? 'border-[#C9A961] bg-[#C9A961]/10' 
-                        : 'border-slate-200'
-                    } ${visualizerLoading.active && visualizerLoading.cardType === 'strategy' && visualizerLoading.cardIndex === i ? 'pointer-events-none' : ''}`}
-                    onDragOver={(e) => handleDragOver(e, 'strategy', i)}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, 'strategy', i, strategy.title)}
-                  >
-                    {visualizerLoading.active && visualizerLoading.cardType === 'strategy' && visualizerLoading.cardIndex === i ? (
-                      <div className="p-4 text-center">
-                        <div className="w-full bg-slate-200 rounded-full h-2 mb-3 overflow-hidden">
-                          <div 
-                            className="bg-[#C9A961] h-2 rounded-full transition-all duration-300 ease-out"
-                            style={{ width: `${visualizerLoading.progress}%` }}
-                          ></div>
+                  {/* AI Renovation Visualizer Drop Zone - Only for allowed strategies */}
+                  {isVisualizerAllowed(strategy.title) ? (
+                    <div 
+                      data-no-pdf="true"
+                      className={`mt-4 pt-4 border-t border-dashed transition-all ${
+                        dragOverCard?.type === 'strategy' && dragOverCard?.index === i 
+                          ? 'border-[#C9A961] bg-[#C9A961]/10' 
+                          : 'border-slate-200'
+                      } ${visualizerLoading.active && visualizerLoading.cardType === 'strategy' && visualizerLoading.cardIndex === i ? 'pointer-events-none' : ''}`}
+                      onDragOver={(e) => handleDragOver(e, 'strategy', i)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, 'strategy', i, strategy.title)}
+                    >
+                      {visualizerLoading.active && visualizerLoading.cardType === 'strategy' && visualizerLoading.cardIndex === i ? (
+                        <div className="p-4 text-center">
+                          <div className="w-full bg-slate-200 rounded-full h-2 mb-3 overflow-hidden">
+                            <div 
+                              className="bg-[#C9A961] h-2 rounded-full transition-all duration-300 ease-out"
+                              style={{ width: `${visualizerLoading.progress}%` }}
+                            ></div>
+                          </div>
+                          <p className="text-xs text-[#4A4137]/60 font-medium">
+                            <i className="fa-solid fa-wand-magic-sparkles mr-2 text-[#C9A961] animate-pulse"></i>
+                            {visualizerLoading.message}
+                          </p>
                         </div>
-                        <p className="text-xs text-[#4A4137]/60 font-medium">
-                          <i className="fa-solid fa-wand-magic-sparkles mr-2 text-[#C9A961] animate-pulse"></i>
-                          {visualizerLoading.message}
-                        </p>
-                      </div>
-                    ) : (generatedVisuals[`strategy-${i}`]?.length || 0) >= 2 ? (
-                      <div className="p-4 text-center">
-                        <div className="flex items-center justify-center gap-2 text-[#4A4137]/30">
-                          <i className="fa-solid fa-check-circle text-emerald-500"></i>
-                          <span className="text-xs font-bold uppercase tracking-wider">
-                            Limit Reached (2/2)
-                          </span>
-                        </div>
-                        <p className="text-[10px] text-[#4A4137]/30 mt-1">View your visualisations above</p>
-                      </div>
-                    ) : (
-                      <label className="block cursor-pointer">
-                        <input 
-                          type="file" 
-                          accept="image/*"
-                          multiple
-                          className="hidden" 
-                          onChange={(e) => handleFileSelect(e, 'strategy', i, strategy.title)}
-                        />
-                        <div className="p-4 text-center hover:bg-slate-50 rounded-xl transition-colors">
-                          <div className="flex items-center justify-center gap-2 text-[#4A4137]/40 hover:text-[#C9A961] transition-colors">
-                            <i className="fa-solid fa-wand-magic-sparkles text-lg"></i>
+                      ) : (generatedVisuals[`strategy-${i}`]?.length || 0) >= 2 ? (
+                        <div className="p-4 text-center">
+                          <div className="flex items-center justify-center gap-2 text-[#4A4137]/30">
+                            <i className="fa-solid fa-check-circle text-emerald-500"></i>
                             <span className="text-xs font-bold uppercase tracking-wider">
-                              {dragOverCard?.type === 'strategy' && dragOverCard?.index === i 
-                                ? 'Drop image here' 
-                                : `AI Visualise (${generatedVisuals[`strategy-${i}`]?.length || 0}/2)`}
+                              Limit Reached (2/2)
                             </span>
                           </div>
-                          <p className="text-[10px] text-[#4A4137]/30 mt-1">Drag photo or click to upload</p>
+                          <p className="text-[10px] text-[#4A4137]/30 mt-1">View your visualisations above</p>
                         </div>
-                      </label>
-                    )}
-                  </div>
+                      ) : (
+                        <label className="block cursor-pointer">
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            multiple
+                            className="hidden" 
+                            onChange={(e) => handleFileSelect(e, 'strategy', i, strategy.title)}
+                          />
+                          <div className="p-4 text-center hover:bg-slate-50 rounded-xl transition-colors">
+                            <div className="flex items-center justify-center gap-2 text-[#4A4137]/40 hover:text-[#C9A961] transition-colors">
+                              <i className="fa-solid fa-wand-magic-sparkles text-lg"></i>
+                              <span className="text-xs font-bold uppercase tracking-wider">
+                                {dragOverCard?.type === 'strategy' && dragOverCard?.index === i 
+                                  ? 'Drop image here' 
+                                  : `AI Visualise (${generatedVisuals[`strategy-${i}`]?.length || 0}/2)`}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-[#4A4137]/30 mt-1">Drag photo or click to upload</p>
+                          </div>
+                        </label>
+                      )}
+                    </div>
+                  ) : null}
                </div>
              ))}
           </div>

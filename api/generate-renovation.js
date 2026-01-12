@@ -2,6 +2,35 @@
 // Uses @google/genai with gemini-2.5-flash-image model (same as Three Birds)
 
 import { GoogleGenAI } from "@google/genai";
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Whitelist of allowed visualization types (high-value, quality results)
+const ALLOWED_STRATEGIES = [
+  'kitchen',      // Kitchen renovation
+  'bathroom',     // Bathroom update
+  'facade',       // Curb appeal
+  'exterior',     // Exterior refresh
+  'render',       // Facade render
+  'paint',        // Exterior paint
+  'curb',         // Curb appeal
+  'landscap',     // Landscaping
+  'garden',       // Garden design
+];
+
+// Development scenarios are always allowed
+const ALLOW_DEVELOPMENT = true;
+
+function isStrategyAllowed(strategyTitle, type) {
+  // Development scenarios always allowed
+  if (type === 'development') return ALLOW_DEVELOPMENT;
+  
+  // Check if strategy matches whitelist
+  const strategyLower = (strategyTitle || '').toLowerCase();
+  return ALLOWED_STRATEGIES.some(allowed => strategyLower.includes(allowed));
+}
 
 export default async function handler(req, res) {
   // CORS
@@ -23,6 +52,30 @@ export default async function handler(req, res) {
   }
 
   try {
+    // ============================================
+    // AUTHENTICATION: Require signed-up user
+    // ============================================
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ 
+        error: 'Authentication required',
+        message: 'Please sign up or log in to use AI visualizations'
+      });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return res.status(401).json({ 
+        error: 'Invalid session',
+        message: 'Please log in again to use AI visualizations'
+      });
+    }
+
+    console.log('[GenerateRenovation] Authenticated user:', user.email);
+
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       console.error('[GenerateRenovation] GEMINI_API_KEY not configured');
@@ -30,6 +83,18 @@ export default async function handler(req, res) {
     }
 
     const { image, type, strategyTitle, scenarioTitle, propertyAddress } = req.body;
+
+    // ============================================
+    // STRATEGY WHITELIST: Only allow high-value visualizations
+    // ============================================
+    if (!isStrategyAllowed(strategyTitle, type)) {
+      console.log('[GenerateRenovation] Strategy not allowed:', strategyTitle);
+      return res.status(400).json({ 
+        error: 'Visualization not available',
+        message: `AI visualization is not available for "${strategyTitle}". Try Kitchen, Bathroom, Facade, or Landscaping renovations.`,
+        strategyNotAllowed: true
+      });
+    }
 
     if (!image) {
       return res.status(400).json({ error: 'No image provided' });
