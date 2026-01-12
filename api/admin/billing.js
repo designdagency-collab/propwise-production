@@ -148,11 +148,22 @@ export default async function handler(req, res) {
     const totalCalls = currentMonthSearchCount + currentMonthImageCount;
     const blendedCostPerCall = totalCalls > 0 ? currentMonthEstimate / totalCalls : COST_PER_TEXT_SEARCH;
 
-    // Account payable: use manual override if set, otherwise use estimate
-    const accountPayable = manualAccountBalance 
-      ? parseFloat(manualAccountBalance) 
-      : totalEstimate;
-    const isActualBalance = !!manualAccountBalance;
+    // Account payable: priority order:
+    // 1. Manual override from env var
+    // 2. Actual from Google Cloud API
+    // 3. Our estimate
+    let accountPayable = totalEstimate;
+    let isActualBalance = false;
+    
+    if (manualAccountBalance) {
+      accountPayable = parseFloat(manualAccountBalance);
+      isActualBalance = true;
+    } else if (googleCloudCosts?.currentMonth !== null && googleCloudCosts?.currentMonth !== undefined) {
+      // Use actual Google Cloud cost for this month + our estimate for previous months
+      const previousMonthsEstimate = totalEstimate - currentMonthEstimate;
+      accountPayable = previousMonthsEstimate + googleCloudCosts.currentMonth;
+      isActualBalance = true;
+    }
 
     const billing = {
       configured: true,
@@ -242,15 +253,63 @@ async function fetchGoogleCloudCosts(credentialsJson, billingAccountId) {
 
     const accountData = await accountResponse.json();
     
-    // Note: To get actual cost data, you need BigQuery billing export
-    // The Billing API itself doesn't provide cost breakdowns
-    // For now, return account info
+    // Try to get actual costs using Cloud Billing v1beta API
+    let currentMonthCost = null;
+    try {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      
+      // Format dates for the API: YYYY-MM-DD
+      const startDate = startOfMonth.toISOString().split('T')[0];
+      const endDate = now.toISOString().split('T')[0];
+      
+      // Try the cost query endpoint (v1beta)
+      const costResponse = await fetch(
+        `https://cloudbilling.googleapis.com/v1beta/billingAccounts/${billingAccountId}/services/-/costs:query`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            dateRange: {
+              startDate: { year: startOfMonth.getFullYear(), month: startOfMonth.getMonth() + 1, day: 1 },
+              endDate: { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() }
+            }
+          })
+        }
+      );
+      
+      if (costResponse.ok) {
+        const costData = await costResponse.json();
+        console.log('[AdminBilling] Cost API response:', JSON.stringify(costData).substring(0, 500));
+        
+        // Parse the cost data - structure varies by API version
+        if (costData.costTotal?.units) {
+          currentMonthCost = parseFloat(costData.costTotal.units) + 
+            (parseFloat(costData.costTotal.nanos || 0) / 1e9);
+        } else if (costData.rows) {
+          // Aggregate all cost rows
+          currentMonthCost = costData.rows.reduce((sum, row) => {
+            const cost = row.cost?.units ? parseFloat(row.cost.units) : 0;
+            const nanos = row.cost?.nanos ? parseFloat(row.cost.nanos) / 1e9 : 0;
+            return sum + cost + nanos;
+          }, 0);
+        }
+      } else {
+        const errorText = await costResponse.text();
+        console.log('[AdminBilling] Cost API not available:', costResponse.status, errorText.substring(0, 200));
+      }
+    } catch (costError) {
+      console.log('[AdminBilling] Cost query failed (may need BigQuery export):', costError.message);
+    }
+    
     return {
       accountName: accountData.displayName || accountData.name,
       status: accountData.open ? 'Active' : 'Closed',
       masterBillingAccount: accountData.masterBillingAccount || null,
-      // Actual costs require BigQuery export - returning null for now
-      currentMonth: null,
+      currentMonth: currentMonthCost,
       currentBalance: null
     };
     
@@ -272,7 +331,7 @@ async function getGoogleAccessToken(credentials) {
       aud: 'https://oauth2.googleapis.com/token',
       iat: now,
       exp: now + 3600,
-      scope: 'https://www.googleapis.com/auth/cloud-billing.readonly'
+      scope: 'https://www.googleapis.com/auth/cloud-billing.readonly https://www.googleapis.com/auth/cloud-platform'
     };
 
     const encodedHeader = base64UrlEncode(JSON.stringify(header));
