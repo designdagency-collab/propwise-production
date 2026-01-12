@@ -130,6 +130,18 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     message?: string;
   } | null>(null);
 
+  // Visitors state (anonymous traffic)
+  const [visitors, setVisitors] = useState<{
+    total: number;
+    today: number;
+    thisWeek: number;
+    thisMonth: number;
+    activeToday: number;
+    anonymousSearches: number;
+    registeredUsers: number;
+    conversionRate: number;
+  } | null>(null);
+
   // Fetch all data
   const fetchData = async (isAutoRefresh = false) => {
     // Only show full loading on initial load
@@ -140,11 +152,12 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     }
     
     try {
-      const [metricsRes, revenueRes, usersRes, billingRes] = await Promise.all([
+      const [metricsRes, revenueRes, usersRes, billingRes, visitorsRes] = await Promise.all([
         supabaseService.authenticatedFetch('/api/admin/metrics'),
         supabaseService.authenticatedFetch('/api/admin/revenue'),
         supabaseService.authenticatedFetch('/api/admin/users?limit=50'),
-        supabaseService.authenticatedFetch('/api/admin/billing')
+        supabaseService.authenticatedFetch('/api/admin/billing'),
+        supabaseService.authenticatedFetch('/api/admin/visitors')
       ]);
 
       if (metricsRes.ok) {
@@ -167,6 +180,11 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       if (billingRes.ok) {
         const billingData = await billingRes.json();
         setBilling(billingData);
+      }
+
+      if (visitorsRes.ok) {
+        const visitorsData = await visitorsRes.json();
+        setVisitors(visitorsData);
       }
 
       setLoading(false);
@@ -605,6 +623,48 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                 </div>
               </div>
             </div>
+
+            {/* Anonymous Visitors Section */}
+            {visitors && (
+              <div className="bg-white rounded-2xl p-6 shadow-sm border">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
+                  <i className="fa-solid fa-eye mr-2 text-purple-500"></i>
+                  Anonymous Visitors
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-4 bg-purple-50 rounded-xl">
+                    <p className="text-2xl font-black text-purple-600">{visitors.total}</p>
+                    <p className="text-xs text-gray-500 mt-1">Total Visitors</p>
+                  </div>
+                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                    <p className="text-2xl font-black text-[#3A342D]">{visitors.today}</p>
+                    <p className="text-xs text-gray-500 mt-1">New Today</p>
+                  </div>
+                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                    <p className="text-2xl font-black text-[#3A342D]">{visitors.anonymousSearches}</p>
+                    <p className="text-xs text-gray-500 mt-1">Anon Searches</p>
+                  </div>
+                  <div className="text-center p-4 bg-[#5D8A66]/10 rounded-xl">
+                    <p className="text-2xl font-black text-[#5D8A66]">{visitors.conversionRate}%</p>
+                    <p className="text-xs text-gray-500 mt-1">Conversion</p>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t flex justify-between text-sm">
+                  <span className="text-gray-500">
+                    <i className="fa-solid fa-clock mr-1"></i>
+                    Active today: {visitors.activeToday}
+                  </span>
+                  <span className="text-gray-500">
+                    <i className="fa-solid fa-calendar-week mr-1"></i>
+                    This week: {visitors.thisWeek}
+                  </span>
+                  <span className="text-gray-500">
+                    <i className="fa-solid fa-calendar mr-1"></i>
+                    This month: {visitors.thisMonth}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Plans & Invites */}
             <div className="grid md:grid-cols-3 gap-6">
