@@ -386,26 +386,39 @@ Add a NEW DETACHED granny flat or secondary dwelling in the backyard.`;
         allowedChanges = `
 WHAT TO CREATE (granny flat specific):
 - A SEPARATE, DETACHED building in the backyard (NOT attached to main house)
-- Modern 1-2 bedroom self-contained dwelling
-- Size: approximately 40-60 sqm footprint
+- MINIMUM 2 BEDROOM self-contained dwelling (2 bed is standard, can be 2-3 bed)
+- Size: approximately 50-60 sqm footprint (Australian compliant granny flat size)
 - Style: Contemporary design matching or complementing the main house
-- Include: Entry, living area, kitchenette, bedroom(s), bathroom
-- Flat or skillion roof with clean lines
-- Large windows/sliding doors for natural light
-- Small private outdoor area or courtyard
-- Separate pathway from main house
 
-DESIGN STYLE:
-- Modern Australian granny flat aesthetic
-- Crisp white or grey render with timber accents
-- Clean contemporary lines
-- Landscaping around the new dwelling
+REQUIRED ROOMS:
+- Open plan living/dining/kitchen area
+- Full kitchen (not just kitchenette) - oven, cooktop, sink, fridge space
+- 2 bedrooms minimum (master with built-in robe, second bedroom)
+- 1 bathroom with shower, toilet, vanity
+- Separate laundry or European laundry in bathroom
+- Entry/hallway area
+
+DESIGN FEATURES:
+- Flat or skillion roof with clean modern lines
+- Large windows/sliding doors for natural light
+- Covered outdoor area or small deck
+- Separate pathway from main house to street
+- Private courtyard or outdoor space
+
+DESIGN STYLE (Three Birds aesthetic):
+- Modern Australian granny flat
+- Crisp white or light grey render
+- Timber battens or cladding accents
+- Black window frames and gutters
+- Colorbond roof in Monument or Basalt
+- Quality finishes throughout
 
 ⛔ RULES:
 - The granny flat is DETACHED - separate from the main house
+- MUST have minimum 2 bedrooms
 - Do NOT modify the main house
-- Position in backyard with appropriate setbacks
-- Include realistic scale (not too large for a backyard)`;
+- Position in backyard with appropriate setbacks (usually 900mm side, 3m rear)
+- Include realistic scale - fit within typical suburban backyard`;
       } else if (strategyLower.includes('deck') || strategyLower.includes('outdoor') || strategyLower.includes('entertaining') || strategyLower.includes('alfresco')) {
         strategyInstructions = `FOCUS: Outdoor Entertaining Deck / Alfresco Area
 Add or upgrade an outdoor entertaining area ATTACHED to the house.
