@@ -278,7 +278,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
   const hasVisualizations = allVisualizations.length > 0;
   
   // Calculate pages needed for visualizations
-  // 2 visualizations per page (280px height each)
+  // 2 visualizations per page (220px height each)
   const visualizationPages = hasVisualizations 
     ? Math.ceil(allVisualizations.length / 2)
     : 0;
@@ -724,7 +724,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
               </div>
             </PdfPage>
           ) : (
-            // MULTIPLE IMAGES: 2 per page with 280px height each
+            // MULTIPLE IMAGES: 2 per page with 220px height each
             <>
               {Array.from({ length: visualizationPages }).map((_, pageIndex) => {
                 const startIdx = pageIndex * 2;
@@ -750,11 +750,11 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                               {item.strategyType === 'development' ? '🏗️' : '🔨'} {item.strategyName}
                             </p>
                             
-                            <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD', maxHeight: '280px' }}>
+                            <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD', maxHeight: '220px' }}>
                               <img 
                                 src={item.visual.afterImage} 
                                 alt="AI visualisation"
-                                style={{ width: '100%', height: '280px', objectFit: 'cover', display: 'block' }}
+                                style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block' }}
                               />
                             </div>
                           </div>
