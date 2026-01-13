@@ -9,24 +9,29 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Whitelist of allowed visualization types (high-value, quality results)
 const ALLOWED_STRATEGIES = [
-  'kitchen',      // Kitchen renovation
-  'bathroom',     // Bathroom update
-  'facade',       // Curb appeal
-  'exterior',     // Exterior refresh
-  'render',       // Facade render
-  'paint',        // Exterior paint
-  'curb',         // Curb appeal
-  'landscap',     // Landscaping
-  'garden',       // Garden design
-  'outdoor',      // Outdoor entertaining
-  'alfresco',     // Alfresco area
-  'deck',         // Deck addition
-  'entertaining', // Entertaining area
-  'backyard',     // Backyard upgrade
-  'patio',        // Patio area
-  'granny',       // Granny flat
-  'secondary',    // Secondary dwelling
-  'ancillary',    // Ancillary dwelling
+  'kitchen',        // Kitchen renovation
+  'bathroom',       // Bathroom update
+  'facade',         // Facade/curb appeal
+  'exterior',       // Exterior refresh
+  'render',         // Facade render
+  'paint',          // Exterior paint
+  'cladding',       // Re-cladding
+  'transformation', // Complete transformation
+  'curb',           // Curb appeal
+  'street',         // Street presence
+  'front',          // Front yard/garden
+  'landscap',       // Landscaping
+  'garden',         // Garden design
+  'outdoor',        // Outdoor entertaining
+  'alfresco',       // Alfresco area
+  'deck',           // Deck addition
+  'entertaining',   // Entertaining area
+  'backyard',       // Backyard upgrade
+  'patio',          // Patio area
+  'granny',         // Granny flat
+  'secondary',      // Secondary dwelling
+  'ancillary',      // Ancillary dwelling
+  'dwelling',       // Secondary dwelling
 ];
 
 // Free visualization limit
