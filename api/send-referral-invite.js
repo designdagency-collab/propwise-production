@@ -153,14 +153,22 @@ export default async function handler(req, res) {
 
     // Send the email - Maximum deliverability settings
     // Using sender's name in "from" to appear more personal
-    const { data: emailData, error: emailError } = await resend.emails.send({
+    // Only use Reply-To if it's from our domain (avoids FREEMAIL_FORGED_REPLYTO spam penalty)
+    const emailConfig = {
       from: `${senderName} via upblock <hello@mail.upblock.ai>`,
-      replyTo: profile.email || 'hello@upblock.ai',
       to: friendEmail,
       subject: friendName ? `${friendName}, check this out` : 'Quick property tool I found',
       html: generateEmailHtml(senderName, friendName, referralLink, profile.referral_code),
       text: generateEmailText(senderName, friendName, referralLink, profile.referral_code)
-    });
+    };
+    
+    // Only add Reply-To if sender's email is from our domain (not Gmail/freemail)
+    if (profile.email && profile.email.includes('@upblock.ai')) {
+      emailConfig.replyTo = profile.email;
+    }
+    // Otherwise, no Reply-To header (better deliverability than freemail Reply-To)
+    
+    const { data: emailData, error: emailError } = await resend.emails.send(emailConfig);
 
     if (emailError) {
       console.error('[ReferralInvite] Resend error:', emailError);
