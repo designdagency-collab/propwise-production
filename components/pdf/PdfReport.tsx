@@ -700,7 +700,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
               <div className="pdf-section" style={{ background: '#fff' }}>
                 <h2 className="pdf-section-title">
                   <span className="pdf-icon">{Icons.home}</span>
-                  AI Visualizations
+                  AI Visualisations
                 </h2>
                 <p className="pdf-section-subtitle">AI-generated concept imagery for property potential</p>
                 
@@ -709,11 +709,11 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                     {allVisualizations[0].strategyType === 'development' ? '🏗️' : '🔨'} {allVisualizations[0].strategyName}
                   </p>
                   
-                  <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD' }}>
+                  <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD', maxHeight: '450px' }}>
                     <img 
                       src={allVisualizations[0].visual.afterImage} 
                       alt="AI visualisation"
-                      style={{ width: '100%', height: 'auto', display: 'block' }}
+                      style={{ width: '100%', height: '450px', objectFit: 'cover', display: 'block' }}
                     />
                   </div>
                   
@@ -750,11 +750,11 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                               {item.strategyType === 'development' ? '🏗️' : '🔨'} {item.strategyName}
                             </p>
                             
-                            <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD' }}>
+                            <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD', maxHeight: '280px' }}>
                               <img 
                                 src={item.visual.afterImage} 
                                 alt="AI visualisation"
-                                style={{ width: '100%', height: 'auto', display: 'block' }}
+                                style={{ width: '100%', height: '280px', objectFit: 'cover', display: 'block' }}
                               />
                             </div>
                           </div>
