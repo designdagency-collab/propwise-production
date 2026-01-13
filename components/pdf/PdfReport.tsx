@@ -222,6 +222,18 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
   
   const hasWatchOuts = data.watchOuts && data.watchOuts.length > 0;
   
+  // Helper to validate base64 image data
+  const isValidBase64Image = (str: string | undefined | null): boolean => {
+    if (!str || typeof str !== 'string') return false;
+    if (!str.startsWith('data:image/')) return false;
+    // Must have actual image data after the comma
+    const commaIndex = str.indexOf(',');
+    if (commaIndex === -1) return false;
+    const imageData = str.slice(commaIndex + 1);
+    // Must have substantial data (at least 100 chars to be a real image)
+    return imageData.length > 100;
+  };
+
   // Collect all visualizations with their strategy references
   const allVisualizations: Array<{
     visual: VisualizationData;
@@ -242,7 +254,8 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
       if (isNaN(index)) return;
       
       visuals.forEach(visual => {
-        if (!visual || !visual.afterImage) return; // Only check afterImage (beforeImage is discarded)
+        // Validate afterImage is present AND contains valid base64 image data
+        if (!visual || !isValidBase64Image(visual.afterImage)) return;
         
         let strategyName = visual.title || 'Visualization';
         

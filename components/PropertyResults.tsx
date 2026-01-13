@@ -569,20 +569,31 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
           try {
             const compressedAfter = await compressBase64Image(visual.afterImage);
             
+            // Validate compressed result is a valid image
+            if (!compressedAfter || !compressedAfter.startsWith('data:image/') || compressedAfter.length < 500) {
+              console.warn('[PDF] Compressed image invalid, skipping visual', i);
+              continue;
+            }
+            
             compressedArray.push({
               ...visual,
               beforeImage: '', // Not used in PDF
               afterImage: compressedAfter
             });
-            console.log('[PDF] Visual', i, 'compressed successfully');
+            console.log('[PDF] Visual', i, 'compressed successfully, length:', compressedAfter.length);
           } catch (e) {
             console.warn('[PDF] Failed to compress visual', i, ':', e);
-            // Use original image if compression fails
-            compressedArray.push({ 
-              ...visual, 
-              beforeImage: '',
-              afterImage: visual.afterImage // Keep original afterImage
-            });
+            // Validate original image before using as fallback
+            if (visual.afterImage && visual.afterImage.startsWith('data:image/') && visual.afterImage.length > 500) {
+              compressedArray.push({ 
+                ...visual, 
+                beforeImage: '',
+                afterImage: visual.afterImage // Keep original afterImage
+              });
+              console.log('[PDF] Using original image as fallback for visual', i);
+            } else {
+              console.warn('[PDF] Original image also invalid, skipping visual', i);
+            }
           }
         }
         
