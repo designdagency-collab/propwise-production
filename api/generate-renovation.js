@@ -275,7 +275,7 @@ This is an INTERIOR kitchen renovation. Transform the existing kitchen into a mo
 ⚠️ CRITICAL SPACE ANALYSIS - BEFORE ADDING ANYTHING:
 1. MEASURE the visible floor space in the photo
 2. Identify wall-to-wall distances and existing walkways
-3. Note where appliances, sinks, and cooktops currently are
+3. COUNT the existing fixtures: sinks, cooktops, ovens
 4. Check if there's ACTUALLY room for additional elements`;
         allowedChanges = `
 WHAT TO CHANGE (kitchen specific):
@@ -287,30 +287,62 @@ WHAT TO CHANGE (kitchen specific):
 - Hardware: Modern matte black or brushed brass tapware and handles
 - Flooring: Timber-look tiles or engineered timber (if visible)
 
+🚫 REALISTIC FIXTURE RULES (CRITICAL - DO NOT BREAK):
+- ONE SINK ONLY - residential kitchens have ONE sink, do not add a second
+- ONE COOKTOP/HOTPLATE ONLY - do not duplicate the stovetop
+- ONE OVEN ONLY - do not add extra ovens
+- ONE RANGEHOOD ONLY - positioned above the cooktop
+- If original has 1 sink → result has 1 sink (upgraded, not multiplied)
+- If original has 1 cooktop → result has 1 cooktop (upgraded, not multiplied)
+- UPGRADE fixtures, don't DUPLICATE them
+- A kitchen should look like a REAL home kitchen, not a commercial space
+
 🚫 ISLAND BENCH RULES (CRITICAL):
 - ONLY add an island if there is MINIMUM 1 metre clearance on ALL sides
 - If the kitchen is a GALLEY style (two parallel benches), DO NOT add an island
 - If wall-to-wall distance is less than 3 metres, DO NOT add an island
 - If there's already limited floor space visible, DO NOT add an island
 - If in doubt, upgrade EXISTING benchtops instead of adding new ones
-- A waterfall edge is ONLY appropriate on an EXISTING island, not a new one in a tight space
+- Islands should NOT have sinks or cooktops unless the original already did
 
 DO NOT CHANGE: Wall positions, window locations, ceiling height, room shape, overall kitchen footprint`;
       } else if (strategyLower.includes('bathroom')) {
         strategyInstructions = `FOCUS: Bathroom Update
-This is an INTERIOR bathroom renovation. Transform into a spa-like retreat.`;
+This is an INTERIOR bathroom renovation. Transform into a spa-like retreat.
+
+⚠️ CRITICAL - ANALYSE THE SPACE FIRST:
+1. Identify where WINDOWS are located
+2. Count existing fixtures: toilet, basin(s), shower, bath
+3. Note the vanity position and wall space available`;
         allowedChanges = `
 WHAT TO CHANGE (bathroom specific):
 - Tiles: Large format tiles, terrazzo, or marble-look porcelain
 - Vanity: Floating timber or stone vanity with vessel basin
 - Shower: Frameless glass, rainfall showerhead, matte black fixtures
 - Tapware: Replace with matte black, brushed brass, or chrome
-- Mirror: Large backlit mirror or round feature mirror
+- Mirror: Large backlit mirror or round feature mirror ABOVE THE VANITY
 - Lighting: Wall sconces, LED strip lighting
 - Storage: Built-in niches, mirrored cabinets
 - Bath: Freestanding bath if space permits
+- Layout: You CAN reposition fixtures for a better layout
 
-DO NOT CHANGE: Room layout, window positions, door location`;
+🚫 REALISTIC BATHROOM DESIGN RULES (CRITICAL - DO NOT BREAK):
+- MIRRORS GO ONLY ABOVE VANITIES/BASINS - never over windows
+- NEVER place a mirror where a window exists - windows let in light, mirrors reflect
+- ONE toilet only (not two)
+- ONE shower only (not two)
+- ONE basin unless creating a deliberate double vanity
+- ONE bath maximum (if space permits)
+- If you see a window, that wall gets NO MIRROR - use the opposite wall
+- Vanities with mirrors should be on SOLID WALLS, not window walls
+- Fixtures CAN be repositioned for better flow
+- But don't DUPLICATE fixtures - upgrade them, don't multiply them
+
+🪟 WINDOW CHECK:
+- Look for natural light sources - these are windows
+- Windows MUST remain visible and unobstructed
+- Place vanity + mirror on a wall WITHOUT windows
+- If vanity is under a window, use a small shelf mirror that doesn't cover the window`;
       } else if (strategyLower.includes('deck') || strategyLower.includes('outdoor') || strategyLower.includes('entertaining') || strategyLower.includes('alfresco')) {
         strategyInstructions = `FOCUS: Outdoor Entertaining Deck
 Add or upgrade an outdoor entertaining area attached to the house.`;
