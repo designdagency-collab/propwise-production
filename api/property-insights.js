@@ -455,13 +455,21 @@ MANDATORY MODULES:
 - Return 5–8 strategies (internal/renovation focused).
 - ⚠️ CRITICAL: Use REALISTIC Australian renovation costs. DO NOT inflate costs.
 
+🌳 MANDATORY STRATEGY: CURB APPEAL / FRONT YARD LANDSCAPING
+- ALWAYS include a "Curb Appeal & Front Yard Landscaping" or similar strategy
+- This is applicable to virtually EVERY property and provides high ROI
+- Even if property has existing landscaping, recommend upgrades/refresh
+- Title variations: "Curb Appeal & Landscaping", "Front Garden Refresh", "Street Presence Upgrade"
+- This should be one of the 5-8 strategies returned
+
 AUSTRALIAN RENOVATION COST BENCHMARKS (use these ranges):
+- Curb appeal/front landscaping: $5,000 - $25,000 (ALWAYS INCLUDE)
 - Kitchen renovation: $15,000 - $60,000 (NOT $200k+)
 - Bathroom renovation: $15,000 - $40,000
 - Kitchen + Bathroom combo: $30,000 - $80,000
 - Paint refresh (interior): $3,000 - $15,000
 - Flooring replacement: $5,000 - $25,000
-- Landscaping/garden: $5,000 - $30,000
+- Landscaping/garden (full): $5,000 - $30,000
 - Minor cosmetic refresh: $5,000 - $20,000
 - Outdoor deck/entertaining: $15,000 - $50,000
 - Facade/exterior refresh: $10,000 - $40,000
