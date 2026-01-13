@@ -690,7 +690,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
       </PdfPage>
 
       {/* ================================================================
-          PAGE 5+: AI VISUALIZATIONS (Only if visuals exist)
+          PAGE 5+: AI VISUALISATIONS (Only if visuals exist)
           ================================================================ */}
       {hasVisualizations && (
         <>
@@ -712,7 +712,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                   <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD' }}>
                     <img 
                       src={allVisualizations[0].visual.afterImage} 
-                      alt="AI visualization"
+                      alt="AI visualisation"
                       style={{ width: '100%', height: 'auto', display: 'block' }}
                     />
                   </div>
@@ -737,7 +737,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                         <>
                           <h2 className="pdf-section-title">
                             <span className="pdf-icon">{Icons.home}</span>
-                            AI Visualizations
+                            AI Visualisations
                           </h2>
                           <p className="pdf-section-subtitle">AI-generated concept imagery for property potential</p>
                         </>
@@ -753,7 +753,7 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
                             <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD' }}>
                               <img 
                                 src={item.visual.afterImage} 
-                                alt="AI visualization"
+                                alt="AI visualisation"
                                 style={{ width: '100%', height: 'auto', display: 'block' }}
                               />
                             </div>
@@ -1452,7 +1452,7 @@ export const getPdfDocumentStyles = () => `
     border-radius: 8px;
   }
 
-  /* ===== AI VISUALIZATIONS ===== */
+  /* ===== AI VISUALISATIONS ===== */
   .pdf-visual-single {
     margin-top: 16px;
   }
