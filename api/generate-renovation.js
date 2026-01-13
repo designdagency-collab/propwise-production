@@ -24,6 +24,9 @@ const ALLOWED_STRATEGIES = [
   'entertaining', // Entertaining area
   'backyard',     // Backyard upgrade
   'patio',        // Patio area
+  'granny',       // Granny flat
+  'secondary',    // Secondary dwelling
+  'ancillary',    // Ancillary dwelling
 ];
 
 // Free visualization limit
@@ -356,23 +359,62 @@ WHAT TO CHANGE (bathroom specific):
 - Windows MUST remain visible and unobstructed
 - Place vanity + mirror on a wall WITHOUT windows
 - If vanity is under a window, use a small shelf mirror that doesn't cover the window`;
-      } else if (strategyLower.includes('deck') || strategyLower.includes('outdoor') || strategyLower.includes('entertaining') || strategyLower.includes('alfresco')) {
-        strategyInstructions = `FOCUS: Outdoor Entertaining Deck
-Add or upgrade an outdoor entertaining area attached to the house.`;
+      } else if (strategyLower.includes('granny') || strategyLower.includes('secondary dwelling') || strategyLower.includes('ancillary')) {
+        strategyInstructions = `FOCUS: Detached Granny Flat / Secondary Dwelling
+Add a NEW DETACHED granny flat or secondary dwelling in the backyard.`;
         allowedChanges = `
-WHAT TO CHANGE (outdoor entertaining specific):
-- Add a timber or composite deck (Merbau, Spotted Gum, or ModWood)
-- Install a pergola or roofed alfresco with timber or steel frame
-- Add outdoor kitchen: BBQ, stone benchtop, bar fridge space
-- Include comfortable outdoor lounge and dining furniture
-- Add festoon lighting or integrated LED downlights
-- Install privacy screening: timber slats, plants, or louvres
-- Include ceiling fan if covered
-- Add built-in bench seating or fire pit area
-- Landscape immediate surroundings with low-maintenance plants
+WHAT TO CREATE (granny flat specific):
+- A SEPARATE, DETACHED building in the backyard (NOT attached to main house)
+- Modern 1-2 bedroom self-contained dwelling
+- Size: approximately 40-60 sqm footprint
+- Style: Contemporary design matching or complementing the main house
+- Include: Entry, living area, kitchenette, bedroom(s), bathroom
+- Flat or skillion roof with clean lines
+- Large windows/sliding doors for natural light
+- Small private outdoor area or courtyard
+- Separate pathway from main house
 
-DO NOT CHANGE: House structure, existing windows, doors, or walls
-The deck should CONNECT to the house and complement its style`;
+DESIGN STYLE:
+- Modern Australian granny flat aesthetic
+- Crisp white or grey render with timber accents
+- Clean contemporary lines
+- Landscaping around the new dwelling
+
+⛔ RULES:
+- The granny flat is DETACHED - separate from the main house
+- Do NOT modify the main house
+- Position in backyard with appropriate setbacks
+- Include realistic scale (not too large for a backyard)`;
+      } else if (strategyLower.includes('deck') || strategyLower.includes('outdoor') || strategyLower.includes('entertaining') || strategyLower.includes('alfresco')) {
+        strategyInstructions = `FOCUS: Outdoor Entertaining Deck / Alfresco Area
+Add or upgrade an outdoor entertaining area ATTACHED to the house.
+
+⛔ THIS IS A DECK/ALFRESCO ONLY - NOT A GRANNY FLAT
+You are adding an OPEN-AIR entertaining space, not a separate building.`;
+        allowedChanges = `
+WHAT TO CREATE (outdoor entertaining specific):
+- A timber or composite DECK (Merbau, Spotted Gum, or ModWood)
+- A pergola or roofed alfresco with timber or steel frame
+- Outdoor kitchen area: BBQ, stone benchtop, bar fridge space
+- Comfortable outdoor lounge and dining furniture
+- Festoon lighting or integrated LED downlights
+- Privacy screening: timber slats, plants, or louvres
+- Ceiling fan if covered area
+- Built-in bench seating or fire pit area
+- Landscaping around the deck
+
+⛔⛔⛔ DO NOT ADD THESE - WRONG STRATEGY ⛔⛔⛔
+- DO NOT add a granny flat or secondary dwelling
+- DO NOT add a separate building
+- DO NOT add enclosed rooms with walls on all sides
+- This is an OPEN or SEMI-OPEN outdoor entertaining space
+- The deck should be ATTACHED to the house, not detached
+
+CORRECT OUTPUT: An outdoor deck/alfresco area for entertaining
+WRONG OUTPUT: A granny flat, studio, or separate building
+
+DO NOT CHANGE: Main house structure, existing windows, doors
+The deck should CONNECT to and complement the existing house style`;
       } else if (strategyLower.includes('solar') || strategyLower.includes('panel')) {
         strategyInstructions = `FOCUS: Solar Panel Installation
 Add solar panels to the existing roof. This is a ROOF-ONLY change.`;

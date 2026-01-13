@@ -52,6 +52,9 @@ const VISUALIZER_ALLOWED_STRATEGIES = [
   'entertaining', // Entertaining area
   'backyard',     // Backyard upgrade
   'patio',        // Patio area
+  'granny',       // Granny flat
+  'secondary',    // Secondary dwelling
+  'ancillary',    // Ancillary dwelling
 ];
 
 // Free visualization limit - after this, each costs 0.5 credits
