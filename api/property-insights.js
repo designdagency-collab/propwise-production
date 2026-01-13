@@ -455,24 +455,51 @@ MANDATORY MODULES:
 - Return 5–8 strategies (internal/renovation focused).
 - ⚠️ CRITICAL: Use REALISTIC Australian renovation costs. DO NOT inflate costs.
 
-🌳 MANDATORY STRATEGY: CURB APPEAL / FRONT YARD LANDSCAPING
-- ALWAYS include a "Curb Appeal & Front Yard Landscaping" or similar strategy
-- This is applicable to virtually EVERY property and provides high ROI
-- Even if property has existing landscaping, recommend upgrades/refresh
-- Title variations: "Curb Appeal & Landscaping", "Front Garden Refresh", "Street Presence Upgrade"
-- This should be one of the 5-8 strategies returned
+🌳 MANDATORY STRATEGY: CURB APPEAL / FACADE (ASSESS EXTERIOR CONDITION)
+- ALWAYS include a curb appeal or facade strategy - applicable to EVERY property
+- ⚠️ CRITICAL: Assess the property's EXTERIOR CONDITION from imagery/description:
+  • Does it have old weatherboards, fibro, dated brick veneer?
+  • Is the roof rusty, tiled, or dated Colorbond?
+  • Is the paint peeling or colours outdated (cream, salmon, dark brown)?
+
+SCALE THE RECOMMENDATION BASED ON CONDITION:
+
+A) GOOD EXTERIOR (modern cladding, recent paint, good roof):
+   - Title: "Curb Appeal & Front Garden Refresh"
+   - Focus: Landscaping, new turf, native plants, modern fence, driveway seal
+   - Cost: $5,000 - $25,000
+   - Description style: "Enhance street presence with native coastal planting, fresh turf, and a sleek aluminium slat fence"
+
+B) DATED EXTERIOR (old paint, tired render, minor repairs needed):
+   - Title: "Facade Refresh & Curb Appeal"  
+   - Focus: Exterior repaint, minor render repairs, landscaping, new gutters
+   - Cost: $20,000 - $45,000
+   - Description style: "Repaint exterior in contemporary Dulux Lexicon Quarter with Monument trims, add native garden beds"
+
+C) TIRED/OLD EXTERIOR (old weatherboards, fibro, dated brick, rusty roof):
+   - Title: "Complete Facade Transformation"
+   - Focus: Re-cladding, new roof, full exterior makeover + landscaping
+   - Cost: $60,000 - $100,000
+   - Description style: "Transform with James Hardie Linea cladding in Dulux Surfmist, new Colorbond Monument roof, rendered front fence, and designer landscaping inspired by Three Birds Renovations aesthetic"
+
+DESIGN-FORWARD DESCRIPTIONS (mention specific materials):
+- Cladding: James Hardie Linea, Scyon Axon, Weathertex, rendered brick
+- Roofing: Colorbond in Monument, Surfmist, Basalt, Woodland Grey
+- Colours: Dulux Lexicon Quarter, Surfmist, Natural White, Domino
+- Fencing: Aluminium slats, rendered brick pillars, timber battens
+- Landscaping: Native grasses (lomandra, dianella), ornamental pears, olive trees, decomposed granite paths
 
 AUSTRALIAN RENOVATION COST BENCHMARKS (use these ranges):
-- Curb appeal/front landscaping: $5,000 - $25,000 (ALWAYS INCLUDE)
+- Light curb appeal (landscaping only): $5,000 - $25,000
+- Facade repaint + landscaping: $20,000 - $45,000
+- Full facade transformation (re-clad + roof + landscaping): $60,000 - $100,000
 - Kitchen renovation: $15,000 - $60,000 (NOT $200k+)
 - Bathroom renovation: $15,000 - $40,000
 - Kitchen + Bathroom combo: $30,000 - $80,000
 - Paint refresh (interior): $3,000 - $15,000
 - Flooring replacement: $5,000 - $25,000
-- Landscaping/garden (full): $5,000 - $30,000
 - Minor cosmetic refresh: $5,000 - $20,000
 - Outdoor deck/entertaining: $15,000 - $50,000
-- Facade/exterior refresh: $10,000 - $40,000
 - Full interior renovation (whole house): $80,000 - $200,000
 - Granny flat/secondary dwelling: $100,000 - $200,000
 
