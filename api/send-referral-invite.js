@@ -151,11 +151,11 @@ export default async function handler(req, res) {
     const referralLink = `https://upblock.ai/?ref=${profile.referral_code}`;
     const senderName = profile.full_name || profile.email?.split('@')[0] || 'A friend';
 
-    // Send the email
+    // Send the email - Personal style subject line (avoids Promotions tab)
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: 'upblock.ai <hello@mail.upblock.ai>',
       to: friendEmail,
-      subject: `${senderName} invited you to try upblock.ai`,
+      subject: `${senderName} shared something with you`,
       html: generateEmailHtml(senderName, friendName, referralLink, profile.referral_code),
       text: generateEmailText(senderName, friendName, referralLink, profile.referral_code)
     });
@@ -190,154 +190,70 @@ export default async function handler(req, res) {
   }
 }
 
-// Generate HTML email
+// Generate HTML email - PERSONAL STYLE (avoids Gmail Promotions tab)
+// Key: Minimal HTML, conversational tone, no heavy marketing design
 function generateEmailHtml(senderName, friendName, referralLink, code) {
-  const greeting = friendName ? `Hi ${friendName}` : 'Hi there';
-  const ctaLink = `https://upblock.ai/?autofocus=1&ref=${code}&utm_source=invite&utm_medium=email&utm_campaign=guru_mode`;
+  const greeting = friendName ? `Hey ${friendName}` : 'Hey';
+  const ctaLink = `https://upblock.ai/?ref=${code}`;
   
+  // Personal-style email that looks like a friend forwarded something
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>You're invited to upblock.ai</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f0;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f0; padding: 40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 520px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-          
-          <!-- Header -->
-          <tr>
-            <td style="background-color: #FAF9F6; padding: 32px 40px; text-align: center; border-bottom: 1px solid #E8E6E3;">
-              <img src="https://upblock.ai/upblock.ai-logo.png" alt="upblock.ai" style="height: 50px; width: auto;">
-            </td>
-          </tr>
-          
-          <!-- Body -->
-          <tr>
-            <td style="padding: 40px;">
-              <h1 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 700; color: #3A342D;">
-                Real Estate Guru Mode: On 🧠
-              </h1>
-              <p style="margin: 0 0 24px 0; font-size: 15px; color: #6B6560; line-height: 1.5;">
-                ${greeting}, <strong>${senderName}</strong> thinks you'll love upblock.ai.
-              </p>
-              
-              <!-- Subhead -->
-              <p style="margin: 0 0 20px 0; font-size: 14px; color: #3A342D; line-height: 1.5;">
-                Instant property snapshot: value range + nearby solds + upside scenarios <span style="color: #9B9590;">(AI-assisted)</span>.
-              </p>
-              
-              <!-- Value prop -->
-              <div style="background-color: #FAF9F6; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
-                <table cellpadding="0" cellspacing="0" style="width: 100%;">
-                  <tr>
-                    <td style="padding: 8px 0; font-size: 14px; color: #3A342D;">
-                      <span style="color: #C9A961; font-weight: bold;">✓</span> &nbsp;<strong>Value range</strong> — quick reality check
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; font-size: 14px; color: #3A342D;">
-                      <span style="color: #C9A961; font-weight: bold;">✓</span> &nbsp;<strong>Nearby solds</strong> — real sale prices
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; font-size: 14px; color: #3A342D;">
-                      <span style="color: #C9A961; font-weight: bold;">✓</span> &nbsp;<strong>Upside scenarios</strong> — reno potential
-                    </td>
-                  </tr>
-                </table>
-              </div>
-              
-              <!-- Fake Input Bar CTA -->
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td align="center">
-                    <a href="${ctaLink}" style="display: block; text-decoration: none; max-width: 420px; width: 100%;">
-                      <table cellpadding="0" cellspacing="0" style="width: 100%; background-color: #ffffff; border: 1px solid rgba(0,0,0,0.18); border-radius: 14px; box-shadow: 0 6px 18px rgba(0,0,0,0.06);">
-                        <tr>
-                          <td style="padding: 14px 16px;">
-                            <table cellpadding="0" cellspacing="0" style="width: 100%;">
-                              <tr>
-                                <td style="font-size: 15px; color: #8a8a8a; vertical-align: middle;">
-                                  Enter an address…
-                                </td>
-                                <td style="text-align: right; vertical-align: middle; width: 110px;">
-                                  <span style="display: inline-block; background-color: #C9A961; color: #111111; font-size: 14px; font-weight: 700; padding: 10px 20px; border-radius: 10px; white-space: nowrap;">Search&nbsp;→</span>
-                                </td>
-                              </tr>
-                            </table>
-                          </td>
-                        </tr>
-                      </table>
-                    </a>
-                  </td>
-                </tr>
-                <tr>
-                  <td align="center" style="padding-top: 12px;">
-                    <p style="margin: 0; font-size: 12px; color: #9B9590;">
-                      Takes ~60 seconds
-                    </p>
-                  </td>
-                </tr>
-              </table>
-              
-              <p style="margin: 24px 0 0 0; font-size: 12px; color: #9B9590; text-align: center;">
-                Your referral code: <strong style="color: #C9A961;">${code}</strong>
-              </p>
-              <p style="margin: 12px 0 0 0; font-size: 11px; color: #9B9590; text-align: center;">
-                This offer is for new accounts only. Already have an account? Sign in to use your existing credits.
-              </p>
-            </td>
-          </tr>
-          
-          <!-- Footer -->
-          <tr>
-            <td style="background-color: #FAF9F6; padding: 24px 40px; text-align: center; border-top: 1px solid #E8E6E3;">
-              <p style="margin: 0; font-size: 11px; color: #9B9590;">
-                © ${new Date().getFullYear()} upblock.ai · AI-powered property intelligence
-              </p>
-            </td>
-          </tr>
-          
-        </table>
-      </td>
-    </tr>
-  </table>
+<body style="margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; line-height: 1.6; color: #333;">
+  
+  <p>${greeting},</p>
+  
+  <p>${senderName} thought you'd find this useful – it's a property tool I've been using called <a href="${ctaLink}" style="color: #C9A961;">upblock.ai</a>.</p>
+  
+  <p>You type in any address and it gives you:</p>
+  <ul style="padding-left: 20px; margin: 16px 0;">
+    <li>Estimated value range (pretty accurate from what I've seen)</li>
+    <li>Recent sold prices nearby</li>
+    <li>Renovation ideas with ROI estimates</li>
+  </ul>
+  
+  <p>Takes about a minute. Here's the link if you want to try it:</p>
+  
+  <p><a href="${ctaLink}" style="color: #C9A961; font-weight: 600;">${ctaLink}</a></p>
+  
+  <p>Let me know what you think!</p>
+  
+  <p style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee; font-size: 13px; color: #888;">
+    Sent via <a href="https://upblock.ai" style="color: #888;">upblock.ai</a>
+  </p>
+
 </body>
 </html>
 `;
 }
 
-// Generate plain text version
+// Generate plain text version - PERSONAL STYLE
 function generateEmailText(senderName, friendName, referralLink, code) {
-  const greeting = friendName ? `Hi ${friendName}` : 'Hi there';
-  const ctaLink = `https://upblock.ai/?autofocus=1&ref=${code}&utm_source=invite&utm_medium=email&utm_campaign=guru_mode`;
+  const greeting = friendName ? `Hey ${friendName}` : 'Hey';
+  const ctaLink = `https://upblock.ai/?ref=${code}`;
   
   return `
-${greeting}, ${senderName} thinks you'll love upblock.ai.
+${greeting},
 
-🧠 Real Estate Guru Mode: On
+${senderName} thought you'd find this useful – it's a property tool I've been using called upblock.ai.
 
-Instant property snapshot: value range + nearby solds + upside scenarios (AI-assisted).
+You type in any address and it gives you:
+- Estimated value range (pretty accurate from what I've seen)
+- Recent sold prices nearby
+- Renovation ideas with ROI estimates
 
-✓ Value range — quick reality check
-✓ Nearby solds — real sale prices
-✓ Upside scenarios — reno potential
+Takes about a minute. Here's the link if you want to try it:
+${ctaLink}
 
-👉 Enter an address and search: ${ctaLink}
-
-Takes ~60 seconds.
-
-Your referral code: ${code}
-
-Note: This offer is for new accounts only.
+Let me know what you think!
 
 ---
-© ${new Date().getFullYear()} upblock.ai
+Sent via upblock.ai
 `.trim();
 }
 
