@@ -270,42 +270,55 @@ Generate a realistic, proportionally-sized ${contextTitle.toLowerCase()} that fi
       
       if (strategyLower.includes('kitchen')) {
         strategyInstructions = `FOCUS: Kitchen Modernisation
-This is an INTERIOR kitchen renovation. Transform the existing kitchen into a modern, high-end cooking space.
+This is an INTERIOR kitchen renovation for a RESIDENTIAL HOME (not commercial).
 
-⚠️ CRITICAL SPACE ANALYSIS - BEFORE ADDING ANYTHING:
-1. MEASURE the visible floor space in the photo
-2. Identify wall-to-wall distances and existing walkways
-3. COUNT the existing fixtures: sinks, cooktops, ovens
-4. Check if there's ACTUALLY room for additional elements`;
+⛔⛔⛔ ABSOLUTE RULE - READ THIS FIRST ⛔⛔⛔
+This is a SINGLE FAMILY HOME kitchen. Australian homes have:
+- EXACTLY 1 oven (ONE oven, not two, not three - ONE)
+- EXACTLY 1 cooktop/hotplate (ONE, not two)
+- EXACTLY 1 sink (ONE sink only)
+- EXACTLY 1 rangehood
+
+COUNT THE APPLIANCES IN THE ORIGINAL PHOTO. The renovated version MUST have the SAME COUNT.
+If original has 1 oven → renovated has 1 oven
+If original has 1 sink → renovated has 1 sink
+DO NOT ADD EXTRA APPLIANCES. This is NOT a commercial kitchen.
+
+⚠️ BEFORE GENERATING - ANALYSE:
+1. Count ovens in photo: ___  (result must match)
+2. Count cooktops in photo: ___ (result must match)
+3. Count sinks in photo: ___ (result must match)`;
         allowedChanges = `
 WHAT TO CHANGE (kitchen specific):
 - Cabinetry: Replace with handleless shaker or flat-panel in white, grey, or natural timber
 - Benchtops: Install Caesarstone, marble-look engineered stone, or timber
 - Splashback: Add subway tiles, herringbone pattern, or feature tiles
-- Appliances: Show modern stainless steel or integrated appliances
+- Appliances: UPGRADE the EXISTING appliances - modern stainless steel or integrated
 - Lighting: Add pendant lights (if island exists), LED strip under cabinets
 - Hardware: Modern matte black or brushed brass tapware and handles
 - Flooring: Timber-look tiles or engineered timber (if visible)
 
-🚫 REALISTIC FIXTURE RULES (CRITICAL - DO NOT BREAK):
-- ONE SINK ONLY - residential kitchens have ONE sink, do not add a second
-- ONE COOKTOP/HOTPLATE ONLY - do not duplicate the stovetop
-- ONE OVEN ONLY - do not add extra ovens
-- ONE RANGEHOOD ONLY - positioned above the cooktop
-- If original has 1 sink → result has 1 sink (upgraded, not multiplied)
-- If original has 1 cooktop → result has 1 cooktop (upgraded, not multiplied)
-- UPGRADE fixtures, don't DUPLICATE them
-- A kitchen should look like a REAL home kitchen, not a commercial space
+⛔⛔⛔ APPLIANCE COUNT - NEVER BREAK THESE RULES ⛔⛔⛔
+- ONE OVEN ONLY - if photo shows 1 oven, result has 1 oven. NEVER 2 ovens.
+- ONE COOKTOP ONLY - if photo shows 1 cooktop, result has 1 cooktop. NEVER 2.
+- ONE SINK ONLY - if photo shows 1 sink, result has 1 sink. NEVER 2 sinks.
+- ONE RANGEHOOD ONLY - above the single cooktop
+- This is a HOME kitchen, not a restaurant. Homes don't have double ovens side by side.
+- UPGRADE the appliance quality, do NOT multiply the quantity
 
-🚫 ISLAND BENCH RULES (CRITICAL):
+🚫 ISLAND BENCH RULES:
 - ONLY add an island if there is MINIMUM 1 metre clearance on ALL sides
 - If the kitchen is a GALLEY style (two parallel benches), DO NOT add an island
 - If wall-to-wall distance is less than 3 metres, DO NOT add an island
-- If there's already limited floor space visible, DO NOT add an island
-- If in doubt, upgrade EXISTING benchtops instead of adding new ones
 - Islands should NOT have sinks or cooktops unless the original already did
 
-DO NOT CHANGE: Wall positions, window locations, ceiling height, room shape, overall kitchen footprint`;
+🔍 FINAL CHECK BEFORE RENDERING:
+□ Does result have same number of ovens as original? (should be 1)
+□ Does result have same number of cooktops as original? (should be 1)
+□ Does result have same number of sinks as original? (should be 1)
+□ Does this look like a realistic Australian home kitchen?
+
+DO NOT CHANGE: Wall positions, window locations, ceiling height, room shape`;
       } else if (strategyLower.includes('bathroom')) {
         strategyInstructions = `FOCUS: Bathroom Update
 This is an INTERIOR bathroom renovation. Transform into a spa-like retreat.
@@ -428,7 +441,10 @@ WHAT YOU CAN CHANGE (cosmetic only):
 - Gutters and fascia color`;
       }
       
-      fullPrompt = `You are renovating an EXISTING building. ${strategyInstructions}
+      fullPrompt = `You are renovating an EXISTING RESIDENTIAL HOME (single family dwelling).
+This is NOT a commercial property. This is a normal Australian HOUSE.
+
+${strategyInstructions}
 
 ⛔⛔⛔ ABSOLUTE RULES - DO NOT BREAK THESE ⛔⛔⛔
 1. KEEP THE EXACT SAME BUILDING - same shape, same walls, same roof line, same footprint
@@ -438,6 +454,7 @@ WHAT YOU CAN CHANGE (cosmetic only):
 5. DO NOT remove any existing walls or structural elements.
 6. DO NOT change the roof shape or building silhouette.
 7. DO NOT extend or modify the building structure in ANY way (no extensions, no new levels).
+8. DO NOT DUPLICATE APPLIANCES - homes have ONE of each major appliance (1 oven, 1 cooktop, 1 sink)
 ${allowedChanges}
 
 DESIGN STYLE: Three Birds Renovations / coastal-luxe Australian
