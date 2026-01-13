@@ -129,6 +129,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   // Track user's total visualization count for free/paid logic
   const [userVisualizationCount, setUserVisualizationCount] = useState<number>(0);
   
+  // Track whether cached visualizations have finished loading (for PDF export)
+  const [visualCacheLoaded, setVisualCacheLoaded] = useState<boolean>(false);
+  
   // Track which visualizations are selected for PDF export (default: all selected)
   // Key format: "strategy-0-0" or "development-1-0" (type-cardIndex-visualIndex)
   const [pdfSelectedVisuals, setPdfSelectedVisuals] = useState<Set<string>>(new Set());
@@ -174,6 +177,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         const token = await supabaseService.getAccessToken();
         if (!token) {
           console.log('[Visuals] No auth token, skipping cache load');
+          setVisualCacheLoaded(true); // Mark as loaded even if skipped
           return;
         }
 
@@ -205,6 +209,10 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         }
       } catch (err) {
         console.warn('[Visuals] Could not load cached visualizations:', err);
+      } finally {
+        // Always mark cache as loaded so PDF export can proceed
+        setVisualCacheLoaded(true);
+        console.log('[Visuals] Cache loading complete');
       }
     };
 
@@ -373,6 +381,26 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
     setIsExporting(true);
     
     try {
+      // 0. Wait for cached visualizations to finish loading (ensures AI images are included)
+      if (!visualCacheLoaded) {
+        console.log('[PDF] Waiting for visualization cache to load...');
+        await new Promise<void>((resolve) => {
+          const checkInterval = setInterval(() => {
+            if (visualCacheLoaded) {
+              clearInterval(checkInterval);
+              resolve();
+            }
+          }, 100);
+          // Timeout after 5 seconds to avoid infinite wait
+          setTimeout(() => {
+            clearInterval(checkInterval);
+            console.log('[PDF] Cache wait timeout, proceeding anyway');
+            resolve();
+          }, 5000);
+        });
+      }
+      console.log('[PDF] Visualization cache ready, generatedVisuals keys:', Object.keys(generatedVisuals));
+      
       // 1. Pre-fetch static map image (with retries)
       let mapDataUrl: string | null = null;
       console.log('[PDF] Fetching static map for:', data.address);
