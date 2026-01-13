@@ -223,6 +223,11 @@ Here's the link: ${ctaLink}
 
 Takes about a minute to run.
 
+Will follow up with a call.
+
+Thanks,<br>
+${senderName}
+
 </body>
 </html>
 `;
@@ -243,6 +248,11 @@ You put in any address and it shows you the estimated value, recent sales nearby
 Here's the link: ${ctaLink}
 
 Takes about a minute to run.
+
+Will follow up with a call.
+
+Thanks,
+${senderName}
 `.trim();
 }
 
