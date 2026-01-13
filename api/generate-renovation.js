@@ -246,18 +246,39 @@ WHAT TO CREATE: ${contextTitle}
 5. The front facade faces the street, the rear faces the backyard
 6. If unsure which way is street, look for existing driveways on neighboring properties
 
+🏠🏠 DUPLEX / DUAL OCCUPANCY RULES (CRITICAL):
+If creating a DUPLEX or DUAL OCCUPANCY (2 dwellings):
+- Each dwelling MUST have its OWN garage
+- Garages should be BALANCED - NOT all on one side
+- PREFERRED: Mirrored layout with garages on OPPOSITE outer edges
+  → Dwelling 1 garage on LEFT side, Dwelling 2 garage on RIGHT side
+- ACCEPTABLE: Central shared driveway with garages side-by-side in middle
+- NOT ACCEPTABLE: Both garages bunched to one side of the building
+- The design should look SYMMETRICAL or BALANCED from the street
+- Each dwelling should have equal street presence
+
+Example good duplex layout (viewed from street):
+[Garage 1] [Entry 1] [Entry 2] [Garage 2]  ✓ Balanced
+[Entry 1] [Garage 1] [Garage 2] [Entry 2]  ✓ Central garages OK
+
+Example BAD duplex layout:
+[Garage 1] [Garage 2] [Entry 1] [Entry 2]  ✗ All garages on one side - WRONG
+
 DESIGN STYLE:
 - Crisp white render with timber accents
 - Modern flat or skillion roof with solar panels
 - Contemporary glazing and balconies with railings
 - Street-facing entry and garage (FACING THE ROAD)
 - Rear private courtyard or garden
+- For duplex: SYMMETRICAL or BALANCED facade design
 
 🚨 FINAL CHECK BEFORE GENERATING:
 1. Is the garage facing the STREET (not the backyard)?
 2. Is the driveway connecting to the ROAD (not crossing into rear)?
 3. Does the building fit WITHIN the white boundary lines?
 4. Would this building's orientation make sense on a real suburban street?
+5. FOR DUPLEX: Are garages BALANCED (not all on one side)?
+6. FOR DUPLEX: Does each dwelling have equal street presence?
 
 🧹 WATERMARK REMOVAL:
 If the original image has any watermarks, logos, text overlays, or branding from real estate agencies, mapping services, or photography companies - REMOVE THEM COMPLETELY from the generated image. The output should be clean with no watermarks.
