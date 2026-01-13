@@ -454,22 +454,52 @@ WHAT TO CHANGE (solar specific):
 - ONLY add solar panels to the existing roof
 - The house should look IDENTICAL except for solar panels`;
       } else if (strategyLower.includes('landscap') || strategyLower.includes('garden') || strategyLower.includes('curb')) {
-        strategyInstructions = `FOCUS: Landscaping & Garden Design
-Upgrade the outdoor landscape and gardens while keeping the house structure identical.`;
+        strategyInstructions = `FOCUS: Three Birds Style Curb Appeal & Front Landscaping
+Transform the front yard into a magazine-worthy, coastal-luxe Australian streetscape.
+
+🏠 THREE BIRDS RENOVATIONS AESTHETIC:
+- Fresh, modern, welcoming street presence
+- Layered planting with texture and depth
+- Clean lines with organic softness
+- "Undone but designed" natural look
+- Instantly adds perceived value at first glance`;
         allowedChanges = `
-WHAT TO CHANGE (landscaping specific):
-- Plant selection: Native Australian plants, ornamental grasses, hedging
-- Garden beds: Defined edges with corten steel or timber
-- Lawn: Fresh green lawn or low-maintenance artificial turf
-- Paths: Stepping stones, paved walkways, gravel paths
-- Trees: Feature trees like Magnolia, Frangipani, or Ornamental Pear
-- Mulch: Fresh brown or black mulch in garden beds
-- Lighting: Garden uplights, path markers, feature lighting
-- Planters: Large Mediterranean pots with topiary or olive trees
-- Driveway: Exposed aggregate, pavers, or concrete if visible
+WHAT TO CREATE (Three Birds curb appeal):
+
+🌿 PLANTING PALETTE (coastal-luxe Australian):
+- Hedging: Murraya, Lilly Pilly, Star Jasmine on fence
+- Ornamental grasses: Lomandra, Blue Fescue, Pennisetum
+- Feature plants: Agave, Bird of Paradise, Cycads
+- Softening plants: Silver Bush, Westringia, Coastal Rosemary
+- Trees: Ornamental Pear, Frangipani, Magnolia Little Gem, Olive
+- Ground cover: Native violet, Dichondra, Star Jasmine
+
+🛤️ HARDSCAPE (modern Australian):
+- Paths: Large format concrete pavers or bluestone steppers
+- Driveway: Exposed aggregate in warm grey or charcoal
+- Edging: Corten steel garden bed edges (signature Three Birds)
+- Letterbox: Modern concrete or timber post with black numbers
+- Fencing: Horizontal timber slat or rendered wall with capping
+
+✨ FINISHING TOUCHES:
+- Mulch: Black or dark brown chunky mulch (fresh, generous layer)
+- Lighting: Copper or black path lights, up-lights on feature trees
+- Planters: Large white or concrete pots with topiary spheres or olive trees
+- House numbers: Oversized modern numbers in matte black
+- Entry: Frame the front door with symmetrical planting
+
+🎨 THREE BIRDS DESIGN PRINCIPLES:
+- Create DEPTH with layered planting (low → medium → tall)
+- Add TEXTURE contrast (spiky grasses + soft shrubs + sculptural plants)
+- Keep it CURATED - lush but intentional, not overgrown
+- Frame the entry - draw the eye to the front door
+- Balance symmetry with organic natural shapes
+- Use a LIMITED colour palette (greens, whites, greys, warm timber)
+- Add ONE statement feature (Frangipani, sculptural Agave, or Olive tree)
 
 DO NOT CHANGE: House structure, windows, doors, roof, paint colors
-Only the landscaping and outdoor areas should be transformed`;
+TRANSFORM: Front yard, garden beds, lawn, driveway surface, paths, fencing
+The house stays the same - only the landscaping gets the Three Birds treatment`;
       } else if (strategyLower.includes('facade') || strategyLower.includes('exterior') || strategyLower.includes('render') || strategyLower.includes('paint')) {
         strategyInstructions = `FOCUS: Facade Refresh
 Update the exterior appearance with paint, render, and cosmetic improvements.`;
