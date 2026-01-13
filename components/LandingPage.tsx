@@ -133,6 +133,20 @@ const LandingPage: React.FC<LandingPageProps> = ({
                     style={{ color: 'var(--text-primary)' }}
                     autoComplete="off"
                   />
+                  {/* Clear button - appears when address has text */}
+                  {address && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onAddressChange('');
+                        setShowSuggestions(false);
+                      }}
+                      className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-[#C9A961] transition-colors rounded-full hover:bg-gray-100/50"
+                      aria-label="Clear address"
+                    >
+                      <i className="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 pr-2">
                   {isMobile && (
