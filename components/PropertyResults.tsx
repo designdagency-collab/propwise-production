@@ -431,8 +431,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
       };
       
       // Compress and crop to target aspect ratio for consistent PDF layout
+      // Higher resolution (800px) for print quality, optimized JPEG compression (0.75)
       // targetRatio: 16/9 = 1.78 (landscape), 4/3 = 1.33, 3/2 = 1.5
-      const compressBase64Image = async (base64: string, maxWidth: number = 450, quality: number = 0.95, targetRatio: number = 16/9): Promise<string> => {
+      const compressBase64Image = async (base64: string, maxWidth: number = 800, quality: number = 0.75, targetRatio: number = 16/9): Promise<string> => {
         return new Promise((resolve, reject) => {
           if (!isValidBase64Image(base64)) {
             console.error('[PDF] Invalid base64 image format');
