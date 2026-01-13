@@ -151,11 +151,13 @@ export default async function handler(req, res) {
     const referralLink = `https://upblock.ai/?ref=${profile.referral_code}`;
     const senderName = profile.full_name || profile.email?.split('@')[0] || 'A friend';
 
-    // Send the email - Personal style subject line (avoids Promotions tab)
+    // Send the email - Maximum deliverability settings
+    // Using sender's name in "from" to appear more personal
     const { data: emailData, error: emailError } = await resend.emails.send({
-      from: 'upblock.ai <hello@mail.upblock.ai>',
+      from: `${senderName} via upblock <hello@mail.upblock.ai>`,
+      replyTo: profile.email || 'hello@upblock.ai',
       to: friendEmail,
-      subject: `${senderName} shared something with you`,
+      subject: friendName ? `${friendName}, check this out` : 'Quick property tool I found',
       html: generateEmailHtml(senderName, friendName, referralLink, profile.referral_code),
       text: generateEmailText(senderName, friendName, referralLink, profile.referral_code)
     });
@@ -190,49 +192,35 @@ export default async function handler(req, res) {
   }
 }
 
-// Generate HTML email - PERSONAL STYLE (avoids Gmail Promotions tab)
-// Key: Minimal HTML, conversational tone, no heavy marketing design
+// Generate HTML email - MAXIMUM DELIVERABILITY
+// Super minimal HTML - almost plain text to avoid spam filters
 function generateEmailHtml(senderName, friendName, referralLink, code) {
   const greeting = friendName ? `Hey ${friendName}` : 'Hey';
   const ctaLink = `https://upblock.ai/?ref=${code}`;
   
-  // Personal-style email that looks like a friend forwarded something
+  // Near plain-text email - minimal HTML to maximize deliverability
   return `
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 15px; line-height: 1.6; color: #333;">
-  
-  <p>${greeting},</p>
-  
-  <p>${senderName} thought you'd find this useful – it's a property tool I've been using called <a href="${ctaLink}" style="color: #C9A961;">upblock.ai</a>.</p>
-  
-  <p>You type in any address and it gives you:</p>
-  <ul style="padding-left: 20px; margin: 16px 0;">
-    <li>Estimated value range (pretty accurate from what I've seen)</li>
-    <li>Recent sold prices nearby</li>
-    <li>Renovation ideas with ROI estimates</li>
-  </ul>
-  
-  <p>Takes about a minute. Here's the link if you want to try it:</p>
-  
-  <p><a href="${ctaLink}" style="color: #C9A961; font-weight: 600;">${ctaLink}</a></p>
-  
-  <p>Let me know what you think!</p>
-  
-  <p style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee; font-size: 13px; color: #888;">
-    Sent via <a href="https://upblock.ai" style="color: #888;">upblock.ai</a>
-  </p>
+<head><meta charset="utf-8"></head>
+<body style="font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #333;">
+
+${greeting},
+
+I've been using this property tool and thought you might find it useful.
+
+You put in any address and it shows you the estimated value, recent sales nearby, and renovation ideas with potential returns.
+
+Here's the link: ${ctaLink}
+
+Takes about a minute to run.
 
 </body>
 </html>
 `;
 }
 
-// Generate plain text version - PERSONAL STYLE
+// Generate plain text version - MAXIMUM DELIVERABILITY
 function generateEmailText(senderName, friendName, referralLink, code) {
   const greeting = friendName ? `Hey ${friendName}` : 'Hey';
   const ctaLink = `https://upblock.ai/?ref=${code}`;
@@ -240,20 +228,13 @@ function generateEmailText(senderName, friendName, referralLink, code) {
   return `
 ${greeting},
 
-${senderName} thought you'd find this useful – it's a property tool I've been using called upblock.ai.
+I've been using this property tool and thought you might find it useful.
 
-You type in any address and it gives you:
-- Estimated value range (pretty accurate from what I've seen)
-- Recent sold prices nearby
-- Renovation ideas with ROI estimates
+You put in any address and it shows you the estimated value, recent sales nearby, and renovation ideas with potential returns.
 
-Takes about a minute. Here's the link if you want to try it:
-${ctaLink}
+Here's the link: ${ctaLink}
 
-Let me know what you think!
-
----
-Sent via upblock.ai
+Takes about a minute to run.
 `.trim();
 }
 
