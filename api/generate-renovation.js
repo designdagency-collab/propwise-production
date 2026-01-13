@@ -90,70 +90,83 @@ export default async function handler(req, res) {
     // CREDIT CHECK: First 2 visualizations free, then 0.5 credits each
     // ============================================
     
-    // Count user's total visualizations across all properties
-    const { count: totalVisualizationCount, error: countError } = await supabase
-      .from('visualization_cache')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-    
-    if (countError) {
-      console.error('[GenerateRenovation] Error counting visualizations:', countError);
-    }
-    
-    const currentVisualizationCount = totalVisualizationCount || 0;
-    const isFreeVisualization = currentVisualizationCount < FREE_VISUALIZATION_LIMIT;
-    
-    console.log(`[GenerateRenovation] User has ${currentVisualizationCount} visualizations. Free: ${isFreeVisualization}`);
-    
-    // If not free, check and deduct credits
+    let currentVisualizationCount = 0;
+    let isFreeVisualization = true;
     let creditsDeducted = false;
-    if (!isFreeVisualization) {
-      // Fetch user's profile to check credits
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('credit_topups, plan_type')
-        .eq('id', user.id)
-        .single();
+    
+    try {
+      // Count user's total visualizations across all properties
+      const { count: totalVisualizationCount, error: countError } = await supabase
+        .from('visualization_cache')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
       
-      if (profileError || !profile) {
-        console.error('[GenerateRenovation] Error fetching profile:', profileError);
-        return res.status(500).json({ error: 'Could not verify credits' });
-      }
-      
-      // UNLIMITED_PRO users don't consume credits
-      if (profile.plan_type === 'UNLIMITED_PRO') {
-        console.log('[GenerateRenovation] UNLIMITED_PRO user - no credit deduction');
+      if (countError) {
+        console.error('[GenerateRenovation] Error counting visualizations:', countError);
+        // If count fails, assume user is within free limit to avoid blocking
+        console.log('[GenerateRenovation] Proceeding as free due to count error');
       } else {
-        const availableCredits = profile.credit_topups || 0;
+        currentVisualizationCount = totalVisualizationCount || 0;
+        isFreeVisualization = currentVisualizationCount < FREE_VISUALIZATION_LIMIT;
         
-        if (availableCredits < CREDIT_COST_PER_VISUALIZATION) {
-          console.log('[GenerateRenovation] Insufficient credits:', availableCredits);
-          return res.status(402).json({ 
-            error: 'Insufficient credits',
-            message: `You've used your ${FREE_VISUALIZATION_LIMIT} free AI visualizations. Each additional visualization costs ${CREDIT_COST_PER_VISUALIZATION} credits. Please purchase more credits to continue.`,
-            insufficientCredits: true,
-            freeUsed: currentVisualizationCount,
-            freeLimit: FREE_VISUALIZATION_LIMIT,
-            creditsRequired: CREDIT_COST_PER_VISUALIZATION,
-            creditsAvailable: availableCredits
-          });
+        console.log(`[GenerateRenovation] User has ${currentVisualizationCount} visualizations. Free: ${isFreeVisualization}`);
+        
+        // If not free, check and deduct credits
+        if (!isFreeVisualization) {
+          // Fetch user's profile to check credits
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('credit_topups, plan_type')
+            .eq('id', user.id)
+            .single();
+          
+          if (profileError) {
+            console.error('[GenerateRenovation] Error fetching profile:', profileError);
+            // Allow generation but don't charge
+            console.log('[GenerateRenovation] Proceeding without credit check due to profile error');
+          } else if (profile) {
+            // UNLIMITED_PRO users don't consume credits
+            if (profile.plan_type === 'UNLIMITED_PRO') {
+              console.log('[GenerateRenovation] UNLIMITED_PRO user - no credit deduction');
+            } else {
+              const availableCredits = parseFloat(profile.credit_topups) || 0;
+              
+              if (availableCredits < CREDIT_COST_PER_VISUALIZATION) {
+                console.log('[GenerateRenovation] Insufficient credits:', availableCredits);
+                return res.status(402).json({ 
+                  error: 'Insufficient credits',
+                  message: `You've used your ${FREE_VISUALIZATION_LIMIT} free AI visualizations. Each additional visualization costs ${CREDIT_COST_PER_VISUALIZATION} credits. Please purchase more credits to continue.`,
+                  insufficientCredits: true,
+                  freeUsed: currentVisualizationCount,
+                  freeLimit: FREE_VISUALIZATION_LIMIT,
+                  creditsRequired: CREDIT_COST_PER_VISUALIZATION,
+                  creditsAvailable: availableCredits
+                });
+              }
+              
+              // Deduct 0.5 credits
+              const newCreditBalance = availableCredits - CREDIT_COST_PER_VISUALIZATION;
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ credit_topups: newCreditBalance })
+                .eq('id', user.id);
+              
+              if (updateError) {
+                console.error('[GenerateRenovation] Error deducting credits:', updateError);
+                // Don't block - just log the error
+                console.log('[GenerateRenovation] Proceeding without deducting credits due to update error');
+              } else {
+                creditsDeducted = true;
+                console.log(`[GenerateRenovation] Deducted ${CREDIT_COST_PER_VISUALIZATION} credits. New balance: ${newCreditBalance}`);
+              }
+            }
+          }
         }
-        
-        // Deduct 0.5 credits
-        const newCreditBalance = availableCredits - CREDIT_COST_PER_VISUALIZATION;
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ credit_topups: newCreditBalance })
-          .eq('id', user.id);
-        
-        if (updateError) {
-          console.error('[GenerateRenovation] Error deducting credits:', updateError);
-          return res.status(500).json({ error: 'Failed to process credits' });
-        }
-        
-        creditsDeducted = true;
-        console.log(`[GenerateRenovation] Deducted ${CREDIT_COST_PER_VISUALIZATION} credits. New balance: ${newCreditBalance}`);
       }
+    } catch (creditCheckError) {
+      console.error('[GenerateRenovation] Credit check failed:', creditCheckError);
+      // Don't block generation if credit check fails
+      console.log('[GenerateRenovation] Proceeding despite credit check error');
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
