@@ -500,22 +500,75 @@ WHAT TO CREATE (Three Birds curb appeal):
 DO NOT CHANGE: House structure, windows, doors, roof, paint colors
 TRANSFORM: Front yard, garden beds, lawn, driveway surface, paths, fencing
 The house stays the same - only the landscaping gets the Three Birds treatment`;
-      } else if (strategyLower.includes('facade') || strategyLower.includes('exterior') || strategyLower.includes('render') || strategyLower.includes('paint')) {
-        strategyInstructions = `FOCUS: Facade Refresh
-Update the exterior appearance with paint, render, and cosmetic improvements.`;
+      } else if (strategyLower.includes('facade') || strategyLower.includes('exterior') || strategyLower.includes('render') || strategyLower.includes('paint') || strategyLower.includes('cladding') || strategyLower.includes('transformation')) {
+        strategyInstructions = `FOCUS: Three Birds Style Complete Facade Transformation
+Transform the entire exterior into a magazine-worthy, coastal-luxe Australian home.
+This is a DRAMATIC before/after transformation - make it impressive!`;
         allowedChanges = `
-WHAT TO CHANGE (facade specific):
-- Paint/Render: Fresh white, soft grey, or warm greige render
-- Roof: Colorbond in Monument, Surfmist, Basalt, or terracotta tiles
-- Window frames: Repaint to black or white aluminum look
-- Front door: Statement door in black, timber, or feature color
-- Gutters and fascia: Match roof or contrast in white
-- Lighting: Modern wall-mounted entry lights
-- House numbers: Contemporary large format numbers
-- Fencing: Modern front fence if visible
+🏠 THREE BIRDS FACADE TRANSFORMATION:
 
-DO NOT CHANGE: Building shape, window positions, door positions, roof line
-Only surface finishes and colors should change`;
+FIRST - IDENTIFY THE EXISTING EXTERIOR:
+Look at the photo and determine if the house is:
+A) BRICK (orange, brown, cream, red brick)
+B) WEATHERBOARD/TIMBER (horizontal boards, painted timber)
+C) FIBRO/CEMENT SHEET (flat panels, dated look)
+D) RENDER (textured or painted render)
+
+THEN APPLY THE RIGHT TRANSFORMATION:
+
+🧱 FOR BRICK HOMES (Three Birds signature look):
+- PAINTED BRICK: Crisp white (Dulux Natural White) or soft grey (Dulux Dieskau)
+- LIMEWASH BRICK: Textured European look in white or grey
+- RENDERED BRICK: Smooth modern acrylic render in white/off-white
+- BAGGED BRICK: Budget option, textured cement wash
+- PARTIAL RENDER: Render lower half, paint upper, or vice versa
+- ADD CONTRAST: Timber battens, black window frames, feature cladding
+
+🪵 FOR WEATHERBOARD/TIMBER HOMES:
+- FRESH PAINT: White, Surfmist, soft grey
+- RE-CLAD: James Hardie Linea boards (horizontal) or Scyon Axon (vertical)
+- SCYON STRIA: Wider horizontal boards for modern look
+- ADD TEXTURE: Mix cladding with rendered sections
+
+📋 FOR FIBRO/DATED CLADDING:
+- FULL RE-CLAD: James Hardie Linea, Weathertex, or Scyon Axon
+- PAINT IF GOOD CONDITION: Fresh white or grey
+- Add architectural interest with mixed cladding profiles
+
+🎨 COLOUR PALETTE (Three Birds approved):
+WALLS: Dulux Natural White, Lexicon Quarter, Surfmist, Dieskau (grey)
+TRIMS: Dulux Domino (charcoal), Monument, Black Caviar
+ACCENTS: Warm timber (Blackbutt, Spotted Gum) or black steel
+
+🏠 ROOF TRANSFORMATION:
+- Replace dated tiles with Colorbond in Monument, Basalt, or Surfmist
+- If keeping tiles, ensure they're charcoal/slate or terracotta
+- Add solar panels if roof permits
+
+🖼️ WINDOW & DOOR TRANSFORMATION:
+- Repaint window frames to BLACK (signature Three Birds look)
+- Statement front door: Black, charcoal, or natural timber
+- Add timber or black steel awning over entry if appropriate
+- Consider black powder-coated aluminium look
+
+✨ FINISHING DETAILS:
+- Gutters & fascia: Colorbond Monument or to match roof
+- Downpipes: Black or charcoal, not white
+- House numbers: Oversized matte black modern numbers
+- Lighting: Black or copper wall sconces flanking entry
+- Fencing: Horizontal timber slats, rendered pillars, or black steel
+
+🌿 INCLUDE BASIC LANDSCAPING TO COMPLETE THE LOOK:
+- Fresh garden beds with native plants
+- Crisp lawn edge
+- Gravel or paved path
+- Feature plant at entry (olive tree, ornamental pear)
+
+THE GOAL: Make it look like a Three Birds Renovations "after" photo!
+Magazine-worthy, dramatically improved, aspirational but achievable.
+
+DO NOT CHANGE: Building shape, window positions, door positions, roof line shape
+TRANSFORM: Every surface finish - walls, roof colour, trims, doors, landscaping`;
       } else {
         // Generic renovation fallback
         strategyInstructions = `FOCUS: General Cosmetic Renovation
