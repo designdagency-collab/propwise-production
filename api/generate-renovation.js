@@ -18,7 +18,17 @@ const ALLOWED_STRATEGIES = [
   'curb',         // Curb appeal
   'landscap',     // Landscaping
   'garden',       // Garden design
+  'outdoor',      // Outdoor entertaining
+  'alfresco',     // Alfresco area
+  'deck',         // Deck addition
+  'entertaining', // Entertaining area
+  'backyard',     // Backyard upgrade
+  'patio',        // Patio area
 ];
+
+// Free visualization limit
+const FREE_VISUALIZATION_LIMIT = 2;
+const CREDIT_COST_PER_VISUALIZATION = 0.5;
 
 // Development scenarios are always allowed
 const ALLOW_DEVELOPMENT = true;
@@ -75,6 +85,76 @@ export default async function handler(req, res) {
     }
 
     console.log('[GenerateRenovation] Authenticated user:', user.email);
+
+    // ============================================
+    // CREDIT CHECK: First 2 visualizations free, then 0.5 credits each
+    // ============================================
+    
+    // Count user's total visualizations across all properties
+    const { count: totalVisualizationCount, error: countError } = await supabase
+      .from('visualization_cache')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+    
+    if (countError) {
+      console.error('[GenerateRenovation] Error counting visualizations:', countError);
+    }
+    
+    const currentVisualizationCount = totalVisualizationCount || 0;
+    const isFreeVisualization = currentVisualizationCount < FREE_VISUALIZATION_LIMIT;
+    
+    console.log(`[GenerateRenovation] User has ${currentVisualizationCount} visualizations. Free: ${isFreeVisualization}`);
+    
+    // If not free, check and deduct credits
+    let creditsDeducted = false;
+    if (!isFreeVisualization) {
+      // Fetch user's profile to check credits
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('credit_topups, plan_type')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileError || !profile) {
+        console.error('[GenerateRenovation] Error fetching profile:', profileError);
+        return res.status(500).json({ error: 'Could not verify credits' });
+      }
+      
+      // UNLIMITED_PRO users don't consume credits
+      if (profile.plan_type === 'UNLIMITED_PRO') {
+        console.log('[GenerateRenovation] UNLIMITED_PRO user - no credit deduction');
+      } else {
+        const availableCredits = profile.credit_topups || 0;
+        
+        if (availableCredits < CREDIT_COST_PER_VISUALIZATION) {
+          console.log('[GenerateRenovation] Insufficient credits:', availableCredits);
+          return res.status(402).json({ 
+            error: 'Insufficient credits',
+            message: `You've used your ${FREE_VISUALIZATION_LIMIT} free AI visualizations. Each additional visualization costs ${CREDIT_COST_PER_VISUALIZATION} credits. Please purchase more credits to continue.`,
+            insufficientCredits: true,
+            freeUsed: currentVisualizationCount,
+            freeLimit: FREE_VISUALIZATION_LIMIT,
+            creditsRequired: CREDIT_COST_PER_VISUALIZATION,
+            creditsAvailable: availableCredits
+          });
+        }
+        
+        // Deduct 0.5 credits
+        const newCreditBalance = availableCredits - CREDIT_COST_PER_VISUALIZATION;
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ credit_topups: newCreditBalance })
+          .eq('id', user.id);
+        
+        if (updateError) {
+          console.error('[GenerateRenovation] Error deducting credits:', updateError);
+          return res.status(500).json({ error: 'Failed to process credits' });
+        }
+        
+        creditsDeducted = true;
+        console.log(`[GenerateRenovation] Deducted ${CREDIT_COST_PER_VISUALIZATION} credits. New balance: ${newCreditBalance}`);
+      }
+    }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -411,7 +491,14 @@ Generate a beautifully updated version focusing ONLY on ${contextTitle.toLowerCa
       success: true,
       generatedImage,
       type: isDevelopment ? 'development' : 'renovation',
-      context: contextTitle
+      context: contextTitle,
+      // Credit info for frontend
+      creditInfo: {
+        wasFree: isFreeVisualization,
+        creditsCharged: creditsDeducted ? CREDIT_COST_PER_VISUALIZATION : 0,
+        totalVisualizationsNow: currentVisualizationCount + 1,
+        freeLimit: FREE_VISUALIZATION_LIMIT
+      }
     });
 
   } catch (error) {

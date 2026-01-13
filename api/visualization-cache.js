@@ -48,9 +48,30 @@ export default async function handler(req, res) {
 
   const userId = user.id;
 
-  // GET: Load cached visualizations for a property
+  // GET: Load cached visualizations for a property (or just get total count)
   if (req.method === 'GET') {
-    const { address } = req.query;
+    const { address, totalCountOnly } = req.query;
+    
+    // Special mode: just return total count across all properties
+    if (totalCountOnly === 'true') {
+      try {
+        const { count: totalCount, error } = await supabase
+          .from('visualization_cache')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId);
+        
+        if (error) {
+          console.error('[VisualizationCache] Count error:', error);
+          return res.status(500).json({ error: 'Failed to count visualizations' });
+        }
+        
+        console.log(`[VisualizationCache] User ${userId.substring(0, 8)}... has ${totalCount || 0} total visualizations`);
+        return res.status(200).json({ totalCount: totalCount || 0, freeLimit: 2 });
+      } catch (err) {
+        console.error('[VisualizationCache] Error:', err);
+        return res.status(500).json({ error: 'Server error' });
+      }
+    }
     
     if (!address) {
       return res.status(400).json({ error: 'Address is required' });
@@ -59,6 +80,12 @@ export default async function handler(req, res) {
     const addressKey = normalizeAddress(address);
 
     try {
+      // Also get total count for credit tracking
+      const { count: totalCount } = await supabase
+        .from('visualization_cache')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+      
       const { data: cached, error } = await supabase
         .from('visualization_cache')
         .select('strategy_key, strategy_name, strategy_type, generated_image, created_at')
@@ -88,7 +115,12 @@ export default async function handler(req, res) {
       }
 
       console.log(`[VisualizationCache] Loaded ${cached?.length || 0} visualizations for user ${userId.substring(0, 8)}...`);
-      return res.status(200).json({ visualizations, count: cached?.length || 0 });
+      return res.status(200).json({ 
+        visualizations, 
+        count: cached?.length || 0,
+        totalCount: totalCount || 0,
+        freeLimit: 2
+      });
 
     } catch (err) {
       console.error('[VisualizationCache] Error:', err);

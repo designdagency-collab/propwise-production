@@ -46,7 +46,16 @@ const VISUALIZER_ALLOWED_STRATEGIES = [
   'curb',         // Curb appeal
   'landscap',     // Landscaping
   'garden',       // Garden design
+  'outdoor',      // Outdoor entertaining
+  'alfresco',     // Alfresco area
+  'deck',         // Deck addition
+  'entertaining', // Entertaining area
+  'backyard',     // Backyard upgrade
+  'patio',        // Patio area
 ];
+
+// Free visualization limit - after this, each costs 0.5 credits
+const FREE_VISUALIZATION_LIMIT = 2;
 
 // Check if a strategy title is allowed for visualization
 const isVisualizerAllowed = (strategyTitle: string): boolean => {
@@ -114,6 +123,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   // Track which visualization is being viewed in the gallery (for cards with multiple images)
   const [activeVisualIndex, setActiveVisualIndex] = useState<{ [key: string]: number }>({});
   
+  // Track user's total visualization count for free/paid logic
+  const [userVisualizationCount, setUserVisualizationCount] = useState<number>(0);
+  
   // Track which visualizations are selected for PDF export (default: all selected)
   // Key format: "strategy-0-0" or "development-1-0" (type-cardIndex-visualIndex)
   const [pdfSelectedVisuals, setPdfSelectedVisuals] = useState<Set<string>>(new Set());
@@ -172,7 +184,14 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         });
 
         if (response.ok) {
-          const { visualizations, count } = await response.json();
+          const { visualizations, count, totalCount, freeLimit } = await response.json();
+          
+          // Update total visualization count for free/paid display
+          if (typeof totalCount === 'number') {
+            setUserVisualizationCount(totalCount);
+            console.log(`[Visuals] User has ${totalCount}/${freeLimit} free visualizations used`);
+          }
+          
           if (count > 0 && visualizations) {
             console.log(`[Visuals] Loaded ${count} cached visualizations from database`);
             setGeneratedVisuals(prev => {
@@ -785,13 +804,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
     index: number,
     title: string
   ): Promise<void> => {
-    // Limit uplift strategies to 2 visualisations per card
-    const visualKey = `${type}-${index}`;
-    const existingCount = generatedVisuals[visualKey]?.length || 0;
-    if (type === 'strategy' && existingCount >= 2) {
-      alert('You\'ve reached the limit of 2 AI visualisations for this strategy. Try a different uplift strategy!');
-      return;
-    }
+    // Credit check is done server-side - first 2 free, then 0.5 credits each
     
     // Compress image before upload (max 1920px width, 80% quality)
     let base64Image: string;
@@ -882,6 +895,12 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
           alert(`🔒 Sign Up Required\n\n${result.message || 'Please sign up or log in to use AI visualizations.'}`);
           return;
         }
+        // Check if insufficient credits
+        if (response.status === 402 || result.insufficientCredits) {
+          setVisualizerLoading({ active: false, progress: 0, message: '' });
+          alert(`💳 Credits Required\n\n${result.message || 'You need more credits to generate additional visualizations.'}\n\nYour free visualizations: ${result.freeUsed || 0}/${result.freeLimit || 2} used\nCredits available: ${result.creditsAvailable || 0}\nCredits needed: ${result.creditsRequired || 0.5}`);
+          return;
+        }
         throw new Error(result.error || result.message || 'Failed to generate visualization');
       }
 
@@ -891,6 +910,12 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
       // Small delay then show result
       await new Promise(resolve => setTimeout(resolve, 500));
       setVisualizerLoading({ active: false, progress: 0, message: '' });
+      
+      // Update visualization count from response
+      if (result.creditInfo?.totalVisualizationsNow) {
+        setUserVisualizationCount(result.creditInfo.totalVisualizationsNow);
+        console.log(`[Visuals] Updated count to ${result.creditInfo.totalVisualizationsNow}. Was free: ${result.creditInfo.wasFree}`);
+      }
       
       if (result.fallbackMode || !result.generatedImage) {
         // Fallback mode - show description only
@@ -1552,16 +1577,6 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                             {visualizerLoading.message}
                           </p>
                         </div>
-                      ) : (generatedVisuals[`strategy-${i}`]?.length || 0) >= 2 ? (
-                        <div className="p-4 text-center">
-                          <div className="flex items-center justify-center gap-2 text-[#4A4137]/30">
-                            <i className="fa-solid fa-check-circle text-emerald-500"></i>
-                            <span className="text-xs font-bold uppercase tracking-wider">
-                              Limit Reached (2/2)
-                            </span>
-                          </div>
-                          <p className="text-[10px] text-[#4A4137]/30 mt-1">View your visualisations above</p>
-                        </div>
                       ) : (
                         <label className="block cursor-pointer">
                           <input 
@@ -1577,7 +1592,17 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                               <span className="text-xs font-bold uppercase tracking-wider">
                                 {dragOverCard?.type === 'strategy' && dragOverCard?.index === i 
                                   ? 'Drop image here' 
-                                  : `AI Visualise (${generatedVisuals[`strategy-${i}`]?.length || 0}/2)`}
+                                  : 'AI Visualise'}
+                              </span>
+                              {/* Show pricing badge */}
+                              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                                userVisualizationCount < FREE_VISUALIZATION_LIMIT 
+                                  ? 'bg-emerald-100 text-emerald-700' 
+                                  : 'bg-amber-100 text-amber-700'
+                              }`}>
+                                {userVisualizationCount < FREE_VISUALIZATION_LIMIT 
+                                  ? `Free (${FREE_VISUALIZATION_LIMIT - userVisualizationCount} left)` 
+                                  : '½ Credit'}
                               </span>
                             </div>
                             <p className="text-[10px] text-[#4A4137]/30 mt-1">Drag photo or click to upload</p>
@@ -1787,28 +1812,38 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                            {visualizerLoading.message}
                          </p>
                        </div>
-                     ) : (
-                       <label className="block cursor-pointer">
-                         <input 
-                           type="file" 
-                           accept="image/*"
-                           multiple
-                           className="hidden" 
-                           onChange={(e) => handleFileSelect(e, 'development', i, scenario.title)}
-                         />
-                         <div className="p-4 text-center hover:bg-slate-50 rounded-xl transition-colors">
-                           <div className="flex items-center justify-center gap-2 text-[#4A4137]/40 hover:text-[#4A4137] transition-colors">
-                             <i className="fa-solid fa-city text-lg"></i>
-                             <span className="text-xs font-bold uppercase tracking-wider">
-                               {dragOverCard?.type === 'development' && dragOverCard?.index === i 
-                                 ? 'Drop aerial/drone image' 
-                                 : 'AI Visualise Development'}
-                             </span>
-                           </div>
-                           <p className="text-[10px] text-[#4A4137]/30 mt-1">Drop drone/aerial photos to render (multiple supported)</p>
-                         </div>
-                       </label>
-                     )}
+                    ) : (
+                      <label className="block cursor-pointer">
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          multiple
+                          className="hidden" 
+                          onChange={(e) => handleFileSelect(e, 'development', i, scenario.title)}
+                        />
+                        <div className="p-4 text-center hover:bg-slate-50 rounded-xl transition-colors">
+                          <div className="flex items-center justify-center gap-2 text-[#4A4137]/40 hover:text-[#4A4137] transition-colors">
+                            <i className="fa-solid fa-city text-lg"></i>
+                            <span className="text-xs font-bold uppercase tracking-wider">
+                              {dragOverCard?.type === 'development' && dragOverCard?.index === i 
+                                ? 'Drop aerial/drone image' 
+                                : 'AI Visualise Development'}
+                            </span>
+                            {/* Show pricing badge */}
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                              userVisualizationCount < FREE_VISUALIZATION_LIMIT 
+                                ? 'bg-emerald-100 text-emerald-700' 
+                                : 'bg-amber-100 text-amber-700'
+                            }`}>
+                              {userVisualizationCount < FREE_VISUALIZATION_LIMIT 
+                                ? `Free (${FREE_VISUALIZATION_LIMIT - userVisualizationCount} left)` 
+                                : '½ Credit'}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-[#4A4137]/30 mt-1">Drop drone/aerial photos to render (multiple supported)</p>
+                        </div>
+                      </label>
+                    )}
                    </div>
                 </div>
               ))}
