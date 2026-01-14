@@ -9,6 +9,7 @@ import TermsAndConditions from './components/TermsAndConditions';
 import AccountSettings from './components/AccountSettings';
 import InviteFriendsModal from './components/InviteFriendsModal';
 import { AdminPage } from './components/AdminPage';
+import { BoomFinder } from './components/BoomFinder';
 import LandingPage from './components/LandingPage';
 import { geminiService } from './services/geminiService';
 import { stripeService } from './services/stripeService';
@@ -136,6 +137,9 @@ const App: React.FC = () => {
   
   // Admin dashboard state
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  
+  // Boom Finder page state
+  const [showBoomFinder, setShowBoomFinder] = useState(false);
   
   // Initialize from cache for instant header display (optimistic UX)
   const cachedData = getCachedProfile();
@@ -1734,6 +1738,7 @@ const App: React.FC = () => {
         onAccountSettings={() => { setShowTerms(false); setShowPricing(false); setShowAccountSettings(true); fetchSearchHistory(); }}
         onInviteFriends={() => setShowInviteFriends(true)}
         onAdminPanel={() => setShowAdminDashboard(true)}
+        onBoomFinder={() => setShowBoomFinder(true)}
         isLoggedIn={isLoggedIn}
         isAdmin={isAdmin}
         userName={userProfile?.full_name}
@@ -2135,6 +2140,31 @@ const App: React.FC = () => {
       {showAdminDashboard && (
         <div className="fixed inset-0 z-[60] bg-[#FAF9F6] overflow-y-auto">
           <AdminPage onBack={() => setShowAdminDashboard(false)} />
+        </div>
+      )}
+
+      {/* Boom Finder Page - Full Screen */}
+      {showBoomFinder && (
+        <div className="fixed inset-0 z-[55] bg-[#FAF9F6] overflow-y-auto">
+          <div className="sticky top-0 z-10 bg-white border-b px-4 py-3 flex items-center justify-between">
+            <button
+              onClick={() => setShowBoomFinder(false)}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+            >
+              <i className="fa-solid fa-arrow-left"></i>
+              Back
+            </button>
+            <span className="font-semibold">Boom Finder</span>
+            <div className="w-16"></div>
+          </div>
+          <BoomFinder 
+            onSelectSuburb={(suburb, state) => {
+              setShowBoomFinder(false);
+              setAddress(`${suburb}, ${state}`);
+            }}
+            isAdmin={isAdmin}
+            authToken={authToken || undefined}
+          />
         </div>
       )}
 

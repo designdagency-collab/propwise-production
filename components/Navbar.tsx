@@ -20,6 +20,7 @@ interface NavbarProps {
   onAccountSettings?: () => void;
   onInviteFriends?: () => void;
   onAdminPanel?: () => void;
+  onBoomFinder?: () => void;
   isLoggedIn?: boolean;
   isAdmin?: boolean;
   userName?: string;
@@ -44,6 +45,7 @@ const Navbar: React.FC<NavbarProps> = ({
   onAccountSettings,
   onInviteFriends,
   onAdminPanel,
+  onBoomFinder,
   isLoggedIn = false,
   isAdmin = false,
   userName,
@@ -182,6 +184,18 @@ const Navbar: React.FC<NavbarProps> = ({
             >
               <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'} text-sm sm:text-lg`}></i>
             </button>
+            
+            {/* Boom Finder - visible to all logged in users */}
+            {isLoggedIn && (
+              <button 
+                onClick={onBoomFinder}
+                title="Boom Finder - Discover high-growth suburbs"
+                className="p-1.5 sm:p-2.5 transition-colors rounded-xl hover:bg-amber-100"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                <i className="fa-solid fa-chart-line text-sm sm:text-lg text-amber-500"></i>
+              </button>
+            )}
             
             {/* Admin Panel - only for authorized admin emails */}
             {isLoggedIn && userEmail?.toLowerCase() === 'designd.agency@gmail.com' && (
