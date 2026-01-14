@@ -1,10 +1,9 @@
 // API endpoint to fetch pre-cached boom suburb scores by state
-// Data is refreshed monthly via /api/admin/refresh-boom-data
+// Uses direct postgres connection via pg package to bypass PostgREST schema cache
 
-import { createClient } from '@supabase/supabase-js';
+import pg from 'pg';
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
 export default async function handler(req, res) {
   // CORS
@@ -27,77 +26,66 @@ export default async function handler(req, res) {
 
   const { state, search, sortBy = 'boom_score', sortOrder = 'desc', limit = 100 } = req.query;
 
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return res.status(500).json({ error: 'Database not configured' });
+  if (!connectionString) {
+    return res.status(500).json({ 
+      error: 'Database not configured',
+      message: 'Add DATABASE_URL to Vercel environment variables'
+    });
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
   const maxLimit = Math.min(parseInt(limit) || 100, 500);
 
-  try {
-    // Try direct REST API call to bypass PostgREST schema cache
-    const restUrl = `${supabaseUrl}/rest/v1/boom_suburbs?select=*&limit=${maxLimit}`;
-    const headers = {
-      'apikey': supabaseServiceKey,
-      'Authorization': `Bearer ${supabaseServiceKey}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    };
+  // Validate and sanitize sort column
+  const validSortColumns = ['boom_score', 'crowding_score', 'supply_constraint_score', 'rent_value_gap_score', 'population', 'suburb_name', 'median_rent_weekly'];
+  const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'boom_score';
+  const sortDir = sortOrder === 'asc' ? 'ASC' : 'DESC';
 
-    // Add filters
-    let url = restUrl;
+  const client = new pg.Client({ connectionString, ssl: { rejectUnauthorized: false } });
+
+  try {
+    await client.connect();
+
+    // Build WHERE clause
+    const conditions = [];
+    const params = [];
+    let paramIndex = 1;
+
     if (state && state !== 'all') {
-      url += `&state=eq.${state.toUpperCase()}`;
+      conditions.push(`state = $${paramIndex}`);
+      params.push(state.toUpperCase());
+      paramIndex++;
     }
     if (search) {
-      url += `&suburb_name=ilike.*${encodeURIComponent(search)}*`;
-    }
-    
-    // Add sorting
-    const validSortColumns = ['boom_score', 'crowding_score', 'supply_constraint_score', 'rent_value_gap_score', 'population', 'suburb_name', 'median_rent_weekly'];
-    const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'boom_score';
-    const sortDir = sortOrder === 'asc' ? 'asc' : 'desc';
-    url += `&order=${sortColumn}.${sortDir}.nullslast`;
-
-    console.log('[BoomSuburbs] Fetching from:', url);
-    
-    const response = await fetch(url, { headers });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[BoomSuburbs] REST API error:', response.status, errorText);
-      
-      // If schema cache issue, return empty with message
-      if (errorText.includes('schema cache') || response.status === 404) {
-        return res.status(200).json({
-          suburbs: [],
-          total: 0,
-          states: ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'],
-          lastRefresh: null,
-          refreshStatus: 'schema_pending',
-          message: 'Database schema is refreshing. Please pause and resume your Supabase project, or wait 5-10 minutes.'
-        });
-      }
-      
-      throw new Error(`REST API error: ${response.status} - ${errorText}`);
+      conditions.push(`suburb_name ILIKE $${paramIndex}`);
+      params.push(`%${search}%`);
+      paramIndex++;
     }
 
-    const suburbs = await response.json();
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    // Query suburbs
+    const query = `
+      SELECT * FROM boom_suburbs 
+      ${whereClause}
+      ORDER BY ${sortColumn} ${sortDir} NULLS LAST
+      LIMIT ${maxLimit}
+    `;
+    
+    console.log('[BoomSuburbs] Query:', query, params);
+    const { rows: suburbs } = await client.query(query, params);
 
     // Get metadata
     let metadata = null;
     try {
-      const metaResponse = await fetch(
-        `${supabaseUrl}/rest/v1/boom_data_metadata?id=eq.main&limit=1`,
-        { headers }
+      const metaResult = await client.query(
+        "SELECT * FROM boom_data_metadata WHERE id = 'main' LIMIT 1"
       );
-      if (metaResponse.ok) {
-        const metaData = await metaResponse.json();
-        metadata = metaData?.[0] || null;
-      }
+      metadata = metaResult.rows?.[0] || null;
     } catch (e) {
       console.log('[BoomSuburbs] Could not fetch metadata:', e.message);
     }
+
+    await client.end();
 
     return res.status(200).json({
       suburbs: suburbs || [],
@@ -108,15 +96,29 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('[BoomSuburbs] Error:', error.message);
+    console.error('[BoomSuburbs] Database error:', error.message);
+    
+    try { await client.end(); } catch (e) {}
+    
+    // Check if table doesn't exist
+    if (error.message?.includes('does not exist')) {
+      return res.status(200).json({
+        suburbs: [],
+        total: 0,
+        states: ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'],
+        lastRefresh: null,
+        refreshStatus: 'pending',
+        message: 'Tables not created. Run the SQL migration first.'
+      });
+    }
     
     return res.status(200).json({
       suburbs: [],
       total: 0,
       states: ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'],
       lastRefresh: null,
-      refreshStatus: 'schema_pending',
-      message: 'Database schema is refreshing. Please pause and resume your Supabase project to fix.'
+      refreshStatus: 'error',
+      message: error.message || 'Database connection error'
     });
   }
 }
