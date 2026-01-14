@@ -212,6 +212,31 @@ const responseSchema = {
         cars: { type: "INTEGER" }
       }
     },
+    commercialDetails: {
+      type: "OBJECT",
+      description: "Only populated when propertyType is Commercial",
+      properties: {
+        buildingType: { type: "STRING", enum: ['Retail', 'Office', 'Industrial', 'Warehouse', 'Medical', 'Hospitality', 'Mixed-Use', 'Other'] },
+        buildingAreaSqm: { type: "NUMBER" },
+        landAreaSqm: { type: "NUMBER" },
+        floorSpaceRatio: { type: "NUMBER" },
+        yearBuilt: { type: "STRING" },
+        condition: { type: "STRING", enum: ['Excellent', 'Good', 'Fair', 'Poor', 'Unknown'] },
+        parkingSpaces: { type: "INTEGER" },
+        tenancyStatus: { type: "STRING", enum: ['Vacant', 'Leased', 'Partially Leased', 'Owner Occupied', 'Unknown'] },
+        currentTenant: { type: "STRING" },
+        annualRentIncome: { type: "NUMBER" },
+        leaseTermRemaining: { type: "STRING" },
+        ratePerSqmLand: { type: "NUMBER" },
+        ratePerSqmBuilding: { type: "NUMBER" },
+        capRate: { type: "NUMBER" },
+        valuationMethod: { type: "STRING", enum: ['Direct Comparison', 'Income Capitalisation', 'Summation', 'Mixed'] },
+        valuationBreakdown: { type: "STRING" },
+        landValue: { type: "NUMBER" },
+        improvementsValue: { type: "NUMBER" },
+        potentialUses: { type: "ARRAY", items: { type: "STRING" } }
+      }
+    },
     sitePlan: {
       type: "OBJECT",
       properties: {
@@ -843,7 +868,122 @@ RULES:
   → The EXACT title MUST appear in developmentScenarios array with full details (costs, profit, eligibility).
 - If best strategy is a renovation/value-add (e.g., "Kitchen & Bathroom Renovation"):
   → The EXACT title MUST appear in valueAddStrategies array.
-- For combined lots: developmentScenarios should NOT be empty. Include at least the recommended development option.`;
+- For combined lots: developmentScenarios should NOT be empty. Include at least the recommended development option.
+
+---
+
+🏢 COMMERCIAL PROPERTY ANALYSIS (ONLY IF propertyType = "Commercial")
+
+If you have determined the property is COMMERCIAL, you MUST populate the commercialDetails object with accurate data.
+Skip residential fields (beds/baths/cars = 0, rentalPosition = null for residential rent).
+
+📋 STEP A: DETERMINE BUILDING TYPE
+Search for the property and classify:
+- Retail: Shopfront, strip shop, showroom, retail warehouse
+- Office: Professional office space, medical suites
+- Industrial: Factory, manufacturing, light industrial
+- Warehouse: Storage, distribution centre, logistics
+- Medical: Healthcare facility, specialist rooms, pharmacy
+- Hospitality: Café, restaurant, pub, hotel
+- Mixed-Use: Retail on ground floor + residential/office above
+- Other: Childcare, service station, car wash, etc.
+
+📋 STEP B: GET LAND & BUILDING MEASUREMENTS
+Search for the property on commercialrealestate.com.au, realcommercial.com.au, or council records:
+
+1. LAND SIZE (landAreaSqm):
+   - Search "[address] lot size" or check council property information
+   - Look for "site area" or "land area" in commercial listings
+   - If unavailable, estimate from satellite imagery (label as estimate)
+
+2. BUILDING SIZE (buildingAreaSqm):
+   - Search for "Net Lettable Area (NLA)" or "Gross Floor Area (GFA)"
+   - Check commercial listings for building size
+   - If unavailable, estimate: Building Area ≈ Land Size × Floor Space Ratio
+
+3. FLOOR SPACE RATIO (floorSpaceRatio):
+   - Calculate: Building Area / Land Area
+   - Typical ratios: Retail strip shop 0.5-0.8, Office 1.0-2.0, Industrial 0.3-0.5
+
+📋 STEP C: COMMERCIAL VALUATION (CRITICAL - DO THE MATH)
+
+Use these Australian commercial benchmarks:
+
+🏪 RETAIL (Strip shops, main road shopfronts):
+- Land value: $3,000 - $15,000 /sqm (prime) to $1,500 - $5,000 /sqm (secondary)
+- Building value: $1,500 - $4,000 /sqm
+- Cap rates: 5.5% - 7.5%
+
+🏢 OFFICE:
+- Land value: $2,000 - $10,000 /sqm (CBD/metro), $1,000 - $3,000 /sqm (suburban)
+- Building value: $2,000 - $5,000 /sqm
+- Cap rates: 5.0% - 7.0%
+
+🏭 INDUSTRIAL / WAREHOUSE:
+- Land value: $500 - $2,500 /sqm (metro), $200 - $800 /sqm (outer)
+- Building value: $800 - $2,000 /sqm
+- Cap rates: 5.0% - 6.5%
+
+🏥 MEDICAL:
+- Land value: Similar to office
+- Building value: $2,500 - $6,000 /sqm (fitted out)
+- Cap rates: 5.5% - 7.0%
+
+📊 VALUATION METHODS:
+
+1. SUMMATION METHOD (use when vacant or owner-occupied):
+   Value = Land Value + Building Value
+   Example:
+   - Land: 300 sqm × $5,000/sqm = $1,500,000
+   - Building: 200 sqm × $2,500/sqm = $500,000
+   - Total: $2,000,000
+
+2. INCOME CAPITALISATION (use when leased):
+   Value = Annual Net Rent / Cap Rate
+   Example:
+   - Annual rent: $120,000
+   - Cap rate: 6%
+   - Value = $120,000 / 0.06 = $2,000,000
+
+3. DIRECT COMPARISON (always cross-check):
+   Search commercialrealestate.com.au for recent sales of similar properties
+   Compare $/sqm of building area
+
+📋 STEP D: POPULATE commercialDetails
+
+{
+  buildingType: "Retail",           // From Step A
+  buildingAreaSqm: 200,             // From Step B
+  landAreaSqm: 300,                 // From Step B
+  floorSpaceRatio: 0.67,            // buildingArea / landArea
+  yearBuilt: "1980s",               // If known
+  condition: "Good",                // From imagery/listing
+  parkingSpaces: 2,                 // From listing
+  tenancyStatus: "Leased",          // Vacant/Leased/Owner Occupied
+  currentTenant: "XYZ Cafe",        // If leased
+  annualRentIncome: 65000,          // If leased
+  leaseTermRemaining: "3 years",    // If known
+  ratePerSqmLand: 5000,             // $/sqm used for land
+  ratePerSqmBuilding: 2500,         // $/sqm used for building
+  capRate: 6.5,                     // Capitalisation rate %
+  valuationMethod: "Summation",     // Method used
+  valuationBreakdown: "Land: 300sqm × $5,000 = $1.5M + Building: 200sqm × $2,500 = $500K = $2.0M",
+  landValue: 1500000,               // Land component
+  improvementsValue: 500000,        // Building component
+  potentialUses: ["Retail", "Cafe", "Medical", "Office"]  // Permitted under zoning
+}
+
+📋 STEP E: SET valueSnapshot FOR COMMERCIAL
+
+- estimateMin / estimateMax: Based on your commercial valuation (± 10%)
+- indicativeMidpoint: Your calculated value
+- yield: Commercial gross yield (annual rent / value × 100)
+- growth: Commercial property growth for that area (typically 3-5% p.a.)
+- confidenceLevel: High if you found actual comparable sales, Medium if estimated
+
+⚠️ COMMERCIAL COMPARABLE SALES:
+Search commercialrealestate.com.au for SOLD commercial properties nearby.
+For comparableSales, include commercial sales with $/sqm notes.`;
 
     console.log('[PropertyInsights] Calling Gemini API with model gemini-3-flash-preview...');
     
