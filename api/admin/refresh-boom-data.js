@@ -1,6 +1,7 @@
 // Admin API - Refresh boom suburb data from ABS
 // Should be run monthly to update suburb scores
 // Requires admin authentication
+// v2.0 - Added trades influx metrics (Jan 2026)
 
 import { createClient } from '@supabase/supabase-js';
 import pg from 'pg';
@@ -507,6 +508,18 @@ export default async function handler(req, res) {
     }
 
     console.log('[RefreshBoomData] Generated data for', allSuburbs.length, 'suburbs');
+    
+    // Debug: Log sample suburb to verify trades data is generated
+    if (allSuburbs.length > 0) {
+      const sample = allSuburbs[0];
+      console.log('[RefreshBoomData] Sample suburb trades data:', {
+        name: sample.suburb_name,
+        trades_workers: sample.trades_workers,
+        trades_pct_workforce: sample.trades_pct_workforce,
+        trades_growth_pct: sample.trades_growth_pct,
+        trades_influx_score: sample.trades_influx_score
+      });
+    }
 
     // Clear existing data
     await client.query('DELETE FROM boom_suburbs');
