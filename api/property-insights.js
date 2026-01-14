@@ -799,21 +799,23 @@ MANDATORY MODULES:
   • Is the paint peeling or colours outdated (cream, salmon, dark brown)?
 
 SCALE THE RECOMMENDATION BASED ON CONDITION:
+⚠️ CRITICAL: Always use the title "Luxe Facade Transformation" regardless of condition.
+Adjust COST and DESCRIPTION based on actual exterior condition:
 
 A) GOOD EXTERIOR (modern cladding, recent paint, good roof):
-   - Title: "Curb Appeal & Front Garden Refresh"
+   - Title: "Luxe Facade Transformation"
    - Focus: Landscaping, new turf, native plants, modern fence, driveway seal
    - Cost: $5,000 - $25,000
    - Description style: "Enhance street presence with native coastal planting, fresh turf, and a sleek aluminium slat fence"
 
 B) DATED EXTERIOR (old paint, tired render, minor repairs needed):
-   - Title: "Facade Refresh & Curb Appeal"  
+   - Title: "Luxe Facade Transformation"
    - Focus: Exterior repaint, minor render repairs, landscaping, new gutters
    - Cost: $20,000 - $45,000
    - Description style: "Repaint exterior in contemporary Dulux Lexicon Quarter with Monument trims, add native garden beds"
 
 C) TIRED/OLD EXTERIOR (old weatherboards, fibro, dated brick, rusty roof):
-   - Title: "Complete Facade Transformation"
+   - Title: "Luxe Facade Transformation"
    - Focus: Re-cladding, new roof, full exterior makeover + landscaping
    - Cost: $60,000 - $100,000
    - Description style: "Transform with James Hardie Linea cladding in Dulux Surfmist, new Colorbond Monument roof, rendered front fence, and designer landscaping inspired by Three Birds Renovations aesthetic"
