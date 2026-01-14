@@ -49,34 +49,19 @@ export default async function handler(req, res) {
     });
 
     if (error) {
-      console.error('[BoomSuburbs] Query error:', error.message, error.code);
+      console.error('[BoomSuburbs] RPC error:', error.message, error.code, error.hint);
       
-      // Schema cache issue - return empty results gracefully
-      if (error.message?.includes('schema cache') || error.code === 'PGRST200') {
-        console.log('[BoomSuburbs] Schema cache not ready, returning empty results');
-        return res.status(200).json({
-          suburbs: [],
-          total: 0,
-          states: ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'],
-          lastRefresh: null,
-          refreshStatus: 'schema_pending',
-          message: 'Schema cache refreshing. Please wait a few minutes and try again.'
-        });
-      }
-      
-      // Table doesn't exist
-      if (error.code === '42P01') {
-        return res.status(200).json({
-          suburbs: [],
-          total: 0,
-          states: ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'],
-          lastRefresh: null,
-          refreshStatus: 'pending',
-          message: 'Tables not created. Run the SQL migration first.'
-        });
-      }
-      
-      return res.status(500).json({ error: 'Failed to fetch suburbs', details: error.message });
+      // Return error details for debugging
+      return res.status(200).json({
+        suburbs: [],
+        total: 0,
+        states: ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'],
+        lastRefresh: null,
+        refreshStatus: 'error',
+        message: `RPC Error: ${error.message}`,
+        errorCode: error.code,
+        errorHint: error.hint
+      });
     }
 
     // Get metadata (last refresh date) - separate try/catch so it doesn't fail the whole request
