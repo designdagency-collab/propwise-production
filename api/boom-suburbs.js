@@ -34,33 +34,19 @@ export default async function handler(req, res) {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    // Build query for boom_suburbs
-    let query = supabase
-      .from('boom_suburbs')
-      .select('*');
-
-    // Filter by state if provided
-    if (state && state !== 'all') {
-      query = query.eq('state', state.toUpperCase());
-    }
-
-    // Search by suburb name if provided
-    if (search) {
-      query = query.ilike('suburb_name', `%${search}%`);
-    }
-
-    // Sorting
+    // Validate sort column
     const validSortColumns = ['boom_score', 'crowding_score', 'supply_constraint_score', 'rent_value_gap_score', 'population', 'suburb_name', 'median_rent_weekly'];
     const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'boom_score';
-    const ascending = sortOrder === 'asc';
-    
-    query = query.order(sortColumn, { ascending, nullsFirst: false });
-
-    // Limit results
     const maxLimit = Math.min(parseInt(limit) || 100, 500);
-    query = query.limit(maxLimit);
 
-    const { data: suburbs, error } = await query;
+    // Use RPC function to bypass PostgREST schema cache issues
+    const { data: suburbs, error } = await supabase.rpc('get_boom_suburbs', {
+      p_state: state || 'all',
+      p_search: search || '',
+      p_sort_by: sortColumn,
+      p_sort_order: sortOrder || 'desc',
+      p_limit: maxLimit
+    });
 
     if (error) {
       console.error('[BoomSuburbs] Query error:', error.message, error.code);
@@ -106,39 +92,11 @@ export default async function handler(req, res) {
       console.log('[BoomSuburbs] Could not fetch metadata:', e.message);
     }
 
-    // Get total count for the state
-    let total = suburbs?.length || 0;
-    try {
-      let countQuery = supabase
-        .from('boom_suburbs')
-        .select('*', { count: 'exact', head: true });
-      
-      if (state && state !== 'all') {
-        countQuery = countQuery.eq('state', state.toUpperCase());
-      }
-      if (search) {
-        countQuery = countQuery.ilike('suburb_name', `%${search}%`);
-      }
+    // Count is just the length of results for now (simpler)
+    const total = suburbs?.length || 0;
 
-      const { count } = await countQuery;
-      total = count || total;
-    } catch (e) {
-      console.log('[BoomSuburbs] Could not get count:', e.message);
-    }
-
-    // Get available states
-    let states = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'];
-    try {
-      const { data: stateData } = await supabase
-        .from('boom_suburbs')
-        .select('state');
-      
-      if (stateData?.length) {
-        states = [...new Set(stateData.map(s => s.state))].sort();
-      }
-    } catch (e) {
-      console.log('[BoomSuburbs] Could not get states:', e.message);
-    }
+    // Default states
+    const states = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'];
 
     return res.status(200).json({
       suburbs: suburbs || [],
