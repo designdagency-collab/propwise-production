@@ -32,76 +32,91 @@ export default async function handler(req, res) {
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const maxLimit = Math.min(parseInt(limit) || 100, 500);
 
   try {
-    // Validate sort column
+    // Try direct REST API call to bypass PostgREST schema cache
+    const restUrl = `${supabaseUrl}/rest/v1/boom_suburbs?select=*&limit=${maxLimit}`;
+    const headers = {
+      'apikey': supabaseServiceKey,
+      'Authorization': `Bearer ${supabaseServiceKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    };
+
+    // Add filters
+    let url = restUrl;
+    if (state && state !== 'all') {
+      url += `&state=eq.${state.toUpperCase()}`;
+    }
+    if (search) {
+      url += `&suburb_name=ilike.*${encodeURIComponent(search)}*`;
+    }
+    
+    // Add sorting
     const validSortColumns = ['boom_score', 'crowding_score', 'supply_constraint_score', 'rent_value_gap_score', 'population', 'suburb_name', 'median_rent_weekly'];
     const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'boom_score';
-    const maxLimit = Math.min(parseInt(limit) || 100, 500);
+    const sortDir = sortOrder === 'asc' ? 'asc' : 'desc';
+    url += `&order=${sortColumn}.${sortDir}.nullslast`;
 
-    // Use RPC function to bypass PostgREST schema cache issues
-    const { data: suburbs, error } = await supabase.rpc('get_boom_suburbs', {
-      p_state: state || 'all',
-      p_search: search || '',
-      p_sort_by: sortColumn,
-      p_sort_order: sortOrder || 'desc',
-      p_limit: maxLimit
-    });
-
-    if (error) {
-      console.error('[BoomSuburbs] RPC error:', error.message, error.code, error.hint);
+    console.log('[BoomSuburbs] Fetching from:', url);
+    
+    const response = await fetch(url, { headers });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[BoomSuburbs] REST API error:', response.status, errorText);
       
-      // Return error details for debugging
-      return res.status(200).json({
-        suburbs: [],
-        total: 0,
-        states: ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'],
-        lastRefresh: null,
-        refreshStatus: 'error',
-        message: `RPC Error: ${error.message}`,
-        errorCode: error.code,
-        errorHint: error.hint
-      });
+      // If schema cache issue, return empty with message
+      if (errorText.includes('schema cache') || response.status === 404) {
+        return res.status(200).json({
+          suburbs: [],
+          total: 0,
+          states: ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'],
+          lastRefresh: null,
+          refreshStatus: 'schema_pending',
+          message: 'Database schema is refreshing. Please pause and resume your Supabase project, or wait 5-10 minutes.'
+        });
+      }
+      
+      throw new Error(`REST API error: ${response.status} - ${errorText}`);
     }
 
-    // Get metadata (last refresh date) - separate try/catch so it doesn't fail the whole request
+    const suburbs = await response.json();
+
+    // Get metadata
     let metadata = null;
     try {
-      const { data: metaData } = await supabase
-        .from('boom_data_metadata')
-        .select('*')
-        .eq('id', 'main')
-        .single();
-      metadata = metaData;
+      const metaResponse = await fetch(
+        `${supabaseUrl}/rest/v1/boom_data_metadata?id=eq.main&limit=1`,
+        { headers }
+      );
+      if (metaResponse.ok) {
+        const metaData = await metaResponse.json();
+        metadata = metaData?.[0] || null;
+      }
     } catch (e) {
       console.log('[BoomSuburbs] Could not fetch metadata:', e.message);
     }
 
-    // Count is just the length of results for now (simpler)
-    const total = suburbs?.length || 0;
-
-    // Default states
-    const states = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'];
-
     return res.status(200).json({
       suburbs: suburbs || [],
-      total: total || 0,
-      states,
+      total: suburbs?.length || 0,
+      states: ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'],
       lastRefresh: metadata?.last_refresh || null,
-      refreshStatus: metadata?.refresh_status || 'unknown'
+      refreshStatus: metadata?.refresh_status || 'pending'
     });
 
   } catch (error) {
-    console.error('[BoomSuburbs] Unexpected error:', error);
+    console.error('[BoomSuburbs] Error:', error.message);
     
-    // Return empty data gracefully for any error
     return res.status(200).json({
       suburbs: [],
       total: 0,
       states: ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'],
       lastRefresh: null,
-      refreshStatus: 'error',
-      message: error.message || 'An error occurred'
+      refreshStatus: 'schema_pending',
+      message: 'Database schema is refreshing. Please pause and resume your Supabase project to fix.'
     });
   }
 }
