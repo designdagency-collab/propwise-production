@@ -258,6 +258,10 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
 
         {/* Results Table */}
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden" style={{ borderColor: 'var(--border-color)' }}>
+          <div className="px-4 py-2 bg-gray-50 border-b text-xs text-gray-500 flex items-center gap-1">
+            <i className="fa-solid fa-circle-info"></i>
+            <span>Hover over column headers for metric explanations</span>
+          </div>
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <i className="fa-solid fa-spinner animate-spin text-3xl text-amber-500"></i>
@@ -284,51 +288,58 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
               <table className="w-full">
                 <thead className="bg-gray-50 border-b" style={{ borderColor: 'var(--border-color)' }}>
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700" title="Ranking position based on current sort order">
                       Rank
                     </th>
                     <th 
                       className="px-4 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('suburb_name')}
+                      title="Suburb or town name. Click to sort alphabetically."
                     >
                       Suburb <SortIcon column="suburb_name" />
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700" title="Australian State or Territory">
                       State
                     </th>
                     <th 
                       className="px-4 py-3 text-center text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('boom_score')}
+                      title="Overall growth potential score (0-100). Combines crowding pressure, supply constraints, and rental yields. Higher = stronger growth fundamentals."
                     >
                       Boom Score <SortIcon column="boom_score" />
                     </th>
                     <th 
                       className="px-4 py-3 text-center text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('crowding_score')}
+                      title="Crowding Pressure (0-100). Measures population density, growth rate, and persons per dwelling. Higher = more demand pressure on housing."
                     >
                       Crowding <SortIcon column="crowding_score" />
                     </th>
                     <th 
                       className="px-4 py-3 text-center text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('supply_constraint_score')}
+                      title="Supply Constraint (0-100). Measures how limited new housing supply is relative to demand. Higher = less new housing being built, more price pressure."
                     >
                       Supply Gap <SortIcon column="supply_constraint_score" />
                     </th>
                     <th 
                       className="px-4 py-3 text-center text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('rent_value_gap_score')}
+                      title="Rent/Value Gap (0-100). Compares rental income potential vs buy costs. Higher = strong rents relative to property prices, good for investors."
                     >
                       Rent/Value <SortIcon column="rent_value_gap_score" />
                     </th>
                     <th 
                       className="px-4 py-3 text-right text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('median_rent_weekly')}
+                      title="Median weekly rent from ABS Census data. Indicates typical rental costs in the area."
                     >
                       Median Rent <SortIcon column="median_rent_weekly" />
                     </th>
                     <th 
                       className="px-4 py-3 text-right text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('population')}
+                      title="Estimated resident population. Larger populations typically have more stable markets and amenities."
                     >
                       Population <SortIcon column="population" />
                     </th>
