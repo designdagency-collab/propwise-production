@@ -3,7 +3,7 @@
 // API Documentation: https://www.abs.gov.au/about/data-services/application-programming-interfaces-apis/data-api-user-guide/using-api
 // No API key required as of November 2024
 
-const ABS_API_BASE = 'https://api.data.abs.gov.au';
+const ABS_API_BASE = 'https://data.api.abs.gov.au/rest';
 
 // LGA name to code mapping for major Australian areas
 // Source: ABS ASGS LGA codes

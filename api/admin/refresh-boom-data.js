@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const ABS_API_BASE = 'https://api.data.abs.gov.au';
+const ABS_API_BASE = 'https://data.api.abs.gov.au/rest';
 
 // Australian states
 const STATES = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'];

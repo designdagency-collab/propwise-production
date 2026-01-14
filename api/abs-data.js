@@ -1,8 +1,8 @@
 // API endpoint for fetching real ABS (Australian Bureau of Statistics) data
 // Used to supplement and validate AI-generated property insights
-// ABS API: https://api.data.abs.gov.au (no API key required)
+// ABS API: https://data.api.abs.gov.au/rest (no API key required - updated Nov 2024)
 
-const ABS_API_BASE = 'https://api.data.abs.gov.au';
+const ABS_API_BASE = 'https://data.api.abs.gov.au/rest';
 
 // Greater Capital City Statistical Area codes for property price lookups
 const GCCSA_CODES = {

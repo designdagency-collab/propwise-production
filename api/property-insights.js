@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import { createClient } from '@supabase/supabase-js';
 
 // ABS API base URL (no API key required)
-const ABS_API_BASE = 'https://api.data.abs.gov.au';
+const ABS_API_BASE = 'https://data.api.abs.gov.au/rest';
 
 // GCCSA codes for major Australian cities
 const GCCSA_CODES = {
