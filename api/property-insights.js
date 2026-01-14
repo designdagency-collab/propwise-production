@@ -2,12 +2,189 @@
 import { GoogleGenAI } from "@google/genai";
 import { createClient } from '@supabase/supabase-js';
 
+// ABS API base URL (no API key required)
+const ABS_API_BASE = 'https://api.data.abs.gov.au';
+
+// GCCSA codes for major Australian cities
+const GCCSA_CODES = {
+  'sydney': '1GSYD', 'melbourne': '2GMEL', 'brisbane': '3GBRI',
+  'adelaide': '4GADE', 'perth': '5GPER', 'hobart': '6GHOB',
+  'darwin': '7GDAR', 'canberra': '8ACTE',
+};
+
+// Suburb to capital city mapping
+const SUBURB_TO_GCCSA = {
+  // Greater Sydney
+  'parramatta': '1GSYD', 'blacktown': '1GSYD', 'penrith': '1GSYD', 'liverpool': '1GSYD',
+  'campbelltown': '1GSYD', 'randwick': '1GSYD', 'bondi': '1GSYD', 'manly': '1GSYD',
+  'chatswood': '1GSYD', 'hornsby': '1GSYD', 'sutherland': '1GSYD', 'cronulla': '1GSYD',
+  'burwood': '1GSYD', 'strathfield': '1GSYD', 'ryde': '1GSYD', 'epping': '1GSYD',
+  'castle hill': '1GSYD', 'north sydney': '1GSYD', 'mosman': '1GSYD', 'neutral bay': '1GSYD',
+  'dee why': '1GSYD', 'brookvale': '1GSYD', 'hurstville': '1GSYD', 'kogarah': '1GSYD',
+  'bankstown': '1GSYD', 'auburn': '1GSYD', 'granville': '1GSYD', 'fairfield': '1GSYD',
+  'ingleburn': '1GSYD', 'wollongong': '1GSYD', 'newcastle': '1GSYD', 'gosford': '1GSYD',
+  // Greater Melbourne
+  'st kilda': '2GMEL', 'south yarra': '2GMEL', 'richmond': '2GMEL', 'fitzroy': '2GMEL',
+  'brunswick': '2GMEL', 'footscray': '2GMEL', 'doncaster': '2GMEL', 'box hill': '2GMEL',
+  'glen waverley': '2GMEL', 'dandenong': '2GMEL', 'frankston': '2GMEL', 'werribee': '2GMEL',
+  'craigieburn': '2GMEL', 'preston': '2GMEL', 'coburg': '2GMEL', 'essendon': '2GMEL',
+  'kew': '2GMEL', 'hawthorn': '2GMEL', 'camberwell': '2GMEL', 'toorak': '2GMEL',
+  'brighton': '2GMEL', 'sandringham': '2GMEL', 'caulfield': '2GMEL', 'geelong': '2GMEL',
+  // Greater Brisbane
+  'south brisbane': '3GBRI', 'fortitude valley': '3GBRI', 'west end': '3GBRI',
+  'toowong': '3GBRI', 'indooroopilly': '3GBRI', 'ipswich': '3GBRI', 'logan': '3GBRI',
+  'gold coast': '3GBRI', 'sunshine coast': '3GBRI', 'caboolture': '3GBRI',
+  // Greater Adelaide
+  'glenelg': '4GADE', 'port adelaide': '4GADE', 'salisbury': '4GADE', 'unley': '4GADE',
+  'norwood': '4GADE', 'burnside': '4GADE', 'prospect': '4GADE',
+  // Greater Perth
+  'fremantle': '5GPER', 'joondalup': '5GPER', 'rockingham': '5GPER', 'mandurah': '5GPER',
+  'subiaco': '5GPER', 'claremont': '5GPER', 'scarborough': '5GPER', 'morley': '5GPER',
+  // Greater Hobart
+  'glenorchy': '6GHOB', 'sandy bay': '6GHOB',
+  // Darwin
+  'palmerston': '7GDAR', 'casuarina': '7GDAR',
+  // Canberra/ACT
+  'belconnen': '8ACTE', 'woden': '8ACTE', 'tuggeranong': '8ACTE', 'gungahlin': '8ACTE',
+};
+
 // Initialize Supabase client for caching
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Cache TTL: 2 weeks in milliseconds
 const CACHE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
+
+/**
+ * Extract suburb from an Australian address
+ */
+function extractSuburb(address) {
+  const normalized = address.toLowerCase().trim();
+  
+  // Clean address to find suburb
+  let cleaned = normalized
+    .replace(/\d{4}/, '') // Remove postcode
+    .replace(/\b(nsw|vic|qld|sa|wa|tas|nt|act|new south wales|victoria|queensland|south australia|western australia|tasmania|northern territory|australian capital territory)\b/gi, '')
+    .replace(/\b(street|st|road|rd|avenue|ave|drive|dr|court|ct|place|pl|lane|ln|crescent|cres|way|parade|pde|highway|hwy|boulevard|blvd|close|cl)\b/gi, '')
+    .replace(/[,]/g, ' ')
+    .trim();
+  
+  const parts = cleaned.split(/\s+/).filter(p => p.length > 2 && !/^\d+$/.test(p));
+  
+  // Check for known suburbs (from end of address)
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const part = parts[i].toLowerCase();
+    if (SUBURB_TO_GCCSA[part] || GCCSA_CODES[part]) {
+      return part;
+    }
+    // Check two-word suburbs
+    if (i > 0) {
+      const twoWord = `${parts[i-1]} ${parts[i]}`.toLowerCase();
+      if (SUBURB_TO_GCCSA[twoWord]) {
+        return twoWord;
+      }
+    }
+  }
+  
+  return parts.length > 0 ? parts[parts.length - 1] : null;
+}
+
+/**
+ * Fetch ABS Residential Property Price Index
+ * Returns index value and year-on-year percentage change
+ */
+async function fetchABSPropertyPriceIndex(gccsaCode) {
+  try {
+    // RES_PROP_INDEXES: INDEX (1) and PCPY (2) for percentage change
+    const url = `${ABS_API_BASE}/data/ABS,RES_PROP_INDEXES,1.0.0/1+2.${gccsaCode}.Q?detail=dataonly`;
+    
+    console.log('[ABS] Fetching property price index for:', gccsaCode);
+    
+    const response = await fetch(url, {
+      headers: { 'Accept': 'application/vnd.sdmx.data+json' }
+    });
+    
+    if (!response.ok) {
+      console.log('[ABS] API returned:', response.status);
+      return null;
+    }
+    
+    const data = await response.json();
+    const dataSets = data?.data?.dataSets;
+    
+    if (!dataSets || dataSets.length === 0) return null;
+    
+    const series = dataSets[0].series;
+    if (!series || Object.keys(series).length === 0) return null;
+    
+    // Get time periods
+    const timePeriods = data?.data?.structure?.dimensions?.observation?.find(
+      d => d.id === 'TIME_PERIOD'
+    )?.values || [];
+    
+    let index = null;
+    let percentageChange = null;
+    let period = null;
+    
+    for (const [seriesKey, seriesData] of Object.entries(series)) {
+      const observations = seriesData.observations;
+      if (!observations) continue;
+      
+      const obsKeys = Object.keys(observations).sort((a, b) => parseInt(b) - parseInt(a));
+      if (obsKeys.length > 0) {
+        const latestKey = obsKeys[0];
+        const value = observations[latestKey][0];
+        
+        // Series "0:X:0" is index, "1:X:0" is percentage change
+        if (seriesKey.startsWith('0:')) {
+          index = value;
+          period = timePeriods[parseInt(latestKey)]?.name || timePeriods[parseInt(latestKey)]?.id;
+        } else if (seriesKey.startsWith('1:')) {
+          percentageChange = value;
+        }
+      }
+    }
+    
+    console.log('[ABS] Property price index:', { index, percentageChange, period });
+    return { index, percentageChange, period };
+    
+  } catch (error) {
+    console.error('[ABS] Error fetching price index:', error.message);
+    return null;
+  }
+}
+
+/**
+ * Fetch real ABS data for an address to supplement AI insights
+ */
+async function fetchABSData(address) {
+  const suburb = extractSuburb(address);
+  if (!suburb) {
+    console.log('[ABS] Could not extract suburb from address');
+    return null;
+  }
+  
+  const gccsaCode = SUBURB_TO_GCCSA[suburb.toLowerCase()] || GCCSA_CODES[suburb.toLowerCase()];
+  if (!gccsaCode) {
+    console.log('[ABS] No GCCSA mapping for suburb:', suburb);
+    return null;
+  }
+  
+  const priceIndex = await fetchABSPropertyPriceIndex(gccsaCode);
+  
+  if (priceIndex) {
+    return {
+      suburb,
+      region: gccsaCode,
+      priceIndex: priceIndex.index,
+      priceGrowthPercent: priceIndex.percentageChange,
+      period: priceIndex.period,
+      source: 'ABS Residential Property Price Indexes'
+    };
+  }
+  
+  return null;
+}
 
 // Normalize address for consistent cache keys
 function normalizeAddress(address) {
@@ -342,8 +519,38 @@ export default async function handler(req, res) {
 
   console.log('[PropertyInsights] Fetching insights for:', address.substring(0, 40) + '...', forceRefresh ? '(DATA CORRECTION MODE)' : '');
 
+  // Fetch real ABS data to supplement AI insights
+  let absData = null;
+  try {
+    absData = await fetchABSData(address);
+    if (absData) {
+      console.log('[PropertyInsights] ABS data fetched:', { 
+        region: absData.region, 
+        priceGrowth: absData.priceGrowthPercent,
+        period: absData.period 
+      });
+    }
+  } catch (absErr) {
+    console.warn('[PropertyInsights] ABS fetch failed (continuing without):', absErr.message);
+  }
+
   try {
     const ai = new GoogleGenAI({ apiKey });
+
+    // ABS data context for the AI prompt
+    const absContext = absData ? `
+📊 OFFICIAL ABS DATA FOR THIS REGION (USE THIS - DO NOT OVERRIDE):
+- Region: ${absData.region} (Greater ${absData.suburb?.charAt(0).toUpperCase() + absData.suburb?.slice(1)})
+- Property Price Index: ${absData.priceIndex} (${absData.period})
+- Annual Price Growth: ${absData.priceGrowthPercent !== null ? absData.priceGrowthPercent.toFixed(1) + '%' : 'N/A'}
+- Source: ${absData.source}
+
+⚠️ IMPORTANT: The above ABS data is OFFICIAL and should be used to VALIDATE your estimates.
+- If your estimated growth differs significantly from ${absData.priceGrowthPercent?.toFixed(1)}%, explain why.
+- Set valueSnapshot.growth to reflect the ABS data (e.g., "${absData.priceGrowthPercent?.toFixed(1)}% p.a. (ABS ${absData.period})").
+- Set confidenceLevel to "High" for this region as we have official ABS data.
+
+` : '';
 
     // Data correction instructions when user triggers refresh
     const dataCorrectionInstructions = forceRefresh ? `
@@ -380,8 +587,7 @@ The user has indicated the previous data may be INCORRECT. Pay EXTRA attention t
 
     const prompt = `You are a professional Australian property planning analyst and prop-tech engineer for upblock.ai.
 Your task is to generate a structured Property DNA report for: "${address}".
-${dataCorrectionInstructions}
-
+${dataCorrectionInstructions}${absContext}
 ⚠️ MANDATORY FIRST STEP - ZONING & PROPERTY TYPE VERIFICATION:
 Before generating ANY data, you MUST search and verify:
 
@@ -647,7 +853,43 @@ RULES:
     }
     data.sources = sources;
 
-    console.log('[PropertyInsights] Success for:', address.substring(0, 40) + '...');
+    // Add ABS data and confidence levels to response
+    if (absData) {
+      // Add official ABS source
+      sources.unshift({
+        title: `ABS ${absData.source}`,
+        url: 'https://www.abs.gov.au/statistics/economy/price-indexes-and-inflation/residential-property-price-indexes-eight-capital-cities'
+      });
+      
+      // Add ABS data to response
+      data.absData = {
+        region: absData.region,
+        priceIndex: absData.priceIndex,
+        priceGrowthPercent: absData.priceGrowthPercent,
+        period: absData.period,
+        source: absData.source
+      };
+      
+      // Set data confidence based on what we have
+      data.dataConfidence = {
+        overall: 'High',
+        priceGrowth: { level: 'High', source: 'ABS Official Data' },
+        propertyValue: { level: 'Medium', source: 'AI Estimate + ABS Context' },
+        comparableSales: { level: data.comparableSales?.nearbySales?.length > 0 ? 'Medium' : 'Low', source: 'Web Search' },
+        zoning: { level: 'Medium', source: 'Web Search' }
+      };
+    } else {
+      // No ABS data available
+      data.dataConfidence = {
+        overall: 'Medium',
+        priceGrowth: { level: 'Low', source: 'AI Estimate' },
+        propertyValue: { level: 'Medium', source: 'AI Estimate' },
+        comparableSales: { level: data.comparableSales?.nearbySales?.length > 0 ? 'Medium' : 'Low', source: 'Web Search' },
+        zoning: { level: 'Medium', source: 'Web Search' }
+      };
+    }
+
+    console.log('[PropertyInsights] Success for:', address.substring(0, 40) + '...', 'Confidence:', data.dataConfidence?.overall);
     
     // Save to cache (non-blocking, don't fail if cache save fails)
     if (supabaseUrl && supabaseServiceKey) {
