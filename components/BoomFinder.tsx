@@ -217,10 +217,12 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* State selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="boom-state-select" className="block text-sm font-medium text-gray-700 mb-2">
                 State / Territory
               </label>
               <select
+                id="boom-state-select"
+                name="state"
                 value={selectedState}
                 onChange={(e) => setSelectedState(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
@@ -236,11 +238,13 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
 
             {/* Search */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="boom-search-input" className="block text-sm font-medium text-gray-700 mb-2">
                 Search Suburb
               </label>
               <div className="relative">
                 <input
+                  id="boom-search-input"
+                  name="search"
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
