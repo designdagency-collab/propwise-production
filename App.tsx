@@ -1738,7 +1738,10 @@ const App: React.FC = () => {
         onAccountSettings={() => { setShowTerms(false); setShowPricing(false); setShowAccountSettings(true); fetchSearchHistory(); }}
         onInviteFriends={() => setShowInviteFriends(true)}
         onAdminPanel={() => setShowAdminDashboard(true)}
-        onBoomFinder={() => setShowBoomFinder(true)}
+        onBoomFinder={() => {
+          console.log('[App] Setting showBoomFinder to true');
+          setShowBoomFinder(true);
+        }}
         isLoggedIn={isLoggedIn}
         isAdmin={isAdmin}
         userName={userProfile?.full_name}

@@ -188,7 +188,10 @@ const Navbar: React.FC<NavbarProps> = ({
             {/* Boom Finder - visible to all logged in users */}
             {isLoggedIn && (
               <button 
-                onClick={onBoomFinder}
+                onClick={() => {
+                  console.log('[Navbar] Boom Finder clicked');
+                  onBoomFinder?.();
+                }}
                 title="Boom Finder - Discover high-growth suburbs"
                 className="p-1.5 sm:p-2.5 transition-colors rounded-xl hover:bg-amber-100"
                 style={{ color: 'var(--text-muted)' }}
