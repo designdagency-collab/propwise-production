@@ -1,7 +1,7 @@
 // Admin API - Refresh boom suburb data from ABS
 // Should be run monthly to update suburb scores
 // Requires admin authentication
-// v2.0 - Added trades influx metrics (Jan 2026)
+// v3.0 - Added trades, median price, yield (Jan 2026)
 
 import { createClient } from '@supabase/supabase-js';
 import pg from 'pg';
@@ -585,9 +585,16 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
+      version: 'v3.0-trades-price-yield',
       suburbsUpdated: allSuburbs.length,
       states: STATES,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      sampleData: allSuburbs.length > 0 ? {
+        suburb: allSuburbs[0].suburb_name,
+        median_house_price: allSuburbs[0].median_house_price,
+        gross_rental_yield: allSuburbs[0].gross_rental_yield,
+        trades_influx_score: allSuburbs[0].trades_influx_score
+      } : null
     });
 
   } catch (error) {
