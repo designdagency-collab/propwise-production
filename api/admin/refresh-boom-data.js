@@ -275,14 +275,16 @@ const SAMPLE_SUBURBS = {
 
 /**
  * Calculate boom score from individual metrics
+ * Now includes trades influx as a growth signal
  */
 function calculateBoomScore(suburb) {
-  // Component weights
+  // Component weights - trades influx is a strong leading indicator
   const weights = {
-    crowding: 0.30,
-    supply: 0.25,
-    rentGap: 0.25,
-    growth: 0.20
+    crowding: 0.25,        // Demand pressure
+    supply: 0.20,          // Supply constraint
+    rentGap: 0.20,         // Rental yield potential
+    growth: 0.15,          // Population growth
+    tradesInflux: 0.20     // Construction activity signal (leading indicator)
   };
 
   // Calculate weighted score
@@ -306,6 +308,10 @@ function calculateBoomScore(suburb) {
     const growthScore = Math.min(100, Math.max(0, suburb.pop_growth_pct * 20 + 50));
     score += weights.growth * growthScore;
     totalWeight += weights.growth;
+  }
+  if (suburb.trades_influx_score != null) {
+    score += weights.tradesInflux * suburb.trades_influx_score;
+    totalWeight += weights.tradesInflux;
   }
 
   // Normalize by actual weights used
@@ -368,6 +374,40 @@ function generateSuburbData(suburb, state) {
     rentToIncome * 2 + (50 - mortgageToIncome) + 20
   )));
 
+  // Trades/construction workforce metrics
+  // Based on ABS Census occupation data - OCCP (Occupation) codes:
+  // - Construction Managers (1331)
+  // - Building/Plumbing Labourers (8212, 8213)
+  // - Carpenters/Joiners (3312)
+  // - Electricians (3411)
+  // - Plumbers (3341)
+  // - Painters (3322)
+  // - Bricklayers (3311)
+  // Areas with high tradesperson population often signal:
+  // 1. Active construction/development
+  // 2. Infrastructure investment
+  // 3. Affordability for working families
+  // 4. Upcoming growth corridors
+  
+  // Calculate trades workers (typically 8-15% of workforce in growth areas)
+  const workforceSize = Math.round(population * 0.65); // ~65% of population is working age
+  const baseTradesPct = state === 'WA' || state === 'QLD' ? 14 : state === 'NT' ? 16 : 10;
+  const tradesPct = parseFloat((baseTradesPct * rand()).toFixed(2));
+  const tradesWorkers = Math.round(workforceSize * (tradesPct / 100));
+  
+  // Trades growth (areas with construction booms see influx of tradies)
+  // Higher in new development areas, mining regions, infrastructure projects
+  const isGrowthCorridor = popGrowth > 2.5 || approvalsPerPop > 5;
+  const tradesGrowth = parseFloat((isGrowthCorridor ? 3 + Math.random() * 8 : -1 + Math.random() * 4).toFixed(2));
+  
+  // Trades influx score: Combination of high trades population % and growth rate
+  // High score = lots of tradies moving in = construction activity = growth signal
+  const tradesInfluxScore = Math.round(Math.min(100, Math.max(0,
+    (tradesPct - 8) * 8 +    // Base score from trades concentration
+    tradesGrowth * 5 +        // Bonus for trades growth
+    (isGrowthCorridor ? 15 : 0) // Bonus for growth corridor
+  )));
+
   return {
     state,
     suburb_name: suburb.name,
@@ -383,9 +423,13 @@ function generateSuburbData(suburb, state) {
     median_income_weekly: income,
     rent_to_income_pct: rentToIncome,
     mortgage_to_income_pct: mortgageToIncome,
+    trades_workers: tradesWorkers,
+    trades_pct_workforce: tradesPct,
+    trades_growth_pct: tradesGrowth,
     crowding_score: crowdingScore,
     supply_constraint_score: supplyScore,
     rent_value_gap_score: rentValueScore,
+    trades_influx_score: tradesInfluxScore,
     boom_score: 0, // Calculated after
     data_source: 'ABS (simulated)',
     last_updated: new Date().toISOString()
@@ -474,17 +518,20 @@ export default async function handler(req, res) {
           state, suburb_name, sa2_code, postcode, population, pop_growth_pct,
           persons_per_dwelling, building_approvals_12m, approvals_per_1000_pop,
           median_rent_weekly, median_mortgage_monthly, median_income_weekly,
-          rent_to_income_pct, mortgage_to_income_pct, crowding_score,
-          supply_constraint_score, rent_value_gap_score, boom_score,
-          data_source, last_updated
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+          rent_to_income_pct, mortgage_to_income_pct, 
+          trades_workers, trades_pct_workforce, trades_growth_pct,
+          crowding_score, supply_constraint_score, rent_value_gap_score, 
+          trades_influx_score, boom_score, data_source, last_updated
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
       `, [
         suburb.state, suburb.suburb_name, suburb.sa2_code, suburb.postcode,
         suburb.population, suburb.pop_growth_pct, suburb.persons_per_dwelling,
         suburb.building_approvals_12m, suburb.approvals_per_1000_pop,
         suburb.median_rent_weekly, suburb.median_mortgage_monthly, suburb.median_income_weekly,
-        suburb.rent_to_income_pct, suburb.mortgage_to_income_pct, suburb.crowding_score,
-        suburb.supply_constraint_score, suburb.rent_value_gap_score, suburb.boom_score,
+        suburb.rent_to_income_pct, suburb.mortgage_to_income_pct,
+        suburb.trades_workers, suburb.trades_pct_workforce, suburb.trades_growth_pct,
+        suburb.crowding_score, suburb.supply_constraint_score, suburb.rent_value_gap_score,
+        suburb.trades_influx_score, suburb.boom_score,
         suburb.data_source, suburb.last_updated
       ]);
     }

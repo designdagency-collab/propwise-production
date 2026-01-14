@@ -14,9 +14,13 @@ interface BoomSuburb {
   median_mortgage_monthly: number;
   median_income_weekly: number;
   rent_to_income_pct: number;
+  trades_workers: number;
+  trades_pct_workforce: number;
+  trades_growth_pct: number;
   crowding_score: number;
   supply_constraint_score: number;
   rent_value_gap_score: number;
+  trades_influx_score: number;
   boom_score: number;
   last_updated: string;
 }
@@ -330,6 +334,13 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
                       Rent/Value <SortIcon column="rent_value_gap_score" />
                     </th>
                     <th 
+                      className="px-4 py-3 text-center text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('trades_influx_score')}
+                      title="Trades Influx (0-100). Measures construction worker activity in the area. Higher = more tradies moving in, signalling new development, infrastructure projects, and future growth. A leading indicator of price appreciation."
+                    >
+                      Trades <SortIcon column="trades_influx_score" />
+                    </th>
+                    <th 
                       className="px-4 py-3 text-right text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('median_rent_weekly')}
                       title="Median weekly rent from ABS Census data. Indicates typical rental costs in the area."
@@ -375,6 +386,9 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
                       </td>
                       <td className="px-4 py-4 text-center">
                         <ScoreBadge score={suburb.rent_value_gap_score} />
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <ScoreBadge score={suburb.trades_influx_score} />
                       </td>
                       <td className="px-4 py-4 text-right text-sm">
                         ${suburb.median_rent_weekly}/wk

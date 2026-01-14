@@ -423,3 +423,81 @@ CREATE POLICY "Service role full access visualization_cache" ON visualization_ca
 -- Auto-cleanup old visualizations (optional, run via cron)
 -- DELETE FROM visualization_cache WHERE created_at < NOW() - INTERVAL '30 days';
 
+
+-- ============================================
+-- BOOM FINDER - Suburb scores from ABS data
+-- ============================================
+
+-- Table to store pre-calculated boom scores for suburbs (refreshed monthly)
+CREATE TABLE IF NOT EXISTS boom_suburbs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  state TEXT NOT NULL,
+  suburb_name TEXT NOT NULL,
+  sa2_code TEXT,
+  postcode TEXT,
+  
+  -- Population metrics
+  population INTEGER,
+  pop_growth_pct DECIMAL(5,2),
+  persons_per_dwelling DECIMAL(4,2),
+  
+  -- Building/supply metrics
+  building_approvals_12m INTEGER,
+  approvals_per_1000_pop DECIMAL(6,2),
+  
+  -- Rent/affordability metrics (from Census)
+  median_rent_weekly INTEGER,
+  median_mortgage_monthly INTEGER,
+  median_income_weekly INTEGER,
+  rent_to_income_pct DECIMAL(5,2),
+  mortgage_to_income_pct DECIMAL(5,2),
+  
+  -- Trades/construction workforce metrics (from Census occupation data)
+  trades_workers INTEGER,                    -- Number of people in construction/trades occupations
+  trades_pct_workforce DECIMAL(5,2),         -- Percentage of workforce in trades
+  trades_growth_pct DECIMAL(5,2),            -- Year-on-year growth in trades workers
+  
+  -- Calculated scores (0-100)
+  crowding_score INTEGER,
+  supply_constraint_score INTEGER,
+  rent_value_gap_score INTEGER,
+  trades_influx_score INTEGER,               -- Trades activity indicator (high = lots of tradies moving in)
+  boom_score INTEGER,
+  
+  -- Metadata
+  data_source TEXT DEFAULT 'ABS',
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  UNIQUE(state, suburb_name)
+);
+
+-- Indexes for fast lookups
+CREATE INDEX IF NOT EXISTS idx_boom_suburbs_state ON boom_suburbs(state);
+CREATE INDEX IF NOT EXISTS idx_boom_suburbs_boom_score ON boom_suburbs(boom_score DESC);
+CREATE INDEX IF NOT EXISTS idx_boom_suburbs_suburb_name ON boom_suburbs(suburb_name);
+CREATE INDEX IF NOT EXISTS idx_boom_suburbs_trades ON boom_suburbs(trades_influx_score DESC);
+
+-- RLS - public read access (no auth required for viewing suburb scores)
+ALTER TABLE boom_suburbs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public can view boom suburbs" ON boom_suburbs;
+CREATE POLICY "Public can view boom suburbs" ON boom_suburbs
+  FOR SELECT USING (true);
+
+-- Service role full access (for admin refresh)
+DROP POLICY IF EXISTS "Service role full access boom_suburbs" ON boom_suburbs;
+CREATE POLICY "Service role full access boom_suburbs" ON boom_suburbs 
+  FOR ALL USING (true);
+
+-- Metadata table to track last refresh
+CREATE TABLE IF NOT EXISTS boom_data_metadata (
+  id TEXT PRIMARY KEY DEFAULT 'main',
+  last_refresh TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  refresh_status TEXT DEFAULT 'pending',
+  suburbs_count INTEGER DEFAULT 0,
+  error_message TEXT
+);
+
+INSERT INTO boom_data_metadata (id, last_refresh, refresh_status)
+VALUES ('main', NOW(), 'pending')
+ON CONFLICT (id) DO NOTHING;
