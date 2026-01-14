@@ -423,7 +423,6 @@ CREATE POLICY "Service role full access visualization_cache" ON visualization_ca
 -- Auto-cleanup old visualizations (optional, run via cron)
 -- DELETE FROM visualization_cache WHERE created_at < NOW() - INTERVAL '30 days';
 
-
 -- ============================================
 -- BOOM FINDER - Suburb scores from ABS data
 -- ============================================
@@ -445,23 +444,19 @@ CREATE TABLE IF NOT EXISTS boom_suburbs (
   building_approvals_12m INTEGER,
   approvals_per_1000_pop DECIMAL(6,2),
   
-  -- Rent/affordability metrics (from Census)
+  -- Price/rent/affordability metrics (from Census & CoreLogic)
+  median_house_price INTEGER,             -- Median house price in the suburb
   median_rent_weekly INTEGER,
   median_mortgage_monthly INTEGER,
   median_income_weekly INTEGER,
   rent_to_income_pct DECIMAL(5,2),
   mortgage_to_income_pct DECIMAL(5,2),
-  
-  -- Trades/construction workforce metrics (from Census occupation data)
-  trades_workers INTEGER,                    -- Number of people in construction/trades occupations
-  trades_pct_workforce DECIMAL(5,2),         -- Percentage of workforce in trades
-  trades_growth_pct DECIMAL(5,2),            -- Year-on-year growth in trades workers
+  gross_rental_yield DECIMAL(5,2),        -- (Annual rent / house price) * 100
   
   -- Calculated scores (0-100)
   crowding_score INTEGER,
   supply_constraint_score INTEGER,
   rent_value_gap_score INTEGER,
-  trades_influx_score INTEGER,               -- Trades activity indicator (high = lots of tradies moving in)
   boom_score INTEGER,
   
   -- Metadata
@@ -475,7 +470,6 @@ CREATE TABLE IF NOT EXISTS boom_suburbs (
 CREATE INDEX IF NOT EXISTS idx_boom_suburbs_state ON boom_suburbs(state);
 CREATE INDEX IF NOT EXISTS idx_boom_suburbs_boom_score ON boom_suburbs(boom_score DESC);
 CREATE INDEX IF NOT EXISTS idx_boom_suburbs_suburb_name ON boom_suburbs(suburb_name);
-CREATE INDEX IF NOT EXISTS idx_boom_suburbs_trades ON boom_suburbs(trades_influx_score DESC);
 
 -- RLS - public read access (no auth required for viewing suburb scores)
 ALTER TABLE boom_suburbs ENABLE ROW LEVEL SECURITY;

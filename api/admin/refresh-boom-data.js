@@ -347,9 +347,21 @@ function generateSuburbData(suburb, state) {
   const approvals = Math.round((50 + Math.random() * 500) * rand());
   const approvalsPerPop = parseFloat(((approvals / population) * 1000).toFixed(2));
 
+  // Median house price (based on state and suburb type)
+  // Sydney/Melbourne premium, regional discounts
+  const baseHousePrice = {
+    'NSW': 950000, 'VIC': 780000, 'QLD': 650000, 'SA': 580000,
+    'WA': 550000, 'TAS': 520000, 'NT': 480000, 'ACT': 820000
+  }[state] || 600000;
+  const housePrice = Math.round(baseHousePrice * rand());
+
   // Rent (median weekly)
   const baseRent = 400 * mult;
   const rent = Math.round(baseRent * rand());
+
+  // Gross rental yield = (Annual rent / House price) * 100
+  const annualRent = rent * 52;
+  const grossYield = parseFloat(((annualRent / housePrice) * 100).toFixed(2));
 
   // Mortgage (median monthly)
   const baseMortgage = 2000 * mult;
@@ -367,8 +379,9 @@ function generateSuburbData(suburb, state) {
   // Crowding score: Higher PPD = more crowded = higher score
   const crowdingScore = Math.round(Math.min(100, Math.max(0, (ppd - 2.0) * 50 + popGrowth * 10)));
 
-  // Supply constraint: Lower approvals per capita = more constrained = higher score
-  const supplyScore = Math.round(Math.min(100, Math.max(0, 100 - approvalsPerPop * 10)));
+  // Development activity: Higher approvals per capita = more building = growth signal
+  // Renamed from "Supply Constraint" - now higher score = more development activity
+  const supplyScore = Math.round(Math.min(100, Math.max(0, approvalsPerPop * 15 + 20)));
 
   // Rent value gap: High rent relative to mortgage = good rental yield potential
   const rentValueScore = Math.round(Math.min(100, Math.max(0, 
@@ -419,11 +432,13 @@ function generateSuburbData(suburb, state) {
     persons_per_dwelling: ppd,
     building_approvals_12m: approvals,
     approvals_per_1000_pop: approvalsPerPop,
+    median_house_price: housePrice,
     median_rent_weekly: rent,
     median_mortgage_monthly: mortgage,
     median_income_weekly: income,
     rent_to_income_pct: rentToIncome,
     mortgage_to_income_pct: mortgageToIncome,
+    gross_rental_yield: grossYield,
     trades_workers: tradesWorkers,
     trades_pct_workforce: tradesPct,
     trades_growth_pct: tradesGrowth,
@@ -509,15 +524,19 @@ export default async function handler(req, res) {
 
     console.log('[RefreshBoomData] Generated data for', allSuburbs.length, 'suburbs');
     
-    // Debug: Log sample suburb to verify trades data is generated
+    // Debug: Log sample suburb to verify all data is generated
     if (allSuburbs.length > 0) {
       const sample = allSuburbs[0];
-      console.log('[RefreshBoomData] Sample suburb trades data:', {
+      console.log('[RefreshBoomData] Sample suburb data:', {
         name: sample.suburb_name,
+        state: sample.state,
+        median_house_price: sample.median_house_price,
+        median_rent_weekly: sample.median_rent_weekly,
+        gross_rental_yield: sample.gross_rental_yield,
         trades_workers: sample.trades_workers,
         trades_pct_workforce: sample.trades_pct_workforce,
-        trades_growth_pct: sample.trades_growth_pct,
-        trades_influx_score: sample.trades_influx_score
+        trades_influx_score: sample.trades_influx_score,
+        boom_score: sample.boom_score
       });
     }
 
@@ -530,18 +549,18 @@ export default async function handler(req, res) {
         INSERT INTO boom_suburbs (
           state, suburb_name, sa2_code, postcode, population, pop_growth_pct,
           persons_per_dwelling, building_approvals_12m, approvals_per_1000_pop,
-          median_rent_weekly, median_mortgage_monthly, median_income_weekly,
-          rent_to_income_pct, mortgage_to_income_pct, 
+          median_house_price, median_rent_weekly, median_mortgage_monthly, median_income_weekly,
+          rent_to_income_pct, mortgage_to_income_pct, gross_rental_yield,
           trades_workers, trades_pct_workforce, trades_growth_pct,
           crowding_score, supply_constraint_score, rent_value_gap_score, 
           trades_influx_score, boom_score, data_source, last_updated
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
       `, [
         suburb.state, suburb.suburb_name, suburb.sa2_code, suburb.postcode,
         suburb.population, suburb.pop_growth_pct, suburb.persons_per_dwelling,
         suburb.building_approvals_12m, suburb.approvals_per_1000_pop,
-        suburb.median_rent_weekly, suburb.median_mortgage_monthly, suburb.median_income_weekly,
-        suburb.rent_to_income_pct, suburb.mortgage_to_income_pct,
+        suburb.median_house_price, suburb.median_rent_weekly, suburb.median_mortgage_monthly, suburb.median_income_weekly,
+        suburb.rent_to_income_pct, suburb.mortgage_to_income_pct, suburb.gross_rental_yield,
         suburb.trades_workers, suburb.trades_pct_workforce, suburb.trades_growth_pct,
         suburb.crowding_score, suburb.supply_constraint_score, suburb.rent_value_gap_score,
         suburb.trades_influx_score, suburb.boom_score,

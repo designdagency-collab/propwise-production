@@ -10,10 +10,12 @@ interface BoomSuburb {
   pop_growth_pct: number;
   persons_per_dwelling: number;
   building_approvals_12m: number;
+  median_house_price: number;
   median_rent_weekly: number;
   median_mortgage_monthly: number;
   median_income_weekly: number;
   rent_to_income_pct: number;
+  gross_rental_yield: number;
   trades_workers: number;
   trades_pct_workforce: number;
   trades_growth_pct: number;
@@ -322,9 +324,9 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
                     <th 
                       className="px-4 py-3 text-center text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('supply_constraint_score')}
-                      title="Supply Constraint (0-100). Measures how limited new housing supply is relative to demand. Higher = less new housing being built, more price pressure."
+                      title="Development Activity (0-100). Measures building approvals and construction activity. Higher = more homes being built, active growth area with developer confidence."
                     >
-                      Supply Gap <SortIcon column="supply_constraint_score" />
+                      Development <SortIcon column="supply_constraint_score" />
                     </th>
                     <th 
                       className="px-4 py-3 text-center text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
@@ -342,10 +344,17 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
                     </th>
                     <th 
                       className="px-4 py-3 text-right text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('median_rent_weekly')}
-                      title="Median weekly rent from ABS Census data. Indicates typical rental costs in the area."
+                      onClick={() => handleSort('median_house_price')}
+                      title="Median house price in the suburb. Based on recent sales data and CoreLogic estimates."
                     >
-                      Median Rent <SortIcon column="median_rent_weekly" />
+                      Median Price <SortIcon column="median_house_price" />
+                    </th>
+                    <th 
+                      className="px-4 py-3 text-right text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('gross_rental_yield')}
+                      title="Gross Rental Yield = (Annual Rent ÷ House Price) × 100. Higher yields mean better cash flow for investors. 4-5%+ is generally considered good."
+                    >
+                      Yield <SortIcon column="gross_rental_yield" />
                     </th>
                     <th 
                       className="px-4 py-3 text-right text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
@@ -391,7 +400,10 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
                         <ScoreBadge score={suburb.trades_influx_score} />
                       </td>
                       <td className="px-4 py-4 text-right text-sm">
-                        ${suburb.median_rent_weekly}/wk
+                        ${suburb.median_house_price?.toLocaleString() || '—'}
+                      </td>
+                      <td className="px-4 py-4 text-right text-sm font-medium" style={{ color: (suburb.gross_rental_yield || 0) >= 5 ? '#16a34a' : (suburb.gross_rental_yield || 0) >= 4 ? '#ca8a04' : '#6b7280' }}>
+                        {suburb.gross_rental_yield ? `${suburb.gross_rental_yield}%` : '—'}
                       </td>
                       <td className="px-4 py-4 text-right text-sm text-gray-600">
                         {suburb.population?.toLocaleString()}

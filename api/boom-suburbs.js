@@ -36,7 +36,7 @@ export default async function handler(req, res) {
   const maxLimit = Math.min(parseInt(limit) || 100, 500);
 
   // Validate and sanitize sort column
-  const validSortColumns = ['boom_score', 'crowding_score', 'supply_constraint_score', 'rent_value_gap_score', 'trades_influx_score', 'population', 'suburb_name', 'median_rent_weekly'];
+  const validSortColumns = ['boom_score', 'crowding_score', 'supply_constraint_score', 'rent_value_gap_score', 'trades_influx_score', 'population', 'suburb_name', 'median_house_price', 'gross_rental_yield'];
   const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'boom_score';
   const sortDir = sortOrder === 'asc' ? 'ASC' : 'DESC';
 
