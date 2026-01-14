@@ -972,19 +972,39 @@ Search for the property and classify:
 📋 STEP B: GET LAND & BUILDING MEASUREMENTS
 Search for the property on commercialrealestate.com.au, realcommercial.com.au, or council records:
 
-1. LAND SIZE (landAreaSqm):
-   - Search "[address] lot size" or check council property information
-   - Look for "site area" or "land area" in commercial listings
-   - If unavailable, estimate from satellite imagery (label as estimate)
+1. LAND SIZE (landAreaSqm) - CRITICAL: MUST BE ACCURATE NUMBER:
+   - Search "[address] lot size" or "[address] land area" or "[address] site area"
+   - Check commercial listings for land/site area
+   - Check council property information
+   
+   ⚠️ UNIT CONVERSION (YOU MUST CONVERT TO SQM):
+   - If you find HECTARES: Multiply by 10,000 → landAreaSqm
+     Example: 2.47 hectares = 2.47 × 10,000 = 24,700 sqm
+   - If you find ACRES: Multiply by 4,047 → landAreaSqm
+     Example: 6.1 acres = 6.1 × 4,047 = 24,687 sqm
+   - If you find SQM: Use directly
+     Example: 2,205 sqm = 2205 (remove comma)
+   
+   ⛔ SANITY CHECK - READ THIS CAREFULLY:
+   - Commercial properties are NEVER 2 sqm or 5 sqm - that's tiny!
+   - Minimum commercial land size is typically 100+ sqm (small shop)
+   - Industrial/warehouse properties are typically 1,000 - 50,000+ sqm
+   - If your number seems too small, you likely missed a unit conversion
+   - "2.47 hectares" is 24,700 sqm, NOT 2 sqm!
+   - "2,205 sqm" is 2205 sqm, NOT 2 sqm!
+   
+   ⛔ IF landAreaSqm < 50 FOR COMMERCIAL → YOU HAVE MADE AN ERROR. RE-CHECK.
 
 2. BUILDING SIZE (buildingAreaSqm):
    - Search for "Net Lettable Area (NLA)" or "Gross Floor Area (GFA)"
-   - Check commercial listings for building size
+   - Check commercial listings for building/warehouse size
+   - Same conversion rules apply: hectares × 10,000, acres × 4,047
    - If unavailable, estimate: Building Area ≈ Land Size × Floor Space Ratio
 
 3. FLOOR SPACE RATIO (floorSpaceRatio):
    - Calculate: Building Area / Land Area
    - Typical ratios: Retail strip shop 0.5-0.8, Office 1.0-2.0, Industrial 0.3-0.5
+   - If land is 24,700 sqm and building is 2,205 sqm → FSR = 0.089
 
 📋 STEP C: COMMERCIAL VALUATION (CRITICAL - DO THE MATH)
 
@@ -1032,27 +1052,37 @@ Use these Australian commercial benchmarks:
 
 📋 STEP D: POPULATE commercialDetails
 
+EXAMPLE 1 - Small retail shop:
 {
-  buildingType: "Retail",           // From Step A
-  buildingAreaSqm: 200,             // From Step B
-  landAreaSqm: 300,                 // From Step B
-  floorSpaceRatio: 0.67,            // buildingArea / landArea
-  yearBuilt: "1980s",               // If known
-  condition: "Good",                // From imagery/listing
-  parkingSpaces: 2,                 // From listing
-  tenancyStatus: "Leased",          // Vacant/Leased/Owner Occupied
-  currentTenant: "XYZ Cafe",        // If leased
-  annualRentIncome: 65000,          // If leased
-  leaseTermRemaining: "3 years",    // If known
-  ratePerSqmLand: 5000,             // $/sqm used for land
-  ratePerSqmBuilding: 2500,         // $/sqm used for building
-  capRate: 6.5,                     // Capitalisation rate %
-  valuationMethod: "Summation",     // Method used
+  buildingType: "Retail",
+  buildingAreaSqm: 200,             // 200 sqm shop
+  landAreaSqm: 300,                 // 300 sqm lot
+  floorSpaceRatio: 0.67,
+  ratePerSqmLand: 5000,
+  ratePerSqmBuilding: 2500,
   valuationBreakdown: "Land: 300sqm × $5,000 = $1.5M + Building: 200sqm × $2,500 = $500K = $2.0M",
-  landValue: 1500000,               // Land component
-  improvementsValue: 500000,        // Building component
-  potentialUses: ["Retail", "Cafe", "Medical", "Office"]  // Permitted under zoning
+  landValue: 1500000,
+  improvementsValue: 500000
 }
+
+EXAMPLE 2 - Large industrial site (like 393-403 Taylor St):
+{
+  buildingType: "Industrial",
+  buildingAreaSqm: 2205,            // 2,205 sqm warehouse
+  landAreaSqm: 24700,               // 2.47 hectares = 24,700 sqm (NOT 2 sqm!)
+  floorSpaceRatio: 0.089,           // 2205 / 24700 = 0.089
+  ratePerSqmLand: 200,              // Regional industrial rate
+  ratePerSqmBuilding: 1000,
+  valuationBreakdown: "Land: 24,700sqm × $200 = $4.94M + Building: 2,205sqm × $1,000 = $2.2M",
+  landValue: 4940000,
+  improvementsValue: 2205000
+}
+
+⛔ FINAL CHECK BEFORE SUBMITTING:
+- Is landAreaSqm a reasonable number? (Not 2, not 5, not 10 for commercial)
+- Did you convert hectares to sqm? (× 10,000)
+- Did you convert acres to sqm? (× 4,047)
+- Does your valuation math add up?
 
 📋 STEP E: SET valueSnapshot FOR COMMERCIAL
 
