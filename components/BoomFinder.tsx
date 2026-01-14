@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { supabaseService } from '../services/supabaseService';
 
 interface BoomSuburb {
   id: string;
@@ -23,7 +24,6 @@ interface BoomSuburb {
 interface BoomFinderProps {
   onSelectSuburb?: (suburb: string, state: string) => void;
   isAdmin?: boolean;
-  authToken?: string;
 }
 
 const STATES = [
@@ -64,7 +64,7 @@ const ScoreBadge: React.FC<{ score: number; label?: string }> = ({ score, label 
   );
 };
 
-export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin, authToken }) => {
+export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin }) => {
   const [suburbs, setSuburbs] = useState<BoomSuburb[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -113,16 +113,12 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
   }, [fetchSuburbs]);
 
   const handleRefreshData = async () => {
-    if (!authToken || refreshing) return;
+    if (refreshing) return;
 
     setRefreshing(true);
     try {
-      const response = await fetch('/api/admin/refresh-boom-data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
-        }
+      const response = await supabaseService.authenticatedFetch('/api/admin/refresh-boom-data', {
+        method: 'POST'
       });
 
       if (!response.ok) {

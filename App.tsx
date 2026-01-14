@@ -2166,7 +2166,6 @@ const App: React.FC = () => {
               setAddress(`${suburb}, ${state}`);
             }}
             isAdmin={isAdmin}
-            authToken={authToken || undefined}
           />
         </div>
       )}
