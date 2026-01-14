@@ -34,18 +34,7 @@ export default async function handler(req, res) {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    // Get metadata (last refresh date)
-    const { data: metadata, error: metaError } = await supabase
-      .from('boom_data_metadata')
-      .select('*')
-      .eq('id', 'main')
-      .single();
-
-    if (metaError) {
-      console.log('[BoomSuburbs] Metadata table may not exist:', metaError.message);
-    }
-
-    // Build query
+    // Build query for boom_suburbs
     let query = supabase
       .from('boom_suburbs')
       .select('*');
@@ -74,53 +63,102 @@ export default async function handler(req, res) {
     const { data: suburbs, error } = await query;
 
     if (error) {
-      console.error('[BoomSuburbs] Query error:', error);
-      // If table doesn't exist, return empty results instead of error
-      if (error.code === '42P01' || error.message?.includes('does not exist')) {
+      console.error('[BoomSuburbs] Query error:', error.message, error.code);
+      
+      // Schema cache issue - return empty results gracefully
+      if (error.message?.includes('schema cache') || error.code === 'PGRST200') {
+        console.log('[BoomSuburbs] Schema cache not ready, returning empty results');
         return res.status(200).json({
           suburbs: [],
           total: 0,
-          states: [],
+          states: ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'],
           lastRefresh: null,
-          refreshStatus: 'pending',
-          message: 'Tables not yet created. Run the SQL migration first.'
+          refreshStatus: 'schema_pending',
+          message: 'Schema cache refreshing. Please wait a few minutes and try again.'
         });
       }
+      
+      // Table doesn't exist
+      if (error.code === '42P01') {
+        return res.status(200).json({
+          suburbs: [],
+          total: 0,
+          states: ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'],
+          lastRefresh: null,
+          refreshStatus: 'pending',
+          message: 'Tables not created. Run the SQL migration first.'
+        });
+      }
+      
       return res.status(500).json({ error: 'Failed to fetch suburbs', details: error.message });
     }
 
-    // Get total count for the state
-    let countQuery = supabase
-      .from('boom_suburbs')
-      .select('*', { count: 'exact', head: true });
-    
-    if (state && state !== 'all') {
-      countQuery = countQuery.eq('state', state.toUpperCase());
-    }
-    if (search) {
-      countQuery = countQuery.ilike('suburb_name', `%${search}%`);
+    // Get metadata (last refresh date) - separate try/catch so it doesn't fail the whole request
+    let metadata = null;
+    try {
+      const { data: metaData } = await supabase
+        .from('boom_data_metadata')
+        .select('*')
+        .eq('id', 'main')
+        .single();
+      metadata = metaData;
+    } catch (e) {
+      console.log('[BoomSuburbs] Could not fetch metadata:', e.message);
     }
 
-    const { count } = await countQuery;
+    // Get total count for the state
+    let total = suburbs?.length || 0;
+    try {
+      let countQuery = supabase
+        .from('boom_suburbs')
+        .select('*', { count: 'exact', head: true });
+      
+      if (state && state !== 'all') {
+        countQuery = countQuery.eq('state', state.toUpperCase());
+      }
+      if (search) {
+        countQuery = countQuery.ilike('suburb_name', `%${search}%`);
+      }
+
+      const { count } = await countQuery;
+      total = count || total;
+    } catch (e) {
+      console.log('[BoomSuburbs] Could not get count:', e.message);
+    }
 
     // Get available states
-    const { data: states } = await supabase
-      .from('boom_suburbs')
-      .select('state')
-      .order('state');
-    
-    const uniqueStates = [...new Set(states?.map(s => s.state) || [])];
+    let states = ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'];
+    try {
+      const { data: stateData } = await supabase
+        .from('boom_suburbs')
+        .select('state');
+      
+      if (stateData?.length) {
+        states = [...new Set(stateData.map(s => s.state))].sort();
+      }
+    } catch (e) {
+      console.log('[BoomSuburbs] Could not get states:', e.message);
+    }
 
     return res.status(200).json({
       suburbs: suburbs || [],
-      total: count || 0,
-      states: uniqueStates,
+      total: total || 0,
+      states,
       lastRefresh: metadata?.last_refresh || null,
       refreshStatus: metadata?.refresh_status || 'unknown'
     });
 
   } catch (error) {
-    console.error('[BoomSuburbs] Error:', error);
-    return res.status(500).json({ error: 'Internal server error', details: error.message });
+    console.error('[BoomSuburbs] Unexpected error:', error);
+    
+    // Return empty data gracefully for any error
+    return res.status(200).json({
+      suburbs: [],
+      total: 0,
+      states: ['NSW', 'VIC', 'QLD', 'SA', 'WA', 'TAS', 'NT', 'ACT'],
+      lastRefresh: null,
+      refreshStatus: 'error',
+      message: error.message || 'An error occurred'
+    });
   }
 }
