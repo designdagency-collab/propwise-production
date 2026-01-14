@@ -613,101 +613,113 @@ The user has indicated the previous data may be INCORRECT. Pay EXTRA attention t
     const prompt = `You are a professional Australian property planning analyst and prop-tech engineer for upblock.ai.
 Your task is to generate a structured Property DNA report for: "${address}".
 ${dataCorrectionInstructions}${absContext}
-🚨 STEP 1: COMMERCIAL PROPERTY PRE-CHECK (DO THIS FIRST - BEFORE ANYTHING ELSE)
-Before assuming ANY property is residential, you MUST check for commercial indicators:
+🚨🚨🚨 MANDATORY STEP 1: BUSINESS/COMMERCIAL SEARCH (YOU MUST DO THIS FIRST) 🚨🚨🚨
 
-🏢 COMMERCIAL ADDRESS PATTERNS (if ANY match → propertyType = "Commercial"):
-- Address starts with "Shop", "Suite", "Level", "Office", "Unit" in a non-residential building
-- Address contains "Kiosk", "Tenancy", "Ground Floor", "First Floor" (commercial building)
-- Street number ranges like "123-125" or "10-12" (often shopfronts or commercial)
-- Address is in a shopping centre, arcade, plaza, or retail complex
+⛔ STOP! Before doing ANYTHING else, you MUST search for businesses at this address.
+⛔ DO NOT SKIP THIS STEP. DO NOT ASSUME RESIDENTIAL.
+⛔ If you skip this step and classify a commercial property as "House", you have FAILED.
 
-🛣️ MAIN ROAD / COMMERCIAL STRIP CHECK:
-These roads are predominantly commercial - addresses on them are likely NOT residential:
-- NSW: Parramatta Rd, Victoria Rd, Pacific Hwy, Great Western Hwy, Princes Hwy, King St (Newtown), Oxford St
-- VIC: Sydney Rd, High St, Chapel St, Bridge Rd, Smith St, Brunswick St
-- QLD: Coronation Dr, Ipswich Rd, Logan Rd, Sandgate Rd
-- SA: Unley Rd, Magill Rd, The Parade, Henley Beach Rd
-- WA: Stirling Hwy, Albany Hwy, Canning Hwy
-If address is on a main arterial road → SEARCH "[address]" to verify if residential or commercial
+🔍 REQUIRED SEARCH #1: Search "[full address]" 
+Look at the search results. Does ANY result mention:
+- A business name (e.g., "Sydney Tools", "Bunnings", "McDonald's", "Any Company Pty Ltd")
+- A store, warehouse, factory, office, shop, café, restaurant, gym, medical centre
+- Words like "commercial", "industrial", "retail", "warehouse", "office"
+→ If YES to ANY of these: propertyType = "Commercial" IMMEDIATELY. STOP residential analysis.
 
-🔍 MANDATORY COMMERCIAL VERIFICATION SEARCHES:
-1. Search "[full address] ABN" - if an ABN is registered at this EXACT address → COMMERCIAL
-2. Search "[full address] business" - if a business name/shop operates there → COMMERCIAL
-3. Search Google Maps "[address]" - look at Street View:
-   - Shopfront with signage? → COMMERCIAL
-   - Awning over footpath? → COMMERCIAL
-   - Display windows? → COMMERCIAL
-   - Part of a row of shops? → COMMERCIAL
-   - Roller door/loading dock? → COMMERCIAL (industrial)
-4. Search "[address] for lease" or "[address] commercial" - if commercial listings exist → COMMERCIAL
+🔍 REQUIRED SEARCH #2: Search "[address] site:commercialrealestate.com.au"
+If this address appears on commercialrealestate.com.au:
+→ propertyType = "Commercial" IMMEDIATELY. This is a commercial property.
 
-🚫 AUTOMATIC COMMERCIAL CLASSIFICATION (NO FURTHER CHECKS NEEDED):
-If ANY of the following are TRUE, set propertyType = "Commercial" immediately:
-✓ An ABN or business name is registered at this address
-✓ A shop, cafe, restaurant, office, or business operates there
-✓ The building has shopfronts on ground floor
-✓ Address format is "Shop X", "Suite X", "Level X", "Office X"
-✓ Property is listed on commercialrealestate.com.au
-✓ Zoning is B1, B2, B3, B4, B5, B6, B7, IN1, IN2, IN3, IN4, SP1, SP2
-✓ No residential listing (beds/baths) can be found on realestate.com.au or domain.com.au
+🔍 REQUIRED SEARCH #3: Search "[address] ABN" or "[address] business"
+If an ABN number or business registration appears:
+→ propertyType = "Commercial" IMMEDIATELY.
 
-⚠️ CRITICAL DEFAULT RULE:
-- If you CANNOT find a residential listing with beds/baths/cars → DO NOT assume it's a house
-- Default to "Commercial" if on a main road, or "Unknown" if unclear
-- ONLY mark as "House" if you find an ACTUAL real estate listing with bedroom/bathroom counts
+📸 REQUIRED CHECK: Look at the property on Google Maps
+What do you see?
+- Warehouse with roller doors → COMMERCIAL (Industrial)
+- Shop with signage/awning → COMMERCIAL (Retail)
+- Office building → COMMERCIAL (Office)
+- Large parking lot for customers → COMMERCIAL
+- Loading docks, trucks → COMMERCIAL (Industrial/Warehouse)
+- Regular house with front yard → Potentially residential (continue to Step 2)
 
----
+🏪 COMMON COMMERCIAL INDICATORS (if ANY match → COMMERCIAL):
+- Business operates at this address (Sydney Tools, Bunnings, any retailer, any company)
+- Property has commercial signage visible
+- Building is a warehouse, factory, or industrial unit
+- Address is "Unit X" or "30A" in a commercial/industrial complex
+- Property is on a main road with other shops nearby
+- Property has a commercial lease or is listed for commercial rent
+- Zoning is B1-B7 (Business), IN1-IN4 (Industrial), SP1-SP3 (Special Purpose)
 
-📋 STEP 2: ZONING VERIFICATION (if not already classified as Commercial):
-Search for zoning code from council planning maps or NSW Planning Portal:
+⛔⛔⛔ HARD RULE: YOU CANNOT CLASSIFY AS "HOUSE" IF: ⛔⛔⛔
+1. A business operates at the address
+2. The property is on commercialrealestate.com.au
+3. The building looks like a warehouse/shop/office (not a house)
+4. You cannot find a residential listing with beds/baths on realestate.com.au or domain.com.au
+5. The zoning is NOT residential (R1, R2, R3, R4, R5)
 
-RESIDENTIAL ZONES (can be House/Apartment/Townhouse):
-- R1, R2, R3, R4, R5, RU1-RU5, E4 = Residential
-
-COMMERCIAL/INDUSTRIAL ZONES (ALWAYS "Commercial" property type):
-- B1, B2, B3, B4, B5, B6, B7 = Business/Commercial → propertyType = "Commercial"
-- IN1, IN2, IN3, IN4 = Industrial → propertyType = "Commercial"
-- SP1, SP2, SP3 = Special Purpose → Usually "Commercial"
-- W1, W2, W3 = Working Waterfront → "Commercial"
-
-⚠️ ZONING OVERRIDES APPEARANCE: A property in a B2 zone is COMMERCIAL even if it LOOKS like a house.
+If ANY of the above are true → propertyType = "Commercial" or "Unknown", NEVER "House"
 
 ---
 
-📋 STEP 3: RESIDENTIAL VERIFICATION (ONLY if Steps 1-2 confirm residential zone AND no commercial indicators):
-- Search realestate.com.au and domain.com.au for the EXACT address
-- Extract beds/baths/cars from the listing
-- If NO listing found → consider "Unknown" not "House"
-- Houses = standalone dwelling, typically 300sqm+ land, in R1-R5 zone
-- Apartments = strata title, unit number format like "5/30" or "Unit 5"
+📋 STEP 2: ZONING CHECK (only if Step 1 found NO commercial indicators)
 
-5. COMBINED/AMALGAMATED LOTS DETECTION (CRITICAL - CROSS-REFERENCE LISTINGS):
-   When searching for this property on realestate.com.au or Domain:
-   
-   ⚠️ IMPORTANT: The user may enter "2 Grace Avenue" but the ACTUAL listing might be for "2-4 Grace Avenue" or "2 & 4 Grace Avenue" (combined lots). You MUST check:
-   
-   a) LISTING TITLE CHECK: Does the listing title include MULTIPLE street numbers?
-      - User searched: "2 Grace Avenue"
-      - Actual listing: "2-4 Grace Avenue" or "2 & 4 Grace Avenue" → THIS IS COMBINED LOTS
-      - Look for patterns like "2-4", "2 & 4", "2, 4", "Lots 1 & 2"
-   
-   b) LISTING DESCRIPTION CHECK: Does it mention:
-      - "combined lots", "amalgamated", "dual blocks", "two titles", "multiple lots"
-      - "sold together", "both properties", "development site"
-      - "combined area", "total land"
-   
-   c) LAND SIZE CHECK: Is the land size LARGER than typical for one house?
-      - If listing shows 1,000sqm+ in suburban area, likely combined lots
-      - Cross-reference: typical house lot in that suburb is 600-800sqm
-   
-   d) IF COMBINED LOTS DETECTED:
-      - Set isCombinedLots = true
-      - Use the COMBINED land area from the listing (e.g., 1,443sqm not 715sqm)
-      - Update the address to reflect the combined lots (e.g., "2-4 Grace Avenue")
-      - Emphasise development potential in your analysis
-      - MUST populate developmentScenarios with at least 1-2 viable development options
-      - If recommending development as bestStrategyByProfit, ensure that EXACT scenario is in developmentScenarios
+Search for zoning: "[suburb] [council] LEP zoning map" or "NSW Planning Portal [address]"
+
+RESIDENTIAL ZONES (R1, R2, R3, R4, R5, RU1-RU5, E4):
+→ Continue to Step 3 to verify residential
+
+COMMERCIAL/INDUSTRIAL ZONES:
+- B1, B2, B3, B4, B5, B6, B7 = Business → propertyType = "Commercial"
+- IN1, IN2, IN3, IN4 = Industrial → propertyType = "Commercial"  
+- SP1, SP2, SP3 = Special Purpose → propertyType = "Commercial"
+- W1, W2, W3 = Waterfront → propertyType = "Commercial"
+
+⚠️ ZONING OVERRIDES EVERYTHING: If zoning is B2 or IN1, it's COMMERCIAL even if it looks like a house.
+
+---
+
+📋 STEP 3: RESIDENTIAL LISTING CHECK (only if Steps 1-2 confirm residential)
+
+Search realestate.com.au and domain.com.au for "[address]"
+
+✅ If you find a residential listing with beds/baths/cars → It's residential (House/Apartment)
+❌ If NO residential listing exists → DO NOT assume "House". Use "Unknown" or "Commercial"
+
+The ONLY way to classify as "House" is:
+1. Step 1 found NO business/commercial indicators
+2. Step 2 confirmed R1-R5 residential zoning
+3. Step 3 found an ACTUAL residential listing with bedroom/bathroom counts
+
+---
+
+📋 STEP 4: COMBINED/AMALGAMATED LOTS DETECTION (for residential properties only):
+When searching for this property on realestate.com.au or Domain:
+
+⚠️ IMPORTANT: The user may enter "2 Grace Avenue" but the ACTUAL listing might be for "2-4 Grace Avenue" or "2 & 4 Grace Avenue" (combined lots). You MUST check:
+
+a) LISTING TITLE CHECK: Does the listing title include MULTIPLE street numbers?
+   - User searched: "2 Grace Avenue"
+   - Actual listing: "2-4 Grace Avenue" or "2 & 4 Grace Avenue" → THIS IS COMBINED LOTS
+   - Look for patterns like "2-4", "2 & 4", "2, 4", "Lots 1 & 2"
+
+b) LISTING DESCRIPTION CHECK: Does it mention:
+   - "combined lots", "amalgamated", "dual blocks", "two titles", "multiple lots"
+   - "sold together", "both properties", "development site"
+   - "combined area", "total land"
+
+c) LAND SIZE CHECK: Is the land size LARGER than typical for one house?
+   - If listing shows 1,000sqm+ in suburban area, likely combined lots
+   - Cross-reference: typical house lot in that suburb is 600-800sqm
+
+d) IF COMBINED LOTS DETECTED:
+   - Set isCombinedLots = true
+   - Use the COMBINED land area from the listing (e.g., 1,443sqm not 715sqm)
+   - Update the address to reflect the combined lots (e.g., "2-4 Grace Avenue")
+   - Emphasise development potential in your analysis
+   - MUST populate developmentScenarios with at least 1-2 viable development options
+   - If recommending development as bestStrategyByProfit, ensure that EXACT scenario is in developmentScenarios
 
 FOCUS: Value Uplift, Renovation Feasibility, Development Potential, Comparable Sales, Rental Yield, and Local Amenities.
 
