@@ -1,7 +1,7 @@
 // Admin API - Refresh boom suburb data from ABS
 // Should be run monthly to update suburb scores
 // Requires admin authentication
-// v3.0 - Added trades, median price, yield (Jan 2026)
+// v4.0 - Smart Boom Score with bottleneck penalties (Jan 2026)
 
 import { createClient } from '@supabase/supabase-js';
 import pg from 'pg';
@@ -275,37 +275,43 @@ const SAMPLE_SUBURBS = {
 };
 
 /**
- * Calculate boom score from individual metrics
- * Now includes trades influx as a growth signal
+ * Calculate boom score with bottleneck penalties
+ * 
+ * Key insight: High demand is good, but EXTREME demand without supply = growth stall
+ * Based on real-world factors:
+ * - Housing Crisis: Lack of rentals, high costs, short-term accommodation conversion
+ * - Labour Shortages: Can't fill roles because workers have nowhere to live
+ * - Infrastructure Gaps: Limited construction capacity, power/internet issues
+ * - Economic Shifts: Remote area costs, industry dependency risks
  */
 function calculateBoomScore(suburb) {
-  // Component weights - trades influx is a strong leading indicator
+  // Base component weights
   const weights = {
-    crowding: 0.25,        // Demand pressure
-    supply: 0.20,          // Supply constraint
-    rentGap: 0.20,         // Rental yield potential
-    growth: 0.15,          // Population growth
-    tradesInflux: 0.20     // Construction activity signal (leading indicator)
+    crowding: 0.18,        // Demand pressure
+    development: 0.18,     // Building activity (supply response)
+    rentValue: 0.15,       // Rental yield potential
+    growth: 0.12,          // Population growth
+    tradesInflux: 0.17,    // Construction activity signal
+    balance: 0.20          // Supply-demand balance (critical for sustainable growth)
   };
 
-  // Calculate weighted score
   let score = 0;
   let totalWeight = 0;
 
+  // Standard component scoring
   if (suburb.crowding_score != null) {
     score += weights.crowding * suburb.crowding_score;
     totalWeight += weights.crowding;
   }
   if (suburb.supply_constraint_score != null) {
-    score += weights.supply * suburb.supply_constraint_score;
-    totalWeight += weights.supply;
+    score += weights.development * suburb.supply_constraint_score;
+    totalWeight += weights.development;
   }
   if (suburb.rent_value_gap_score != null) {
-    score += weights.rentGap * suburb.rent_value_gap_score;
-    totalWeight += weights.rentGap;
+    score += weights.rentValue * suburb.rent_value_gap_score;
+    totalWeight += weights.rentValue;
   }
   if (suburb.pop_growth_pct != null) {
-    // Convert growth % to score (0-100)
     const growthScore = Math.min(100, Math.max(0, suburb.pop_growth_pct * 20 + 50));
     score += weights.growth * growthScore;
     totalWeight += weights.growth;
@@ -315,8 +321,72 @@ function calculateBoomScore(suburb) {
     totalWeight += weights.tradesInflux;
   }
 
-  // Normalize by actual weights used
-  return totalWeight > 0 ? Math.round(score / totalWeight) : 50;
+  // === SUPPLY-DEMAND BALANCE SCORE ===
+  // Healthy growth = high demand WITH adequate supply response
+  // Bottleneck = high demand WITHOUT supply response (housing crisis)
+  if (suburb.crowding_score != null && suburb.supply_constraint_score != null) {
+    const demand = suburb.crowding_score;
+    const supply = suburb.supply_constraint_score; // = development activity
+    
+    // Ideal: demand and supply are both high (growing AND building)
+    // Bad: high demand but low supply (bottleneck/crisis)
+    // Bad: low demand but high supply (oversupply risk)
+    const balanceScore = Math.min(100, Math.max(0,
+      (supply + demand) / 2 -                    // Base: average of both
+      Math.abs(demand - supply) * 0.4            // Penalty for imbalance
+    ));
+    
+    score += weights.balance * balanceScore;
+    totalWeight += weights.balance;
+  }
+
+  // === BOTTLENECK PENALTIES ===
+  // These reduce scores for areas with growth-limiting factors
+  let penalty = 0;
+  
+  // 1. Housing Crisis Penalty: Very high crowding + very low development
+  //    = Severe housing shortage, growth will stall (like Esperance)
+  if (suburb.crowding_score > 80 && suburb.supply_constraint_score < 30) {
+    penalty += 15;
+  } else if (suburb.crowding_score > 70 && suburb.supply_constraint_score < 40) {
+    penalty += 8;
+  }
+  
+  // 2. Affordability Crisis: Rent takes too much of income
+  //    = Workers can't afford to move here, labour shortages
+  if (suburb.rent_to_income_pct != null && suburb.rent_to_income_pct > 35) {
+    penalty += Math.min(12, (suburb.rent_to_income_pct - 35) * 1.2);
+  }
+  
+  // 3. Infrastructure Bottleneck: Low trades + high demand
+  //    = Can't build fast enough, limited construction capacity
+  if (suburb.trades_influx_score != null && suburb.crowding_score != null) {
+    if (suburb.trades_influx_score < 25 && suburb.crowding_score > 70) {
+      penalty += 10;
+    } else if (suburb.trades_influx_score < 35 && suburb.crowding_score > 60) {
+      penalty += 5;
+    }
+  }
+  
+  // 4. Remote/Small Town Penalty: Infrastructure and service limitations
+  //    = Harder to scale, limited construction capacity, power/internet gaps
+  if (suburb.population != null) {
+    if (suburb.population < 3000) {
+      penalty += 8;  // Very small - significant infrastructure limits
+    } else if (suburb.population < 8000) {
+      penalty += 4;  // Small - some limitations
+    }
+  }
+  
+  // 5. Oversupply Risk: High development but low demand
+  //    = Could lead to property value stagnation
+  if (suburb.supply_constraint_score > 80 && suburb.crowding_score < 30) {
+    penalty += 10;
+  }
+
+  // Calculate final score with penalties
+  const baseScore = totalWeight > 0 ? score / totalWeight : 50;
+  return Math.round(Math.max(0, Math.min(100, baseScore - penalty)));
 }
 
 /**
@@ -585,7 +655,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      version: 'v3.0-trades-price-yield',
+      version: 'v4.0-smart-bottleneck-penalties',
       suburbsUpdated: allSuburbs.length,
       states: STATES,
       timestamp: new Date().toISOString(),
