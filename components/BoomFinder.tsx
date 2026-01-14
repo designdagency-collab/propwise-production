@@ -24,6 +24,7 @@ interface BoomSuburb {
 interface BoomFinderProps {
   onSelectSuburb?: (suburb: string, state: string) => void;
   isAdmin?: boolean;
+  userEmail?: string;
 }
 
 const STATES = [
@@ -64,7 +65,9 @@ const ScoreBadge: React.FC<{ score: number; label?: string }> = ({ score, label 
   );
 };
 
-export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin }) => {
+export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin, userEmail }) => {
+  // Allow refresh for admin flag OR specific admin email
+  const canRefresh = isAdmin || userEmail?.toLowerCase() === 'designd.agency@gmail.com';
   const [suburbs, setSuburbs] = useState<BoomSuburb[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -177,7 +180,7 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin 
                   year: 'numeric' 
                 })}
               </span>
-              {isAdmin && (
+              {canRefresh && (
                 <button
                   onClick={handleRefreshData}
                   disabled={refreshing}
@@ -274,7 +277,7 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin 
           ) : suburbs.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-500">
               <i className="fa-solid fa-map-marker-alt text-4xl mb-3 opacity-30"></i>
-              <p>No suburbs found. {isAdmin && 'Click "Refresh Data" to load ABS data.'}</p>
+              <p>No suburbs found. {canRefresh && 'Click "Refresh Data" to load ABS data.'}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
