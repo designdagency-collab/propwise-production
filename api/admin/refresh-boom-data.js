@@ -612,30 +612,46 @@ export default async function handler(req, res) {
 
     // Clear existing data
     await client.query('DELETE FROM boom_suburbs');
+    console.log('[RefreshBoomData] Cleared existing data');
 
-    // Insert all suburbs
+    // Insert all suburbs with error handling
+    let insertedCount = 0;
+    let insertErrors = [];
+    
     for (const suburb of allSuburbs) {
-      await client.query(`
-        INSERT INTO boom_suburbs (
-          state, suburb_name, sa2_code, postcode, population, pop_growth_pct,
-          persons_per_dwelling, building_approvals_12m, approvals_per_1000_pop,
-          median_house_price, median_rent_weekly, median_mortgage_monthly, median_income_weekly,
-          rent_to_income_pct, mortgage_to_income_pct, gross_rental_yield,
-          trades_workers, trades_pct_workforce, trades_growth_pct,
-          crowding_score, supply_constraint_score, rent_value_gap_score, 
-          trades_influx_score, boom_score, data_source, last_updated
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
-      `, [
-        suburb.state, suburb.suburb_name, suburb.sa2_code, suburb.postcode,
-        suburb.population, suburb.pop_growth_pct, suburb.persons_per_dwelling,
-        suburb.building_approvals_12m, suburb.approvals_per_1000_pop,
-        suburb.median_house_price, suburb.median_rent_weekly, suburb.median_mortgage_monthly, suburb.median_income_weekly,
-        suburb.rent_to_income_pct, suburb.mortgage_to_income_pct, suburb.gross_rental_yield,
-        suburb.trades_workers, suburb.trades_pct_workforce, suburb.trades_growth_pct,
-        suburb.crowding_score, suburb.supply_constraint_score, suburb.rent_value_gap_score,
-        suburb.trades_influx_score, suburb.boom_score,
-        suburb.data_source, suburb.last_updated
-      ]);
+      try {
+        await client.query(`
+          INSERT INTO boom_suburbs (
+            state, suburb_name, sa2_code, postcode, population, pop_growth_pct,
+            persons_per_dwelling, building_approvals_12m, approvals_per_1000_pop,
+            median_house_price, median_rent_weekly, median_mortgage_monthly, median_income_weekly,
+            rent_to_income_pct, mortgage_to_income_pct, gross_rental_yield,
+            trades_workers, trades_pct_workforce, trades_growth_pct,
+            crowding_score, supply_constraint_score, rent_value_gap_score, 
+            trades_influx_score, boom_score, data_source, last_updated
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
+        `, [
+          suburb.state, suburb.suburb_name, suburb.sa2_code, suburb.postcode,
+          suburb.population, suburb.pop_growth_pct, suburb.persons_per_dwelling,
+          suburb.building_approvals_12m, suburb.approvals_per_1000_pop,
+          suburb.median_house_price, suburb.median_rent_weekly, suburb.median_mortgage_monthly, suburb.median_income_weekly,
+          suburb.rent_to_income_pct, suburb.mortgage_to_income_pct, suburb.gross_rental_yield,
+          suburb.trades_workers, suburb.trades_pct_workforce, suburb.trades_growth_pct,
+          suburb.crowding_score, suburb.supply_constraint_score, suburb.rent_value_gap_score,
+          suburb.trades_influx_score, suburb.boom_score,
+          suburb.data_source, suburb.last_updated
+        ]);
+        insertedCount++;
+      } catch (insertError) {
+        console.error('[RefreshBoomData] Insert error for', suburb.suburb_name, ':', insertError.message);
+        insertErrors.push({ suburb: suburb.suburb_name, error: insertError.message });
+        // Continue with other suburbs
+      }
+    }
+    
+    console.log('[RefreshBoomData] Inserted', insertedCount, 'of', allSuburbs.length, 'suburbs');
+    if (insertErrors.length > 0) {
+      console.error('[RefreshBoomData] Insert errors:', insertErrors.slice(0, 5)); // Log first 5 errors
     }
 
     // Update metadata
@@ -654,16 +670,23 @@ export default async function handler(req, res) {
     console.log('[RefreshBoomData] Refresh complete:', allSuburbs.length, 'suburbs');
 
     return res.status(200).json({
-      success: true,
-      version: 'v4.0-smart-bottleneck-penalties',
-      suburbsUpdated: allSuburbs.length,
+      success: insertErrors.length === 0,
+      version: 'v4.1-with-error-logging',
+      suburbsGenerated: allSuburbs.length,
+      suburbsInserted: insertedCount,
+      insertErrors: insertErrors.length,
+      firstErrors: insertErrors.slice(0, 3),
       states: STATES,
       timestamp: new Date().toISOString(),
       sampleData: allSuburbs.length > 0 ? {
         suburb: allSuburbs[0].suburb_name,
+        state: allSuburbs[0].state,
         median_house_price: allSuburbs[0].median_house_price,
+        median_rent_weekly: allSuburbs[0].median_rent_weekly,
         gross_rental_yield: allSuburbs[0].gross_rental_yield,
-        trades_influx_score: allSuburbs[0].trades_influx_score
+        trades_workers: allSuburbs[0].trades_workers,
+        trades_influx_score: allSuburbs[0].trades_influx_score,
+        boom_score: allSuburbs[0].boom_score
       } : null
     });
 
