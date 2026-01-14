@@ -3,9 +3,11 @@
 // Requires admin authentication
 
 import { createClient } from '@supabase/supabase-js';
+import pg from 'pg';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const connectionString = process.env.DATABASE_URL;
 
 const ABS_API_BASE = 'https://data.api.abs.gov.au/rest';
 
@@ -280,34 +282,34 @@ export default async function handler(req, res) {
   const token = authHeader.split(' ')[1];
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  // Verify user is admin
+  // Verify user is admin (using email from JWT, not profiles table)
   const { data: { user }, error: authError } = await supabase.auth.getUser(token);
   if (authError || !user) {
     return res.status(401).json({ error: 'Invalid token' });
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('email')
-    .eq('id', user.id)
-    .single();
-
   const ADMIN_EMAILS = ['designd.agency@gmail.com'];
-  if (!ADMIN_EMAILS.includes(profile?.email?.toLowerCase())) {
+  if (!ADMIN_EMAILS.includes(user.email?.toLowerCase())) {
     return res.status(403).json({ error: 'Admin access required' });
   }
 
-  console.log('[RefreshBoomData] Starting refresh by:', profile.email);
+  console.log('[RefreshBoomData] Starting refresh by:', user.email);
+
+  if (!connectionString) {
+    return res.status(500).json({ error: 'DATABASE_URL not configured' });
+  }
+
+  const client = new pg.Client({ connectionString, ssl: { rejectUnauthorized: false } });
 
   try {
+    await client.connect();
+
     // Update status to refreshing
-    await supabase
-      .from('boom_data_metadata')
-      .upsert({
-        id: 'main',
-        refresh_status: 'refreshing',
-        last_refresh: new Date().toISOString()
-      }, { onConflict: 'id' });
+    await client.query(`
+      INSERT INTO boom_data_metadata (id, refresh_status, last_refresh) 
+      VALUES ('main', 'refreshing', NOW())
+      ON CONFLICT (id) DO UPDATE SET refresh_status = 'refreshing', last_refresh = NOW()
+    `);
 
     // Generate data for all suburbs
     const allSuburbs = [];
@@ -324,33 +326,43 @@ export default async function handler(req, res) {
 
     console.log('[RefreshBoomData] Generated data for', allSuburbs.length, 'suburbs');
 
-    // Clear existing data and insert new
-    await supabase.from('boom_suburbs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    // Clear existing data
+    await client.query('DELETE FROM boom_suburbs');
 
-    // Insert in batches
-    const batchSize = 50;
-    for (let i = 0; i < allSuburbs.length; i += batchSize) {
-      const batch = allSuburbs.slice(i, i + batchSize);
-      const { error: insertError } = await supabase
-        .from('boom_suburbs')
-        .insert(batch);
-      
-      if (insertError) {
-        console.error('[RefreshBoomData] Insert error:', insertError);
-        throw insertError;
-      }
+    // Insert all suburbs
+    for (const suburb of allSuburbs) {
+      await client.query(`
+        INSERT INTO boom_suburbs (
+          state, suburb_name, sa2_code, postcode, population, pop_growth_pct,
+          persons_per_dwelling, building_approvals_12m, approvals_per_1000_pop,
+          median_rent_weekly, median_mortgage_monthly, median_income_weekly,
+          rent_to_income_pct, mortgage_to_income_pct, crowding_score,
+          supply_constraint_score, rent_value_gap_score, boom_score,
+          data_source, last_updated
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+      `, [
+        suburb.state, suburb.suburb_name, suburb.sa2_code, suburb.postcode,
+        suburb.population, suburb.pop_growth_pct, suburb.persons_per_dwelling,
+        suburb.building_approvals_12m, suburb.approvals_per_1000_pop,
+        suburb.median_rent_weekly, suburb.median_mortgage_monthly, suburb.median_income_weekly,
+        suburb.rent_to_income_pct, suburb.mortgage_to_income_pct, suburb.crowding_score,
+        suburb.supply_constraint_score, suburb.rent_value_gap_score, suburb.boom_score,
+        suburb.data_source, suburb.last_updated
+      ]);
     }
 
     // Update metadata
-    await supabase
-      .from('boom_data_metadata')
-      .upsert({
-        id: 'main',
-        refresh_status: 'complete',
-        suburbs_count: allSuburbs.length,
-        last_refresh: new Date().toISOString(),
-        error_message: null
-      }, { onConflict: 'id' });
+    await client.query(`
+      INSERT INTO boom_data_metadata (id, refresh_status, suburbs_count, last_refresh, error_message) 
+      VALUES ('main', 'complete', $1, NOW(), NULL)
+      ON CONFLICT (id) DO UPDATE SET 
+        refresh_status = 'complete', 
+        suburbs_count = $1, 
+        last_refresh = NOW(),
+        error_message = NULL
+    `, [allSuburbs.length]);
+
+    await client.end();
 
     console.log('[RefreshBoomData] Refresh complete:', allSuburbs.length, 'suburbs');
 
@@ -364,14 +376,14 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('[RefreshBoomData] Error:', error);
 
-    // Update metadata with error
-    await supabase
-      .from('boom_data_metadata')
-      .upsert({
-        id: 'main',
-        refresh_status: 'error',
-        error_message: error.message
-      }, { onConflict: 'id' });
+    try {
+      await client.query(`
+        INSERT INTO boom_data_metadata (id, refresh_status, error_message) 
+        VALUES ('main', 'error', $1)
+        ON CONFLICT (id) DO UPDATE SET refresh_status = 'error', error_message = $1
+      `, [error.message]);
+      await client.end();
+    } catch (e) {}
 
     return res.status(500).json({ error: 'Failed to refresh data', message: error.message });
   }
