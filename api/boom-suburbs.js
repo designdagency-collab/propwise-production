@@ -35,11 +35,15 @@ export default async function handler(req, res) {
 
   try {
     // Get metadata (last refresh date)
-    const { data: metadata } = await supabase
+    const { data: metadata, error: metaError } = await supabase
       .from('boom_data_metadata')
       .select('*')
       .eq('id', 'main')
       .single();
+
+    if (metaError) {
+      console.log('[BoomSuburbs] Metadata table may not exist:', metaError.message);
+    }
 
     // Build query
     let query = supabase
@@ -71,7 +75,18 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error('[BoomSuburbs] Query error:', error);
-      return res.status(500).json({ error: 'Failed to fetch suburbs' });
+      // If table doesn't exist, return empty results instead of error
+      if (error.code === '42P01' || error.message?.includes('does not exist')) {
+        return res.status(200).json({
+          suburbs: [],
+          total: 0,
+          states: [],
+          lastRefresh: null,
+          refreshStatus: 'pending',
+          message: 'Tables not yet created. Run the SQL migration first.'
+        });
+      }
+      return res.status(500).json({ error: 'Failed to fetch suburbs', details: error.message });
     }
 
     // Get total count for the state
@@ -106,6 +121,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('[BoomSuburbs] Error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 }
