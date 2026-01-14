@@ -694,6 +694,60 @@ The ONLY way to classify as "House" is:
 
 ---
 
+📋 STEP 3B: EXTRACT ACCURATE PROPERTY DATA (CRITICAL - NO GUESSING)
+
+⛔ DO NOT GUESS property details. You MUST find them from actual sources.
+⛔ If you cannot find a data point, mark it as unknown/0, do NOT make up numbers.
+
+🔍 MANDATORY SEARCH FOR PROPERTY DETAILS:
+
+1. BEDS/BATHS/CARS - Search these in order until you find data:
+   a) Search "[address] site:realestate.com.au" → Extract beds/baths/cars from listing
+   b) Search "[address] site:domain.com.au" → Extract beds/baths/cars from listing
+   c) Search "[address] sold" → Check recent sale records for property details
+   d) If NONE found → Set beds=0, baths=0, cars=0 and confidenceLevel="Low"
+
+   ⚠️ DO NOT ESTIMATE beds/baths. A 3-bedroom house is NOT the same as a 4-bedroom house.
+   ⚠️ If listing says "3 bed 2 bath 2 car" → Use EXACTLY 3, 2, 2. Not 4, 2, 2.
+
+2. LAND SIZE - Search these in order:
+   a) Search "[address] land size" or "[address] lot size"
+   b) Check the property listing for "Land size", "Block size", "Lot area"
+   c) Search "[council name] property information [address]" for council records
+   d) Search "[address] site:realestate.com.au" and look for land area in listing
+   e) If NOT found → Set landSize = "Unknown" (do NOT guess 500sqm or 600sqm)
+
+   ⚠️ Land sizes vary HUGELY: Inner city = 150-300sqm, Suburbs = 400-700sqm, Outer = 700-1500sqm
+   ⚠️ NEVER assume a "typical" land size. Find the ACTUAL number.
+
+3. PROPERTY VALUE - Use CURRENT 2025/2026 data only:
+   a) Search "[address] price guide 2025" or "[address] for sale 2025"
+   b) Search "[suburb] median house price 2025" for context
+   c) Search "[address] sold 2024 2025" for recent sale if applicable
+   d) Check ABS data provided in this prompt for official growth rates
+   
+   ⚠️ Property values change significantly year to year. 2022 data is OUTDATED.
+   ⚠️ Always use the most recent data available (2024-2026).
+
+4. COMPARABLE SALES - MUST be recent and SOLD:
+   a) Search "[suburb] houses sold 2024 2025" 
+   b) Search "[suburb] recent sales site:realestate.com.au"
+   c) Filter to SOLD properties only (not "for sale" or "under offer")
+   d) Only include sales from the last 12-18 months
+   e) Prefer sales within 1km of the subject property
+   
+   ⚠️ DO NOT include properties that are currently FOR SALE as comparables
+   ⚠️ Each comparable MUST have: address, sold date, sold price
+   ⚠️ If you cannot find recent sold comparables, return an empty array
+
+📊 DATA CONFIDENCE RULES:
+- If beds/baths/cars came from actual listing → confidenceLevel = "High"
+- If land size came from council/listing → confidenceLevel = "High"  
+- If any data is estimated/unknown → confidenceLevel = "Low"
+- If using sales data older than 18 months → confidenceLevel = "Low"
+
+---
+
 📋 STEP 4: COMBINED/AMALGAMATED LOTS DETECTION (for residential properties only):
 When searching for this property on realestate.com.au or Domain:
 
@@ -853,21 +907,36 @@ G) NEXT ACTION:
 5. LOCAL AREA INTEL, APPROVAL PATHWAY & ZONING INTEL.
 - Include schools and key public transport (trains/buses).
 
-6. COMPARABLE SALES (CRITICAL - SOLD ONLY)
-⚠️ ONLY return RECENTLY SOLD properties as comparables. Do NOT include:
-- Active listings (for sale, coming soon, expressions of interest)
-- Under offer / under contract properties
-- Price guide / auction listings without a sold result
+6. COMPARABLE SALES (CRITICAL - RECENT SOLD ONLY)
+
+🔍 MANDATORY SEARCH FOR COMPARABLES:
+Search: "[suburb] houses sold 2024 2025 site:realestate.com.au"
+Search: "[suburb] recent sales site:domain.com.au"
+Search: "[suburb] auction results 2024 2025"
+
+⛔ DO NOT INCLUDE (these are NOT comparables):
+- Properties currently FOR SALE
+- Properties "under offer" or "under contract"
+- Auction listings without a SOLD result
+- Sales older than 18 months (before July 2024)
 - Withdrawn or expired listings
 
-For each comparable sale:
-- Must have an actual SOLD DATE (when it settled/sold)
-- Must have an actual SALE PRICE (what it sold for, not asking price)
-- Should be within 18 months of today's date
-- Should be within 2km of the subject property
-- Prefer similar property types (houses with houses, units with units)
+✅ EACH COMPARABLE MUST HAVE:
+- Actual street address (e.g., "15 Smith St, Suburb")
+- SOLD date (e.g., "Dec 2024", "Nov 2024") - MUST be 2024 or 2025
+- SOLD price (e.g., $1,250,000) - the actual sale price, NOT asking price
+- Distance from subject property (within 2km preferred)
+- Similar property type (houses with houses, units with units)
+- Similar bed/bath configuration where possible
 
-If you cannot find verified sold comparables, return an empty array rather than including active listings.
+📅 DATE REQUIREMENTS:
+- Today's date is January 2026
+- Only include sales from July 2024 onwards (last 18 months)
+- Prioritize sales from 2025 and late 2024
+- Sales from 2022 or 2023 are TOO OLD - do not use
+
+⚠️ If you cannot find 3+ recent sold comparables, return fewer or empty array.
+⚠️ NEVER make up sale prices or dates. Only use verified sold data.
 
 RULES:
 - LISTING ADDRESS is king: If user searches "2 Grace Ave" but listing is "2-4 Grace Ave", use "2-4 Grace Ave" and treat as combined lots.
