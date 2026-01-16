@@ -29,6 +29,15 @@
       "js": ["content-script.js"],
       "css": ["styles.css"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://upblock.ai/*",
+        "https://www.upblock.ai/*",
+        "http://localhost:5173/*"
+      ],
+      "js": ["auth-bridge.js"],
+      "run_at": "document_idle"
     }
   ],
   "action": {

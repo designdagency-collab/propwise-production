@@ -57,11 +57,22 @@ const clearCachedProfile = () => {
 const sendTokenToExtension = async (userEmail: string) => {
   try {
     const token = await supabaseService.getAccessToken();
-    if (token && window.chrome?.runtime) {
-      // Store in localStorage so extension can access it
-      localStorage.setItem('upblock_extension_token', token);
-      localStorage.setItem('upblock_extension_email', userEmail);
-      console.log('[Extension] Auth token stored for extension');
+    if (!token) return;
+    
+    // Store in localStorage (backup method)
+    localStorage.setItem('upblock_extension_token', token);
+    localStorage.setItem('upblock_extension_email', userEmail);
+    
+    // Send message to extension (if installed)
+    if (window.chrome?.runtime) {
+      // Try to find the extension ID from installed extensions
+      // Extension will listen for this message
+      window.postMessage({
+        type: 'UPBLOCK_AUTH',
+        token: token,
+        email: userEmail
+      }, '*');
+      console.log('[Extension] Auth token sent to extension');
     }
   } catch (e) {
     // Extension not installed or error - ignore

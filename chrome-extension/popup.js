@@ -5,20 +5,8 @@ console.log('[Upblock Popup] Script loaded');
 
 // Check login status on popup open
 async function checkLoginStatus() {
-  // Check both localStorage (shared with main app) and chrome.storage
-  chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-    if (tabs[0]) {
-      chrome.tabs.sendMessage(tabs[0].id, {action: 'getAuthStatus'}, (response) => {
-        updateUI(response?.token, response?.email);
-      });
-    }
-  });
-  
-  // Also check chrome.storage as fallback
   chrome.storage.local.get(['upblock_auth_token', 'upblock_user_email'], (result) => {
-    if (result.upblock_auth_token) {
-      updateUI(result.upblock_auth_token, result.upblock_user_email);
-    }
+    updateUI(result.upblock_auth_token, result.upblock_user_email);
   });
 }
 

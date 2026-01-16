@@ -64,26 +64,18 @@ function extractListings() {
   }).filter(item => item && item.address);
 }
 
-// Get auth token from localStorage (shared with upblock.ai)
+// Get auth token from chrome.storage
 async function getAuthToken() {
-  try {
-    // First try localStorage (shared with main app)
-    const token = localStorage.getItem('upblock_extension_token');
-    if (token) {
-      console.log('[Upblock] Found token in localStorage');
-      return token;
-    }
-    
-    // Fallback to chrome.storage
-    return new Promise((resolve) => {
-      chrome.storage.local.get(['upblock_auth_token'], (result) => {
-        resolve(result.upblock_auth_token || null);
-      });
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['upblock_auth_token'], (result) => {
+      if (result.upblock_auth_token) {
+        console.log('[Upblock] Found auth token in storage');
+      } else {
+        console.log('[Upblock] No auth token found - please login at upblock.ai');
+      }
+      resolve(result.upblock_auth_token || null);
     });
-  } catch (e) {
-    console.error('[Upblock] Error getting auth token:', e);
-    return null;
-  }
+  });
 }
 
 // Fetch score from API
@@ -291,16 +283,6 @@ const observer = new MutationObserver((mutations) => {
 observer.observe(document.body, {
   childList: true,
   subtree: true
-});
-
-// Listen for messages from popup
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'getAuthStatus') {
-    const token = localStorage.getItem('upblock_extension_token');
-    const email = localStorage.getItem('upblock_extension_email');
-    sendResponse({ token, email });
-  }
-  return true;
 });
 
 console.log('[Upblock] Content script initialized');
