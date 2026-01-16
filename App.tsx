@@ -376,15 +376,28 @@ const App: React.FC = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []); // Empty dependency - only run once on mount
 
-  // Check for referral code in URL on page load
+  // Check for referral code and address prefill in URL on page load
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    
+    // Check for referral code
     const refCode = urlParams.get('ref');
     if (refCode) {
       console.log('[Referral] Found referral code in URL:', refCode);
       setPendingReferralCode(refCode.toUpperCase());
-      // Remove from URL to clean it up
       urlParams.delete('ref');
+    }
+    
+    // Check for address prefill (from Chrome extension)
+    const prefillAddress = urlParams.get('prefill');
+    if (prefillAddress) {
+      console.log('[Extension] Prefilling address from extension:', prefillAddress);
+      setAddress(prefillAddress);
+      urlParams.delete('prefill');
+    }
+    
+    // Clean up URL if params were found
+    if (refCode || prefillAddress) {
       const newUrl = urlParams.toString() 
         ? `${window.location.pathname}?${urlParams}` 
         : window.location.pathname;

@@ -166,11 +166,13 @@ function injectScoreBadge(listing, score) {
     </div>
   `;
 
-  // Add click handler to open full report
+  // Add click handler to open full report with address pre-filled
   badge.addEventListener('click', (e) => {
     e.stopPropagation();
     e.preventDefault();
-    window.open(`https://upblock.ai/?address=${encodeURIComponent(listing.address)}`, '_blank');
+    const url = `https://upblock.ai/?prefill=${encodeURIComponent(listing.address)}`;
+    console.log('[Upblock] Opening full report for:', listing.address);
+    window.open(url, '_blank');
   });
 
   // Find insertion point
@@ -314,6 +316,13 @@ function observeScroll(remainingListings, token, initialLoadedCount, totalCount)
 // Main initialization
 async function init() {
   console.log('[Upblock] ========== INIT START ==========');
+  
+  // Clear any existing badges from previous page
+  const oldBadges = document.querySelectorAll('.upblock-score-badge, .upblock-loading-banner');
+  if (oldBadges.length > 0) {
+    console.log('[Upblock] Clearing', oldBadges.length, 'old badges from previous page');
+    oldBadges.forEach(badge => badge.remove());
+  }
   
   const site = getCurrentSite();
   console.log('[Upblock] Current site:', site);
