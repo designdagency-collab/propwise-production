@@ -6,41 +6,52 @@
   
   function extractToken() {
     try {
-      console.log('[Upblock Injected] Searching for Supabase session...');
+      console.log('[Upblock Injected] === SEARCHING FOR AUTH ===');
       
-      // Try localStorage first
-      const localKeys = Object.keys(localStorage);
-      console.log('[Upblock Injected] localStorage keys:', localKeys);
-      let supabaseKey = localKeys.find(k => k.includes('supabase') || k.includes('auth'));
-      
-      // Try sessionStorage if not in localStorage
-      if (!supabaseKey) {
-        const sessionKeys = Object.keys(sessionStorage);
-        console.log('[Upblock Injected] sessionStorage keys:', sessionKeys);
-        supabaseKey = sessionKeys.find(k => k.includes('supabase') || k.includes('auth'));
-        
-        if (supabaseKey) {
-          const sessionData = JSON.parse(sessionStorage.getItem(supabaseKey));
-          const token = sessionData?.access_token;
-          const email = sessionData?.user?.email;
-          console.log('[Upblock Injected] ✓ Found in sessionStorage:', email);
-          return { token, email };
-        }
-      } else {
-        const sessionData = JSON.parse(localStorage.getItem(supabaseKey));
-        const token = sessionData?.access_token;
-        const email = sessionData?.user?.email;
-        console.log('[Upblock Injected] ✓ Found in localStorage:', email);
+      // METHOD 1: Check window.__upblock_auth (set by main app)
+      if (window.__upblock_auth) {
+        const { token, email } = window.__upblock_auth;
+        console.log('[Upblock Injected] ✓ Found window.__upblock_auth:', email);
         return { token, email };
       }
       
-      // Last resort: check if there's a global window variable with session
-      if (window.supabase?.auth) {
-        console.log('[Upblock Injected] Trying window.supabase.auth...');
-        // Can't directly call async getSession from here, so return null
+      // METHOD 2: Check localStorage (direct from main app)
+      const directToken = localStorage.getItem('upblock_extension_token');
+      const directEmail = localStorage.getItem('upblock_extension_email');
+      if (directToken) {
+        console.log('[Upblock Injected] ✓ Found direct localStorage token:', directEmail);
+        return { token: directToken, email: directEmail };
       }
       
-      console.log('[Upblock Injected] ❌ No Supabase session found in localStorage or sessionStorage');
+      // METHOD 3: Check all localStorage keys
+      const localKeys = Object.keys(localStorage);
+      console.log('[Upblock Injected] All localStorage keys:', localKeys);
+      
+      // METHOD 4: Check all sessionStorage keys
+      const sessionKeys = Object.keys(sessionStorage);
+      console.log('[Upblock Injected] All sessionStorage keys:', sessionKeys);
+      
+      // METHOD 5: Look for Supabase-specific keys
+      const supabaseLocalKey = localKeys.find(k => 
+        k.includes('supabase') && k.includes('auth')
+      );
+      const supabaseSessionKey = sessionKeys.find(k => 
+        k.includes('supabase') && k.includes('auth')
+      );
+      
+      if (supabaseLocalKey) {
+        const data = JSON.parse(localStorage.getItem(supabaseLocalKey));
+        console.log('[Upblock Injected] Supabase localStorage data:', data);
+        return { token: data?.access_token, email: data?.user?.email };
+      }
+      
+      if (supabaseSessionKey) {
+        const data = JSON.parse(sessionStorage.getItem(supabaseSessionKey));
+        console.log('[Upblock Injected] Supabase sessionStorage data:', data);
+        return { token: data?.access_token, email: data?.user?.email };
+      }
+      
+      console.log('[Upblock Injected] ❌ No auth found');
       return null;
       
     } catch (e) {

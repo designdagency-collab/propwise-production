@@ -57,26 +57,34 @@ const clearCachedProfile = () => {
 const sendTokenToExtension = async (userEmail: string) => {
   try {
     const token = await supabaseService.getAccessToken();
-    if (!token) return;
+    if (!token) {
+      console.log('[Extension] No token available');
+      return;
+    }
     
-    // Store in localStorage (backup method)
+    console.log('[Extension] Sending token to extension for:', userEmail);
+    
+    // Method 1: Expose on window object (easiest for injected scripts)
+    (window as any).__upblock_auth = {
+      token: token,
+      email: userEmail,
+      timestamp: Date.now()
+    };
+    console.log('[Extension] ✓ Set window.__upblock_auth');
+    
+    // Method 2: Store in localStorage
     localStorage.setItem('upblock_extension_token', token);
     localStorage.setItem('upblock_extension_email', userEmail);
+    console.log('[Extension] ✓ Set localStorage items');
     
-    // Send message to extension (if installed)
-    if (window.chrome?.runtime) {
-      // Try to find the extension ID from installed extensions
-      // Extension will listen for this message
-      window.postMessage({
-        type: 'UPBLOCK_AUTH',
-        token: token,
-        email: userEmail
-      }, '*');
-      console.log('[Extension] Auth token sent to extension');
-    }
+    // Method 3: Dispatch custom event
+    window.dispatchEvent(new CustomEvent('upblock_auth_ready', {
+      detail: { token, email: userEmail }
+    }));
+    console.log('[Extension] ✓ Dispatched upblock_auth_ready event');
+    
   } catch (e) {
-    // Extension not installed or error - ignore
-    console.log('[Extension] Not installed or error:', e);
+    console.error('[Extension] Error sending token:', e);
   }
 };
 
