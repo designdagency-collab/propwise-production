@@ -156,13 +156,21 @@ function getScoreClass(score) {
 function injectScoreBadge(listing, score) {
   const { card, selectors } = listing;
 
-  // Create badge element
+  // Create badge element with on-brand styling
   const badge = document.createElement('div');
   badge.className = `upblock-score-badge ${getScoreClass(score)}`;
+  badge.title = `Upblock Score: ${score}/100 - Click for full analysis`;
   badge.innerHTML = `
     <div class="upblock-score-content">
-      <span class="upblock-score-value">${score}</span>
-      <span class="upblock-score-label">Upblock</span>
+      <div class="upblock-score-top">
+        <span class="upblock-score-value">${score}</span>
+      </div>
+      <div class="upblock-score-bottom">
+        <svg class="upblock-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+        </svg>
+        <span class="upblock-label">upblock</span>
+      </div>
     </div>
   `;
 
@@ -194,8 +202,15 @@ function showLoadingBadge(card) {
   badge.title = 'Loading Upblock Score...';
   badge.innerHTML = `
     <div class="upblock-score-content">
-      <span class="upblock-score-spinner">●</span>
-      <span class="upblock-score-label">Loading</span>
+      <div class="upblock-score-top">
+        <span class="upblock-score-spinner">●</span>
+      </div>
+      <div class="upblock-score-bottom">
+        <svg class="upblock-icon" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+        </svg>
+        <span class="upblock-label">upblock</span>
+      </div>
     </div>
   `;
   

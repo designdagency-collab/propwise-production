@@ -1,88 +1,132 @@
-/* Upblock Score Badge Styles */
+/* Upblock Score Badge Styles - Premium Gold Branding */
 
 .upblock-score-badge {
   position: absolute !important;
   top: 12px !important;
   right: 12px !important;
   z-index: 100 !important;
-  padding: 8px 12px !important;
-  border-radius: 8px !important;
-  backdrop-filter: blur(8px) !important;
+  padding: 10px 14px !important;
+  border-radius: 10px !important;
+  backdrop-filter: blur(12px) !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+  min-width: 70px !important;
 }
 
 .upblock-score-badge:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+.upblock-score-badge:active {
+  transform: translateY(-1px) scale(0.98) !important;
 }
 
 .upblock-score-content {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 2px !important;
+  gap: 4px !important;
+}
+
+.upblock-score-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .upblock-score-value {
-  font-size: 24px !important;
-  font-weight: 700 !important;
+  font-size: 28px !important;
+  font-weight: 800 !important;
   line-height: 1 !important;
   color: white !important;
+  letter-spacing: -0.5px !important;
 }
 
-.upblock-score-label {
-  font-size: 10px !important;
-  font-weight: 600 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
+.upblock-score-bottom {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.upblock-icon {
+  width: 12px !important;
+  height: 12px !important;
   color: white !important;
   opacity: 0.9 !important;
 }
 
-/* Score color variants */
+.upblock-label {
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  text-transform: lowercase !important;
+  letter-spacing: 0.3px !important;
+  color: white !important;
+  opacity: 0.95 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+/* Score color variants - Upblock Gold Branding */
 .upblock-score-badge.excellent {
-  background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+  border: 2px solid rgba(245, 158, 11, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25) !important;
 }
 
 .upblock-score-badge.good {
-  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  background: linear-gradient(135deg, #F59E0B 0%, #B45309 100%) !important;
+  border: 2px solid rgba(245, 158, 11, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2) !important;
 }
 
 .upblock-score-badge.average {
-  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%) !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%) !important;
+  border: 2px solid rgba(107, 114, 128, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
 .upblock-score-badge.below-average {
   background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  border: 2px solid rgba(239, 68, 68, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2) !important;
 }
 
 .upblock-score-badge.poor {
-  background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%) !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  background: linear-gradient(135deg, #991B1B 0%, #7F1D1D 100%) !important;
+  border: 2px solid rgba(153, 27, 27, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(153, 27, 27, 0.2) !important;
 }
 
-/* Loading state */
+/* Loading state - Gold shimmer */
 .upblock-score-badge.loading {
-  background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%) !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  background: linear-gradient(135deg, #D97706 0%, #B45309 100%) !important;
+  border: 2px solid rgba(217, 119, 6, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2) !important;
+  animation: upblock-shimmer 2s ease-in-out infinite !important;
 }
 
 .upblock-score-spinner {
-  font-size: 24px !important;
+  font-size: 20px !important;
   color: white !important;
   animation: upblock-pulse 1.5s ease-in-out infinite !important;
 }
 
 @keyframes upblock-pulse {
   0%, 100% {
-    opacity: 0.3;
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes upblock-shimmer {
+  0%, 100% {
+    opacity: 0.9;
   }
   50% {
     opacity: 1;
@@ -113,7 +157,7 @@
   position: relative !important;
 }
 
-/* Loading Banner - Top of page progress indicator */
+/* Loading Banner - Premium Gold Branding */
 .upblock-loading-banner {
   position: fixed !important;
   top: 80px !important;
@@ -121,12 +165,17 @@
   z-index: 999999 !important;
   background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
   color: white !important;
-  padding: 12px 20px !important;
-  border-radius: 12px !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  transition: opacity 0.3s ease !important;
+  padding: 14px 24px !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.35), 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   opacity: 1 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.upblock-loading-banner:hover {
+  box-shadow: 0 12px 32px rgba(245, 158, 11, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
 .upblock-banner-content {
@@ -147,15 +196,18 @@
 
 .upblock-banner-text {
   font-size: 14px !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.2px !important;
 }
 
 .upblock-banner-count {
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  background: rgba(255, 255, 255, 0.2) !important;
-  padding: 4px 8px !important;
-  border-radius: 6px !important;
-  min-width: 50px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  background: rgba(255, 255, 255, 0.25) !important;
+  padding: 5px 10px !important;
+  border-radius: 8px !important;
+  min-width: 52px !important;
   text-align: center !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  letter-spacing: 0.3px !important;
 }
