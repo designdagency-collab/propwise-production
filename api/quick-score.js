@@ -2,7 +2,7 @@
 // Returns just the Upblock Score (0-100) for a given address
 // Much cheaper than full property-insights (2k tokens vs 10k tokens)
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/genai';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
