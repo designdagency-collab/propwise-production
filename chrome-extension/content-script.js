@@ -167,9 +167,11 @@ function injectScoreBadge(listing, score) {
 function showLoadingBadge(card) {
   const badge = document.createElement('div');
   badge.className = 'upblock-score-badge loading';
+  badge.title = 'Loading Upblock Score...';
   badge.innerHTML = `
     <div class="upblock-score-content">
       <span class="upblock-score-spinner">●</span>
+      <span class="upblock-score-label">Loading</span>
     </div>
   `;
   
@@ -182,6 +184,41 @@ function showLoadingBadge(card) {
   return badge;
 }
 
+// Show page-level loading banner
+function showLoadingBanner(total) {
+  const banner = document.createElement('div');
+  banner.id = 'upblock-loading-banner';
+  banner.className = 'upblock-loading-banner';
+  banner.innerHTML = `
+    <div class="upblock-banner-content">
+      <i class="upblock-spinner">⏳</i>
+      <span class="upblock-banner-text">Loading Upblock Scores...</span>
+      <span class="upblock-banner-count">0/${total}</span>
+    </div>
+  `;
+  document.body.appendChild(banner);
+  return banner;
+}
+
+// Update loading banner count
+function updateLoadingBanner(loaded, total) {
+  const banner = document.getElementById('upblock-loading-banner');
+  if (banner) {
+    const countEl = banner.querySelector('.upblock-banner-count');
+    if (countEl) {
+      countEl.textContent = `${loaded}/${total}`;
+    }
+    
+    // Remove banner when complete
+    if (loaded >= total) {
+      setTimeout(() => {
+        banner.style.opacity = '0';
+        setTimeout(() => banner.remove(), 300);
+      }, 500);
+    }
+  }
+}
+
 // Process listings in batches
 async function processListings(listings, token) {
   if (!token) {
@@ -189,8 +226,14 @@ async function processListings(listings, token) {
     return;
   }
 
+  // Show loading banner
+  const banner = showLoadingBanner(listings.length);
+  let loadedCount = 0;
+
   // Process visible listings first
   const visibleListings = listings.slice(0, CONFIG.BATCH_SIZE);
+  
+  console.log('[Upblock] Loading scores for first', visibleListings.length, 'visible listings...');
   
   for (const listing of visibleListings) {
     const loadingBadge = showLoadingBadge(listing.card);
@@ -204,17 +247,23 @@ async function processListings(listings, token) {
     
     if (score !== null) {
       injectScoreBadge(listing, score);
+      loadedCount++;
+      updateLoadingBanner(loadedCount, listings.length);
+      console.log(`[Upblock] ✓ Loaded ${loadedCount}/${listings.length}`);
     }
   }
 
   // Process remaining listings lazily (when user scrolls)
   if (listings.length > CONFIG.BATCH_SIZE) {
-    observeScroll(listings.slice(CONFIG.BATCH_SIZE), token);
+    console.log('[Upblock] Remaining', listings.length - CONFIG.BATCH_SIZE, 'listings will load on scroll');
+    observeScroll(listings.slice(CONFIG.BATCH_SIZE), token, loadedCount, listings.length);
   }
 }
 
 // Observe scroll to load scores for listings as they come into view
-function observeScroll(remainingListings, token) {
+function observeScroll(remainingListings, token, initialLoadedCount, totalCount) {
+  let loadedCount = initialLoadedCount;
+  
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(async (entry) => {
       if (entry.isIntersecting) {
@@ -226,6 +275,9 @@ function observeScroll(remainingListings, token) {
           if (loadingBadge) loadingBadge.remove();
           if (score !== null) {
             injectScoreBadge(listing, score);
+            loadedCount++;
+            updateLoadingBanner(loadedCount, totalCount);
+            console.log(`[Upblock] ✓ Loaded ${loadedCount}/${totalCount} (on scroll)`);
           }
         }
       }

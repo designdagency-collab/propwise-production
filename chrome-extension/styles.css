@@ -112,3 +112,50 @@
 .listing-card__image {
   position: relative !important;
 }
+
+/* Loading Banner - Top of page progress indicator */
+.upblock-loading-banner {
+  position: fixed !important;
+  top: 80px !important;
+  right: 20px !important;
+  z-index: 999999 !important;
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+  color: white !important;
+  padding: 12px 20px !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  transition: opacity 0.3s ease !important;
+  opacity: 1 !important;
+}
+
+.upblock-banner-content {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.upblock-spinner {
+  font-size: 18px !important;
+  animation: upblock-spin 2s linear infinite !important;
+}
+
+@keyframes upblock-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.upblock-banner-text {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.upblock-banner-count {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+  min-width: 50px !important;
+  text-align: center !important;
+}
