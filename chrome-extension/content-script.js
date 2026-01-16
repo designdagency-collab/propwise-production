@@ -28,12 +28,26 @@ const SELECTORS = {
     address: '[data-testid="address-line1"], .address',
     priceArea: '[data-testid="listing-card-price"], .price',
     badgeContainer: '.listing-card__details, .css-1qp9106'
+  },
+  'realcommercial.com.au': {
+    card: '[data-testid="property-card"], article.property-card, .commercial-card',
+    address: '[data-testid="address"], .property-address, .address',
+    priceArea: '[data-testid="price"], .property-price, .price',
+    badgeContainer: '.property-card'
+  },
+  'commercialrealestate.com.au': {
+    card: '.property-card, .listing-card, article.property',
+    address: '.property-address, .address, [itemprop="address"]',
+    priceArea: '.price, .property-price',
+    badgeContainer: '.property-card'
   }
 };
 
 // Get current site
 function getCurrentSite() {
   const hostname = window.location.hostname;
+  if (hostname.includes('realcommercial.com.au')) return 'realcommercial.com.au';
+  if (hostname.includes('commercialrealestate.com.au')) return 'commercialrealestate.com.au';
   if (hostname.includes('realestate.com.au')) return 'realestate.com.au';
   if (hostname.includes('domain.com.au')) return 'domain.com.au';
   return null;

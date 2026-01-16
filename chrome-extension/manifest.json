@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Upblock Score",
   "version": "1.0.0",
-  "description": "See Upblock investment scores on realestate.com.au and domain.com.au listings",
+  "description": "See Upblock investment scores on residential and commercial property listings across REA, Domain, and commercial sites",
   "permissions": [
     "storage",
     "activeTab"
@@ -12,6 +12,10 @@
     "https://realestate.com.au/*",
     "https://www.domain.com.au/*",
     "https://domain.com.au/*",
+    "https://www.realcommercial.com.au/*",
+    "https://realcommercial.com.au/*",
+    "https://www.commercialrealestate.com.au/*",
+    "https://commercialrealestate.com.au/*",
     "https://upblock.ai/*",
     "https://www.upblock.ai/*"
   ],
@@ -24,7 +28,11 @@
         "https://www.realestate.com.au/*",
         "https://realestate.com.au/*",
         "https://www.domain.com.au/*",
-        "https://domain.com.au/*"
+        "https://domain.com.au/*",
+        "https://www.realcommercial.com.au/*",
+        "https://realcommercial.com.au/*",
+        "https://www.commercialrealestate.com.au/*",
+        "https://commercialrealestate.com.au/*"
       ],
       "js": ["content-script.js"],
       "css": ["styles.css"],

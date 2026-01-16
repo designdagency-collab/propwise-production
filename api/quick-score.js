@@ -18,7 +18,11 @@ export default async function handler(req, res) {
     'https://www.realestate.com.au',
     'https://realestate.com.au',
     'https://www.domain.com.au',
-    'https://domain.com.au'
+    'https://domain.com.au',
+    'https://www.realcommercial.com.au',
+    'https://realcommercial.com.au',
+    'https://www.commercialrealestate.com.au',
+    'https://commercialrealestate.com.au'
   ];
   const origin = req.headers.origin;
   
