@@ -27,6 +27,12 @@
       margin-bottom: 20px;
     }
 
+    .logo-img {
+      height: 48px;
+      width: auto;
+      margin-bottom: 12px;
+    }
+
     .logo {
       font-size: 32px;
       font-weight: 700;
@@ -58,6 +64,14 @@
       color: #3A342D;
       border: 1px solid rgba(201, 169, 97, 0.3);
       font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .status.logged-in:hover {
+      background: rgba(201, 169, 97, 0.2);
+      border-color: rgba(201, 169, 97, 0.5);
+      transform: translateY(-1px);
     }
 
     .status-icon {
@@ -144,7 +158,7 @@
 <body>
   <div class="container">
     <div class="header">
-      <div class="logo">upblock</div>
+      <img src="upblock-logo.png" alt="upblock" class="logo-img">
       <div class="tagline">Investment scores on every listing</div>
     </div>
 
@@ -162,6 +176,10 @@
 
     <button id="login-btn" class="button button-primary">
       Login to Upblock
+    </button>
+
+    <button id="account-btn" class="button button-primary" style="display: none;">
+      View Account
     </button>
 
     <button id="logout-btn" class="button button-secondary" style="display: none;">

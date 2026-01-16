@@ -216,20 +216,30 @@ export default async function handler(req, res) {
     // Insert search history ONLY if not a recent search (prevents duplicates)
     let historyError = null;
     if (!isRecentSearch) {
+      console.log('[SaveSearch] Inserting new search history record:', { userId, address: address.substring(0, 40) });
       const { error } = await supabase
         .from('search_history')
         .insert({ user_id: userId, address });
       historyError = error;
+      if (!error) {
+        console.log('[SaveSearch] Search history inserted successfully');
+      }
     } else {
       // Update the timestamp of the existing search so it appears at the top
-      await supabase
+      console.log('[SaveSearch] Updating existing search history timestamp:', recentSearch.id);
+      const { error: updateError } = await supabase
         .from('search_history')
         .update({ created_at: new Date().toISOString() })
         .eq('id', recentSearch.id);
+      if (updateError) {
+        console.error('[SaveSearch] History update error:', updateError);
+      } else {
+        console.log('[SaveSearch] Search history updated successfully');
+      }
     }
 
     if (historyError) {
-      console.error('[SaveSearch] History insert error:', historyError.message);
+      console.error('[SaveSearch] History insert error:', historyError);
     }
 
     // Fetch updated profile to return current values

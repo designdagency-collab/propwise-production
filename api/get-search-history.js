@@ -77,6 +77,8 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log('[GetSearchHistory] Querying search_history table for user_id:', userId);
+    
     const { data, error } = await supabase
       .from('search_history')
       .select('address, created_at')
@@ -85,14 +87,18 @@ export default async function handler(req, res) {
       .limit(20);
 
     if (error) {
-      console.error('Failed to fetch search history:', error);
+      console.error('[GetSearchHistory] Database error:', error);
       return res.status(500).json({ error: error.message });
     }
 
-    console.log('Search history fetched for user:', userId, 'count:', data?.length || 0);
+    console.log('[GetSearchHistory] Query successful. Records found:', data?.length || 0);
+    if (data && data.length > 0) {
+      console.log('[GetSearchHistory] Sample record:', data[0]);
+    }
+    
     return res.status(200).json({ history: data || [] });
   } catch (error) {
-    console.error('Server error:', error);
+    console.error('[GetSearchHistory] Server error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

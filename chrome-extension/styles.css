@@ -5,14 +5,44 @@
   top: 12px !important;
   right: 12px !important;
   z-index: 100 !important;
-  padding: 10px 14px !important;
-  border-radius: 10px !important;
+  padding: 12px 16px !important;
+  border-radius: 12px !important;
   backdrop-filter: blur(12px) !important;
   cursor: pointer !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
-  min-width: 70px !important;
+  min-width: 110px !important;
+  width: 110px !important;
+  min-height: 120px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
+
+/* Verified badge has subtle checkmark indicator */
+.upblock-score-badge.verified {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(255, 255, 255, 0.3) !important;
+}
+
+.upblock-score-badge.preview {
+  opacity: 0.95 !important;
+}
+
+/* Combined lots get special emphasis - always gold with pulse */
+.upblock-score-badge.combined-lot {
+  animation: upblock-pulse-glow 2s ease-in-out infinite !important;
+  box-shadow: 0 4px 20px rgba(201, 169, 97, 0.5), 0 0 0 2px rgba(255, 255, 255, 0.4) !important;
+}
+
+@keyframes upblock-pulse-glow {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(201, 169, 97, 0.4), 0 0 0 2px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 28px rgba(201, 169, 97, 0.6), 0 0 0 2px rgba(255, 255, 255, 0.5);
+  }
 }
 
 .upblock-score-badge:hover {
@@ -28,37 +58,97 @@
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 4px !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 2px 0 !important;
 }
 
 .upblock-score-top {
   display: flex !important;
+  flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
+  gap: 2px !important;
 }
 
 .upblock-score-value {
-  font-size: 28px !important;
+  font-size: 34px !important;
   font-weight: 800 !important;
   line-height: 1 !important;
   color: white !important;
   letter-spacing: -0.5px !important;
 }
 
-.upblock-score-bottom {
+/* Star Rating Display */
+.upblock-stars {
+  font-size: 18px !important;
+  color: white !important;
+  letter-spacing: 3px !important;
+  line-height: 1 !important;
+  display: block !important;
+  text-align: center !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+}
+
+.upblock-star-count {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: white !important;
+  opacity: 0.9 !important;
+  margin-top: 4px !important;
+  display: block !important;
+  text-align: center !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Middle section with logo stacked on top of "score" text */
+.upblock-score-middle {
   display: flex !important;
+  flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  margin-top: 2px !important;
+  gap: 3px !important;
+  margin: 2px 0 !important;
 }
 
 .upblock-logo-img {
-  height: 16px !important;
+  height: 20px !important;
   width: auto !important;
-  max-width: 80px !important;
+  max-width: 85px !important;
   opacity: 0.95 !important;
   filter: brightness(0) invert(1) !important;
   display: block !important;
+}
+
+.upblock-score-text {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: white !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
+  opacity: 0.9 !important;
+  line-height: 1 !important;
+}
+
+/* Verified score display */
+.upblock-verified-score {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-top: 4px !important;
+  padding-top: 4px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+  width: 100% !important;
+}
+
+.upblock-verified-label {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: white !important;
+  opacity: 0.9 !important;
+  letter-spacing: 0.3px !important;
 }
 
 .upblock-score-badge.average .upblock-logo-img,
@@ -71,17 +161,24 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  margin: 2px 0 !important;
+  margin-top: 4px !important;
+  width: 100% !important;
+  padding: 0 4px !important;
 }
 
 .upblock-price {
   font-size: 12px !important;
   font-weight: 800 !important;
   color: white !important;
-  letter-spacing: 0.2px !important;
+  letter-spacing: 0.3px !important;
   opacity: 0.95 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
-  line-height: 1.2 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+  line-height: 1.3 !important;
+  text-align: center !important;
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
 }
 
 /* Score color variants - Upblock Gold Branding (#C9A961) */
@@ -154,14 +251,38 @@
   .upblock-score-badge {
     top: 8px !important;
     right: 8px !important;
-    padding: 6px 10px !important;
+    padding: 10px 14px !important;
+    min-width: 95px !important;
+    width: 95px !important;
+    min-height: 110px !important;
+  }
+  
+  .upblock-stars {
+    font-size: 16px !important;
+    letter-spacing: 2px !important;
+  }
+  
+  .upblock-star-count {
+    font-size: 13px !important;
   }
   
   .upblock-score-value {
-    font-size: 20px !important;
+    font-size: 28px !important;
   }
   
-  .upblock-score-label {
+  .upblock-logo-img {
+    height: 17px !important;
+  }
+  
+  .upblock-score-text {
+    font-size: 9px !important;
+  }
+  
+  .upblock-price {
+    font-size: 10px !important;
+  }
+  
+  .upblock-verified-label {
     font-size: 9px !important;
   }
 }

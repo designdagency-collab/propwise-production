@@ -14,6 +14,7 @@ function updateUI(token, email) {
   const loggedOutEl = document.getElementById('logged-out');
   const loggedInEl = document.getElementById('logged-in');
   const loginBtn = document.getElementById('login-btn');
+  const accountBtn = document.getElementById('account-btn');
   const logoutBtn = document.getElementById('logout-btn');
   const userEmailEl = document.getElementById('user-email');
 
@@ -22,6 +23,7 @@ function updateUI(token, email) {
     loggedOutEl.style.display = 'none';
     loggedInEl.style.display = 'block';
     loginBtn.style.display = 'none';
+    accountBtn.style.display = 'block';
     logoutBtn.style.display = 'block';
     
     if (email) {
@@ -33,16 +35,25 @@ function updateUI(token, email) {
     loggedOutEl.style.display = 'block';
     loggedInEl.style.display = 'none';
     loginBtn.style.display = 'block';
+    accountBtn.style.display = 'none';
     logoutBtn.style.display = 'none';
     userEmailEl.style.display = 'none';
   }
 }
 
-// Login button handler
+// Login button handler - redirect to login page
 document.getElementById('login-btn').addEventListener('click', () => {
   // Open Upblock login page with extension auth callback
   chrome.tabs.create({
     url: 'https://upblock.ai/?extension=login'
+  });
+  window.close();
+});
+
+// Account button handler - go to account settings
+document.getElementById('account-btn').addEventListener('click', () => {
+  chrome.tabs.create({
+    url: 'https://upblock.ai/?view=account'
   });
   window.close();
 });

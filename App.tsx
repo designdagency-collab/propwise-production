@@ -401,14 +401,33 @@ const App: React.FC = () => {
       urlParams.delete('prefill');
     }
     
+    // Check for view parameter (from Chrome extension - redirect to account settings)
+    const view = urlParams.get('view');
+    if (view === 'account') {
+      console.log('[Extension] Redirecting to account settings from extension');
+      sessionStorage.setItem('upblock_open_account', 'true');
+      urlParams.delete('view');
+    }
+    
     // Clean up URL if params were found
-    if (refCode || prefillAddress) {
+    if (refCode || prefillAddress || view) {
       const newUrl = urlParams.toString() 
         ? `${window.location.pathname}?${urlParams}` 
         : window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
     }
   }, []);
+
+  // Auto-open account settings from extension (after login state is known)
+  useEffect(() => {
+    const openAccount = sessionStorage.getItem('upblock_open_account');
+    if (openAccount === 'true' && isLoggedIn) {
+      console.log('[Extension] Auto-opening account settings from extension');
+      sessionStorage.removeItem('upblock_open_account');
+      setShowAccountSettings(true);
+      fetchSearchHistory(); // Fetch history when opening from extension
+    }
+  }, [isLoggedIn]);
 
   // Auto-search when prefilled from extension (after login state is known)
   useEffect(() => {
@@ -1120,31 +1139,35 @@ const App: React.FC = () => {
   // Fetch search history from Supabase via server API (bypasses RLS)
   const fetchSearchHistory = async () => {
     const userId = userProfile?.id;
-    console.log('Fetching search history...', { isLoggedIn, userId });
+    console.log('[SearchHistory] Fetching...', { isLoggedIn, userId, userProfileExists: !!userProfile });
     
     if (!isLoggedIn || !userId) {
-      console.log('Not fetching - not logged in or no userId');
+      console.log('[SearchHistory] Not fetching - not logged in or no userId');
       setSearchHistory([]);
       return;
     }
     
     try {
+      console.log('[SearchHistory] Making API call to /api/get-search-history with userId:', userId);
       const response = await supabaseService.authenticatedFetch('/api/get-search-history', {
         method: 'POST',
         body: JSON.stringify({ userId })
       });
       
+      console.log('[SearchHistory] Response status:', response.status, response.statusText);
+      
       if (response.ok) {
-        const { history } = await response.json();
-        console.log('Fetched search history:', history);
-        setSearchHistory(history || []);
+        const data = await response.json();
+        console.log('[SearchHistory] Response data:', data);
+        console.log('[SearchHistory] History count:', data.history?.length || 0);
+        setSearchHistory(data.history || []);
       } else {
         const errorData = await response.json();
-        console.error('Failed to fetch search history:', errorData.error);
+        console.error('[SearchHistory] API error:', response.status, errorData);
         setSearchHistory([]);
       }
     } catch (error) {
-      console.error('Failed to fetch search history:', error);
+      console.error('[SearchHistory] Fetch error:', error);
       setSearchHistory([]);
     }
   };

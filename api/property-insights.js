@@ -505,6 +505,29 @@ export default async function handler(req, res) {
   // Normalize address for cache lookup
   const addressKey = normalizeAddress(address);
   
+  // Check for quick-score cache data (from Chrome extension) to reuse
+  let quickScoreHint = null;
+  if (supabaseUrl && supabaseServiceKey) {
+    try {
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      
+      const { data: quickScore } = await supabase
+        .from('quick_scores_cache')
+        .select('estimated_value, cached_at')
+        .eq('address_key', addressKey)
+        .gte('cached_at', sevenDaysAgo)
+        .maybeSingle();
+      
+      if (quickScore && quickScore.estimated_value) {
+        quickScoreHint = quickScore.estimated_value;
+        console.log('[PropertyInsights] Found quick-score hint:', quickScoreHint, '(will reuse to save API cost)');
+      }
+    } catch (err) {
+      console.warn('[PropertyInsights] Quick-score lookup failed (continuing):', err.message);
+    }
+  }
+  
   // Check cache first (if Supabase is configured and not forcing refresh)
   if (supabaseUrl && supabaseServiceKey && !forceRefresh) {
     try {
@@ -562,6 +585,19 @@ export default async function handler(req, res) {
   try {
     const ai = new GoogleGenAI({ apiKey });
 
+    // Quick-score hint context (if available from Chrome extension cache)
+    const quickScoreContext = quickScoreHint ? `
+💰 ESTIMATED VALUE REFERENCE (from quick-score):
+- Estimated Market Value: $${quickScoreHint.toLocaleString()}
+- Source: Previous analysis (Chrome extension cache)
+
+⚠️ IMPORTANT: Use this as a REFERENCE POINT for your value estimate.
+- If your indicativeMidpoint differs significantly, explain why in your analysis.
+- This helps ensure consistency and saves API cost by reusing prior work.
+- Set valueSnapshot.indicativeMidpoint near this value unless you find strong evidence otherwise.
+
+` : '';
+
     // ABS data context for the AI prompt
     const absContext = absData ? `
 📊 OFFICIAL ABS DATA FOR THIS REGION (USE THIS - DO NOT OVERRIDE):
@@ -612,7 +648,7 @@ The user has indicated the previous data may be INCORRECT. Pay EXTRA attention t
 
     const prompt = `You are a professional Australian property planning analyst and prop-tech engineer for upblock.ai.
 Your task is to generate a structured Property DNA report for: "${address}".
-${dataCorrectionInstructions}${absContext}
+${dataCorrectionInstructions}${quickScoreContext}${absContext}
 🚨🚨🚨 MANDATORY STEP 1: BUSINESS/COMMERCIAL SEARCH (YOU MUST DO THIS FIRST) 🚨🚨🚨
 
 ⛔ STOP! Before doing ANYTHING else, you MUST search for businesses at this address.
@@ -1187,6 +1223,8 @@ For comparableSales, include commercial sales with $/sqm notes.`;
     if (supabaseUrl && supabaseServiceKey) {
       try {
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        
+        // Save full analysis to property_cache
         await supabase
           .from('property_cache')
           .upsert({
@@ -1194,6 +1232,28 @@ For comparableSales, include commercial sales with $/sqm notes.`;
             data: data,
             created_at: new Date().toISOString()
           }, { onConflict: 'address_key' });
+        
+        // IMPORTANT: Update quick_scores_cache with the accurate value
+        // This ensures Chrome extension shows the SAME score after full analysis
+        // The quick-score API will use property_cache data to calculate consistent scores
+        if (data.valueSnapshot?.indicativeMidpoint) {
+          // Note: We're NOT storing the score here, just the estimated value
+          // The quick-score API will recalculate the score from the full data
+          // This ensures score consistency between website and extension
+          await supabase
+            .from('quick_scores_cache')
+            .upsert({
+              address_key: addressKey,
+              address: address,
+              score: 60, // Placeholder - quick-score will recalculate from property_cache
+              estimated_value: data.valueSnapshot.indicativeMidpoint,
+              confidence: data.dataConfidence?.overall || 'Medium',
+              user_id: data.user_id || '00000000-0000-0000-0000-000000000000', // System user for website-generated caches
+              cached_at: new Date().toISOString()
+            }, { onConflict: 'address_key' });
+          console.log('[PropertyInsights] Updated quick-score cache with accurate value:', data.valueSnapshot.indicativeMidpoint);
+        }
+        
         console.log('[PropertyInsights] Cached result for:', addressKey.substring(0, 40) + '...');
       } catch (cacheErr) {
         console.warn('[PropertyInsights] Failed to cache result:', cacheErr.message);
