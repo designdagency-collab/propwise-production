@@ -89,8 +89,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Gemini API key not configured' });
     }
 
-    const genAI = new GoogleGenAI({ apiKey: geminiApiKey });
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
     const prompt = `Analyze this Australian property address and return ONLY a numeric score from 0-100 representing its investment potential.
 
@@ -117,8 +116,12 @@ IMPORTANT:
 
 Score:`;
 
-    const result = await model.generateContent(prompt);
-    const response = result.response.text().trim();
+    const result = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: [{ parts: [{ text: prompt }] }]
+    });
+    
+    const response = result.text?.trim() || '';
     const score = parseInt(response);
 
     if (isNaN(score) || score < 0 || score > 100) {
