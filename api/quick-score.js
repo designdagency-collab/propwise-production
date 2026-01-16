@@ -41,13 +41,18 @@ function calculateInterestRating(address, estimatedValue) {
   }
   
   // DETECT COMBINED LOTS (major development opportunity)
-  const isCombinedLot = 
+  // Be specific - townhouses/units with "/" or "Unit" in address are NOT combined lots
+  const hasUnitIndicator = addressLower.match(/^\d+\//) || addressLower.includes('unit ') || addressLower.includes('/');
+  
+  const isCombinedLot = !hasUnitIndicator && (
     addressLower.includes(' & ') || 
     addressLower.includes(' and ') ||
-    addressLower.match(/\d+-\d+\s/) || // "8-10 Smith St"
-    addressLower.match(/\d+\s*&\s*\d+/) || // "8 & 10 Smith St"
-    addressLower.includes('combined') ||
-    addressLower.includes('dual title');
+    addressLower.match(/\d+\s*-\s*\d+\s+[a-z]/) || // "8-10 Smith St" but not "2-4" (townhouse complex)
+    addressLower.match(/\d+\s*&\s*\d+\s+[a-z]/) || // "8 & 10 Smith St"
+    addressLower.includes('combined lot') ||
+    addressLower.includes('dual title') ||
+    addressLower.includes('dual occ')
+  );
   
   if (isCombinedLot) {
     console.log('[InterestRating] 🔥 COMBINED LOT DETECTED - development opportunity!');
@@ -431,12 +436,18 @@ export default async function handler(req, res) {
         else if (score >= 20) interestStars = 2;  // 20-39: Below average
         else interestStars = 1;                   // 0-19: Poor
         
-        // Detect combined lot
-        const isCombinedLot = 
-          address.toLowerCase().includes(' & ') || 
-          address.toLowerCase().includes(' and ') ||
-          address.match(/\d+-\d+\s/) ||
-          address.match(/\d+\s*&\s*\d+/);
+        // Detect combined lot (use same logic as calculateInterestRating)
+        const addressLower = address.toLowerCase();
+        const hasUnitIndicator = addressLower.match(/^\d+\//) || addressLower.includes('unit ') || addressLower.includes('/');
+        const isCombinedLot = !hasUnitIndicator && (
+          addressLower.includes(' & ') || 
+          addressLower.includes(' and ') ||
+          addressLower.match(/\d+\s*-\s*\d+\s+[a-z]/) ||
+          addressLower.match(/\d+\s*&\s*\d+\s+[a-z]/) ||
+          addressLower.includes('combined lot') ||
+          addressLower.includes('dual title') ||
+          addressLower.includes('dual occ')
+        );
         
         console.log('[QuickScore] Final score from full_analysis:', score, 'Interest stars:', interestStars, 'Combined lot:', isCombinedLot);
         
@@ -471,12 +482,18 @@ export default async function handler(req, res) {
         // Calculate interest rating from cached data
         const interestRating = calculateInterestRating(address, cachedScore.estimated_value);
         
-        // Detect combined lot
-        const isCombinedLot = 
-          address.toLowerCase().includes(' & ') || 
-          address.toLowerCase().includes(' and ') ||
-          address.match(/\d+-\d+\s/) ||
-          address.match(/\d+\s*&\s*\d+/);
+        // Detect combined lot (use same logic as calculateInterestRating)
+        const addressLower = address.toLowerCase();
+        const hasUnitIndicator = addressLower.match(/^\d+\//) || addressLower.includes('unit ') || addressLower.includes('/');
+        const isCombinedLot = !hasUnitIndicator && (
+          addressLower.includes(' & ') || 
+          addressLower.includes(' and ') ||
+          addressLower.match(/\d+\s*-\s*\d+\s+[a-z]/) ||
+          addressLower.match(/\d+\s*&\s*\d+\s+[a-z]/) ||
+          addressLower.includes('combined lot') ||
+          addressLower.includes('dual title') ||
+          addressLower.includes('dual occ')
+        );
         
         return res.status(200).json({
           score: cachedScore.score,
@@ -664,12 +681,18 @@ Return ONLY valid JSON, no other text.`;
     // Calculate Interest Rating (1-5 stars)
     const interestRating = calculateInterestRating(address, estimatedValue);
     
-    // Detect if combined lot for special messaging
-    const isCombinedLot = 
-      address.toLowerCase().includes(' & ') || 
-      address.toLowerCase().includes(' and ') ||
-      address.match(/\d+-\d+\s/) ||
-      address.match(/\d+\s*&\s*\d+/);
+    // Detect if combined lot for special messaging (use same logic as calculateInterestRating)
+    const addressLower = address.toLowerCase();
+    const hasUnitIndicator = addressLower.match(/^\d+\//) || addressLower.includes('unit ') || addressLower.includes('/');
+    const isCombinedLot = !hasUnitIndicator && (
+      addressLower.includes(' & ') || 
+      addressLower.includes(' and ') ||
+      addressLower.match(/\d+\s*-\s*\d+\s+[a-z]/) ||
+      addressLower.match(/\d+\s*&\s*\d+\s+[a-z]/) ||
+      addressLower.includes('combined lot') ||
+      addressLower.includes('dual title') ||
+      addressLower.includes('dual occ')
+    );
     
     console.log('[QuickScore] AI estimate calculated:', { score, estimatedValue, confidence, interestRating, isCombinedLot });
     console.log('[QuickScore] ⚠️ Using AI estimate - for accurate score, do full audit on website');
