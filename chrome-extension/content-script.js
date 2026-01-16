@@ -101,8 +101,13 @@ function extractListings() {
       console.log('[Upblock] Card', index, 'has no address');
     }
     
-    // Skip if already processed
+    // Skip if already processed (check both badge and address set)
     if (card.querySelector('.upblock-score-badge')) {
+      return null;
+    }
+    
+    // Skip if we've already processed this address (prevents duplicates)
+    if (processedAddresses.has(address)) {
       return null;
     }
 
@@ -206,6 +211,9 @@ function injectScoreBadge(listing, score) {
     container.insertBefore(badge, container.firstChild);
   }
 
+  // Mark this address as processed
+  processedAddresses.add(listing.address);
+  
   console.log(`[Upblock] Injected score ${score} for:`, listing.address);
 }
 
@@ -397,6 +405,12 @@ async function init() {
   console.log('[Upblock] ========== INIT COMPLETE ==========');
 }
 
+// Track which addresses we've processed to avoid duplicates
+const processedAddresses = new Set();
+
+// Track last URL to detect navigation (pagination, filters, etc)
+let lastUrl = window.location.href;
+
 // Run on page load
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
@@ -404,13 +418,33 @@ if (document.readyState === 'loading') {
   init();
 }
 
-// Re-run when new listings are loaded (infinite scroll / pagination)
+// Monitor URL changes (for SPA navigation like pagination)
+setInterval(() => {
+  const currentUrl = window.location.href;
+  if (currentUrl !== lastUrl) {
+    console.log('[Upblock] URL changed (pagination/filter), clearing old data...');
+    lastUrl = currentUrl;
+    
+    // Clear processed addresses set
+    processedAddresses.clear();
+    
+    // Wait for new content to load, then process
+    setTimeout(() => {
+      console.log('[Upblock] Reprocessing after navigation');
+      init();
+    }, 1000);
+  }
+}, 500); // Check every 500ms
+
+// Re-run when new listings are loaded (infinite scroll)
 const observer = new MutationObserver((mutations) => {
   const hasNewListings = mutations.some(mutation => 
     Array.from(mutation.addedNodes).some(node => 
       node.nodeType === 1 && (
+        node.matches?.('[data-testid="ResidentialCard"]') ||
         node.matches?.('article[data-testid="residential-card"]') ||
         node.matches?.('[data-testid="listing-card-wrapper"]') ||
+        node.querySelector?.('[data-testid="ResidentialCard"]') ||
         node.querySelector?.('article[data-testid="residential-card"]') ||
         node.querySelector?.('[data-testid="listing-card-wrapper"]')
       )
@@ -418,7 +452,7 @@ const observer = new MutationObserver((mutations) => {
   );
 
   if (hasNewListings) {
-    console.log('[Upblock] New listings detected, processing...');
+    console.log('[Upblock] New listings detected (infinite scroll), processing...');
     setTimeout(init, 500); // Debounce
   }
 });

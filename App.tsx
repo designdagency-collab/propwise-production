@@ -393,6 +393,7 @@ const App: React.FC = () => {
     if (prefillAddress) {
       console.log('[Extension] Prefilling address from extension:', prefillAddress);
       setAddress(prefillAddress);
+      setIsValidAddress(true); // Enable the Audit Block button immediately
       urlParams.delete('prefill');
     }
     
