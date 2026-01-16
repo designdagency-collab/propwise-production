@@ -15,13 +15,13 @@ const CONFIG = {
   CACHE_DURATION: 7 * 24 * 60 * 60 * 1000 // 7 days
 };
 
-// Site-specific selectors
+// Site-specific selectors (updated Jan 2026)
 const SELECTORS = {
   'realestate.com.au': {
-    card: 'article[data-testid="residential-card"], div.residential-card',
-    address: '.residential-card__address, [data-testid="address-line1"], .property-card__address',
-    priceArea: '.property-price, [data-testid="price"]',
-    badgeContainer: '.residential-card__details, .property-card__details'
+    card: '[data-testid="ResidentialCard"], article[data-testid="residential-card"], div.residential-card',
+    address: '[data-testid="address-line1"], .residential-card__address, .property-card__address',
+    priceArea: '[data-testid="price"], .property-price',
+    badgeContainer: '[data-testid="ResidentialCard"]'
   },
   'domain.com.au': {
     card: '[data-testid="listing-card-wrapper"], .css-qrqvdp',
