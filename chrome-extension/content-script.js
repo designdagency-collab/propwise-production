@@ -2,7 +2,10 @@
 // Runs on realestate.com.au and domain.com.au
 // Extracts property listings and injects score badges
 
-console.log('[Upblock] Content script loaded');
+console.log('[Upblock] ========================================');
+console.log('[Upblock] Content script loaded - v1.0.1');
+console.log('[Upblock] Current URL:', window.location.href);
+console.log('[Upblock] ========================================');
 
 // Configuration
 const CONFIG = {
@@ -42,13 +45,25 @@ function extractListings() {
   if (!site) return [];
 
   const selectors = SELECTORS[site];
-  const cards = document.querySelectorAll(selectors.card);
+  console.log('[Upblock] Using selectors for', site, ':', selectors);
   
-  console.log(`[Upblock] Found ${cards.length} property cards on ${site}`);
+  const cards = document.querySelectorAll(selectors.card);
+  console.log(`[Upblock] Found ${cards.length} property cards using selector:`, selectors.card);
+  
+  if (cards.length === 0) {
+    console.log('[Upblock] ⚠️ No cards found. Trying alternative selectors...');
+    // Try broader selector
+    const altCards = document.querySelectorAll('article, [class*="listing"], [class*="property"], [class*="card"]');
+    console.log('[Upblock] Found', altCards.length, 'elements with alternative selector');
+  }
 
   return Array.from(cards).map((card, index) => {
     const addressEl = card.querySelector(selectors.address);
     const address = addressEl?.textContent?.trim();
+    
+    if (!address) {
+      console.log('[Upblock] Card', index, 'has no address');
+    }
     
     // Skip if already processed
     if (card.querySelector('.upblock-score-badge')) {
@@ -224,34 +239,50 @@ function observeScroll(remainingListings, token) {
 
 // Main initialization
 async function init() {
+  console.log('[Upblock] ========== INIT START ==========');
+  
   const site = getCurrentSite();
+  console.log('[Upblock] Current site:', site);
+  
   if (!site) {
-    console.log('[Upblock] Not on a supported site');
+    console.log('[Upblock] ❌ Not on a supported site');
     return;
   }
 
-  console.log('[Upblock] Initializing on:', site);
+  console.log('[Upblock] ✓ Site recognized:', site);
 
   // Get auth token
+  console.log('[Upblock] Checking for auth token...');
   const token = await getAuthToken();
+  
   if (!token) {
-    console.log('[Upblock] No auth token found - please login at upblock.ai');
-    // Show login prompt in extension popup
+    console.log('[Upblock] ❌ No auth token found');
+    console.log('[Upblock] → Please login: Click extension icon → "Login to Upblock"');
     chrome.runtime.sendMessage({ action: 'needsLogin' });
     return;
   }
 
+  console.log('[Upblock] ✓ Auth token found');
+
   // Extract listings
+  console.log('[Upblock] Extracting property listings...');
   const listings = extractListings();
+  
+  console.log('[Upblock] Found', listings.length, 'listings');
+  
   if (listings.length === 0) {
-    console.log('[Upblock] No listings found on page');
+    console.log('[Upblock] ⚠️ No listings found on page');
+    console.log('[Upblock] → Make sure you\'re on a property search page');
     return;
   }
 
-  console.log(`[Upblock] Processing ${listings.length} listings`);
+  console.log(`[Upblock] ✓ Processing ${listings.length} listings`);
+  console.log('[Upblock] First 3 addresses:', listings.slice(0, 3).map(l => l.address));
 
   // Process listings
   await processListings(listings, token);
+  
+  console.log('[Upblock] ========== INIT COMPLETE ==========');
 }
 
 // Run on page load
