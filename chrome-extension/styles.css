@@ -91,17 +91,17 @@
   opacity: 0.9 !important;
 }
 
-/* Score color variants - Upblock Gold Branding */
+/* Score color variants - Upblock Gold Branding (#C9A961) */
 .upblock-score-badge.excellent {
-  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
-  border: 2px solid rgba(245, 158, 11, 0.3) !important;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25) !important;
+  background: linear-gradient(135deg, #C9A961 0%, #B89651 100%) !important;
+  border: 2px solid rgba(201, 169, 97, 0.4) !important;
+  box-shadow: 0 4px 16px rgba(201, 169, 97, 0.35) !important;
 }
 
 .upblock-score-badge.good {
-  background: linear-gradient(135deg, #F59E0B 0%, #B45309 100%) !important;
-  border: 2px solid rgba(245, 158, 11, 0.3) !important;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2) !important;
+  background: linear-gradient(135deg, #C9A961 0%, #A88651 100%) !important;
+  border: 2px solid rgba(201, 169, 97, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(201, 169, 97, 0.3) !important;
 }
 
 .upblock-score-badge.average {
@@ -124,9 +124,9 @@
 
 /* Loading state - Gold shimmer */
 .upblock-score-badge.loading {
-  background: linear-gradient(135deg, #D97706 0%, #B45309 100%) !important;
-  border: 2px solid rgba(217, 119, 6, 0.4) !important;
-  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2) !important;
+  background: linear-gradient(135deg, #C9A961 0%, #B89651 100%) !important;
+  border: 2px solid rgba(201, 169, 97, 0.4) !important;
+  box-shadow: 0 4px 12px rgba(201, 169, 97, 0.3) !important;
   animation: upblock-shimmer 2s ease-in-out infinite !important;
 }
 
@@ -180,25 +180,25 @@
   position: relative !important;
 }
 
-/* Loading Banner - Premium Gold Branding */
+/* Loading Banner - Upblock Gold Branding (#C9A961) */
 .upblock-loading-banner {
   position: fixed !important;
   top: 80px !important;
   right: 20px !important;
   z-index: 999999 !important;
-  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+  background: linear-gradient(135deg, #C9A961 0%, #B89651 100%) !important;
   color: white !important;
   padding: 14px 24px !important;
   border-radius: 14px !important;
-  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.35), 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 8px 24px rgba(201, 169, 97, 0.4), 0 2px 8px rgba(0, 0, 0, 0.1) !important;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   opacity: 1 !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
 }
 
 .upblock-loading-banner:hover {
-  box-shadow: 0 12px 32px rgba(245, 158, 11, 0.4), 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 12px 32px rgba(201, 169, 97, 0.45), 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
 .upblock-banner-content {
