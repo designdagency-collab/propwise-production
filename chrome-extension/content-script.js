@@ -350,14 +350,15 @@ function injectScoreBadge(listing, data) {
   }
   
   // Debug logging
-  console.log(`[Upblock] Badge for ${listing.address}:`, {
+  console.log(`[Upblock] Badge for ${listing.address.substring(0, 40)}:`, {
     stars: interestStars,
     verified,
     score,
     source,
     isCombinedLot,
     reaPrice,
-    estimatedValue
+    estimatedValue: estimatedValue ? `$${(estimatedValue/1000).toFixed(0)}k` : 'none',
+    priceToShow: priceDisplay
   });
   
   if (reaPrice) {
@@ -530,7 +531,7 @@ async function processListings(listings, token) {
       injectScoreBadge(listing, data);
       loadedCount++;
       updateLoadingBanner(loadedCount, listings.length);
-      console.log(`[Upblock] ✓ Loaded ${loadedCount}/${listings.length} - Stars: ${data.interestStars}★, Value: ${data.estimatedValue ? formatPrice(data.estimatedValue) : 'N/A'}`);
+      console.log(`[Upblock] ✓ Loaded ${loadedCount}/${listings.length} - ${listing.address.substring(0,30)} - Stars: ${data.interestStars}★, Value: ${data.estimatedValue ? formatPrice(data.estimatedValue) : 'N/A'}`);
     }
   }
 
