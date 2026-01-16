@@ -257,8 +257,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
               {/* Slider Line */}
               <div 
                 className="absolute top-0 bottom-0 w-1 shadow-2xl z-10"
-                style={{ backgroundColor: 'var(--bg-card)' }}
-                style={{ left: `${sliderPos}%`, transform: 'translateX(-50%)' }}
+                style={{ backgroundColor: 'var(--bg-card)', left: `${sliderPos}%`, transform: 'translateX(-50%)' }}
               >
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-2xl flex items-center justify-center border-4 border-[#C9A961]" style={{ backgroundColor: 'var(--bg-card)' }}>
                   <i className="fa-solid fa-arrows-left-right text-[#C9A961] text-base sm:text-lg"></i>
