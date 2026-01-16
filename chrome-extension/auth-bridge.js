@@ -21,22 +21,35 @@ window.addEventListener('upblock_auth_ready', (event) => {
   
   console.log('[Upblock Auth Bridge] ✓ Received auth from page:', email);
   
-  // Store in chrome.storage (extension-accessible)
-  chrome.storage.local.set({
-    upblock_auth_token: token,
-    upblock_user_email: email
-  }, () => {
-    console.log('[Upblock Auth Bridge] ✅ Token saved to extension storage!');
-    console.log('[Upblock Auth Bridge] ✅ Extension is now authenticated!');
-    console.log('[Upblock Auth Bridge] ✅ Visit realestate.com.au to see scores');
-    
-    // Notify background script
-    chrome.runtime.sendMessage({
-      action: 'loggedIn',
-      token: token,
-      email: email
+  try {
+    // Store in chrome.storage (extension-accessible)
+    chrome.storage.local.set({
+      upblock_auth_token: token,
+      upblock_user_email: email
+    }, () => {
+      if (chrome.runtime.lastError) {
+        console.log('[Upblock Auth Bridge] ⚠️ Extension context invalidated - please reload extension');
+        return;
+      }
+      
+      console.log('[Upblock Auth Bridge] ✅ Token saved to extension storage!');
+      console.log('[Upblock Auth Bridge] ✅ Extension is now authenticated!');
+      console.log('[Upblock Auth Bridge] ✅ Visit realestate.com.au to see scores');
+      
+      // Notify background script
+      try {
+        chrome.runtime.sendMessage({
+          action: 'loggedIn',
+          token: token,
+          email: email
+        });
+      } catch (e) {
+        // Extension reloaded - ignore
+      }
     });
-  });
+  } catch (e) {
+    console.log('[Upblock Auth Bridge] Extension context error (ignore if extension was just reloaded)');
+  }
 });
 
 // Inject the script
