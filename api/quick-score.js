@@ -149,21 +149,21 @@ function calculateInterestRating(address, estimatedValue) {
   else if (points >= 20) stars = 2;  // 20-39: Upblock 20-39 (below average)
   else stars = 1;                    // 0-19: Upblock 0-19 (poor)
   
-  console.log('[InterestRating] Investment-focused calculation:', {
+  console.log('[InterestRating] 🔍 DETAILED CALCULATION:', {
     address: address.substring(0, 50),
     estimatedValue: estimatedValue ? `$${(estimatedValue/1000).toFixed(0)}k` : 'unknown',
+    propertyType: isUnit ? 'Unit' : isTownhouse ? 'Townhouse' : 'House',
     isPremiumSuburb,
-    isUnit,
     isCombinedLot,
-    breakdown: {
-      value: `${valueScore}/20`,
-      yield: `${yieldScore}/20`,
-      cashFlow: `${cashFlowScore}/30`,
-      uplift: `${upliftScore}/20`,
-      constraints: `${constraintsScore}/10`
+    SCORES: {
+      '1_Value': `${valueScore}/20`,
+      '2_Yield': `${yieldScore}/20`,
+      '3_CashFlow': `${cashFlowScore}/30`,
+      '4_Uplift': `${upliftScore}/20`,
+      '5_Constraints': `${constraintsScore}/10`
     },
-    totalPoints: `${points}/100`,
-    stars: `${stars}/5`,
+    TOTAL: `${points}/100`,
+    STARS: `${stars}/5 (${stars === 5 ? 'LOOK!' : stars === 4 ? 'KEEN' : stars === 3 ? 'MAYBE' : stars === 2 ? 'PASS' : 'NAH'})`,
     predictedUpblockRange: stars === 5 ? '75-100' : stars === 4 ? '60-74' : stars === 3 ? '40-59' : stars === 2 ? '20-39' : '0-19'
   });
   
