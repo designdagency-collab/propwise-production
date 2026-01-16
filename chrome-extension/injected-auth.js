@@ -6,24 +6,43 @@
   
   function extractToken() {
     try {
-      // Find Supabase auth key in localStorage
-      const keys = Object.keys(localStorage);
-      console.log('[Upblock Injected] localStorage keys:', keys.filter(k => k.includes('supabase')));
+      console.log('[Upblock Injected] Searching for Supabase session...');
       
-      const supabaseKey = keys.find(k => k.includes('supabase.auth.token'));
+      // Try localStorage first
+      const localKeys = Object.keys(localStorage);
+      console.log('[Upblock Injected] localStorage keys:', localKeys);
+      let supabaseKey = localKeys.find(k => k.includes('supabase') || k.includes('auth'));
       
+      // Try sessionStorage if not in localStorage
       if (!supabaseKey) {
-        console.log('[Upblock Injected] No Supabase key found');
-        return null;
+        const sessionKeys = Object.keys(sessionStorage);
+        console.log('[Upblock Injected] sessionStorage keys:', sessionKeys);
+        supabaseKey = sessionKeys.find(k => k.includes('supabase') || k.includes('auth'));
+        
+        if (supabaseKey) {
+          const sessionData = JSON.parse(sessionStorage.getItem(supabaseKey));
+          const token = sessionData?.access_token;
+          const email = sessionData?.user?.email;
+          console.log('[Upblock Injected] ✓ Found in sessionStorage:', email);
+          return { token, email };
+        }
+      } else {
+        const sessionData = JSON.parse(localStorage.getItem(supabaseKey));
+        const token = sessionData?.access_token;
+        const email = sessionData?.user?.email;
+        console.log('[Upblock Injected] ✓ Found in localStorage:', email);
+        return { token, email };
       }
       
-      const sessionData = JSON.parse(localStorage.getItem(supabaseKey));
-      const token = sessionData?.access_token;
-      const email = sessionData?.user?.email;
+      // Last resort: check if there's a global window variable with session
+      if (window.supabase?.auth) {
+        console.log('[Upblock Injected] Trying window.supabase.auth...');
+        // Can't directly call async getSession from here, so return null
+      }
       
-      console.log('[Upblock Injected] Found session for:', email);
+      console.log('[Upblock Injected] ❌ No Supabase session found in localStorage or sessionStorage');
+      return null;
       
-      return { token, email };
     } catch (e) {
       console.error('[Upblock Injected] Error:', e);
       return null;
