@@ -53,6 +53,22 @@ const clearCachedProfile = () => {
   }
 };
 
+// Send auth token to Chrome extension (if installed)
+const sendTokenToExtension = async (userEmail: string) => {
+  try {
+    const token = await supabaseService.getAccessToken();
+    if (token && window.chrome?.runtime) {
+      // Store in localStorage so extension can access it
+      localStorage.setItem('upblock_extension_token', token);
+      localStorage.setItem('upblock_extension_email', userEmail);
+      console.log('[Extension] Auth token stored for extension');
+    }
+  } catch (e) {
+    // Extension not installed or error - ignore
+    console.log('[Extension] Not installed or error:', e);
+  }
+};
+
 const App: React.FC = () => {
   const [address, setAddress] = useState('');
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
@@ -471,6 +487,9 @@ const App: React.FC = () => {
       setIsLoggedIn(true);
       setShowEmailAuth(false);
       setShowPricing(false); // Close any open modals
+      
+      // Send auth token to Chrome extension (if installed)
+      await sendTokenToExtension(session.user.email || '');
       
       // Load user data from Supabase (sets userProfile which derives email/phone)
       // Pass access_token directly to avoid timing issues where getSession() returns null

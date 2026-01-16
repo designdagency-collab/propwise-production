@@ -5,33 +5,49 @@ console.log('[Upblock Popup] Script loaded');
 
 // Check login status on popup open
 async function checkLoginStatus() {
-  chrome.storage.local.get(['upblock_auth_token', 'upblock_user_email'], (result) => {
-    const loggedOutEl = document.getElementById('logged-out');
-    const loggedInEl = document.getElementById('logged-in');
-    const loginBtn = document.getElementById('login-btn');
-    const logoutBtn = document.getElementById('logout-btn');
-    const userEmailEl = document.getElementById('user-email');
-
-    if (result.upblock_auth_token) {
-      // User is logged in
-      loggedOutEl.style.display = 'none';
-      loggedInEl.style.display = 'block';
-      loginBtn.style.display = 'none';
-      logoutBtn.style.display = 'block';
-      
-      if (result.upblock_user_email) {
-        userEmailEl.textContent = result.upblock_user_email;
-        userEmailEl.style.display = 'block';
-      }
-    } else {
-      // User is logged out
-      loggedOutEl.style.display = 'block';
-      loggedInEl.style.display = 'none';
-      loginBtn.style.display = 'block';
-      logoutBtn.style.display = 'none';
-      userEmailEl.style.display = 'none';
+  // Check both localStorage (shared with main app) and chrome.storage
+  chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+    if (tabs[0]) {
+      chrome.tabs.sendMessage(tabs[0].id, {action: 'getAuthStatus'}, (response) => {
+        updateUI(response?.token, response?.email);
+      });
     }
   });
+  
+  // Also check chrome.storage as fallback
+  chrome.storage.local.get(['upblock_auth_token', 'upblock_user_email'], (result) => {
+    if (result.upblock_auth_token) {
+      updateUI(result.upblock_auth_token, result.upblock_user_email);
+    }
+  });
+}
+
+function updateUI(token, email) {
+  const loggedOutEl = document.getElementById('logged-out');
+  const loggedInEl = document.getElementById('logged-in');
+  const loginBtn = document.getElementById('login-btn');
+  const logoutBtn = document.getElementById('logout-btn');
+  const userEmailEl = document.getElementById('user-email');
+
+  if (token) {
+    // User is logged in
+    loggedOutEl.style.display = 'none';
+    loggedInEl.style.display = 'block';
+    loginBtn.style.display = 'none';
+    logoutBtn.style.display = 'block';
+    
+    if (email) {
+      userEmailEl.textContent = email;
+      userEmailEl.style.display = 'block';
+    }
+  } else {
+    // User is logged out
+    loggedOutEl.style.display = 'block';
+    loggedInEl.style.display = 'none';
+    loginBtn.style.display = 'block';
+    logoutBtn.style.display = 'none';
+    userEmailEl.style.display = 'none';
+  }
 }
 
 // Login button handler
