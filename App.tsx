@@ -590,6 +590,11 @@ const App: React.FC = () => {
           
           await handleSessionLogin(session, `onAuthStateChange:${event}`);
           
+          // Send token to extension (for already-logged-in users)
+          if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+            await sendTokenToExtension(session.user.email || '');
+          }
+          
           // Return to idle if user has credits
           if (appState === AppState.LIMIT_REACHED && remainingCredits > 0) {
             setAppState(AppState.IDLE);
@@ -992,6 +997,9 @@ const App: React.FC = () => {
         await loadUserData(user.id);
         userLoggedIn = true;
         email = user.email || '';
+        
+        // Send token to extension on session recovery
+        await sendTokenToExtension(user.email || '');
       }
     }
     
@@ -1722,6 +1730,9 @@ const App: React.FC = () => {
         await loadUserData(user.id);
         userLoggedIn = true;
         email = user.email || '';
+        
+        // Send token to extension on session recovery
+        await sendTokenToExtension(user.email || '');
       }
     }
     
