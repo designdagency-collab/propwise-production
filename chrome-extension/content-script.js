@@ -103,6 +103,15 @@ function extractListings() {
     const reaPriceMatch = reaPriceText?.match(/\$[\d,]+/);
     const reaPrice = reaPriceMatch ? reaPriceMatch[0] : null;
     
+    // Debug: Log price extraction
+    if (index < 3) {
+      console.log(`[Upblock] Card ${index} price extraction:`, {
+        found: !!priceEl,
+        text: reaPriceText,
+        extracted: reaPrice
+      });
+    }
+    
     if (!address) {
       console.log('[Upblock] Card', index, 'has no address');
     }
@@ -203,6 +212,13 @@ function injectScoreBadge(listing, data) {
   let priceDisplay = null;
   let priceLabel = '';
   let tooltipText = `Upblock Score: ${score}/100\nClick for full analysis`;
+  
+  // Debug logging
+  console.log(`[Upblock] Badge for ${listing.address}:`, {
+    reaPrice,
+    estimatedValue,
+    willShow: reaPrice || formatPrice(estimatedValue)
+  });
   
   if (reaPrice) {
     // REA shows actual price - use it
