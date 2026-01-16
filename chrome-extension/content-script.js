@@ -97,6 +97,12 @@ function extractListings() {
       address = addressEl?.textContent?.trim();
     }
     
+    // Extract actual price from REA (if shown)
+    const priceEl = card.querySelector('.property-price, [class*="price"], [data-testid*="price"]');
+    const reaPriceText = priceEl?.textContent?.trim();
+    const reaPriceMatch = reaPriceText?.match(/\$[\d,]+/);
+    const reaPrice = reaPriceMatch ? reaPriceMatch[0] : null;
+    
     if (!address) {
       console.log('[Upblock] Card', index, 'has no address');
     }
@@ -115,6 +121,7 @@ function extractListings() {
       index,
       card,
       address,
+      reaPrice,  // Actual price from REA (or null if hidden)
       selectors
     };
   }).filter(item => item && item.address);
@@ -189,18 +196,29 @@ function formatPrice(value) {
 
 // Inject score badge into property card
 function injectScoreBadge(listing, data) {
-  const { card, selectors } = listing;
+  const { card, selectors, reaPrice } = listing;
   const { score, estimatedValue, confidence } = data;
 
-  // Create badge element with score and estimated value
+  // Determine what price to show
+  let priceDisplay = null;
+  let priceLabel = '';
+  let tooltipText = `Upblock Score: ${score}/100\nClick for full analysis`;
+  
+  if (reaPrice) {
+    // REA shows actual price - use it
+    priceDisplay = reaPrice;
+    priceLabel = '';  // No "Est." label
+    tooltipText = `Upblock Score: ${score}/100\nListed: ${reaPrice}\nClick for full analysis`;
+  } else if (estimatedValue) {
+    // REA hides price - show AI estimate with disclaimer
+    priceDisplay = formatPrice(estimatedValue);
+    priceLabel = 'Est. ';  // "Est. $1.2M"
+    tooltipText = `Upblock Score: ${score}/100\nEst. Value: ${priceDisplay} (${confidence} confidence)\nPrice not public - AI estimate\nClick for full analysis`;
+  }
+
+  // Create badge element
   const badge = document.createElement('div');
   badge.className = `upblock-score-badge ${getScoreClass(score)}`;
-  
-  const priceDisplay = estimatedValue ? formatPrice(estimatedValue) : null;
-  const tooltipText = priceDisplay 
-    ? `Upblock Score: ${score}/100\nEst. Value: ${priceDisplay} (${confidence} confidence)\nClick for full analysis`
-    : `Upblock Score: ${score}/100\nClick for full analysis`;
-  
   badge.title = tooltipText;
   
   badge.innerHTML = `
@@ -210,12 +228,12 @@ function injectScoreBadge(listing, data) {
       </div>
       ${priceDisplay ? `
       <div class="upblock-price-row">
-        <span class="upblock-price">~${priceDisplay}</span>
+        <span class="upblock-price">${priceLabel}${priceDisplay}</span>
       </div>
       ` : ''}
       <div class="upblock-score-bottom">
-        <svg class="upblock-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+        <svg class="upblock-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
         </svg>
         <span class="upblock-label">upblock</span>
       </div>
@@ -257,8 +275,8 @@ function showLoadingBadge(card) {
         <span class="upblock-score-spinner">●</span>
       </div>
       <div class="upblock-score-bottom">
-        <svg class="upblock-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+        <svg class="upblock-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
         </svg>
         <span class="upblock-label">upblock</span>
       </div>
