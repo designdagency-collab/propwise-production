@@ -659,16 +659,17 @@ setInterval(() => {
       // Clear processed addresses set
       processedAddresses.clear();
       
-      // Wait longer for REA to finish rendering new content
+      // Wait even longer for REA to finish rendering new content (pagination can be slow)
       setTimeout(() => {
-        console.log('[Upblock] Reprocessing after navigation');
+        console.log('[Upblock] Reprocessing after pagination/navigation');
         init();
-      }, 1500); // Increased from 1000ms to 1500ms
-    }, 800); // Wait 800ms for URL to stabilize
+      }, 2500); // Increased to 2500ms for pagination
+    }, 1000); // Wait 1000ms for URL to stabilize
   }
 }, 500); // Check every 500ms
 
 // Re-run when new listings are loaded (infinite scroll)
+let mutationTimeout = null;
 const observer = new MutationObserver((mutations) => {
   const hasNewListings = mutations.some(mutation => 
     Array.from(mutation.addedNodes).some(node => 
@@ -684,8 +685,14 @@ const observer = new MutationObserver((mutations) => {
   );
 
   if (hasNewListings) {
-    console.log('[Upblock] New listings detected (infinite scroll), processing...');
-    setTimeout(init, 500); // Debounce
+    // Debounce to avoid multiple rapid init calls
+    if (mutationTimeout) {
+      clearTimeout(mutationTimeout);
+    }
+    mutationTimeout = setTimeout(() => {
+      console.log('[Upblock] New listings detected (infinite scroll/pagination), processing...');
+      init();
+    }, 1000); // Increased debounce
   }
 });
 
