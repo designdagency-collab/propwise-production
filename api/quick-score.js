@@ -10,9 +10,18 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const geminiApiKey = process.env.GEMINI_API_KEY;
 
 export default async function handler(req, res) {
-  // CORS
-  const allowedOrigins = ['https://upblock.ai', 'https://www.upblock.ai', 'http://localhost:5173', 'chrome-extension://*'];
+  // CORS - Allow Chrome extension to call from any domain
+  const allowedOrigins = [
+    'https://upblock.ai',
+    'https://www.upblock.ai',
+    'http://localhost:5173',
+    'https://www.realestate.com.au',
+    'https://realestate.com.au',
+    'https://www.domain.com.au',
+    'https://domain.com.au'
+  ];
   const origin = req.headers.origin;
+  
   if (allowedOrigins.includes(origin) || origin?.startsWith('chrome-extension://')) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }

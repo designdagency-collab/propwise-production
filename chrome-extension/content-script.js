@@ -58,8 +58,30 @@ function extractListings() {
   }
 
   return Array.from(cards).map((card, index) => {
-    const addressEl = card.querySelector(selectors.address);
-    const address = addressEl?.textContent?.trim();
+    // Try multiple methods to extract address
+    let address = null;
+    
+    // Method 1: aria-label on card itself (REA current structure)
+    address = card.getAttribute('aria-label');
+    
+    // Method 2: Child element with address selector
+    if (!address) {
+      const addressEl = card.querySelector(selectors.address);
+      address = addressEl?.textContent?.trim();
+    }
+    
+    // Method 3: Find any element with state abbreviation (NSW, VIC, etc)
+    if (!address) {
+      const textEls = Array.from(card.querySelectorAll('*'));
+      const addressEl = textEls.find(el => {
+        const text = el.textContent || '';
+        return text.includes(', NSW') || text.includes(', VIC') || 
+               text.includes(', QLD') || text.includes(', SA') ||
+               text.includes(', WA') || text.includes(', TAS') ||
+               text.includes(', NT') || text.includes(', ACT');
+      });
+      address = addressEl?.textContent?.trim();
+    }
     
     if (!address) {
       console.log('[Upblock] Card', index, 'has no address');
