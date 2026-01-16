@@ -69,6 +69,19 @@
         "https://www.upblock.ai/*",
         "http://localhost:5173/*"
       ]
+    },
+    {
+      "resources": ["upblock-logo.png"],
+      "matches": [
+        "https://www.realestate.com.au/*",
+        "https://realestate.com.au/*",
+        "https://www.domain.com.au/*",
+        "https://domain.com.au/*",
+        "https://www.realcommercial.com.au/*",
+        "https://realcommercial.com.au/*",
+        "https://www.commercialrealestate.com.au/*",
+        "https://commercialrealestate.com.au/*"
+      ]
     }
   ]
 }
