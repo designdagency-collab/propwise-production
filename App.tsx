@@ -394,6 +394,10 @@ const App: React.FC = () => {
       console.log('[Extension] Prefilling address from extension:', prefillAddress);
       setAddress(prefillAddress);
       setIsValidAddress(true); // Enable the Audit Block button immediately
+      
+      // Store prefill flag to trigger auto-search after auth is checked
+      sessionStorage.setItem('upblock_auto_search', 'true');
+      
       urlParams.delete('prefill');
     }
     
@@ -405,6 +409,17 @@ const App: React.FC = () => {
       window.history.replaceState({}, document.title, newUrl);
     }
   }, []);
+
+  // Auto-search when prefilled from extension (after login state is known)
+  useEffect(() => {
+    const autoSearch = sessionStorage.getItem('upblock_auto_search');
+    if (autoSearch === 'true' && isLoggedIn && address && isValidAddress) {
+      console.log('[Extension] Auto-submitting search for logged-in user');
+      sessionStorage.removeItem('upblock_auto_search');
+      // Trigger search automatically
+      handleSearch();
+    }
+  }, [isLoggedIn, address, isValidAddress]);
 
   // Check device fingerprint for anonymous users on page load
   useEffect(() => {

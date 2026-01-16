@@ -194,11 +194,21 @@ function getScoreClass(score) {
 // Format price for display
 function formatPrice(value) {
   if (!value) return null;
+  
+  // Handle if value is already a formatted string (e.g., "$1,140,000")
+  if (typeof value === 'string') {
+    value = parseInt(value.replace(/[$,]/g, ''));
+  }
+  
+  // Ensure it's a valid number
+  if (isNaN(value) || value <= 0) return null;
+  
   if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(1)}M`;
+    const millions = value / 1000000;
+    return millions % 1 === 0 ? `$${millions}M` : `$${millions.toFixed(2)}M`;
   }
   if (value >= 1000) {
-    return `$${(value / 1000).toFixed(0)}K`;
+    return `$${Math.round(value / 1000)}K`;
   }
   return `$${value.toLocaleString()}`;
 }
