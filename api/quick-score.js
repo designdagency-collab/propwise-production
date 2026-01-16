@@ -68,7 +68,7 @@ export default async function handler(req, res) {
     // Check cache first (7 day cache for extension)
     const { data: cachedScore } = await supabase
       .from('quick_scores_cache')
-      .select('score, cached_at')
+      .select('score, estimated_value, confidence, cached_at')
       .eq('address_key', addressKey)
       .single();
 
@@ -80,6 +80,8 @@ export default async function handler(req, res) {
         console.log('[QuickScore] Cache hit for:', address);
         return res.status(200).json({
           score: cachedScore.score,
+          estimatedValue: cachedScore.estimated_value,
+          confidence: cachedScore.confidence,
           cached: true,
           address
         });
@@ -95,7 +97,7 @@ export default async function handler(req, res) {
 
     const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
-    const prompt = `Analyze this Australian property address and return ONLY a numeric score from 0-100 representing its investment potential.
+    const prompt = `Analyze this Australian property address and provide an investment score AND estimated market value.
 
 Address: ${address}
 
@@ -106,50 +108,84 @@ SCORING CRITERIA (0-100):
 - Market Indicators (15 points): Growth area, demand signals
 - Development Feasibility (15 points): Zoning, subdivision, granny flat potential
 
-SCORE BRACKETS:
-- 80-100: Exceptional investment (prime location, large land, high growth)
-- 60-79: Strong investment (good location, development potential)
-- 40-59: Average investment (standard property, limited upside)
-- 20-39: Below average (poor location or limited potential)
-- 0-19: Avoid (unfavorable investment characteristics)
+ESTIMATED VALUE CRITERIA:
+- Research recent sales in the suburb/street
+- Consider property type (house/unit/townhouse)
+- Account for land size if mentioned in listing
+- Use local market data for that suburb
+- Provide realistic Australian market values
 
-IMPORTANT:
-- Return ONLY the numeric score (e.g., "75")
-- No explanations, just the number
-- Base on address analysis only (suburb, street type, property format)
+OUTPUT FORMAT (JSON):
+{
+  "score": 75,
+  "estimatedValueMin": 850000,
+  "estimatedValueMax": 950000,
+  "confidence": "Medium"
+}
 
-Score:`;
+CONFIDENCE LEVELS:
+- High: Found recent comparable sales, clear property type
+- Medium: Limited sales data, estimated from suburb averages
+- Low: Minimal data, rough estimate only
+
+Return ONLY valid JSON, no other text.`;
 
     const result = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: [{ parts: [{ text: prompt }] }]
+      contents: [{ parts: [{ text: prompt }] }],
+      config: {
+        responseMimeType: "application/json"
+      }
     });
     
-    const response = result.text?.trim() || '';
-    const score = parseInt(response);
+    const responseText = result.text?.trim() || '{}';
+    let parsedResponse;
+    
+    try {
+      parsedResponse = JSON.parse(responseText);
+    } catch (e) {
+      console.error('[QuickScore] Failed to parse JSON:', responseText);
+      return res.status(500).json({ error: 'Invalid response format' });
+    }
+    
+    const score = parseInt(parsedResponse.score);
+    const estimatedValueMin = parseInt(parsedResponse.estimatedValueMin) || null;
+    const estimatedValueMax = parseInt(parsedResponse.estimatedValueMax) || null;
+    const confidence = parsedResponse.confidence || 'Low';
 
     if (isNaN(score) || score < 0 || score > 100) {
-      console.error('[QuickScore] Invalid score:', response);
+      console.error('[QuickScore] Invalid score:', parsedResponse);
       return res.status(500).json({ error: 'Invalid score returned' });
     }
 
-    // Cache the score
+    // Calculate estimated value midpoint for display
+    const estimatedValue = estimatedValueMin && estimatedValueMax 
+      ? Math.round((estimatedValueMin + estimatedValueMax) / 2)
+      : null;
+
+    // Cache the score and value
     await supabase
       .from('quick_scores_cache')
       .upsert({
         address_key: addressKey,
         address: address,
         score: score,
+        estimated_value: estimatedValue,
+        confidence: confidence,
         user_id: user.id,
         cached_at: new Date().toISOString()
       }, {
         onConflict: 'address_key'
       });
 
-    console.log('[QuickScore] Score calculated and cached:', score);
+    console.log('[QuickScore] Score and value calculated:', { score, estimatedValue, confidence });
 
     return res.status(200).json({
       score,
+      estimatedValue,
+      estimatedValueMin,
+      estimatedValueMax,
+      confidence,
       cached: false,
       address
     });

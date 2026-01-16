@@ -134,7 +134,7 @@ async function getAuthToken() {
   });
 }
 
-// Fetch score from API
+// Fetch score and value from API
 async function fetchScore(address, token) {
   try {
     const response = await fetch(CONFIG.API_URL, {
@@ -155,7 +155,11 @@ async function fetchScore(address, token) {
     }
 
     const data = await response.json();
-    return data.score;
+    return {
+      score: data.score,
+      estimatedValue: data.estimatedValue,
+      confidence: data.confidence
+    };
   } catch (error) {
     console.error('[Upblock] Error fetching score:', error);
     return null;
@@ -171,19 +175,44 @@ function getScoreClass(score) {
   return 'poor';
 }
 
-// Inject score badge into property card
-function injectScoreBadge(listing, score) {
-  const { card, selectors } = listing;
+// Format price for display
+function formatPrice(value) {
+  if (!value) return null;
+  if (value >= 1000000) {
+    return `$${(value / 1000000).toFixed(1)}M`;
+  }
+  if (value >= 1000) {
+    return `$${(value / 1000).toFixed(0)}K`;
+  }
+  return `$${value.toLocaleString()}`;
+}
 
-  // Create badge element with on-brand styling
+// Inject score badge into property card
+function injectScoreBadge(listing, data) {
+  const { card, selectors } = listing;
+  const { score, estimatedValue, confidence } = data;
+
+  // Create badge element with score and estimated value
   const badge = document.createElement('div');
   badge.className = `upblock-score-badge ${getScoreClass(score)}`;
-  badge.title = `Upblock Score: ${score}/100 - Click for full analysis`;
+  
+  const priceDisplay = estimatedValue ? formatPrice(estimatedValue) : null;
+  const tooltipText = priceDisplay 
+    ? `Upblock Score: ${score}/100\nEst. Value: ${priceDisplay} (${confidence} confidence)\nClick for full analysis`
+    : `Upblock Score: ${score}/100\nClick for full analysis`;
+  
+  badge.title = tooltipText;
+  
   badge.innerHTML = `
     <div class="upblock-score-content">
       <div class="upblock-score-top">
         <span class="upblock-score-value">${score}</span>
       </div>
+      ${priceDisplay ? `
+      <div class="upblock-price-row">
+        <span class="upblock-price">~${priceDisplay}</span>
+      </div>
+      ` : ''}
       <div class="upblock-score-bottom">
         <svg class="upblock-icon" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
@@ -299,18 +328,18 @@ async function processListings(listings, token) {
   for (const listing of visibleListings) {
     const loadingBadge = showLoadingBadge(listing.card);
     
-    const score = await fetchScore(listing.address, token);
+    const data = await fetchScore(listing.address, token);
     
     // Remove loading badge
     if (loadingBadge) {
       loadingBadge.remove();
     }
     
-    if (score !== null) {
-      injectScoreBadge(listing, score);
+    if (data !== null) {
+      injectScoreBadge(listing, data);
       loadedCount++;
       updateLoadingBanner(loadedCount, listings.length);
-      console.log(`[Upblock] ✓ Loaded ${loadedCount}/${listings.length}`);
+      console.log(`[Upblock] ✓ Loaded ${loadedCount}/${listings.length} - Score: ${data.score}, Value: ${data.estimatedValue ? formatPrice(data.estimatedValue) : 'N/A'}`);
     }
   }
 
@@ -332,13 +361,13 @@ function observeScroll(remainingListings, token, initialLoadedCount, totalCount)
         if (listing && !listing.processed) {
           listing.processed = true;
           const loadingBadge = showLoadingBadge(listing.card);
-          const score = await fetchScore(listing.address, token);
+          const data = await fetchScore(listing.address, token);
           if (loadingBadge) loadingBadge.remove();
-          if (score !== null) {
-            injectScoreBadge(listing, score);
+          if (data !== null) {
+            injectScoreBadge(listing, data);
             loadedCount++;
             updateLoadingBanner(loadedCount, totalCount);
-            console.log(`[Upblock] ✓ Loaded ${loadedCount}/${totalCount} (on scroll)`);
+            console.log(`[Upblock] ✓ Loaded ${loadedCount}/${totalCount} (on scroll) - Score: ${data.score}, Value: ${data.estimatedValue ? formatPrice(data.estimatedValue) : 'N/A'}`);
           }
         }
       }

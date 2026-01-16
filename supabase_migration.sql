@@ -506,6 +506,8 @@ CREATE TABLE IF NOT EXISTS quick_scores_cache (
   address_key TEXT NOT NULL UNIQUE,
   address TEXT NOT NULL,
   score INTEGER NOT NULL CHECK (score >= 0 AND score <= 100),
+  estimated_value INTEGER,                     -- Estimated market value (midpoint)
+  confidence TEXT,                             -- High/Medium/Low confidence
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   cached_at TIMESTAMPTZ DEFAULT NOW()
 );
