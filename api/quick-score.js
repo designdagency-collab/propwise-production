@@ -34,6 +34,12 @@ function calculateInterestRating(address, estimatedValue) {
   let points = 0;
   const addressLower = address.toLowerCase();
   
+  // DEBUG: Check if estimatedValue is missing
+  if (!estimatedValue) {
+    console.warn('[InterestRating] ⚠️ estimatedValue is NULL/undefined for:', address.substring(0, 40));
+    console.warn('[InterestRating] This will use default scores - may be inaccurate!');
+  }
+  
   // DETECT COMBINED LOTS (major development opportunity)
   const isCombinedLot = 
     addressLower.includes(' & ') || 
@@ -75,41 +81,51 @@ function calculateInterestRating(address, estimatedValue) {
   
   // === 2. YIELD SCORE (~20 points) ===
   // Expensive properties have LOW yields (rent doesn't scale with price)
-  let yieldScore = 10; // default
-  if (isUnit) {
-    if (estimatedValue && estimatedValue > 800000) {
-      yieldScore = 4; // Expensive units = very poor yields
-    } else {
-      yieldScore = 12; // Affordable units = decent yields
+  let yieldScore = 10; // default (assume average)
+  if (estimatedValue) {
+    if (isUnit) {
+      if (estimatedValue > 800000) {
+        yieldScore = 4; // Expensive units = very poor yields
+      } else {
+        yieldScore = 12; // Affordable units = decent yields
+      }
+    } else if (isHouse) {
+      if (estimatedValue > 2000000) {
+        yieldScore = 3; // $2M+ house = terrible yields (~2-3%)
+      } else if (estimatedValue > 1500000) {
+        yieldScore = 6; // $1.5M+ house = poor yields (~3-4%)
+      } else if (estimatedValue > 1000000) {
+        yieldScore = 10; // $1M house = OK yields (~4-5%)
+      } else {
+        yieldScore = 16; // Affordable house = good yields (~5-6%)
+      }
     }
-  } else if (isHouse) {
-    if (estimatedValue && estimatedValue > 2000000) {
-      yieldScore = 3; // $2M+ house = terrible yields (~2-3%)
-    } else if (estimatedValue && estimatedValue > 1500000) {
-      yieldScore = 6; // $1.5M+ house = poor yields (~3-4%)
-    } else if (estimatedValue && estimatedValue > 1000000) {
-      yieldScore = 10; // $1M house = OK yields (~4-5%)
-    } else {
-      yieldScore = 16; // Affordable house = good yields (~5-6%)
-    }
+  } else {
+    // NO estimatedValue - assume average property
+    yieldScore = 10;
   }
   points += yieldScore;
   
   // === 3. CASH FLOW SCORE (~30 points) ===
   // Expensive properties = high mortgages = NEGATIVE cash flow
-  let cashFlowScore = 15; // default
-  if (estimatedValue && estimatedValue > 2500000) {
-    cashFlowScore = 3; // $2.5M+ = very negative cash flow (-$800+/wk)
-  } else if (estimatedValue && estimatedValue > 2000000) {
-    cashFlowScore = 6; // $2M+ = negative cash flow (-$600/wk)
-  } else if (estimatedValue && estimatedValue > 1500000) {
-    cashFlowScore = 10; // $1.5M = negative cash flow (-$400/wk)
-  } else if (estimatedValue && estimatedValue > 1000000) {
-    cashFlowScore = 18; // $1M = slightly negative (-$200/wk)
-  } else if (estimatedValue && estimatedValue > 700000) {
-    cashFlowScore = 24; // $700k-$1M = neutral to positive
+  let cashFlowScore = 15; // default (assume slightly negative)
+  if (estimatedValue) {
+    if (estimatedValue > 2500000) {
+      cashFlowScore = 3; // $2.5M+ = very negative cash flow (-$800+/wk)
+    } else if (estimatedValue > 2000000) {
+      cashFlowScore = 6; // $2M+ = negative cash flow (-$600/wk)
+    } else if (estimatedValue > 1500000) {
+      cashFlowScore = 10; // $1.5M = negative cash flow (-$400/wk)
+    } else if (estimatedValue > 1000000) {
+      cashFlowScore = 18; // $1M = slightly negative (-$200/wk)
+    } else if (estimatedValue > 700000) {
+      cashFlowScore = 24; // $700k-$1M = neutral to positive
+    } else {
+      cashFlowScore = 28; // Under $700k = positive cash flow
+    }
   } else {
-    cashFlowScore = 28; // Under $700k = positive cash flow
+    // NO estimatedValue - assume average property with slightly negative cash flow
+    cashFlowScore = 15;
   }
   points += cashFlowScore;
   
