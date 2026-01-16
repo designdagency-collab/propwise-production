@@ -465,21 +465,32 @@ if (document.readyState === 'loading') {
   init();
 }
 
-// Monitor URL changes (for SPA navigation like pagination)
+// Monitor URL changes (for SPA navigation like pagination/sorting)
+let urlChangeTimeout = null;
 setInterval(() => {
   const currentUrl = window.location.href;
   if (currentUrl !== lastUrl) {
-    console.log('[Upblock] URL changed (pagination/filter), clearing old data...');
+    console.log('[Upblock] URL changed (pagination/filter/sort)');
     lastUrl = currentUrl;
     
-    // Clear processed addresses set
-    processedAddresses.clear();
+    // Clear any pending reload
+    if (urlChangeTimeout) {
+      clearTimeout(urlChangeTimeout);
+    }
     
-    // Wait for new content to load, then process
-    setTimeout(() => {
-      console.log('[Upblock] Reprocessing after navigation');
-      init();
-    }, 1000);
+    // Debounce: Wait for URL to stop changing (handles multiple rapid changes during sort)
+    urlChangeTimeout = setTimeout(() => {
+      console.log('[Upblock] URL stable, clearing old data and reprocessing...');
+      
+      // Clear processed addresses set
+      processedAddresses.clear();
+      
+      // Wait longer for REA to finish rendering new content
+      setTimeout(() => {
+        console.log('[Upblock] Reprocessing after navigation');
+        init();
+      }, 1500); // Increased from 1000ms to 1500ms
+    }, 800); // Wait 800ms for URL to stabilize
   }
 }, 500); // Check every 500ms
 
