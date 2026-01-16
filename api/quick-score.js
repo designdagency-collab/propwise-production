@@ -2,7 +2,7 @@
 // Returns just the Upblock Score (0-100) for a given address
 // Much cheaper than full property-insights (2k tokens vs 10k tokens)
 
-import { GoogleGenerativeAI } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -89,7 +89,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Gemini API key not configured' });
     }
 
-    const genAI = new GoogleGenerativeAI(geminiApiKey);
+    const genAI = new GoogleGenAI({ apiKey: geminiApiKey });
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `Analyze this Australian property address and return ONLY a numeric score from 0-100 representing its investment potential.
