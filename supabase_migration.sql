@@ -495,3 +495,38 @@ CREATE TABLE IF NOT EXISTS boom_data_metadata (
 INSERT INTO boom_data_metadata (id, last_refresh, refresh_status)
 VALUES ('main', NOW(), 'pending')
 ON CONFLICT (id) DO NOTHING;
+
+-- ============================================
+-- CHROME EXTENSION - Quick Scores Cache
+-- ============================================
+
+-- Table to cache quick scores for Chrome extension
+CREATE TABLE IF NOT EXISTS quick_scores_cache (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  address_key TEXT NOT NULL UNIQUE,
+  address TEXT NOT NULL,
+  score INTEGER NOT NULL CHECK (score >= 0 AND score <= 100),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  cached_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for fast lookups
+CREATE INDEX IF NOT EXISTS idx_quick_scores_address ON quick_scores_cache(address_key);
+CREATE INDEX IF NOT EXISTS idx_quick_scores_user ON quick_scores_cache(user_id);
+CREATE INDEX IF NOT EXISTS idx_quick_scores_cached ON quick_scores_cache(cached_at);
+
+-- RLS
+ALTER TABLE quick_scores_cache ENABLE ROW LEVEL SECURITY;
+
+-- Users can read their own scores
+DROP POLICY IF EXISTS "Users can read own scores" ON quick_scores_cache;
+CREATE POLICY "Users can read own scores" ON quick_scores_cache
+  FOR SELECT USING (auth.uid() = user_id);
+
+-- Service role full access (for API)
+DROP POLICY IF EXISTS "Service role full access quick_scores" ON quick_scores_cache;
+CREATE POLICY "Service role full access quick_scores" ON quick_scores_cache
+  FOR ALL USING (true);
+
+-- Auto-cleanup old scores (optional, run via cron)
+-- DELETE FROM quick_scores_cache WHERE cached_at < NOW() - INTERVAL '30 days';

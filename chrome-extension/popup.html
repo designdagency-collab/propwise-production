@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upblock Score</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #FAF9F6;
+      color: #1F2937;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      font-size: 32px;
+      font-weight: 700;
+      color: #F59E0B;
+      margin-bottom: 4px;
+    }
+
+    .tagline {
+      font-size: 12px;
+      color: #6B7280;
+    }
+
+    .status {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .status.logged-out {
+      background: #FEF3C7;
+      color: #92400E;
+      border: 1px solid #FDE68A;
+    }
+
+    .status.logged-in {
+      background: #D1FAE5;
+      color: #065F46;
+      border: 1px solid #A7F3D0;
+    }
+
+    .status-icon {
+      margin-right: 6px;
+    }
+
+    .button {
+      width: 100%;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 8px;
+    }
+
+    .button-primary {
+      background: #F59E0B;
+      color: white;
+    }
+
+    .button-primary:hover {
+      background: #D97706;
+    }
+
+    .button-secondary {
+      background: white;
+      color: #1F2937;
+      border: 1px solid #E5E7EB;
+    }
+
+    .button-secondary:hover {
+      background: #F9FAFB;
+    }
+
+    .info {
+      padding: 16px;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #E5E7EB;
+      margin-top: 16px;
+    }
+
+    .info-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #1F2937;
+    }
+
+    .info-text {
+      font-size: 12px;
+      color: #6B7280;
+      line-height: 1.5;
+    }
+
+    .footer {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 11px;
+      color: #9CA3AF;
+    }
+
+    .footer a {
+      color: #F59E0B;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .user-email {
+      font-size: 12px;
+      color: #6B7280;
+      text-align: center;
+      margin-bottom: 12px;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">upblock</div>
+      <div class="tagline">Investment scores on every listing</div>
+    </div>
+
+    <div id="logged-out" class="status logged-out">
+      <span class="status-icon">⚠️</span>
+      Login required
+    </div>
+
+    <div id="logged-in" class="status logged-in" style="display: none;">
+      <span class="status-icon">✓</span>
+      Connected
+    </div>
+
+    <div id="user-email" class="user-email" style="display: none;"></div>
+
+    <button id="login-btn" class="button button-primary">
+      Login to Upblock
+    </button>
+
+    <button id="logout-btn" class="button button-secondary" style="display: none;">
+      Logout
+    </button>
+
+    <div class="info">
+      <div class="info-title">How it works</div>
+      <div class="info-text">
+        Browse properties on realestate.com.au or domain.com.au and see Upblock investment scores instantly on each listing.
+      </div>
+    </div>
+
+    <div class="footer">
+      <a href="https://upblock.ai" target="_blank">Open Upblock</a> • 
+      <a href="https://upblock.ai/terms" target="_blank">Terms</a>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

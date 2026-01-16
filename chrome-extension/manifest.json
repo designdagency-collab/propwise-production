@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "Upblock Score",
+  "version": "1.0.0",
+  "description": "See Upblock investment scores on realestate.com.au and domain.com.au listings",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://www.realestate.com.au/*",
+    "https://realestate.com.au/*",
+    "https://www.domain.com.au/*",
+    "https://domain.com.au/*",
+    "https://upblock.ai/*",
+    "https://www.upblock.ai/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.realestate.com.au/*",
+        "https://realestate.com.au/*",
+        "https://www.domain.com.au/*",
+        "https://domain.com.au/*"
+      ],
+      "js": ["content-script.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
