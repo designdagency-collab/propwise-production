@@ -879,6 +879,15 @@ const App: React.FC = () => {
 
   // Auto-refresh credits when userProfile changes
   useEffect(() => {
+    // CRITICAL SAFETY NET: If we have userProfile but isLoggedIn is false, fix it!
+    // This catches Google OAuth edge cases where profile loads but state doesn't sync
+    if (userProfile?.id && !isLoggedIn) {
+      console.warn('[Auth] 🚨 SAFETY NET: Have userProfile but isLoggedIn=false!');
+      console.warn('[Auth] 🚨 This should not happen - fixing state...');
+      console.log('[Auth] 🚨 Setting isLoggedIn = true for:', userProfile.email);
+      setIsLoggedIn(true);
+    }
+    
     if (userProfile) {
       const state = calculateCreditState(userProfile);
       setCreditState(state);
