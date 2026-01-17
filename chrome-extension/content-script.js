@@ -513,6 +513,78 @@ function showLoadingBanner(total) {
   return banner;
 }
 
+// Extract suburb name from URL or page
+function getSuburbFromPage() {
+  // Try to get from URL first (e.g., /buy/in-castle+hill,+nsw+2154)
+  const url = window.location.href;
+  const match = url.match(/\/buy\/in-([^,/]+)/);
+  
+  if (match) {
+    // Convert "castle+hill" to "Castle Hill"
+    return match[1]
+      .replace(/\+/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+  }
+  
+  // Fallback: try to extract from page title or breadcrumbs
+  const titleMatch = document.title.match(/Properties? (?:for Sale )?in ([^,]+)/i);
+  if (titleMatch) {
+    return titleMatch[1].trim();
+  }
+  
+  return null;
+}
+
+// Get state from URL
+function getStateFromPage() {
+  const url = window.location.href;
+  const match = url.match(/,\+(nsw|vic|qld|wa|sa|tas|nt|act)[\+\d]/i);
+  return match ? match[1].toUpperCase() : null;
+}
+
+// Log high-rated suburb to admin dashboard
+async function logHighRatedSuburb(averageStars, propertyCount) {
+  const suburbName = getSuburbFromPage();
+  const state = getStateFromPage();
+  
+  if (!suburbName) {
+    console.log('[Upblock] Could not determine suburb name from page');
+    return;
+  }
+  
+  const token = await getAuthToken();
+  if (!token) {
+    console.log('[Upblock] No auth token - cannot log suburb');
+    return;
+  }
+  
+  try {
+    console.log('[Upblock] Logging high-rated suburb:', suburbName, state, '- Avg:', averageStars);
+    
+    const response = await fetch('https://upblock.ai/api/admin/high-rated-suburbs', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        suburbName,
+        state,
+        averageStars: parseFloat(averageStars),
+        propertyCount
+      })
+    });
+    
+    if (response.ok) {
+      console.log('[Upblock] ✓ High-rated suburb logged to admin dashboard');
+    }
+  } catch (error) {
+    console.error('[Upblock] Error logging suburb:', error);
+  }
+}
+
 // Update loading banner count and show summary when complete
 function updateLoadingBanner(loaded, total, allScoresData = null) {
   const banner = document.getElementById('upblock-loading-banner');
@@ -536,6 +608,13 @@ function updateLoadingBanner(loaded, total, allScoresData = null) {
           content.innerHTML = `
             <span class="upblock-banner-average">Average: ${avgStars}★</span>
           `;
+        }
+        
+        // Log high-rated suburbs (4.5+) to admin dashboard
+        if (parseFloat(avgStars) >= 4.5) {
+          logHighRatedSuburb(avgStars, total).catch(err => {
+            console.log('[Upblock] Failed to log high-rated suburb:', err);
+          });
         }
       }
       

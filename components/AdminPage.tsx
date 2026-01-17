@@ -92,12 +92,24 @@ interface AdminPageProps {
   onBack: () => void;
 }
 
+interface HighRatedSuburb {
+  id: string;
+  suburb_name: string;
+  state: string | null;
+  average_stars: number;
+  property_count: number | null;
+  discovered_at: string;
+  user_id: string;
+  profiles: { email: string };
+}
+
 export const AdminPage = ({ onBack }: AdminPageProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'revenue'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'revenue' | 'suburbs'>('overview');
   const [timePeriod, setTimePeriod] = useState<'day' | 'week' | 'month' | 'year'>('month');
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [revenue, setRevenue] = useState<Revenue | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [highRatedSuburbs, setHighRatedSuburbs] = useState<HighRatedSuburb[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -156,12 +168,13 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     }
     
     try {
-      const [metricsRes, revenueRes, usersRes, billingRes, visitorsRes] = await Promise.all([
+      const [metricsRes, revenueRes, usersRes, billingRes, visitorsRes, suburbsRes] = await Promise.all([
         supabaseService.authenticatedFetch('/api/admin/metrics'),
         supabaseService.authenticatedFetch('/api/admin/revenue'),
         supabaseService.authenticatedFetch('/api/admin/users?limit=50'),
         supabaseService.authenticatedFetch('/api/admin/billing'),
-        supabaseService.authenticatedFetch('/api/admin/visitors')
+        supabaseService.authenticatedFetch('/api/admin/visitors'),
+        supabaseService.authenticatedFetch('/api/admin/high-rated-suburbs')
       ]);
 
       if (metricsRes.ok) {
@@ -189,6 +202,11 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       if (visitorsRes.ok) {
         const visitorsData = await visitorsRes.json();
         setVisitors(visitorsData);
+      }
+
+      if (suburbsRes.ok) {
+        const suburbsData = await suburbsRes.json();
+        setHighRatedSuburbs(suburbsData.suburbs || []);
       }
 
       setLoading(false);
@@ -487,7 +505,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
             {[
               { id: 'overview', label: 'Overview', icon: 'fa-chart-pie' },
               { id: 'revenue', label: 'Revenue', icon: 'fa-dollar-sign' },
-              { id: 'users', label: 'Users', icon: 'fa-users' }
+              { id: 'users', label: 'Users', icon: 'fa-users' },
+              { id: 'suburbs', label: 'Top Suburbs', icon: 'fa-star' }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -1365,6 +1384,82 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* High-Rated Suburbs Tab */}
+        {activeTab === 'suburbs' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+              <div className="p-6 border-b bg-gradient-to-r from-yellow-50 to-orange-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center">
+                    <i className="fa-solid fa-star text-yellow-600 text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-gray-900">High-Rated Suburbs (4.5★+)</h3>
+                    <p className="text-sm text-gray-600">Suburbs discovered by users with exceptional property ratings</p>
+                  </div>
+                </div>
+              </div>
+
+              {highRatedSuburbs.length === 0 ? (
+                <div className="p-12 text-center">
+                  <i className="fa-solid fa-star text-gray-300 text-5xl mb-4"></i>
+                  <p className="text-gray-500">No high-rated suburbs discovered yet</p>
+                  <p className="text-sm text-gray-400 mt-2">Users will appear here when they scan suburbs with 4.5★+ average</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Suburb</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Avg Rating</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Properties</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Discovered By</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {highRatedSuburbs.map((suburb) => (
+                        <tr key={suburb.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-gray-900">
+                              {suburb.suburb_name}
+                              {suburb.state && <span className="ml-2 text-xs text-gray-500">{suburb.state}</span>}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl font-black text-yellow-600">{suburb.average_stars.toFixed(1)}</span>
+                              <span className="text-yellow-500">★</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-gray-700 font-medium">
+                              {suburb.property_count || 'N/A'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-600">{suburb.profiles.email}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-500">
+                              {new Date(suburb.discovered_at).toLocaleDateString('en-AU', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>
