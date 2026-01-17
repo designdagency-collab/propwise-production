@@ -26,6 +26,10 @@
       // METHOD 3: Check all localStorage keys
       const localKeys = Object.keys(localStorage);
       console.log('[Upblock Injected] All localStorage keys:', localKeys);
+      console.log('[Upblock Injected] Detailed localStorage contents:');
+      localKeys.forEach(key => {
+        console.log(`  - ${key}: ${localStorage.getItem(key)?.substring(0, 50)}...`);
+      });
       
       // METHOD 4: Check all sessionStorage keys
       const sessionKeys = Object.keys(sessionStorage);
