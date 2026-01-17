@@ -55,14 +55,19 @@ const clearCachedProfile = () => {
 
 // Send auth token to Chrome extension (if installed)
 const sendTokenToExtension = async (userEmail: string) => {
+  console.log('[Extension] 🔑 sendTokenToExtension called for:', userEmail);
+  
   try {
+    console.log('[Extension] Getting access token...');
     const token = await supabaseService.getAccessToken();
+    
     if (!token) {
-      console.log('[Extension] No token available');
+      console.warn('[Extension] ❌ No token available from supabaseService');
       return;
     }
     
-    console.log('[Extension] Sending token to extension for:', userEmail);
+    console.log('[Extension] ✅ Got token, length:', token.length);
+    console.log('[Extension] Setting up extension auth...');
     
     // Method 1: Expose on window object (easiest for injected scripts)
     (window as any).__upblock_auth = {
@@ -70,21 +75,23 @@ const sendTokenToExtension = async (userEmail: string) => {
       email: userEmail,
       timestamp: Date.now()
     };
-    console.log('[Extension] ✓ Set window.__upblock_auth');
+    console.log('[Extension] ✅ Set window.__upblock_auth');
     
     // Method 2: Store in localStorage
     localStorage.setItem('upblock_extension_token', token);
     localStorage.setItem('upblock_extension_email', userEmail);
-    console.log('[Extension] ✓ Set localStorage items');
+    console.log('[Extension] ✅ Set localStorage items');
     
     // Method 3: Dispatch custom event
     window.dispatchEvent(new CustomEvent('upblock_auth_ready', {
       detail: { token, email: userEmail }
     }));
-    console.log('[Extension] ✓ Dispatched upblock_auth_ready event');
+    console.log('[Extension] ✅ Dispatched upblock_auth_ready event');
+    console.log('[Extension] 🎉 Token successfully sent to extension!');
     
   } catch (e) {
-    console.error('[Extension] Error sending token:', e);
+    console.error('[Extension] ❌ CRITICAL ERROR sending token:', e);
+    console.error('[Extension] Error details:', e);
   }
 };
 
@@ -650,11 +657,20 @@ const App: React.FC = () => {
             window.history.replaceState({}, document.title, window.location.pathname);
           }
           
-          await handleSessionLogin(session, `onAuthStateChange:${event}`);
+          try {
+            await handleSessionLogin(session, `onAuthStateChange:${event}`);
+          } catch (err) {
+            console.error('[Auth] handleSessionLogin error (non-critical):', err);
+          }
           
           // Send token to extension for ALL auth events (including SIGNED_IN from Google OAuth)
-          console.log('[Auth] Sending token to extension after', event);
-          await sendTokenToExtension(session.user.email || '');
+          console.log('[Auth] 🔑 Sending token to extension after', event);
+          try {
+            await sendTokenToExtension(session.user.email || '');
+            console.log('[Auth] ✅ sendTokenToExtension completed');
+          } catch (err) {
+            console.error('[Auth] ❌ sendTokenToExtension failed:', err);
+          }
           
           // Return to idle if user has credits
           if (appState === AppState.LIMIT_REACHED && remainingCredits > 0) {
