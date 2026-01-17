@@ -194,6 +194,9 @@ const App: React.FC = () => {
   // Flag to prevent LIMIT_REACHED immediately after signup (race condition fix)
   const justSignedUpRef = useRef(false);
   
+  // Flag to prevent isLoggedIn from being reset to false after successful OAuth login
+  const justLoggedInViaOAuthRef = useRef(false);
+  
   // Derived from userProfile (Supabase is source of truth)
   const userEmail = userProfile?.email || '';
   const userPhone = userProfile?.phone || '';
@@ -559,6 +562,18 @@ const App: React.FC = () => {
       
       console.log('[Auth] Login successful from', source, 'for:', session.user.email);
       console.log('[Auth] Setting isLoggedIn = true');
+      
+      // CRITICAL: Mark that we just logged in via OAuth to prevent race conditions
+      if (source.includes('onAuthStateChange') || source.includes('OAuth') || source.includes('SIGNED_IN')) {
+        justLoggedInViaOAuthRef.current = true;
+        console.log('[Auth] 🛡️ OAuth login detected - setting protection flag');
+        // Clear the flag after 5 seconds (enough time for all async operations)
+        setTimeout(() => {
+          justLoggedInViaOAuthRef.current = false;
+          console.log('[Auth] 🛡️ OAuth protection flag cleared');
+        }, 5000);
+      }
+      
       setIsLoggedIn(true);
       setShowEmailAuth(false);
       setShowPricing(false); // Close any open modals
@@ -620,7 +635,7 @@ const App: React.FC = () => {
               setTimeout(() => retryGetSession(attempt + 1, maxAttempts), 500 * attempt);
             } else {
               // Check if auth was already handled by onAuthStateChange before clearing
-              if (authHandledByListener) {
+              if (authHandledByListener || justLoggedInViaOAuthRef.current) {
                 console.log('[Auth] ⚠️ Retry failed but onAuthStateChange already handled auth - skipping reset');
                 return;
               }
@@ -643,12 +658,15 @@ const App: React.FC = () => {
           }, 300);
         } else {
           // No session and no OAuth - clear any stale cached data
-          if (getCachedProfile()) {
+          // BUT: Don't clear if we just logged in via OAuth (race condition protection)
+          if (getCachedProfile() && !justLoggedInViaOAuthRef.current) {
             console.log('[Auth] No session but cache exists - clearing stale cache');
             clearCachedProfile();
             setIsLoggedIn(false);
             setUserProfile(null);
             setIsAdmin(false);
+          } else if (justLoggedInViaOAuthRef.current) {
+            console.log('[Auth] 🛡️ Skipping cache clear - OAuth login in progress');
           }
         }
       } catch (err: any) {
@@ -717,6 +735,8 @@ const App: React.FC = () => {
           }
         } else if (event === 'SIGNED_OUT') {
           console.log('[Auth] Sign out event received');
+          // Clear OAuth protection flag on explicit sign out
+          justLoggedInViaOAuthRef.current = false;
           clearCachedProfile(); // Clear cache for instant UI update
           setIsLoggedIn(false);
           setUserProfile(null);
@@ -936,6 +956,15 @@ const App: React.FC = () => {
       }
     }
   }, [userProfile, isLoggedIn, appState]);
+
+  // DEBUG: Track isLoggedIn state changes to diagnose OAuth issues
+  useEffect(() => {
+    console.log('[DEBUG] 🔍 isLoggedIn changed:', isLoggedIn);
+    console.log('[DEBUG] 🔍 userProfile:', userProfile ? { id: userProfile.id, email: userProfile.email } : null);
+    console.log('[DEBUG] 🔍 appState:', appState);
+    console.log('[DEBUG] 🔍 OAuth protection:', justLoggedInViaOAuthRef.current);
+    console.log('[DEBUG] 🔍 Will show landing page?', !isLoggedIn && appState === AppState.IDLE);
+  }, [isLoggedIn, userProfile, appState]);
 
   const checkSearchLimit = () => {
     // API key users bypass limits
@@ -1172,6 +1201,9 @@ const App: React.FC = () => {
 
   const handleLogout = async () => {
     console.log('Logout clicked');
+    
+    // Clear OAuth protection flag on explicit logout
+    justLoggedInViaOAuthRef.current = false;
     
     // Clear cached profile first (for instant UI update on next refresh)
     clearCachedProfile();
@@ -1886,6 +1918,15 @@ const App: React.FC = () => {
     setError(result.error || 'Failed to start checkout. Please try again.');
     setAppState(AppState.ERROR);
   };
+
+  // DEBUG: Log render state to diagnose OAuth login issues
+  console.log('[RENDER] 🎨 Current state:', { 
+    isLoggedIn, 
+    hasUserProfile: !!userProfile, 
+    appState,
+    willShowLandingPage: !isLoggedIn && appState === AppState.IDLE,
+    oAuthProtection: justLoggedInViaOAuthRef.current
+  });
 
   return (
     <div className="min-h-screen pb-20 selection:bg-[#C9A961] selection:text-white" style={{ backgroundColor: 'var(--bg-primary)' }}>
