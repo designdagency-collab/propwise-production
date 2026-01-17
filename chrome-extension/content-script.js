@@ -524,29 +524,23 @@ function updateLoadingBanner(loaded, total, allScoresData = null) {
       countEl.textContent = `${loaded}/${total}`;
     }
     
-    // Show summary when complete
+    // Show simple average when complete
     if (loaded >= total && allScoresData && allScoresData.length > 0) {
       const validScores = allScoresData.filter(d => d.interestStars);
       
       if (validScores.length > 0) {
         const avgStars = (validScores.reduce((sum, d) => sum + d.interestStars, 0) / validScores.length).toFixed(1);
-        const starCounts = [0, 0, 0, 0, 0, 0]; // index 0 unused, 1-5 for stars
-        validScores.forEach(d => starCounts[d.interestStars]++);
         
-        // Replace loading content with summary (no advice/interpretation)
+        // Replace with simple average display
         if (content) {
           content.innerHTML = `
-            ${total} properties analyzed | Avg: ${avgStars}★ | 
-            ${starCounts[5]} five-star, ${starCounts[4]} four-star, ${starCounts[3]} three-star
+            <span class="upblock-banner-average">Average: ${avgStars}★</span>
           `;
         }
       }
       
-      // Auto-hide after showing summary
-      setTimeout(() => {
-        banner.style.opacity = '0';
-        setTimeout(() => banner.remove(), 300);
-      }, 4000); // Show for 4 seconds
+      // Keep visible - user can reference while browsing
+      // Don't auto-hide anymore
     }
   }
 }
