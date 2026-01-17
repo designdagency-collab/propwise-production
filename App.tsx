@@ -59,7 +59,16 @@ const sendTokenToExtension = async (userEmail: string) => {
   
   try {
     console.log('[Extension] Getting access token...');
-    const token = await supabaseService.getAccessToken();
+    
+    // Add timeout to prevent hanging (2 second max)
+    const timeoutPromise = new Promise<null>((_, reject) => 
+      setTimeout(() => reject(new Error('getAccessToken timeout')), 2000)
+    );
+    
+    const token = await Promise.race([
+      supabaseService.getAccessToken(),
+      timeoutPromise
+    ]) as string | null;
     
     if (!token) {
       console.warn('[Extension] ❌ No token available from supabaseService');
@@ -583,12 +592,16 @@ const App: React.FC = () => {
         console.log('[Auth] User logged in - ensuring search interface is visible');
       }
       
-      // Send auth token to Chrome extension (if installed)
-      await sendTokenToExtension(session.user.email || '');
-      
-      // Load user data from Supabase (sets userProfile which derives email/phone)
+      // Load user data from Supabase FIRST (sets userProfile which derives email/phone)
       // Pass access_token directly to avoid timing issues where getSession() returns null
+      console.log('[Auth] About to call loadUserData...');
       await loadUserData(session.user.id, session.access_token);
+      console.log('[Auth] loadUserData completed');
+      
+      // Send auth token to Chrome extension in background (non-blocking)
+      sendTokenToExtension(session.user.email || '').catch(err => {
+        console.error('[Auth] sendTokenToExtension failed (non-critical):', err);
+      });
       refreshCreditState();
       
       // Clean up OAuth hash from URL if present
@@ -699,13 +712,11 @@ const App: React.FC = () => {
           }
           
           // Send token to extension for ALL auth events (including SIGNED_IN from Google OAuth)
+          // Run in background - don't block auth flow
           console.log('[Auth] 🔑 Sending token to extension after', event);
-          try {
-            await sendTokenToExtension(session.user.email || '');
-            console.log('[Auth] ✅ sendTokenToExtension completed');
-          } catch (err) {
-            console.error('[Auth] ❌ sendTokenToExtension failed:', err);
-          }
+          sendTokenToExtension(session.user.email || '').catch(err => {
+            console.error('[Auth] ❌ sendTokenToExtension failed (non-critical):', err);
+          });
           
           // Return to idle if user has credits
           if (appState === AppState.LIMIT_REACHED && remainingCredits > 0) {
@@ -1143,8 +1154,10 @@ const App: React.FC = () => {
         userLoggedIn = true;
         email = user.email || '';
         
-        // Send token to extension on session recovery
-        await sendTokenToExtension(user.email || '');
+        // Send token to extension on session recovery (non-blocking)
+        sendTokenToExtension(user.email || '').catch(err => {
+          console.error('[Auth] sendTokenToExtension failed (non-critical):', err);
+        });
       }
     }
     
@@ -1883,8 +1896,10 @@ const App: React.FC = () => {
         userLoggedIn = true;
         email = user.email || '';
         
-        // Send token to extension on session recovery
-        await sendTokenToExtension(user.email || '');
+        // Send token to extension on session recovery (non-blocking)
+        sendTokenToExtension(user.email || '').catch(err => {
+          console.error('[Auth] sendTokenToExtension failed (non-critical):', err);
+        });
       }
     }
     
