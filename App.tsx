@@ -619,6 +619,11 @@ const App: React.FC = () => {
               // Try again with exponential backoff
               setTimeout(() => retryGetSession(attempt + 1, maxAttempts), 500 * attempt);
             } else {
+              // Check if auth was already handled by onAuthStateChange before clearing
+              if (authHandledByListener) {
+                console.log('[Auth] ⚠️ Retry failed but onAuthStateChange already handled auth - skipping reset');
+                return;
+              }
               console.log('[Auth] OAuth flow completed but no session established after retries');
               // Clear stale cache if session couldn't be established
               clearCachedProfile();
@@ -627,7 +632,15 @@ const App: React.FC = () => {
             }
           };
           
-          setTimeout(() => retryGetSession(1, 5), 300);
+          // Only start retry if onAuthStateChange hasn't handled it yet
+          setTimeout(() => {
+            if (!authHandledByListener) {
+              console.log('[Auth] Starting OAuth session retry (onAuthStateChange hasn\'t fired yet)');
+              retryGetSession(1, 5);
+            } else {
+              console.log('[Auth] Skipping retry - onAuthStateChange already handled auth');
+            }
+          }, 300);
         } else {
           // No session and no OAuth - clear any stale cached data
           if (getCachedProfile()) {
@@ -643,6 +656,9 @@ const App: React.FC = () => {
       }
     };
     
+    // Track if auth was successfully handled by onAuthStateChange
+    let authHandledByListener = false;
+    
     // Set up auth state listener FIRST (before initAuth)
     // This ensures we catch the SIGNED_IN event from OAuth processing
     const { data: { subscription } } = supabaseService.supabase!.auth.onAuthStateChange(
@@ -651,6 +667,7 @@ const App: React.FC = () => {
         
         // Handle OAuth callback completion or any sign in
         if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session) {
+          authHandledByListener = true; // Mark as handled
           // Clean up OAuth hash from URL if present
           if (window.location.hash.includes('access_token')) {
             console.log('[Auth] Cleaning OAuth hash from URL');
