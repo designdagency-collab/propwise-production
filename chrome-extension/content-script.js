@@ -506,7 +506,6 @@ function showLoadingBanner(total) {
   banner.innerHTML = `
     <div class="upblock-banner-content">
       <i class="upblock-spinner">⏳</i>
-      <span class="upblock-banner-text">Loading Upblock Scores...</span>
       <span class="upblock-banner-count">0/${total}</span>
     </div>
   `;
@@ -519,7 +518,7 @@ function updateLoadingBanner(loaded, total, allScoresData = null) {
   const banner = document.getElementById('upblock-loading-banner');
   if (banner) {
     const countEl = banner.querySelector('.upblock-banner-count');
-    const textEl = banner.querySelector('.upblock-banner-text');
+    const content = banner.querySelector('.upblock-banner-content');
     
     if (countEl) {
       countEl.textContent = `${loaded}/${total}`;
@@ -534,11 +533,9 @@ function updateLoadingBanner(loaded, total, allScoresData = null) {
         const starCounts = [0, 0, 0, 0, 0, 0]; // index 0 unused, 1-5 for stars
         validScores.forEach(d => starCounts[d.interestStars]++);
         
-        const mostCommon = starCounts.indexOf(Math.max(...starCounts.slice(1)));
-        
-        // Show data summary (no advice/interpretation)
-        if (textEl) {
-          textEl.innerHTML = `
+        // Replace loading content with summary (no advice/interpretation)
+        if (content) {
+          content.innerHTML = `
             ${total} properties analyzed | Avg: ${avgStars}★ | 
             ${starCounts[5]} five-star, ${starCounts[4]} four-star, ${starCounts[3]} three-star
           `;
