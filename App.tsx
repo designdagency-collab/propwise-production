@@ -1919,10 +1919,23 @@ const App: React.FC = () => {
     setAppState(AppState.ERROR);
   };
 
+  // CRITICAL RENDER-TIME FIX: If we have userProfile but isLoggedIn is false, fix it IMMEDIATELY
+  // This is more aggressive than useEffect - runs synchronously during render
+  if (userProfile?.id && !isLoggedIn) {
+    console.error('[RENDER] 🚨 CRITICAL: Have userProfile but isLoggedIn=false! Fixing immediately...');
+    console.error('[RENDER] 🚨 Profile:', { id: userProfile.id, email: userProfile.email, plan: userProfile.plan_type });
+    // Use setTimeout to avoid setState during render
+    setTimeout(() => {
+      console.error('[RENDER] 🚨 Setting isLoggedIn = true NOW');
+      setIsLoggedIn(true);
+    }, 0);
+  }
+
   // DEBUG: Log render state to diagnose OAuth login issues
   console.log('[RENDER] 🎨 Current state:', { 
     isLoggedIn, 
     hasUserProfile: !!userProfile, 
+    userProfileId: userProfile?.id,
     appState,
     willShowLandingPage: !isLoggedIn && appState === AppState.IDLE,
     oAuthProtection: justLoggedInViaOAuthRef.current
