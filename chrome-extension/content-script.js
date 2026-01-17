@@ -661,9 +661,18 @@ setInterval(() => {
       
       // Wait even longer for REA to finish rendering new content (pagination can be slow)
       setTimeout(() => {
-        console.log('[Upblock] Reprocessing after pagination/navigation');
+        console.log('[Upblock] Reprocessing after pagination/navigation (3.5s delay)');
         init();
-      }, 2500); // Increased to 2500ms for pagination
+        
+        // Sometimes REA lazy-loads, so retry again if no listings found
+        setTimeout(() => {
+          const listings = findListings();
+          console.log('[Upblock] Pagination double-check: found', listings.length, 'listings');
+          if (listings.length > 0) {
+            init();
+          }
+        }, 2000); // Check again 2s later
+      }, 3500); // Increased to 3500ms for pagination
     }, 1000); // Wait 1000ms for URL to stabilize
   }
 }, 500); // Check every 500ms
