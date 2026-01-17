@@ -514,21 +514,42 @@ function showLoadingBanner(total) {
   return banner;
 }
 
-// Update loading banner count
-function updateLoadingBanner(loaded, total) {
+// Update loading banner count and show summary when complete
+function updateLoadingBanner(loaded, total, allScoresData = null) {
   const banner = document.getElementById('upblock-loading-banner');
   if (banner) {
     const countEl = banner.querySelector('.upblock-banner-count');
+    const textEl = banner.querySelector('.upblock-banner-text');
+    
     if (countEl) {
       countEl.textContent = `${loaded}/${total}`;
     }
     
-    // Remove banner when complete
-    if (loaded >= total) {
+    // Show summary when complete
+    if (loaded >= total && allScoresData && allScoresData.length > 0) {
+      const validScores = allScoresData.filter(d => d.interestStars);
+      
+      if (validScores.length > 0) {
+        const avgStars = (validScores.reduce((sum, d) => sum + d.interestStars, 0) / validScores.length).toFixed(1);
+        const starCounts = [0, 0, 0, 0, 0, 0]; // index 0 unused, 1-5 for stars
+        validScores.forEach(d => starCounts[d.interestStars]++);
+        
+        const mostCommon = starCounts.indexOf(Math.max(...starCounts.slice(1)));
+        
+        // Show data summary (no advice/interpretation)
+        if (textEl) {
+          textEl.innerHTML = `
+            ${total} properties analyzed | Avg: ${avgStars}★ | 
+            ${starCounts[5]} five-star, ${starCounts[4]} four-star, ${starCounts[3]} three-star
+          `;
+        }
+      }
+      
+      // Auto-hide after showing summary
       setTimeout(() => {
         banner.style.opacity = '0';
         setTimeout(() => banner.remove(), 300);
-      }, 500);
+      }, 4000); // Show for 4 seconds
     }
   }
 }
@@ -547,6 +568,7 @@ async function processListings(listings, token) {
   // Show loading banner
   const banner = showLoadingBanner(listings.length);
   let loadedCount = 0;
+  const allScoresData = []; // Track all scores for summary
 
   // Process visible listings first
   const visibleListings = listings.slice(0, CONFIG.BATCH_SIZE);
@@ -566,7 +588,8 @@ async function processListings(listings, token) {
     if (data !== null) {
       injectScoreBadge(listing, data);
       loadedCount++;
-      updateLoadingBanner(loadedCount, listings.length);
+      allScoresData.push(data); // Store for summary
+      updateLoadingBanner(loadedCount, listings.length, allScoresData);
       console.log(`[Upblock] ✓ Loaded ${loadedCount}/${listings.length} - ${listing.address.substring(0,30)} - Stars: ${data.interestStars}★, Value: ${data.estimatedValue ? formatPrice(data.estimatedValue) : 'N/A'}`);
     }
   }
@@ -574,12 +597,12 @@ async function processListings(listings, token) {
   // Process remaining listings lazily (when user scrolls)
   if (listings.length > CONFIG.BATCH_SIZE) {
     console.log('[Upblock] Remaining', listings.length - CONFIG.BATCH_SIZE, 'listings will load on scroll');
-    observeScroll(listings.slice(CONFIG.BATCH_SIZE), token, loadedCount, listings.length, comparables);
+    observeScroll(listings.slice(CONFIG.BATCH_SIZE), token, loadedCount, listings.length, comparables, allScoresData);
   }
 }
 
 // Observe scroll to load scores for listings as they come into view
-function observeScroll(remainingListings, token, initialLoadedCount, totalCount, comparables = []) {
+function observeScroll(remainingListings, token, initialLoadedCount, totalCount, comparables = [], allScoresData = []) {
   let loadedCount = initialLoadedCount;
   
   const observer = new IntersectionObserver((entries) => {
@@ -594,7 +617,8 @@ function observeScroll(remainingListings, token, initialLoadedCount, totalCount,
           if (data !== null) {
             injectScoreBadge(listing, data);
             loadedCount++;
-            updateLoadingBanner(loadedCount, totalCount);
+            allScoresData.push(data); // Store for summary
+            updateLoadingBanner(loadedCount, totalCount, allScoresData);
             console.log(`[Upblock] ✓ Loaded ${loadedCount}/${totalCount} (on scroll) - Stars: ${data.interestStars}★, Value: ${data.estimatedValue ? formatPrice(data.estimatedValue) : 'N/A'}`);
           }
         }
