@@ -55,14 +55,10 @@ const clearCachedProfile = () => {
 
 // Send auth token to Chrome extension (if installed)
 const sendTokenToExtension = async (userEmail: string) => {
-  console.log('[Extension] 🔑 sendTokenToExtension called for:', userEmail);
-  
   try {
-    console.log('[Extension] Getting access token...');
-    
     // Add timeout to prevent hanging (2 second max)
     const timeoutPromise = new Promise<null>((_, reject) => 
-      setTimeout(() => reject(new Error('getAccessToken timeout')), 2000)
+      setTimeout(() => reject(new Error('timeout')), 2000)
     );
     
     const token = await Promise.race([
@@ -70,36 +66,23 @@ const sendTokenToExtension = async (userEmail: string) => {
       timeoutPromise
     ]) as string | null;
     
-    if (!token) {
-      console.warn('[Extension] ❌ No token available from supabaseService');
-      return;
-    }
+    if (!token) return;
     
-    console.log('[Extension] ✅ Got token, length:', token.length);
-    console.log('[Extension] Setting up extension auth...');
-    
-    // Method 1: Expose on window object (easiest for injected scripts)
+    // Store token for extension
     (window as any).__upblock_auth = {
       token: token,
       email: userEmail,
       timestamp: Date.now()
     };
-    console.log('[Extension] ✅ Set window.__upblock_auth');
-    
-    // Method 2: Store in localStorage
     localStorage.setItem('upblock_extension_token', token);
     localStorage.setItem('upblock_extension_email', userEmail);
-    console.log('[Extension] ✅ Set localStorage items');
-    
-    // Method 3: Dispatch custom event
     window.dispatchEvent(new CustomEvent('upblock_auth_ready', {
       detail: { token, email: userEmail }
     }));
-    console.log('[Extension] ✅ Dispatched upblock_auth_ready event');
-    console.log('[Extension] 🎉 Token successfully sent to extension!');
+    console.log('[Extension] ✓ Token synced');
     
   } catch (e) {
-    console.error('[Extension] ❌ CRITICAL ERROR sending token:', e);
+    // Extension sync is optional - fail silently
     console.error('[Extension] Error details:', e);
   }
 };
@@ -569,34 +552,22 @@ const App: React.FC = () => {
         return;
       }
       
-      console.log('[Auth] Login successful from', source, 'for:', session.user.email);
-      console.log('[Auth] Setting isLoggedIn = true');
+      console.log('[Auth] ✓ Login successful:', session.user.email);
       
       // CRITICAL: Mark that we just logged in via OAuth to prevent race conditions
       if (source.includes('onAuthStateChange') || source.includes('OAuth') || source.includes('SIGNED_IN')) {
         justLoggedInViaOAuthRef.current = true;
-        console.log('[Auth] 🛡️ OAuth login detected - setting protection flag');
-        // Clear the flag after 5 seconds (enough time for all async operations)
         setTimeout(() => {
           justLoggedInViaOAuthRef.current = false;
-          console.log('[Auth] 🛡️ OAuth protection flag cleared');
         }, 5000);
       }
       
       setIsLoggedIn(true);
       setShowEmailAuth(false);
-      setShowPricing(false); // Close any open modals
-      
-      // CRITICAL: Ensure we're not stuck on landing page
-      if (appState === AppState.IDLE) {
-        console.log('[Auth] User logged in - ensuring search interface is visible');
-      }
+      setShowPricing(false);
       
       // Load user data from Supabase FIRST (sets userProfile which derives email/phone)
-      // Pass access_token directly to avoid timing issues where getSession() returns null
-      console.log('[Auth] About to call loadUserData...');
       await loadUserData(session.user.id, session.access_token);
-      console.log('[Auth] loadUserData completed');
       
       // Send auth token to Chrome extension in background (non-blocking)
       sendTokenToExtension(session.user.email || '').catch(err => {
@@ -711,12 +682,8 @@ const App: React.FC = () => {
             console.error('[Auth] handleSessionLogin error (non-critical):', err);
           }
           
-          // Send token to extension for ALL auth events (including SIGNED_IN from Google OAuth)
-          // Run in background - don't block auth flow
-          console.log('[Auth] 🔑 Sending token to extension after', event);
-          sendTokenToExtension(session.user.email || '').catch(err => {
-            console.error('[Auth] ❌ sendTokenToExtension failed (non-critical):', err);
-          });
+          // Send token to extension in background (non-blocking)
+          sendTokenToExtension(session.user.email || '').catch(() => {});
           
           // Return to idle if user has credits
           if (appState === AppState.LIMIT_REACHED && remainingCredits > 0) {
@@ -862,22 +829,17 @@ const App: React.FC = () => {
   // Load user data from Supabase and sync credit state
   // Can optionally pass accessToken directly (for OAuth where session isn't synced yet)
   const loadUserData = async (userId?: string, accessToken?: string) => {
-    console.log('[loadUserData] Called with userId:', userId, 'hasToken:', !!accessToken);
-    
-    // Using server-side API now, no delay needed
+    console.log('[loadUserData] Loading profile for userId:', userId);
     
     try {
       // Pass userId and accessToken directly to avoid getUser() hanging during OAuth
       const profile = await supabaseService.getCurrentProfile(userId, accessToken);
-      console.log('[loadUserData] Got profile:', profile ? { id: profile.id, search_count: profile.search_count, credit_topups: profile.credit_topups, plan_type: profile.plan_type } : null);
       
       if (profile) {
-        console.log('[loadUserData] Profile found - setting user state');
         setUserProfile(profile);
         
         // CRITICAL: Ensure isLoggedIn is true when we have a profile
         setIsLoggedIn(true);
-        console.log('[loadUserData] Set isLoggedIn = true');
         
         // Check admin status
         const adminStatus = profile.is_admin === true;
@@ -889,19 +851,7 @@ const App: React.FC = () => {
         // Use billingService for consistent credit calculation (single source of truth)
         const state = calculateCreditState(profile);
         const calculatedCredits = getRemainingCredits(state);
-        
-        console.log('[loadUserData] Calculated from Supabase:', {
-          profile: { 
-            search_count: profile.search_count, 
-            credit_topups: profile.credit_topups,
-            plan_type: profile.plan_type,
-            pro_used: profile.pro_used,
-            pro_month: profile.pro_month,
-            is_admin: profile.is_admin
-          },
-          calculatedCredits,
-          plan: state.plan
-        });
+        console.log('[loadUserData] ✓ Profile loaded:', profile.plan_type, 'credits:', calculatedCredits);
         
         // IMPORTANT: Set ALL credit-related state immediately to avoid stale state issues
         setCreditState(state);  // This is what checkSearchLimit() uses!
@@ -913,18 +863,12 @@ const App: React.FC = () => {
           setAppState(prev => prev === AppState.LIMIT_REACHED ? AppState.IDLE : prev);
         }
       } else {
-        console.warn('[loadUserData] No profile found - user may need to complete signup');
-        // Profile doesn't exist yet, but user is authenticated
-        // Keep isLoggedIn = true so they see search interface, not landing page
+        console.warn('[loadUserData] No profile found - keeping user logged in');
         setIsLoggedIn(true);
-        console.log('[loadUserData] Set isLoggedIn = true even without profile');
       }
     } catch (error) {
-      console.error('[loadUserData] Error loading user data:', error);
-      // Even if profile loading fails, keep user logged in
-      // They can still use search interface, just might show 0 credits temporarily
+      console.error('[loadUserData] Error:', error);
       setIsLoggedIn(true);
-      console.warn('[loadUserData] Profile load failed but set isLoggedIn = true anyway');
     }
   };
 
@@ -943,11 +887,8 @@ const App: React.FC = () => {
   // Auto-refresh credits when userProfile changes
   useEffect(() => {
     // CRITICAL SAFETY NET: If we have userProfile but isLoggedIn is false, fix it!
-    // This catches Google OAuth edge cases where profile loads but state doesn't sync
     if (userProfile?.id && !isLoggedIn) {
-      console.warn('[Auth] 🚨 SAFETY NET: Have userProfile but isLoggedIn=false!');
-      console.warn('[Auth] 🚨 This should not happen - fixing state...');
-      console.log('[Auth] 🚨 Setting isLoggedIn = true for:', userProfile.email);
+      console.warn('[Auth] Safety net: Syncing isLoggedIn state');
       setIsLoggedIn(true);
     }
     
@@ -967,15 +908,6 @@ const App: React.FC = () => {
       }
     }
   }, [userProfile, isLoggedIn, appState]);
-
-  // DEBUG: Track isLoggedIn state changes to diagnose OAuth issues
-  useEffect(() => {
-    console.log('[DEBUG] 🔍 isLoggedIn changed:', isLoggedIn);
-    console.log('[DEBUG] 🔍 userProfile:', userProfile ? { id: userProfile.id, email: userProfile.email } : null);
-    console.log('[DEBUG] 🔍 appState:', appState);
-    console.log('[DEBUG] 🔍 OAuth protection:', justLoggedInViaOAuthRef.current);
-    console.log('[DEBUG] 🔍 Will show landing page?', !isLoggedIn && appState === AppState.IDLE);
-  }, [isLoggedIn, userProfile, appState]);
 
   const checkSearchLimit = () => {
     // API key users bypass limits
@@ -1934,28 +1866,8 @@ const App: React.FC = () => {
     setAppState(AppState.ERROR);
   };
 
-  // CRITICAL RENDER-TIME FIX: If we have userProfile but isLoggedIn is false, fix it IMMEDIATELY
-  // This is more aggressive than useEffect - runs synchronously during render
-  if (userProfile?.id && !isLoggedIn) {
-    console.error('[RENDER] 🚨 CRITICAL: Have userProfile but isLoggedIn=false! Fixing immediately...');
-    console.error('[RENDER] 🚨 Profile:', { id: userProfile.id, email: userProfile.email, plan: userProfile.plan_type });
-    // Use setTimeout to avoid setState during render
-    setTimeout(() => {
-      console.error('[RENDER] 🚨 Setting isLoggedIn = true NOW');
-      setIsLoggedIn(true);
-    }, 0);
-  }
-
-  // DEBUG: Log render state to diagnose OAuth login issues
-  console.log('[RENDER] 🎨 Current state:', { 
-    isLoggedIn, 
-    hasUserProfile: !!userProfile, 
-    userProfileId: userProfile?.id,
-    appState,
-    willShowLandingPage: !isLoggedIn && appState === AppState.IDLE,
-    oAuthProtection: justLoggedInViaOAuthRef.current
-  });
-
+  // Safety net handled by useEffect (line ~936) - no need for render-time fix now that login works
+  
   return (
     <div className="min-h-screen pb-20 selection:bg-[#C9A961] selection:text-white" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <Navbar 
