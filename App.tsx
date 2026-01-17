@@ -551,9 +551,15 @@ const App: React.FC = () => {
       }
       
       console.log('[Auth] Login successful from', source, 'for:', session.user.email);
+      console.log('[Auth] Setting isLoggedIn = true');
       setIsLoggedIn(true);
       setShowEmailAuth(false);
       setShowPricing(false); // Close any open modals
+      
+      // CRITICAL: Ensure we're not stuck on landing page
+      if (appState === AppState.IDLE) {
+        console.log('[Auth] User logged in - ensuring search interface is visible');
+      }
       
       // Send auth token to Chrome extension (if installed)
       await sendTokenToExtension(session.user.email || '');
@@ -803,7 +809,12 @@ const App: React.FC = () => {
       console.log('[loadUserData] Got profile:', profile ? { id: profile.id, search_count: profile.search_count, credit_topups: profile.credit_topups, plan_type: profile.plan_type } : null);
       
       if (profile) {
+        console.log('[loadUserData] Profile found - setting user state');
         setUserProfile(profile);
+        
+        // CRITICAL: Ensure isLoggedIn is true when we have a profile
+        setIsLoggedIn(true);
+        console.log('[loadUserData] Set isLoggedIn = true');
         
         // Check admin status
         const adminStatus = profile.is_admin === true;
@@ -839,10 +850,18 @@ const App: React.FC = () => {
           setAppState(prev => prev === AppState.LIMIT_REACHED ? AppState.IDLE : prev);
         }
       } else {
-        console.log('[loadUserData] No profile found - user may need to complete signup');
+        console.warn('[loadUserData] No profile found - user may need to complete signup');
+        // Profile doesn't exist yet, but user is authenticated
+        // Keep isLoggedIn = true so they see search interface, not landing page
+        setIsLoggedIn(true);
+        console.log('[loadUserData] Set isLoggedIn = true even without profile');
       }
     } catch (error) {
-      console.error('[Credits] Error loading user data:', error);
+      console.error('[loadUserData] Error loading user data:', error);
+      // Even if profile loading fails, keep user logged in
+      // They can still use search interface, just might show 0 credits temporarily
+      setIsLoggedIn(true);
+      console.warn('[loadUserData] Profile load failed but set isLoggedIn = true anyway');
     }
   };
 
