@@ -53,6 +53,31 @@ function getCurrentSite() {
   return null;
 }
 
+// Parse price text into numeric value (handles $2.65m, $850k, $2,650,000 formats)
+function parsePriceText(priceText) {
+  if (!priceText) return null;
+  
+  const text = priceText.toLowerCase().trim();
+  
+  // Match price with optional decimal and suffix: $2.65m, $850k, $2,650,000
+  const match = text.match(/\$\s*([\d,]+\.?\d*)\s*(m|mil|million|k|thousand)?/i);
+  
+  if (!match) return null;
+  
+  let value = parseFloat(match[1].replace(/,/g, ''));
+  const suffix = match[2];
+  
+  if (suffix) {
+    if (suffix.startsWith('m')) {
+      value *= 1000000; // million
+    } else if (suffix.startsWith('k') || suffix.startsWith('t')) {
+      value *= 1000; // thousand
+    }
+  }
+  
+  return Math.round(value);
+}
+
 // Extract comparable prices from other listings on the page
 function extractComparablePrices() {
   const site = getCurrentSite();
@@ -67,14 +92,10 @@ function extractComparablePrices() {
     
     const priceEl = card.querySelector('.property-price, [class*="price"], [data-testid*="price"]');
     const priceText = priceEl?.textContent?.trim();
-    const priceMatch = priceText?.match(/\$[\d,]+/);
+    const priceNum = parsePriceText(priceText);
     
-    if (priceMatch) {
-      const priceStr = priceMatch[0];
-      const priceNum = parseInt(priceStr.replace(/[$,]/g, ''));
-      if (!isNaN(priceNum) && priceNum > 0) {
-        comparables.push(priceNum);
-      }
+    if (priceNum && priceNum > 0) {
+      comparables.push(priceNum);
     }
   });
   
@@ -142,27 +163,33 @@ function extractListings() {
         priceType = 'contact';
         reaPrice = null; // Don't show price, will fall back to AI estimate
         reaPriceNumeric = null;
-      } else if (lowerPrice.includes('auction') && !reaPriceText.match(/\$[\d,]+/)) {
-        // Only treat as auction if no price shown (some say "Auction - $500k guide")
-        priceType = 'auction';
-        reaPrice = null;
-        reaPriceNumeric = null;
+      } else if (lowerPrice.includes('auction')) {
+        // Check if auction has a guide price (e.g., "Auction - $2.65m guide")
+        const guidePrice = parsePriceText(reaPriceText);
+        if (guidePrice) {
+          // Auction with guide price - treat as range
+          priceType = 'range';
+          reaPrice = `${formatPrice(guidePrice)}+`;
+          reaPriceNumeric = guidePrice;
+        } else {
+          // Auction with no guide price
+          priceType = 'auction';
+          reaPrice = null;
+          reaPriceNumeric = null;
+        }
       } else if (lowerPrice.includes('over') || lowerPrice.includes('from') || lowerPrice.includes('interest')) {
-        // "Buyers Interest over $550,000" or "From $750,000"
+        // "Buyers Interest over $550,000" or "From $750,000" or "From $2.65m"
         priceType = 'range';
-        const priceMatch = reaPriceText.match(/\$[\d,]+/);
-        // Show formatted amount with + indicator
-        if (priceMatch) {
-          const numValue = parseInt(priceMatch[0].replace(/[$,]/g, ''));
+        const numValue = parsePriceText(reaPriceText);
+        if (numValue) {
           reaPrice = `${formatPrice(numValue)}+`;
           reaPriceNumeric = numValue; // Store for calculations
         }
       } else {
-        // Standard price format
-        const priceMatch = reaPriceText.match(/\$[\d,]+/);
-        if (priceMatch) {
-          const numValue = parseInt(priceMatch[0].replace(/[$,]/g, ''));
-          reaPrice = formatPrice(priceMatch[0]);
+        // Standard price format: "$2,650,000" or "$2.65m" or "$850k"
+        const numValue = parsePriceText(reaPriceText);
+        if (numValue) {
+          reaPrice = formatPrice(numValue);
           reaPriceNumeric = numValue; // Store for calculations
         }
       }
