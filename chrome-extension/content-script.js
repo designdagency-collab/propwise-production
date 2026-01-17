@@ -546,22 +546,26 @@ function getStateFromPage() {
 
 // Log high-rated suburb to admin dashboard
 async function logHighRatedSuburb(averageStars, propertyCount) {
+  console.log('[Upblock] 🌟 High-rated suburb detected! Avg:', averageStars);
+  
   const suburbName = getSuburbFromPage();
   const state = getStateFromPage();
   
+  console.log('[Upblock] Extracted suburb:', suburbName, state);
+  
   if (!suburbName) {
-    console.log('[Upblock] Could not determine suburb name from page');
+    console.warn('[Upblock] ❌ Could not determine suburb name from page URL:', window.location.href);
     return;
   }
   
   const token = await getAuthToken();
   if (!token) {
-    console.log('[Upblock] No auth token - cannot log suburb');
+    console.warn('[Upblock] ❌ No auth token - cannot log suburb (user needs to login)');
     return;
   }
   
   try {
-    console.log('[Upblock] Logging high-rated suburb:', suburbName, state, '- Avg:', averageStars);
+    console.log('[Upblock] 📤 Logging to admin dashboard:', suburbName, state, '- Avg:', averageStars, '★');
     
     const response = await fetch('https://upblock.ai/api/admin/high-rated-suburbs', {
       method: 'POST',
@@ -578,10 +582,14 @@ async function logHighRatedSuburb(averageStars, propertyCount) {
     });
     
     if (response.ok) {
-      console.log('[Upblock] ✓ High-rated suburb logged to admin dashboard');
+      const data = await response.json();
+      console.log('[Upblock] ✅ High-rated suburb logged to admin dashboard!', data);
+    } else {
+      const errorText = await response.text();
+      console.error('[Upblock] ❌ API error:', response.status, errorText);
     }
   } catch (error) {
-    console.error('[Upblock] Error logging suburb:', error);
+    console.error('[Upblock] ❌ Network error logging suburb:', error);
   }
 }
 
