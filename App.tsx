@@ -652,10 +652,9 @@ const App: React.FC = () => {
           
           await handleSessionLogin(session, `onAuthStateChange:${event}`);
           
-          // Send token to extension (for already-logged-in users)
-          if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
-            await sendTokenToExtension(session.user.email || '');
-          }
+          // Send token to extension for ALL auth events (including SIGNED_IN from Google OAuth)
+          console.log('[Auth] Sending token to extension after', event);
+          await sendTokenToExtension(session.user.email || '');
           
           // Return to idle if user has credits
           if (appState === AppState.LIMIT_REACHED && remainingCredits > 0) {
