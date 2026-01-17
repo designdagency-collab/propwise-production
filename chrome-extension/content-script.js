@@ -131,6 +131,7 @@ function extractListings() {
     const reaPriceText = priceEl?.textContent?.trim();
     
     let reaPrice = null;
+    let reaPriceNumeric = null; // Store numeric value for API calculations
     let priceType = 'exact'; // 'exact', 'range', 'contact', 'auction'
     
     if (reaPriceText) {
@@ -140,10 +141,12 @@ function extractListings() {
       if (lowerPrice.includes('contact') || lowerPrice.includes('express your interest')) {
         priceType = 'contact';
         reaPrice = null; // Don't show price, will fall back to AI estimate
+        reaPriceNumeric = null;
       } else if (lowerPrice.includes('auction') && !reaPriceText.match(/\$[\d,]+/)) {
         // Only treat as auction if no price shown (some say "Auction - $500k guide")
         priceType = 'auction';
         reaPrice = null;
+        reaPriceNumeric = null;
       } else if (lowerPrice.includes('over') || lowerPrice.includes('from') || lowerPrice.includes('interest')) {
         // "Buyers Interest over $550,000" or "From $750,000"
         priceType = 'range';
@@ -152,11 +155,16 @@ function extractListings() {
         if (priceMatch) {
           const numValue = parseInt(priceMatch[0].replace(/[$,]/g, ''));
           reaPrice = `${formatPrice(numValue)}+`;
+          reaPriceNumeric = numValue; // Store for calculations
         }
       } else {
         // Standard price format
         const priceMatch = reaPriceText.match(/\$[\d,]+/);
-        reaPrice = priceMatch ? formatPrice(priceMatch[0]) : null;
+        if (priceMatch) {
+          const numValue = parseInt(priceMatch[0].replace(/[$,]/g, ''));
+          reaPrice = formatPrice(priceMatch[0]);
+          reaPriceNumeric = numValue; // Store for calculations
+        }
       }
     }
     
@@ -189,6 +197,7 @@ function extractListings() {
       card,
       address,
       reaPrice,  // Actual price from REA (or null if hidden)
+      reaPriceNumeric, // Numeric value for API calculations
       priceType, // 'exact', 'range', 'contact', 'auction'
       selectors
     };
@@ -210,7 +219,7 @@ async function getAuthToken() {
 }
 
 // Fetch score and value from API
-async function fetchScore(address, token, comparables = []) {
+async function fetchScore(address, token, comparables = [], askingPrice = null) {
   try {
     const response = await fetch(CONFIG.API_URL, {
       method: 'POST',
@@ -218,7 +227,7 @@ async function fetchScore(address, token, comparables = []) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ address, comparables })
+      body: JSON.stringify({ address, comparables, askingPrice })
     });
 
     if (!response.ok) {
@@ -520,7 +529,7 @@ async function processListings(listings, token) {
   for (const listing of visibleListings) {
     const loadingBadge = showLoadingBadge(listing.card);
     
-    const data = await fetchScore(listing.address, token, comparables);
+    const data = await fetchScore(listing.address, token, comparables, listing.reaPriceNumeric);
     
     // Remove loading badge
     if (loadingBadge) {
@@ -553,7 +562,7 @@ function observeScroll(remainingListings, token, initialLoadedCount, totalCount,
         if (listing && !listing.processed) {
           listing.processed = true;
           const loadingBadge = showLoadingBadge(listing.card);
-          const data = await fetchScore(listing.address, token, comparables);
+          const data = await fetchScore(listing.address, token, comparables, listing.reaPriceNumeric);
           if (loadingBadge) loadingBadge.remove();
           if (data !== null) {
             injectScoreBadge(listing, data);

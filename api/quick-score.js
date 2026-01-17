@@ -375,7 +375,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Invalid token' });
   }
 
-  const { address, comparables } = req.body;
+  const { address, comparables, askingPrice } = req.body;
 
   if (!address) {
     return res.status(400).json({ error: 'Address is required' });
@@ -383,7 +383,11 @@ export default async function handler(req, res) {
 
   // Normalize address for cache key (MUST match property-insights.js)
   const addressKey = normalizeAddress(address);
-  console.log('[QuickScore] Address normalization:', { original: address, normalized: addressKey });
+  console.log('[QuickScore] Request:', { 
+    address: address.substring(0, 50), 
+    normalized: addressKey.substring(0, 50),
+    askingPrice: askingPrice ? `$${(askingPrice/1000).toFixed(0)}k` : 'not provided'
+  });
   
   // Log comparables if provided
   if (comparables && comparables.length > 0) {
@@ -479,8 +483,10 @@ export default async function handler(req, res) {
       if (cacheAge < sevenDays) {
         console.log('[QuickScore] Cache hit for:', address);
         
-        // Calculate interest rating from cached data
-        const interestRating = calculateInterestRating(address, cachedScore.estimated_value);
+        // Calculate interest rating - use askingPrice if available, otherwise cached estimate
+        const valueForCalculation = askingPrice || cachedScore.estimated_value;
+        console.log('[QuickScore] Using value:', askingPrice ? `$${(askingPrice/1000).toFixed(0)}k (asking price)` : `$${(cachedScore.estimated_value/1000).toFixed(0)}k (cached estimate)`);
+        const interestRating = calculateInterestRating(address, valueForCalculation);
         
         // Detect combined lot (use same logic as calculateInterestRating)
         const addressLower = address.toLowerCase();
@@ -678,8 +684,10 @@ Return ONLY valid JSON, no other text.`;
         onConflict: 'address_key'
       });
 
-    // Calculate Interest Rating (1-5 stars)
-    const interestRating = calculateInterestRating(address, estimatedValue);
+    // Calculate Interest Rating (1-5 stars) - use askingPrice if available, otherwise AI estimate
+    const valueForCalculation = askingPrice || estimatedValue;
+    console.log('[QuickScore] Using value for stars:', askingPrice ? `$${(askingPrice/1000).toFixed(0)}k (asking price)` : estimatedValue ? `$${(estimatedValue/1000).toFixed(0)}k (AI estimate)` : 'none');
+    const interestRating = calculateInterestRating(address, valueForCalculation);
     
     // Detect if combined lot for special messaging (use same logic as calculateInterestRating)
     const addressLower = address.toLowerCase();
