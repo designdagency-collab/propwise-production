@@ -829,41 +829,44 @@ const App: React.FC = () => {
   // Load user data from Supabase and sync credit state
   // Can optionally pass accessToken directly (for OAuth where session isn't synced yet)
   const loadUserData = async (userId?: string, accessToken?: string) => {
-    console.log('[loadUserData] Loading profile for userId:', userId);
+    // Check cache FIRST for instant UI (while fetching fresh data)
+    const cached = getCachedProfile();
+    if (cached?.profile) {
+      console.log('[loadUserData] Using cached profile (instant UI)');
+      setUserProfile(cached.profile);
+      setIsLoggedIn(true);
+      setIsAdmin(cached.isAdmin);
+      const state = calculateCreditState(cached.profile);
+      setCreditState(state);
+      setRemainingCredits(getRemainingCredits(state));
+      setPlan(state.plan);
+    }
     
+    // Then fetch fresh data in background
     try {
-      // Pass userId and accessToken directly to avoid getUser() hanging during OAuth
       const profile = await supabaseService.getCurrentProfile(userId, accessToken);
       
       if (profile) {
+        // Update with fresh data
         setUserProfile(profile);
-        
-        // CRITICAL: Ensure isLoggedIn is true when we have a profile
         setIsLoggedIn(true);
-        
-        // Check admin status
         const adminStatus = profile.is_admin === true;
         setIsAdmin(adminStatus);
-        
-        // Cache profile for instant header display on refresh
         setCachedProfile(profile, adminStatus);
         
-        // Use billingService for consistent credit calculation (single source of truth)
         const state = calculateCreditState(profile);
         const calculatedCredits = getRemainingCredits(state);
-        console.log('[loadUserData] ✓ Profile loaded:', profile.plan_type, 'credits:', calculatedCredits);
+        console.log('[loadUserData] ✓ Fresh profile:', profile.plan_type, 'credits:', calculatedCredits);
         
-        // IMPORTANT: Set ALL credit-related state immediately to avoid stale state issues
-        setCreditState(state);  // This is what checkSearchLimit() uses!
+        setCreditState(state);
         setRemainingCredits(calculatedCredits);
         setPlan(state.plan);
         
-        // Return to home if was on limit reached screen and now has credits
         if (canAudit(state)) {
           setAppState(prev => prev === AppState.LIMIT_REACHED ? AppState.IDLE : prev);
         }
       } else {
-        console.warn('[loadUserData] No profile found - keeping user logged in');
+        console.warn('[loadUserData] No profile found');
         setIsLoggedIn(true);
       }
     } catch (error) {
