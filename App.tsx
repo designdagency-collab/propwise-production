@@ -4,6 +4,7 @@ import PropertyResults from './components/PropertyResults';
 import Pricing from './components/Pricing';
 import PhoneVerification from './components/PhoneVerification';
 import PhoneRecoveryModal from './components/PhoneRecoveryModal';
+import SellerInterestModal from './components/SellerInterestModal';
 import EmailAuth from './components/EmailAuth';
 import TermsAndConditions from './components/TermsAndConditions';
 import AccountSettings from './components/AccountSettings';
@@ -154,6 +155,8 @@ const App: React.FC = () => {
   const [showTerms, setShowTerms] = useState(false);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const [showPhoneRecovery, setShowPhoneRecovery] = useState(false);
+  const [showSellerInterest, setShowSellerInterest] = useState(false);
+  const [sellerInterestData, setSellerInterestData] = useState<{ address: string; price: number } | null>(null);
   // Initialize from cache for instant header display
   const [userProfile, setUserProfile] = useState<any>(() => getCachedProfile()?.profile || null);
   const [searchHistory, setSearchHistory] = useState<{ address: string; created_at: string }[]>([]);
@@ -1678,6 +1681,11 @@ const App: React.FC = () => {
     }
   };
 
+  const handleSellerInterest = (address: string, price: number) => {
+    setSellerInterestData({ address, price });
+    setShowSellerInterest(true);
+  };
+
   const handleHome = useCallback(() => {
     setAppState(AppState.IDLE);
     setResults(null);
@@ -2138,6 +2146,7 @@ const App: React.FC = () => {
               isConfirming={isConfirmingData}
               isConfirmed={isDataConfirmed}
               onConfirmData={handleConfirmData}
+              onSellerInterest={handleSellerInterest}
             />
           )}
 
@@ -2283,6 +2292,25 @@ const App: React.FC = () => {
         onSendInvite={sendReferralInvite}
         isLoading={isGeneratingReferralCode}
       />
+
+      {/* Seller Interest Modal */}
+      {showSellerInterest && sellerInterestData && (
+        <SellerInterestModal
+          onClose={() => {
+            setShowSellerInterest(false);
+            setSellerInterestData(null);
+          }}
+          propertyAddress={sellerInterestData.address}
+          targetPrice={sellerInterestData.price}
+          userProfile={userProfile}
+          isLoggedIn={isLoggedIn}
+          onLoginRequired={() => {
+            setShowSellerInterest(false);
+            setEmailAuthMode('signup');
+            setShowEmailAuth(true);
+          }}
+        />
+      )}
 
       {/* Admin Page - Full Screen */}
       {showAdminDashboard && (

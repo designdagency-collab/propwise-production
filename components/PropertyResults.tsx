@@ -33,6 +33,7 @@ interface PropertyResultsProps {
   isConfirming?: boolean;
   isConfirmed?: boolean;
   onConfirmData?: () => void;
+  onSellerInterest?: (address: string, price: number) => void;
 }
 
 // Whitelist of strategies that support AI visualization
@@ -79,7 +80,8 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   maxRefreshes = 3,
   isConfirming = false,
   isConfirmed = false,
-  onConfirmData
+  onConfirmData,
+  onSellerInterest
 }) => {
   const [selectedStrategies, setSelectedStrategies] = useState<Set<number>>(new Set());
   const [isExporting, setIsExporting] = useState(false);
@@ -1221,6 +1223,16 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                 <p className={`text-xl sm:text-2xl font-black transition-colors whitespace-nowrap ${effectiveSelection.size > 0 ? 'text-[#8A9A6D]' : ''}`} style={{ color: effectiveSelection.size > 0 ? '#8A9A6D' : 'var(--text-primary)' }}>
                    {baseline === undefined ? 'TBA' : effectiveSelection.size === 0 ? formatValue(baseline) : `${formatValue(afterLow)} – ${formatValue(afterHigh)}`}
                 </p>
+                {onSellerInterest && afterHigh && (
+                  <button
+                    onClick={() => onSellerInterest(address, afterHigh)}
+                    data-no-pdf="true"
+                    className="mt-2 text-[9px] font-bold uppercase tracking-widest text-[#8A9A6D] hover:text-[#6A7A4D] transition-colors flex items-center gap-1"
+                  >
+                    <i className="fa-solid fa-hand-point-up"></i>
+                    Interested in selling at this price?
+                  </button>
+                )}
              </div>
              <div className="space-y-0.5" data-pdf-kpi>
                 <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Growth (5yr)</p>

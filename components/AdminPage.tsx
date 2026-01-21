@@ -103,13 +103,27 @@ interface HighRatedSuburb {
   profiles: { email: string };
 }
 
+interface SellerLead {
+  id: string;
+  property_address: string;
+  target_price: number;
+  name: string;
+  phone: string | null;
+  email: string;
+  notes: string | null;
+  created_at: string;
+  user_id: string;
+  profiles: { email: string; phone: string };
+}
+
 export const AdminPage = ({ onBack }: AdminPageProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'revenue' | 'suburbs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'revenue' | 'suburbs' | 'leads'>('overview');
   const [timePeriod, setTimePeriod] = useState<'day' | 'week' | 'month' | 'year'>('month');
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [revenue, setRevenue] = useState<Revenue | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [highRatedSuburbs, setHighRatedSuburbs] = useState<HighRatedSuburb[]>([]);
+  const [sellerLeads, setSellerLeads] = useState<SellerLead[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -168,13 +182,14 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     }
     
     try {
-      const [metricsRes, revenueRes, usersRes, billingRes, visitorsRes, suburbsRes] = await Promise.all([
+      const [metricsRes, revenueRes, usersRes, billingRes, visitorsRes, suburbsRes, leadsRes] = await Promise.all([
         supabaseService.authenticatedFetch('/api/admin/metrics'),
         supabaseService.authenticatedFetch('/api/admin/revenue'),
         supabaseService.authenticatedFetch('/api/admin/users?limit=50'),
         supabaseService.authenticatedFetch('/api/admin/billing'),
         supabaseService.authenticatedFetch('/api/admin/visitors'),
-        supabaseService.authenticatedFetch('/api/admin/high-rated-suburbs')
+        supabaseService.authenticatedFetch('/api/admin/high-rated-suburbs'),
+        supabaseService.authenticatedFetch('/api/seller-interest')
       ]);
 
       if (metricsRes.ok) {
@@ -207,6 +222,11 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       if (suburbsRes.ok) {
         const suburbsData = await suburbsRes.json();
         setHighRatedSuburbs(suburbsData.suburbs || []);
+      }
+
+      if (leadsRes.ok) {
+        const leadsData = await leadsRes.json();
+        setSellerLeads(leadsData.leads || []);
       }
 
       setLoading(false);
@@ -506,7 +526,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
               { id: 'overview', label: 'Overview', icon: 'fa-chart-pie' },
               { id: 'revenue', label: 'Revenue', icon: 'fa-dollar-sign' },
               { id: 'users', label: 'Users', icon: 'fa-users' },
-              { id: 'suburbs', label: 'Top Suburbs', icon: 'fa-star' }
+              { id: 'suburbs', label: 'Top Suburbs', icon: 'fa-star' },
+              { id: 'leads', label: 'Seller Leads', icon: 'fa-home' }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -1447,6 +1468,87 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                           <td className="px-6 py-4">
                             <span className="text-sm text-gray-500">
                               {new Date(suburb.discovered_at).toLocaleDateString('en-AU', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Seller Leads Tab */}
+        {activeTab === 'leads' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+              <div className="p-6 border-b bg-gradient-to-r from-green-50 to-emerald-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+                    <i className="fa-solid fa-home text-green-600 text-xl"></i>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-gray-900">Seller Interest Leads</h3>
+                    <p className="text-sm text-gray-600">Users interested in selling at their property's improved value</p>
+                  </div>
+                </div>
+              </div>
+
+              {sellerLeads.length === 0 ? (
+                <div className="p-12 text-center">
+                  <i className="fa-solid fa-home text-gray-300 text-5xl mb-4"></i>
+                  <p className="text-gray-500">No seller leads yet</p>
+                  <p className="text-sm text-gray-400 mt-2">Leads will appear when users express interest in selling</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Property Address</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Target Price</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Contact</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Notes</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {sellerLeads.map((lead) => (
+                        <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-gray-900">{lead.property_address}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-xl font-black text-green-600">
+                              ${lead.target_price.toLocaleString()}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="space-y-1">
+                              <div className="font-bold text-gray-900">{lead.name}</div>
+                              <div className="text-sm text-gray-600">{lead.email}</div>
+                              {lead.phone && (
+                                <div className="text-sm text-gray-600">
+                                  <i className="fa-solid fa-phone mr-1"></i>
+                                  {lead.phone}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm text-gray-600 max-w-xs">
+                              {lead.notes || <span className="text-gray-400 italic">No notes</span>}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-500">
+                              {new Date(lead.created_at).toLocaleDateString('en-AU', {
                                 day: 'numeric',
                                 month: 'short',
                                 year: 'numeric'
