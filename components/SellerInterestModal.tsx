@@ -1,92 +1,70 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabaseService } from '../services/supabaseService';
 
 interface SellerInterestModalProps {
   onClose: () => void;
   propertyAddress: string;
   targetPrice: number;
+  valueAddStrategies: any[];
   userProfile: any;
   isLoggedIn: boolean;
-  onLoginRequired: () => void;
 }
 
 const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
   onClose,
   propertyAddress,
   targetPrice,
+  valueAddStrategies,
   userProfile,
-  isLoggedIn,
-  onLoginRequired
+  isLoggedIn
 }) => {
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [notes, setNotes] = useState('');
+  const [step, setStep] = useState(1); // 1: Improvements, 2: Contact Details
+  const [completedImprovements, setCompletedImprovements] = useState<Set<number>>(new Set());
+  const [name, setName] = useState(userProfile?.full_name || '');
+  const [phone, setPhone] = useState(userProfile?.phone || '');
+  const [additionalNotes, setAdditionalNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Pre-fill form from user profile
-  useEffect(() => {
-    if (userProfile) {
-      setName(userProfile.full_name || '');
-      setPhone(userProfile.phone || '');
-      setEmail(userProfile.email || '');
+  const toggleImprovement = (index: number) => {
+    const newSet = new Set(completedImprovements);
+    if (newSet.has(index)) {
+      newSet.delete(index);
+    } else {
+      newSet.add(index);
     }
-  }, [userProfile]);
+    setCompletedImprovements(newSet);
+  };
 
-  // Check if logged in
-  if (!isLoggedIn) {
-    return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={onClose}>
-        <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
-          <div className="text-center space-y-6">
-            <div className="w-16 h-16 rounded-2xl bg-[#C9A961]/10 flex items-center justify-center mx-auto">
-              <i className="fa-solid fa-user-plus text-[#C9A961] text-2xl"></i>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Create an Account</h3>
-              <p className="text-gray-600">Sign up to express interest in selling your property</p>
-            </div>
-            <button
-              onClick={() => {
-                onClose();
-                onLoginRequired();
-              }}
-              className="w-full py-4 bg-[#C9A961] text-white font-bold rounded-xl hover:bg-[#B8985 1] transition-all uppercase tracking-widest text-sm"
-            >
-              Create Free Account
-            </button>
-            <button
-              onClick={onClose}
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleSubmit = async () => {
+    if (!name.trim() || !phone.trim()) {
+      setError('Please provide your name and phone number');
+      return;
+    }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
     setSubmitting(true);
     setError(null);
 
+    // Build improvements completed list
+    const completedList = Array.from(completedImprovements).map(idx => 
+      valueAddStrategies[idx]?.title || 'Unknown'
+    );
+
     try {
-      const response = await supabaseService.authenticatedFetch('/api/seller-interest', {
+      const response = await fetch('https://upblock.ai/api/seller-interest', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': isLoggedIn && userProfile ? `Bearer ${await supabaseService.getAccessToken()}` : ''
         },
         body: JSON.stringify({
           propertyAddress,
           targetPrice,
           name: name.trim(),
           phone: phone.trim(),
-          email: email.trim(),
-          notes: notes.trim()
+          email: userProfile?.email || '', // Use profile email if logged in
+          notes: `Completed improvements: ${completedList.join(', ')}${additionalNotes ? `\n\nAdditional notes: ${additionalNotes}` : ''}`
         })
       });
 
@@ -94,7 +72,7 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
         setSuccess(true);
         setTimeout(() => {
           onClose();
-        }, 2000);
+        }, 2500);
       } else {
         const data = await response.json();
         setError(data.error || 'Failed to submit. Please try again.');
@@ -115,24 +93,109 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
           </div>
           <div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h3>
-            <p className="text-gray-600">Your interest has been recorded. We'll be in touch soon.</p>
+            <p className="text-gray-600">We'll be in touch soon to discuss your property sale.</p>
           </div>
         </div>
       </div>
     );
   }
 
+  // Step 1: Improvements Questionnaire
+  if (step === 1) {
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={onClose}>
+        <div className="bg-white rounded-3xl p-8 max-w-3xl w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-[#C9A961]/10 flex items-center justify-center">
+                <i className="fa-solid fa-hammer text-[#C9A961] text-xl"></i>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">Property Improvements</h3>
+                <p className="text-sm text-gray-500">Which improvements have you completed?</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center transition-colors"
+            >
+              <i className="fa-solid fa-xmark text-gray-400 text-xl"></i>
+            </button>
+          </div>
+
+          {/* Property Info */}
+          <div className="bg-gradient-to-r from-[#C9A961]/5 to-[#8A9A6D]/5 rounded-2xl p-6 mb-6">
+            <div className="space-y-2">
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Your Property</p>
+              <p className="text-lg font-bold text-gray-900">{propertyAddress}</p>
+              <p className="text-xs text-gray-500">Potential sale price: <span className="font-bold text-[#C9A961]">${targetPrice.toLocaleString()}</span></p>
+            </div>
+          </div>
+
+          {/* Improvements Checklist */}
+          <div className="space-y-3 mb-6">
+            <p className="text-sm font-bold text-gray-700">Select the improvements you've already completed:</p>
+            {valueAddStrategies.map((strategy, index) => (
+              <label
+                key={index}
+                className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  completedImprovements.has(index)
+                    ? 'border-[#8A9A6D] bg-[#8A9A6D]/5'
+                    : 'border-gray-200 hover:border-[#C9A961]/30'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={completedImprovements.has(index)}
+                  onChange={() => toggleImprovement(index)}
+                  className="w-5 h-5 rounded border-gray-300 text-[#8A9A6D] focus:ring-[#8A9A6D]"
+                />
+                <div className="flex-1">
+                  <p className="font-bold text-gray-900">{strategy.title}</p>
+                  {strategy.estimatedUplift && (
+                    <p className="text-xs text-gray-500">
+                      Value uplift: ${strategy.estimatedUplift.low?.toLocaleString()} - ${strategy.estimatedUplift.high?.toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              </label>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 py-4 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all uppercase tracking-widest text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => setStep(2)}
+              className="flex-1 py-4 bg-[#C9A961] text-white font-bold rounded-xl hover:bg-[#B89851] transition-all uppercase tracking-widest text-sm"
+            >
+              Next: Contact Details
+              <i className="fa-solid fa-arrow-right ml-2"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Step 2: Contact Details
+  // Step 2: Contact Details
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-3xl p-8 max-w-xl w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-[#C9A961]/10 flex items-center justify-center">
-              <i className="fa-solid fa-home text-[#C9A961] text-xl"></i>
+              <i className="fa-solid fa-user text-[#C9A961] text-xl"></i>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900">Interested in Selling?</h3>
-              <p className="text-sm text-gray-500">Let us know about your property</p>
+              <h3 className="text-2xl font-bold text-gray-900">Contact Details</h3>
+              <p className="text-sm text-gray-500">How can we reach you?</p>
             </div>
           </div>
           <button
@@ -143,28 +206,24 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
           </button>
         </div>
 
-        {/* Property Details */}
-        <div className="bg-gradient-to-r from-[#C9A961]/5 to-[#C9A961]/10 rounded-2xl p-6 mb-6">
-          <div className="space-y-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Property Address</p>
-              <p className="text-lg font-bold text-gray-900">{propertyAddress}</p>
-            </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-1">Target Sale Price</p>
-              <p className="text-2xl font-black text-[#C9A961]">
-                ${targetPrice.toLocaleString()}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">Based on minor post-improvement value</p>
-            </div>
+        {/* Summary of selections */}
+        <div className="bg-gradient-to-r from-[#C9A961]/5 to-[#8A9A6D]/5 rounded-2xl p-4 mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <i className="fa-solid fa-check-circle text-[#8A9A6D]"></i>
+            <p className="text-sm font-bold text-gray-700">
+              {completedImprovements.size} improvement{completedImprovements.size !== 1 ? 's' : ''} completed
+            </p>
           </div>
+          <p className="text-xs text-gray-600">
+            Target price: <span className="font-bold text-[#C9A961]">${targetPrice.toLocaleString()}</span>
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           {/* Name */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
-              Full Name *
+              Your Name *
             </label>
             <input
               type="text"
@@ -172,34 +231,20 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
               onChange={(e) => setName(e.target.value)}
               required
               className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C9A961] focus:border-transparent"
-              placeholder="Enter your full name"
-            />
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              Email *
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C9A961] focus:border-transparent"
-              placeholder="your@email.com"
+              placeholder="Enter your name"
             />
           </div>
 
           {/* Phone */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
-              Phone Number
+              Phone Number *
             </label>
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              required
               className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C9A961] focus:border-transparent"
               placeholder="+61 4XX XXX XXX"
             />
@@ -208,14 +253,14 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
           {/* Additional Notes */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
-              Additional Notes
+              Additional Information (Optional)
             </label>
             <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={4}
+              value={additionalNotes}
+              onChange={(e) => setAdditionalNotes(e.target.value)}
+              rows={3}
               className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C9A961] focus:border-transparent resize-none"
-              placeholder="Tell us about your property, timeline, or any other details..."
+              placeholder="Timeline, special circumstances, etc..."
             />
           </div>
 
@@ -227,17 +272,17 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
             </div>
           )}
 
-          {/* Submit Button */}
+          {/* Submit Buttons */}
           <div className="flex gap-3 pt-4">
             <button
-              type="button"
-              onClick={onClose}
+              onClick={() => setStep(1)}
               className="flex-1 py-4 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all uppercase tracking-widest text-sm"
             >
-              Cancel
+              <i className="fa-solid fa-arrow-left mr-2"></i>
+              Back
             </button>
             <button
-              type="submit"
+              onClick={handleSubmit}
               disabled={submitting}
               className={`flex-1 py-4 bg-[#C9A961] text-white font-bold rounded-xl transition-all uppercase tracking-widest text-sm ${
                 submitting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#B89851]'
@@ -249,14 +294,14 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
                   Submitting...
                 </>
               ) : (
-                'Submit Interest'
+                'Submit'
               )}
             </button>
           </div>
-        </form>
+        </div>
 
         <p className="text-xs text-gray-400 text-center mt-6">
-          By submitting, you agree to be contacted about your property sale interest.
+          By submitting, you agree to be contacted about selling your property.
         </p>
       </div>
     </div>

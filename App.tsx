@@ -156,7 +156,7 @@ const App: React.FC = () => {
   const [showAccountSettings, setShowAccountSettings] = useState(false);
   const [showPhoneRecovery, setShowPhoneRecovery] = useState(false);
   const [showSellerInterest, setShowSellerInterest] = useState(false);
-  const [sellerInterestData, setSellerInterestData] = useState<{ address: string; price: number } | null>(null);
+  const [sellerInterestData, setSellerInterestData] = useState<{ address: string; price: number; strategies: any[] } | null>(null);
   // Initialize from cache for instant header display
   const [userProfile, setUserProfile] = useState<any>(() => getCachedProfile()?.profile || null);
   const [searchHistory, setSearchHistory] = useState<{ address: string; created_at: string }[]>([]);
@@ -1681,8 +1681,8 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSellerInterest = (address: string, price: number) => {
-    setSellerInterestData({ address, price });
+  const handleSellerInterest = (address: string, price: number, strategies: any[]) => {
+    setSellerInterestData({ address, price, strategies });
     setShowSellerInterest(true);
   };
 
@@ -2302,13 +2302,9 @@ const App: React.FC = () => {
           }}
           propertyAddress={sellerInterestData.address}
           targetPrice={sellerInterestData.price}
+          valueAddStrategies={sellerInterestData.strategies}
           userProfile={userProfile}
           isLoggedIn={isLoggedIn}
-          onLoginRequired={() => {
-            setShowSellerInterest(false);
-            setEmailAuthMode('signup');
-            setShowEmailAuth(true);
-          }}
         />
       )}
 

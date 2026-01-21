@@ -33,7 +33,7 @@ interface PropertyResultsProps {
   isConfirming?: boolean;
   isConfirmed?: boolean;
   onConfirmData?: () => void;
-  onSellerInterest?: (address: string, price: number) => void;
+  onSellerInterest?: (address: string, price: number, strategies: any[]) => void;
 }
 
 // Whitelist of strategies that support AI visualization
@@ -1223,13 +1223,13 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                 <p className={`text-xl sm:text-2xl font-black transition-colors whitespace-nowrap ${effectiveSelection.size > 0 ? 'text-[#8A9A6D]' : ''}`} style={{ color: effectiveSelection.size > 0 ? '#8A9A6D' : 'var(--text-primary)' }}>
                    {baseline === undefined ? 'TBA' : effectiveSelection.size === 0 ? formatValue(baseline) : `${formatValue(afterLow)} – ${formatValue(afterHigh)}`}
                 </p>
-                {onSellerInterest && afterHigh && (
+                {onSellerInterest && afterHigh && data.valueAddStrategies && (
                   <button
-                    onClick={() => onSellerInterest(address, afterHigh)}
+                    onClick={() => onSellerInterest(address, afterHigh, data.valueAddStrategies)}
                     data-no-pdf="true"
-                    className="mt-3 px-4 py-2 rounded-lg bg-gradient-to-r from-[#C9A961]/10 to-[#8A9A6D]/10 border border-[#C9A961]/20 hover:border-[#C9A961]/40 transition-all group relative overflow-hidden"
+                    className="seller-interest-button mt-3 px-5 py-3 rounded-xl bg-gradient-to-r from-[#C9A961] to-[#8A9A6D] hover:from-[#D4B872] hover:to-[#9AAA7D] transition-all duration-300 group"
                   >
-                    <span className="seller-interest-shimmer text-[10px] font-bold uppercase tracking-widest text-[#8A9A6D] group-hover:text-[#6A7A4D] transition-colors flex items-center gap-2 relative z-10">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white flex items-center gap-2 relative z-10">
                       <i className="fa-solid fa-sparkles"></i>
                       Interested in selling at this price?
                     </span>
