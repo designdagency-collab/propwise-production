@@ -1227,10 +1227,12 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                   <button
                     onClick={() => onSellerInterest(address, afterHigh)}
                     data-no-pdf="true"
-                    className="mt-2 text-[9px] font-bold uppercase tracking-widest text-[#8A9A6D] hover:text-[#6A7A4D] transition-colors flex items-center gap-1"
+                    className="mt-3 px-4 py-2 rounded-lg bg-gradient-to-r from-[#C9A961]/10 to-[#8A9A6D]/10 border border-[#C9A961]/20 hover:border-[#C9A961]/40 transition-all group relative overflow-hidden"
                   >
-                    <i className="fa-solid fa-hand-point-up"></i>
-                    Interested in selling at this price?
+                    <span className="seller-interest-shimmer text-[10px] font-bold uppercase tracking-widest text-[#8A9A6D] group-hover:text-[#6A7A4D] transition-colors flex items-center gap-2 relative z-10">
+                      <i className="fa-solid fa-sparkles"></i>
+                      Interested in selling at this price?
+                    </span>
                   </button>
                 )}
              </div>
