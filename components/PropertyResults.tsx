@@ -1217,6 +1217,18 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
              <div className="space-y-0.5" data-pdf-kpi>
                 <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Estimated Value</p>
                 <p className="text-xl sm:text-2xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
+                {onSellerInterest && data?.valueSnapshot?.indicativeMidpoint && (
+                  <button
+                    onClick={() => onSellerInterest(address, data.valueSnapshot.indicativeMidpoint, [])}
+                    data-no-pdf="true"
+                    className="mt-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#B8864A]/10 to-[#B8864A]/20 border border-[#B8864A]/20 hover:border-[#B8864A]/40 hover:bg-gradient-to-r hover:from-[#B8864A]/20 hover:to-[#B8864A]/30 transition-all duration-300"
+                  >
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#B8864A] flex items-center gap-1.5">
+                      <i className="fa-solid fa-hand-holding-dollar"></i>
+                      Interested in buying?
+                    </span>
+                  </button>
+                )}
              </div>
              <div className="space-y-0.5" data-pdf-kpi>
                 <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Minor Post-Improvements</p>

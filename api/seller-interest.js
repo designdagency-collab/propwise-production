@@ -78,18 +78,23 @@ export default async function handler(req, res) {
         try {
           const resend = new Resend(resendApiKey);
           
+          // Determine if buyer or seller interest based on notes
+          const isBuyerInterest = notes && notes.startsWith('BUYER INTEREST');
+          const leadType = isBuyerInterest ? 'Buyer' : 'Seller';
+          
           await resend.emails.send({
             from: 'Upblock <noreply@upblock.ai>',
             to: 'support@upblock.ai',
-            subject: `New Seller Lead: ${propertyAddress}`,
+            subject: `New ${leadType} Lead: ${propertyAddress}`,
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #C9A961;">New Seller Interest Submitted</h2>
+                <h2 style="color: ${isBuyerInterest ? '#B8864A' : '#C9A961'};">New ${leadType} Interest Submitted</h2>
                 
-                <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                <div style="background: ${isBuyerInterest ? '#fef5e7' : '#f9f9f9'}; padding: 20px; border-radius: 10px; margin: 20px 0;">
                   <h3 style="margin-top: 0;">Property Details</h3>
                   <p><strong>Address:</strong> ${propertyAddress}</p>
-                  <p><strong>Target Sale Price:</strong> $${targetPrice.toLocaleString()}</p>
+                  <p><strong>${isBuyerInterest ? 'Interested At' : 'Target Sale Price'}:</strong> $${targetPrice.toLocaleString()}</p>
+                  <p><strong>Lead Type:</strong> <span style="background: ${isBuyerInterest ? '#B8864A' : '#8A9A6D'}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${isBuyerInterest ? 'BUYER' : 'SELLER'}</span></p>
                 </div>
                 
                 <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">

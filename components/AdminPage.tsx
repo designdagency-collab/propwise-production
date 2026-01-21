@@ -1511,16 +1511,24 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Type</th>
                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Property Address</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Target Price</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Price</th>
                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Contact</th>
                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Notes</th>
                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Date</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {sellerLeads.map((lead) => (
+                      {sellerLeads.map((lead) => {
+                        const isBuyer = lead.notes?.startsWith('BUYER INTEREST');
+                        return (
                         <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${isBuyer ? 'bg-[#B8864A]' : 'bg-[#8A9A6D]'}`}>
+                              {isBuyer ? 'BUYER' : 'SELLER'}
+                            </span>
+                          </td>
                           <td className="px-6 py-4">
                             <div className="font-bold text-gray-900">{lead.property_address}</div>
                           </td>
@@ -1556,7 +1564,8 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                             </span>
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

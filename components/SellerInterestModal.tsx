@@ -18,7 +18,8 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
   userProfile,
   isLoggedIn
 }) => {
-  const [step, setStep] = useState(1); // 1: Improvements, 2: Contact Details
+  const isBuyerInterest = !valueAddStrategies || valueAddStrategies.length === 0;
+  const [step, setStep] = useState(isBuyerInterest ? 2 : 1); // Skip to contact if buyer interest
   const [completedImprovements, setCompletedImprovements] = useState<Set<number>>(new Set());
   const [name, setName] = useState(userProfile?.full_name || '');
   const [phone, setPhone] = useState(userProfile?.phone || '');
@@ -46,10 +47,18 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
     setSubmitting(true);
     setError(null);
 
-    // Build improvements completed list
-    const completedList = Array.from(completedImprovements).map(idx => 
-      valueAddStrategies[idx]?.title || 'Unknown'
-    );
+    // Build notes based on type
+    let notesText = '';
+    
+    if (isBuyerInterest) {
+      notesText = `BUYER INTEREST${additionalNotes ? `\n\n${additionalNotes}` : ''}`;
+    } else {
+      // Build improvements completed list
+      const completedList = Array.from(completedImprovements).map(idx => 
+        valueAddStrategies[idx]?.title || 'Unknown'
+      );
+      notesText = `SELLER INTEREST - Completed improvements: ${completedList.join(', ')}${additionalNotes ? `\n\nAdditional notes: ${additionalNotes}` : ''}`;
+    }
 
     try {
       const response = await fetch('https://upblock.ai/api/seller-interest', {
@@ -64,7 +73,7 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
           name: name.trim(),
           phone: phone.trim(),
           email: userProfile?.email || '', // Use profile email if logged in
-          notes: `Completed improvements: ${completedList.join(', ')}${additionalNotes ? `\n\nAdditional notes: ${additionalNotes}` : ''}`
+          notes: notesText
         })
       });
 
@@ -93,7 +102,11 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
           </div>
           <div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">Thank You!</h3>
-            <p className="text-gray-600">We'll be in touch soon to discuss your property sale.</p>
+            <p className="text-gray-600">
+              {isBuyerInterest 
+                ? "We'll be in touch soon to discuss this property opportunity." 
+                : "We'll be in touch soon to discuss your property sale."}
+            </p>
           </div>
         </div>
       </div>
@@ -190,11 +203,13 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
       <div className="bg-white rounded-3xl p-8 max-w-xl w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-[#C9A961]/10 flex items-center justify-center">
-              <i className="fa-solid fa-user text-[#C9A961] text-xl"></i>
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isBuyerInterest ? 'bg-[#B8864A]/10' : 'bg-[#C9A961]/10'}`}>
+              <i className={`fa-solid ${isBuyerInterest ? 'fa-hand-holding-dollar' : 'fa-home'} ${isBuyerInterest ? 'text-[#B8864A]' : 'text-[#C9A961]'} text-xl`}></i>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900">Contact Details</h3>
+              <h3 className="text-2xl font-bold text-gray-900">
+                {isBuyerInterest ? 'Buyer Interest' : 'Contact Details'}
+              </h3>
               <p className="text-sm text-gray-500">How can we reach you?</p>
             </div>
           </div>
@@ -206,17 +221,22 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
           </button>
         </div>
 
-        {/* Summary of selections */}
-        <div className="bg-gradient-to-r from-[#C9A961]/5 to-[#8A9A6D]/5 rounded-2xl p-4 mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <i className="fa-solid fa-check-circle text-[#8A9A6D]"></i>
-            <p className="text-sm font-bold text-gray-700">
-              {completedImprovements.size} improvement{completedImprovements.size !== 1 ? 's' : ''} completed
+        {/* Property Info */}
+        <div className={`bg-gradient-to-r rounded-2xl p-4 mb-6 ${isBuyerInterest ? 'from-[#B8864A]/5 to-[#B8864A]/10' : 'from-[#C9A961]/5 to-[#8A9A6D]/5'}`}>
+          <div className="space-y-2">
+            <p className="text-sm font-bold text-gray-900">{propertyAddress}</p>
+            {!isBuyerInterest && completedImprovements.size > 0 && (
+              <div className="flex items-center gap-2">
+                <i className="fa-solid fa-check-circle text-[#8A9A6D] text-sm"></i>
+                <p className="text-xs text-gray-600">
+                  {completedImprovements.size} improvement{completedImprovements.size !== 1 ? 's' : ''} completed
+                </p>
+              </div>
+            )}
+            <p className="text-xs text-gray-600">
+              {isBuyerInterest ? 'Interested at' : 'Target price'}: <span className={`font-bold ${isBuyerInterest ? 'text-[#B8864A]' : 'text-[#C9A961]'}`}>${targetPrice.toLocaleString()}</span>
             </p>
           </div>
-          <p className="text-xs text-gray-600">
-            Target price: <span className="font-bold text-[#C9A961]">${targetPrice.toLocaleString()}</span>
-          </p>
         </div>
 
         <div className="space-y-4">
@@ -260,7 +280,7 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
               onChange={(e) => setAdditionalNotes(e.target.value)}
               rows={3}
               className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C9A961] focus:border-transparent resize-none"
-              placeholder="Timeline, special circumstances, etc..."
+              placeholder={isBuyerInterest ? "Financing ready, settlement timeline, etc..." : "Timeline, special circumstances, etc..."}
             />
           </div>
 
@@ -274,13 +294,23 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
 
           {/* Submit Buttons */}
           <div className="flex gap-3 pt-4">
-            <button
-              onClick={() => setStep(1)}
-              className="flex-1 py-4 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all uppercase tracking-widest text-sm"
-            >
-              <i className="fa-solid fa-arrow-left mr-2"></i>
-              Back
-            </button>
+            {!isBuyerInterest && (
+              <button
+                onClick={() => setStep(1)}
+                className="flex-1 py-4 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all uppercase tracking-widest text-sm"
+              >
+                <i className="fa-solid fa-arrow-left mr-2"></i>
+                Back
+              </button>
+            )}
+            {isBuyerInterest && (
+              <button
+                onClick={onClose}
+                className="flex-1 py-4 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all uppercase tracking-widest text-sm"
+              >
+                Cancel
+              </button>
+            )}
             <button
               onClick={handleSubmit}
               disabled={submitting}
