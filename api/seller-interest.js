@@ -1,9 +1,11 @@
 // API endpoint for seller interest feature
 // Allows users to express interest in selling their property at a specific price
 import { createClient } from '@supabase/supabase-js';
+import { Resend } from 'resend';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const resendApiKey = process.env.RESEND_API_KEY;
 
 export default async function handler(req, res) {
   // CORS
@@ -70,6 +72,65 @@ export default async function handler(req, res) {
       }
 
       console.log('[SellerInterest] New lead:', propertyAddress, '-', name, '-', email);
+
+      // Send email notification to support@upblock.ai
+      if (resendApiKey) {
+        try {
+          const resend = new Resend(resendApiKey);
+          
+          await resend.emails.send({
+            from: 'Upblock <noreply@upblock.ai>',
+            to: 'support@upblock.ai',
+            subject: `New Seller Lead: ${propertyAddress}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #C9A961;">New Seller Interest Submitted</h2>
+                
+                <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                  <h3 style="margin-top: 0;">Property Details</h3>
+                  <p><strong>Address:</strong> ${propertyAddress}</p>
+                  <p><strong>Target Sale Price:</strong> $${targetPrice.toLocaleString()}</p>
+                </div>
+                
+                <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                  <h3 style="margin-top: 0;">Contact Information</h3>
+                  <p><strong>Name:</strong> ${name}</p>
+                  <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+                  <p><strong>Email:</strong> ${email || 'Not provided'}</p>
+                </div>
+                
+                ${notes ? `
+                <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                  <h3 style="margin-top: 0;">Additional Notes</h3>
+                  <p style="white-space: pre-wrap;">${notes}</p>
+                </div>
+                ` : ''}
+                
+                <div style="background: #fff3e0; padding: 15px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #C9A961;">
+                  <p style="margin: 0; font-size: 14px;">
+                    <strong>Submitted:</strong> ${new Date().toLocaleString('en-AU', { 
+                      dateStyle: 'full', 
+                      timeStyle: 'short' 
+                    })}
+                  </p>
+                </div>
+                
+                <p style="font-size: 12px; color: #666; margin-top: 30px;">
+                  View all seller leads in the Admin Dashboard → Seller Leads tab
+                </p>
+              </div>
+            `
+          });
+          
+          console.log('[SellerInterest] Email notification sent to support@upblock.ai');
+        } catch (emailError) {
+          console.error('[SellerInterest] Failed to send email (non-critical):', emailError);
+          // Don't fail the request if email fails
+        }
+      } else {
+        console.warn('[SellerInterest] Resend API key not configured - email notification skipped');
+      }
+
       return res.status(200).json({ 
         success: true,
         message: 'Thank you! Your interest has been recorded.'
