@@ -1221,10 +1221,10 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                   <button
                     onClick={() => onSellerInterest(address, data.valueSnapshot.indicativeMidpoint, [])}
                     data-no-pdf="true"
-                    className="seller-interest-button mt-3 px-5 py-3 rounded-xl bg-gradient-to-r from-[#C9A961] to-[#8A9A6D] hover:from-[#D4B872] hover:to-[#9AAA7D] transition-all duration-300 group"
+                    className="seller-interest-button mt-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#C9A961] to-[#8A9A6D] hover:from-[#D4B872] hover:to-[#9AAA7D] transition-all duration-300 group"
                   >
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-white flex items-center gap-2 relative z-10">
-                      <i className="fa-solid fa-sparkles"></i>
+                    <span className="text-[8px] font-bold uppercase tracking-widest text-white flex items-center gap-1.5 relative z-10">
+                      <i className="fa-solid fa-sparkles text-[8px]"></i>
                       Interested in buying at this price?
                     </span>
                   </button>
@@ -1239,10 +1239,10 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                   <button
                     onClick={() => onSellerInterest(address, afterHigh, data.valueAddStrategies)}
                     data-no-pdf="true"
-                    className="seller-interest-button mt-3 px-5 py-3 rounded-xl bg-gradient-to-r from-[#C9A961] to-[#8A9A6D] hover:from-[#D4B872] hover:to-[#9AAA7D] transition-all duration-300 group"
+                    className="seller-interest-button mt-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#C9A961] to-[#8A9A6D] hover:from-[#D4B872] hover:to-[#9AAA7D] transition-all duration-300 group"
                   >
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-white flex items-center gap-2 relative z-10">
-                      <i className="fa-solid fa-sparkles"></i>
+                    <span className="text-[8px] font-bold uppercase tracking-widest text-white flex items-center gap-1.5 relative z-10">
+                      <i className="fa-solid fa-sparkles text-[8px]"></i>
                       Interested in selling at this price?
                     </span>
                   </button>
