@@ -83,48 +83,55 @@ export default async function handler(req, res) {
           const leadType = isBuyerInterest ? 'Buyer' : 'Seller';
           
           await resend.emails.send({
-            from: 'Upblock <noreply@upblock.ai>',
+            from: 'Upblock <hello@mail.upblock.ai>',
             to: 'support@upblock.ai',
             subject: `New ${leadType} Lead: ${propertyAddress}`,
             html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: ${isBuyerInterest ? '#B8864A' : '#C9A961'};">New ${leadType} Interest Submitted</h2>
-                
-                <div style="background: ${isBuyerInterest ? '#fef5e7' : '#f9f9f9'}; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                  <h3 style="margin-top: 0;">Property Details</h3>
-                  <p><strong>Address:</strong> ${propertyAddress}</p>
-                  <p><strong>${isBuyerInterest ? 'Interested At' : 'Target Sale Price'}:</strong> $${targetPrice.toLocaleString()}</p>
-                  <p><strong>Lead Type:</strong> <span style="background: ${isBuyerInterest ? '#B8864A' : '#8A9A6D'}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${isBuyerInterest ? 'BUYER' : 'SELLER'}</span></p>
-                </div>
-                
-                <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                  <h3 style="margin-top: 0;">Contact Information</h3>
-                  <p><strong>Name:</strong> ${name}</p>
-                  <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
-                  <p><strong>Email:</strong> ${email || 'Not provided'}</p>
-                </div>
-                
-                ${notes ? `
-                <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                  <h3 style="margin-top: 0;">Additional Notes</h3>
-                  <p style="white-space: pre-wrap;">${notes}</p>
-                </div>
-                ` : ''}
-                
-                <div style="background: #fff3e0; padding: 15px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #C9A961;">
-                  <p style="margin: 0; font-size: 14px;">
-                    <strong>Submitted:</strong> ${new Date().toLocaleString('en-AU', { 
-                      dateStyle: 'full', 
-                      timeStyle: 'short' 
-                    })}
-                  </p>
-                </div>
-                
-                <p style="font-size: 12px; color: #666; margin-top: 30px;">
-                  View all seller leads in the Admin Dashboard → Seller Leads tab
-                </p>
-              </div>
-            `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #333;">
+
+New ${leadType.toUpperCase()} LEAD
+
+Property: ${propertyAddress}
+Price: $${targetPrice.toLocaleString()}
+
+---
+
+Contact:
+Name: ${name}
+Phone: ${phone || 'Not provided'}
+Email: ${email || 'Not provided'}
+
+${notes ? `---\n\n${notes}\n\n` : ''}---
+
+Submitted: ${new Date().toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })}
+
+View in Admin Dashboard → Seller Leads tab
+
+</body>
+</html>
+            `,
+            text: `
+New ${leadType.toUpperCase()} LEAD
+
+Property: ${propertyAddress}
+Price: $${targetPrice.toLocaleString()}
+
+---
+
+Contact:
+Name: ${name}
+Phone: ${phone || 'Not provided'}
+Email: ${email || 'Not provided'}
+
+${notes ? `---\n\n${notes}\n\n` : ''}---
+
+Submitted: ${new Date().toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })}
+
+View in Admin Dashboard → Seller Leads tab
+            `.trim()
           });
           
           console.log('[SellerInterest] Email notification sent to support@upblock.ai');
