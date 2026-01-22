@@ -23,6 +23,7 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
   const [completedImprovements, setCompletedImprovements] = useState<Set<number>>(new Set());
   const [name, setName] = useState(userProfile?.full_name || '');
   const [phone, setPhone] = useState(userProfile?.phone || '');
+  const [email, setEmail] = useState(userProfile?.email || '');
   const [additionalNotes, setAdditionalNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -39,8 +40,8 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (!name.trim() || !phone.trim()) {
-      setError('Please provide your name and phone number');
+    if (!name.trim() || !phone.trim() || !email.trim()) {
+      setError('Please provide your name, phone number, and email');
       return;
     }
 
@@ -72,7 +73,7 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
           targetPrice,
           name: name.trim(),
           phone: phone.trim(),
-          email: userProfile?.email || '', // Use profile email if logged in
+          email: email.trim(),
           notes: notesText
         })
       });
@@ -267,6 +268,21 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
               required
               className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C9A961] focus:border-transparent"
               placeholder="+61 4XX XXX XXX"
+            />
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              Email *
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#C9A961] focus:border-transparent"
+              placeholder="your@email.com"
             />
           </div>
 
