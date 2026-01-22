@@ -97,7 +97,7 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
   if (success) {
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={onClose}>
-        <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl text-center space-y-6" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl text-center space-y-6" onClick={(e) => e.stopPropagation()}>
           <div className="w-16 h-16 rounded-2xl bg-green-100 flex items-center justify-center mx-auto">
             <i className="fa-solid fa-check text-green-600 text-2xl"></i>
           </div>
@@ -118,7 +118,7 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
   if (step === 1) {
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={onClose}>
-        <div className="bg-white rounded-3xl p-8 max-w-3xl w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-[#C9A961]/10 flex items-center justify-center">
@@ -198,10 +198,9 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
   }
 
   // Step 2: Contact Details
-  // Step 2: Contact Details
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-3xl p-8 max-w-xl w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isBuyerInterest ? 'bg-[#B8864A]/10' : 'bg-[#C9A961]/10'}`}>
