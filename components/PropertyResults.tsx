@@ -1221,11 +1221,11 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                   <button
                     onClick={() => onSellerInterest(address, data.valueSnapshot.indicativeMidpoint, [])}
                     data-no-pdf="true"
-                    className="mt-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#B8864A]/10 to-[#B8864A]/20 border border-[#B8864A]/20 hover:border-[#B8864A]/40 hover:bg-gradient-to-r hover:from-[#B8864A]/20 hover:to-[#B8864A]/30 transition-all duration-300"
+                    className="seller-interest-button mt-3 px-5 py-3 rounded-xl bg-gradient-to-r from-[#C9A961] to-[#8A9A6D] hover:from-[#D4B872] hover:to-[#9AAA7D] transition-all duration-300 group"
                   >
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#B8864A] flex items-center gap-1.5">
-                      <i className="fa-solid fa-hand-holding-dollar"></i>
-                      Interested in buying?
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white flex items-center gap-2 relative z-10">
+                      <i className="fa-solid fa-sparkles"></i>
+                      Interested in buying at this price?
                     </span>
                   </button>
                 )}
