@@ -1,7 +1,7 @@
 -- Create table for tracking seller interest leads
 CREATE TABLE IF NOT EXISTS seller_interest (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- Nullable - property owners don't need accounts
   property_address TEXT NOT NULL,
   target_price BIGINT NOT NULL,
   name TEXT NOT NULL,

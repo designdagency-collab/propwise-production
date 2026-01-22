@@ -62,11 +62,16 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
     }
 
     try {
+      console.log('[SellerInterest] Submitting:', { propertyAddress, targetPrice, name, email, isBuyerInterest });
+      
+      const authToken = isLoggedIn && userProfile ? await supabaseService.getAccessToken() : null;
+      console.log('[SellerInterest] Auth token:', authToken ? 'present' : 'none (anonymous)');
+      
       const response = await fetch('https://upblock.ai/api/seller-interest', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': isLoggedIn && userProfile ? `Bearer ${await supabaseService.getAccessToken()}` : ''
+          ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
         },
         body: JSON.stringify({
           propertyAddress,
@@ -78,17 +83,23 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
         })
       });
 
+      console.log('[SellerInterest] Response status:', response.status);
+
       if (response.ok) {
+        const data = await response.json();
+        console.log('[SellerInterest] Success:', data);
         setSuccess(true);
         setTimeout(() => {
           onClose();
         }, 2500);
       } else {
         const data = await response.json();
+        console.error('[SellerInterest] Error response:', data);
         setError(data.error || 'Failed to submit. Please try again.');
         setSubmitting(false);
       }
     } catch (err: any) {
+      console.error('[SellerInterest] Network error:', err);
       setError(err.message || 'Network error. Please try again.');
       setSubmitting(false);
     }

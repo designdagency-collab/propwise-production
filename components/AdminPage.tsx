@@ -226,7 +226,10 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
 
       if (leadsRes.ok) {
         const leadsData = await leadsRes.json();
+        console.log('[Admin] Seller leads fetched:', leadsData.leads?.length || 0);
         setSellerLeads(leadsData.leads || []);
+      } else {
+        console.error('[Admin] Failed to fetch seller leads:', leadsRes.status);
       }
 
       setLoading(false);

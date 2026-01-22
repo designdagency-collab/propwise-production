@@ -20,25 +20,32 @@ export default async function handler(req, res) {
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  // Verify authentication
+  // Try to get user if authenticated, but allow anonymous submissions
+  let user = null;
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
-  const token = authHeader.split(' ')[1];
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
   
-  if (authError || !user) {
-    return res.status(401).json({ error: 'Invalid token' });
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    const { data: authData } = await supabase.auth.getUser(token);
+    user = authData?.user || null;
   }
 
   if (req.method === 'POST') {
-    // Submit seller interest
+    // Submit seller/buyer interest (no auth required - property owners don't need accounts)
     const { propertyAddress, targetPrice, name, phone, email, notes } = req.body;
+
+    console.log('[SellerInterest] POST request received:', {
+      propertyAddress: propertyAddress?.substring(0, 50),
+      targetPrice,
+      name,
+      email,
+      hasUser: !!user,
+      userId: user?.id
+    });
 
     // Validate required fields
     if (!propertyAddress || !targetPrice || !name || !email) {
+      console.error('[SellerInterest] Missing required fields');
       return res.status(400).json({ 
         error: 'Missing required fields',
         required: ['propertyAddress', 'targetPrice', 'name', 'email']
@@ -48,15 +55,17 @@ export default async function handler(req, res) {
     // Validate price is a number
     const priceNum = parseInt(targetPrice);
     if (isNaN(priceNum) || priceNum <= 0) {
+      console.error('[SellerInterest] Invalid price:', targetPrice);
       return res.status(400).json({ error: 'Invalid target price' });
     }
 
     try {
-      // Insert seller interest
+      // Insert seller interest (user_id can be null for anonymous submissions)
+      console.log('[SellerInterest] Inserting into database...');
       const { error: insertError } = await supabase
         .from('seller_interest')
         .insert({
-          user_id: user.id,
+          user_id: user?.id || null,
           property_address: propertyAddress,
           target_price: priceNum,
           name: name.trim(),
@@ -68,10 +77,10 @@ export default async function handler(req, res) {
 
       if (insertError) {
         console.error('[SellerInterest] Insert error:', insertError);
-        return res.status(500).json({ error: 'Failed to save seller interest' });
+        return res.status(500).json({ error: 'Failed to save seller interest', details: insertError.message });
       }
 
-      console.log('[SellerInterest] New lead:', propertyAddress, '-', name, '-', email);
+      console.log('[SellerInterest] ✅ Saved to database:', propertyAddress, '-', name, '-', email);
 
       // Send email notification to support@upblock.ai
       if (resendApiKey) {
@@ -154,7 +163,11 @@ View in Admin Dashboard → Seller Leads tab
     }
 
   } else if (req.method === 'GET') {
-    // Fetch seller interest submissions for admin
+    // Fetch seller interest submissions for admin (requires authentication)
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication required for admin access' });
+    }
+
     try {
       // Verify admin status
       const { data: profile } = await supabase
@@ -167,7 +180,7 @@ View in Admin Dashboard → Seller Leads tab
         return res.status(403).json({ error: 'Admin access required' });
       }
 
-      // Fetch all seller interest submissions
+      // Fetch all seller interest submissions (left join since user_id can be null for anonymous)
       const { data: leads, error } = await supabase
         .from('seller_interest')
         .select(`
@@ -180,7 +193,7 @@ View in Admin Dashboard → Seller Leads tab
           notes,
           created_at,
           user_id,
-          profiles!inner(email, phone)
+          profiles(email, phone)
         `)
         .order('created_at', { ascending: false })
         .limit(200);
