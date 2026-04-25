@@ -20,7 +20,7 @@ interface NavbarProps {
   onAccountSettings?: () => void;
   onInviteFriends?: () => void;
   onAdminPanel?: () => void;
-  onBoomFinder?: () => void;
+  onHotSpots?: () => void;
   onLeadsDashboard?: () => void;
   isLoggedIn?: boolean;
   isAdmin?: boolean;
@@ -47,7 +47,7 @@ const Navbar: React.FC<NavbarProps> = ({
   onAccountSettings,
   onInviteFriends,
   onAdminPanel,
-  onBoomFinder,
+  onHotSpots,
   onLeadsDashboard,
   isLoggedIn = false,
   isAdmin = false,
@@ -194,7 +194,7 @@ const Navbar: React.FC<NavbarProps> = ({
               <button
                 onClick={() => {
                   console.log('[Navbar] Hot Spots clicked');
-                  onBoomFinder?.();
+                  onHotSpots?.();
                 }}
                 title="Hot Spots — high-growth suburbs"
                 className="p-1.5 sm:p-2.5 transition-colors rounded-xl hover:bg-[#C9A961]/10"

@@ -10,7 +10,7 @@ import TermsAndConditions from './components/TermsAndConditions';
 import AccountSettings from './components/AccountSettings';
 import InviteFriendsModal from './components/InviteFriendsModal';
 import { AdminPage } from './components/AdminPage';
-import { BoomFinder } from './components/BoomFinder';
+import { HotSpots } from './components/HotSpots';
 import LeadsDashboard from './components/LeadsDashboard';
 import LandingPage from './components/LandingPage';
 import { geminiService } from './services/geminiService';
@@ -166,8 +166,8 @@ const App: React.FC = () => {
   // Admin dashboard state
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   
-  // Boom Finder page state
-  const [showBoomFinder, setShowBoomFinder] = useState(false);
+  // Hot Spots page state
+  const [showHotSpots, setShowHotSpots] = useState(false);
 
   // Leads dashboard state (subscriber tier — Developers + Buyers Agents)
   const [showLeadsDashboard, setShowLeadsDashboard] = useState(false);
@@ -1848,9 +1848,9 @@ const App: React.FC = () => {
         onAccountSettings={() => { setShowTerms(false); setShowPricing(false); setShowAccountSettings(true); fetchSearchHistory(); }}
         onInviteFriends={() => setShowInviteFriends(true)}
         onAdminPanel={() => setShowAdminDashboard(true)}
-        onBoomFinder={() => {
-          console.log('[App] Setting showBoomFinder to true');
-          setShowBoomFinder(true);
+        onHotSpots={() => {
+          console.log('[App] Setting showHotSpots to true');
+          setShowHotSpots(true);
         }}
         onLeadsDashboard={() => setShowLeadsDashboard(true)}
         isLoggedIn={isLoggedIn}
@@ -2301,12 +2301,12 @@ const App: React.FC = () => {
       )}
 
       {/* Boom Finder Page - Full Screen */}
-      {showBoomFinder && (
+      {showHotSpots && (
         <div className="fixed inset-0 z-[55] overflow-y-auto" style={{ backgroundColor: 'var(--bg-primary)' }}>
-          <BoomFinder
-            onBack={() => setShowBoomFinder(false)}
+          <HotSpots
+            onBack={() => setShowHotSpots(false)}
             onSelectSuburb={(suburb, state) => {
-              setShowBoomFinder(false);
+              setShowHotSpots(false);
               setAddress(`${suburb}, ${state}`);
             }}
             isAdmin={isAdmin}

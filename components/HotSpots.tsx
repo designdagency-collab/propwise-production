@@ -27,7 +27,7 @@ interface BoomSuburb {
   last_updated: string;
 }
 
-interface BoomFinderProps {
+interface HotSpotsProps {
   onSelectSuburb?: (suburb: string, state: string) => void;
   onBack?: () => void;
   isAdmin?: boolean;
@@ -76,7 +76,7 @@ const ScoreBadge: React.FC<{ score: number }> = ({ score }) => {
   );
 };
 
-export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, onBack, isAdmin, userEmail }) => {
+export const HotSpots: React.FC<HotSpotsProps> = ({ onSelectSuburb, onBack, isAdmin, userEmail }) => {
   const canRefresh = isAdmin || userEmail?.toLowerCase() === 'designd.agency@gmail.com';
   const [suburbs, setSuburbs] = useState<BoomSuburb[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,7 +110,7 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, onBack, 
       setTotalCount(data.total || 0);
       setLastRefresh(data.lastRefresh);
     } catch (err) {
-      console.error('[BoomFinder] Error:', err);
+      console.error('[HotSpots] Error:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
@@ -134,7 +134,7 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, onBack, 
       }
       await fetchSuburbs();
     } catch (err) {
-      console.error('[BoomFinder] Refresh error:', err);
+      console.error('[HotSpots] Refresh error:', err);
       alert('Failed to refresh data: ' + (err instanceof Error ? err.message : 'Unknown error'));
     } finally {
       setRefreshing(false);
@@ -467,4 +467,4 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, onBack, 
   );
 };
 
-export default BoomFinder;
+export default HotSpots;
