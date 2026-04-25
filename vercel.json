@@ -5,10 +5,6 @@
     "api/generate-pdf.js": {
       "memory": 3008,
       "maxDuration": 60
-    },
-    "api/generate-renovation.js": {
-      "memory": 1024,
-      "maxDuration": 60
     }
   },
   "headers": [

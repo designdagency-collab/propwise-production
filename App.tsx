@@ -16,7 +16,7 @@ import { geminiService } from './services/geminiService';
 import { stripeService } from './services/stripeService';
 import { supabaseService } from './services/supabaseService';
 import { billingService, calculateCreditState, getRemainingCredits, canAudit } from './services/billingService';
-import { fingerprintService, checkDeviceSearchLimit, recordDeviceSearch } from './services/fingerprintService';
+import { recordDeviceSearch } from './services/fingerprintService';
 import { AppState, PropertyData, PlanType, CreditState } from './types';
 
 // Helper functions for optimistic profile caching (instant header on refresh)
@@ -131,16 +131,6 @@ const App: React.FC = () => {
       return getRemainingCredits(state);
     }
     return 0;
-  });
-  
-  // Device fingerprint state (for anonymous users)
-  // Initialize from localStorage cache for instant display, then verify with Supabase
-  const [deviceCanSearch, setDeviceCanSearch] = useState<boolean>(() => {
-    const cached = localStorage.getItem('prop_device_searches');
-    return !cached || parseInt(cached, 10) < 1; // Can search if no cache or searches < 1
-  });
-  const [deviceSearchesUsed, setDeviceSearchesUsed] = useState(() => {
-    return parseInt(localStorage.getItem('prop_device_searches') || '0', 10);
   });
   
   const [isQuotaError, setIsQuotaError] = useState(false);
@@ -444,33 +434,6 @@ const App: React.FC = () => {
       handleSearch();
     }
   }, [isLoggedIn, address, isValidAddress]);
-
-  // Check device fingerprint for anonymous users on page load
-  useEffect(() => {
-    const checkDevice = async () => {
-      // Only check for anonymous users
-      if (!isLoggedIn) {
-        try {
-          const { canSearch, searchesUsed } = await checkDeviceSearchLimit();
-          setDeviceCanSearch(canSearch);
-          setDeviceSearchesUsed(searchesUsed);
-          // Also update localStorage for instant display on next load
-          localStorage.setItem('prop_device_searches', searchesUsed.toString());
-          console.log('[Fingerprint] Device check:', { canSearch, searchesUsed });
-        } catch (error) {
-          console.error('[Fingerprint] Error checking device:', error);
-          // Check localStorage fallback
-          const cached = parseInt(localStorage.getItem('prop_device_searches') || '0', 10);
-          setDeviceCanSearch(cached < 1);
-          setDeviceSearchesUsed(cached);
-        }
-      } else {
-        // Logged in users don't need device fingerprint
-        setDeviceCanSearch(true);
-      }
-    };
-    checkDevice();
-  }, [isLoggedIn]);
 
   useEffect(() => {
     if (appState === AppState.LOADING) {
@@ -916,17 +879,13 @@ const App: React.FC = () => {
   }, [userProfile, isLoggedIn, appState]);
 
   const checkSearchLimit = () => {
-    // API key users bypass limits
     if (hasKey) return true;
-    
-    // Logged-in users use credit system (from Supabase profile)
+
     if (isLoggedIn) {
       return canAudit(creditState);
     }
-    
-    // Anonymous users: check device fingerprint
-    // Only allow if deviceCanSearch is explicitly true
-    return deviceCanSearch === true;
+
+    return true;
   };
 
   // Check if address was searched within the last 7 days (FREE re-search)
@@ -1034,21 +993,11 @@ const App: React.FC = () => {
         console.error('[Search] Failed to save search:', error);
       }
     } else {
-      // Anonymous users: record device search via fingerprint
+      // Anonymous users: record search via fingerprint for analytics only (no quota)
       try {
         await recordDeviceSearch();
-        setDeviceCanSearch(false); // Used their 1 free search
-        setDeviceSearchesUsed(prev => {
-          const newCount = prev + 1;
-          localStorage.setItem('prop_device_searches', newCount.toString());
-          return newCount;
-        });
-        console.log('[Fingerprint] Device search recorded - no more free searches');
       } catch (error) {
         console.error('[Fingerprint] Error recording device search:', error);
-        // Still update local state to block further searches
-        setDeviceCanSearch(false);
-        localStorage.setItem('prop_device_searches', '1');
       }
     }
   };
@@ -1883,7 +1832,7 @@ const App: React.FC = () => {
     <div className="min-h-screen pb-20 selection:bg-[#C9A961] selection:text-white" style={{ backgroundColor: 'var(--bg-primary)' }}>
       <Navbar 
         plan={plan} 
-        remainingCredits={isLoggedIn ? remainingCredits : (deviceCanSearch ? 1 : 0)}
+        remainingCredits={isLoggedIn ? remainingCredits : 999}
         onUpgrade={() => { setShowTerms(false); setShowAccountSettings(false); setShowPricing(true); }} 
         onHome={handleHome}
         onLogin={() => { setShowTerms(false); setShowPricing(false); setShowAccountSettings(false); handleLogin(); }}

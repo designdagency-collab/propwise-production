@@ -10,18 +10,10 @@ const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
 // Format: "123.45" (in AUD)
 const manualAccountBalance = process.env.GOOGLE_CLOUD_ACCOUNT_BALANCE;
 
-// Cost estimates calibrated against actual Google Cloud billing (Jan 2026)
-// Based on: $45.47 actual for 93 searches + 40 images
-//
 // Property insights uses gemini-3-flash-preview (text + structured output)
 // - Includes long prompts with property data, zoning rules, etc.
 // - Per search: ~$0.035 (reasonable for text-only)
 const COST_PER_TEXT_SEARCH = 0.035;
-
-// Renovation visualizations use gemini-2.5-flash-image (image generation)
-// - Includes image input (before photo) + AI generation
-// - Actual cost: ($45.47 - $3.26 text) / 40 images = $1.05/image
-const COST_PER_IMAGE_GENERATION = 1.05;
 
 export default async function handler(req, res) {
   // CORS
@@ -140,42 +132,18 @@ export default async function handler(req, res) {
         .select('id', { count: 'exact', head: true })
     ]);
 
-    // Fetch image generation counts from visualization_cache
-    const [currentMonthImages, lastMonthImages, totalImages] = await Promise.all([
-      supabase
-        .from('visualization_cache')
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', startOfMonth.toISOString()),
-      supabase
-        .from('visualization_cache')
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', startOfLastMonth.toISOString())
-        .lt('created_at', startOfMonth.toISOString()),
-      supabase
-        .from('visualization_cache')
-        .select('id', { count: 'exact', head: true })
-    ]);
-
     const currentMonthSearchCount = currentMonthSearches.count || 0;
     const lastMonthSearchCount = lastMonthSearches.count || 0;
     const totalSearchCount = totalSearches.count || 0;
 
-    const currentMonthImageCount = currentMonthImages.count || 0;
-    const lastMonthImageCount = lastMonthImages.count || 0;
-    const totalImageCount = totalImages.count || 0;
-
-    // Calculate costs: Text searches + Image generations
     const currentMonthTextCost = currentMonthSearchCount * COST_PER_TEXT_SEARCH;
-    const currentMonthImageCost = currentMonthImageCount * COST_PER_IMAGE_GENERATION;
-    const currentMonthEstimate = Math.round((currentMonthTextCost + currentMonthImageCost) * 100) / 100;
+    const currentMonthEstimate = Math.round(currentMonthTextCost * 100) / 100;
 
     const lastMonthTextCost = lastMonthSearchCount * COST_PER_TEXT_SEARCH;
-    const lastMonthImageCost = lastMonthImageCount * COST_PER_IMAGE_GENERATION;
-    const lastMonthEstimate = Math.round((lastMonthTextCost + lastMonthImageCost) * 100) / 100;
+    const lastMonthEstimate = Math.round(lastMonthTextCost * 100) / 100;
 
     const totalTextCost = totalSearchCount * COST_PER_TEXT_SEARCH;
-    const totalImageCost = totalImageCount * COST_PER_IMAGE_GENERATION;
-    const totalEstimate = Math.round((totalTextCost + totalImageCost) * 100) / 100;
+    const totalEstimate = Math.round(totalTextCost * 100) / 100;
 
     // Calculate daily average and projected monthly cost
     const daysElapsed = Math.max(1, now.getDate());
@@ -183,9 +151,7 @@ export default async function handler(req, res) {
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     const projectedMonthly = dailyAverage * daysInMonth;
 
-    // Calculate blended cost per search (for display)
-    const totalCalls = currentMonthSearchCount + currentMonthImageCount;
-    const blendedCostPerCall = totalCalls > 0 ? currentMonthEstimate / totalCalls : COST_PER_TEXT_SEARCH;
+    const blendedCostPerCall = currentMonthSearchCount > 0 ? currentMonthEstimate / currentMonthSearchCount : COST_PER_TEXT_SEARCH;
 
     // Get stored actual balance from database
     const { data: balanceData } = await supabase
@@ -223,18 +189,15 @@ export default async function handler(req, res) {
         estimated: currentMonthEstimate,
         actual: googleCloudCosts?.currentMonth || null,
         searches: currentMonthSearchCount,
-        images: currentMonthImageCount,
         period: `${startOfMonth.toLocaleDateString()} - ${now.toLocaleDateString()}`
       },
       lastMonth: {
         estimated: lastMonthEstimate,
-        searches: lastMonthSearchCount,
-        images: lastMonthImageCount
+        searches: lastMonthSearchCount
       },
       allTime: {
         estimated: totalEstimate,
-        searches: totalSearchCount,
-        images: totalImageCount
+        searches: totalSearchCount
       },
       googleCloud: googleCloudCosts ? {
         accountName: googleCloudCosts.accountName,
@@ -245,21 +208,18 @@ export default async function handler(req, res) {
       projectedMonthly: Math.round(projectedMonthly * 100) / 100,
       dailyAverage: Math.round(dailyAverage * 1000) / 1000,
       costPerSearch: COST_PER_TEXT_SEARCH,
-      costPerImage: COST_PER_IMAGE_GENERATION,
       blendedCostPerCall: Math.round(blendedCostPerCall * 10000) / 10000,
       breakdown: {
-        textCost: Math.round(currentMonthTextCost * 100) / 100,
-        imageCost: Math.round(currentMonthImageCost * 100) / 100
+        textCost: Math.round(currentMonthTextCost * 100) / 100
       },
-      note: `Text: ${currentMonthSearchCount} × $${COST_PER_TEXT_SEARCH} = $${currentMonthTextCost.toFixed(2)} | Images: ${currentMonthImageCount} × $${COST_PER_IMAGE_GENERATION} = $${currentMonthImageCost.toFixed(2)}`,
+      note: `Text: ${currentMonthSearchCount} × $${COST_PER_TEXT_SEARCH} = $${currentMonthTextCost.toFixed(2)}`,
       generatedAt: now.toISOString()
     };
 
-    console.log('[AdminBilling] Estimated costs:', { 
-      currentMonth: currentMonthEstimate, 
+    console.log('[AdminBilling] Estimated costs:', {
+      currentMonth: currentMonthEstimate,
       searches: currentMonthSearchCount,
-      images: currentMonthImageCount,
-      user: profile.email 
+      user: profile.email
     });
     
     return res.status(200).json(billing);

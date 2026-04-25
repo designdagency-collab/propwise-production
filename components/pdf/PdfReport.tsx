@@ -50,20 +50,10 @@ const Icons = {
 // ============================================================================
 // TYPES
 // ============================================================================
-interface VisualizationData {
-  beforeImage: string;
-  afterImage: string;
-  title: string;
-  type: 'renovation' | 'development';
-}
-
 interface PdfReportProps {
   data: PropertyData;
   address: string;
   mapImageUrl?: string;
-  generatedVisuals?: {
-    [key: string]: VisualizationData[];
-  };
 }
 
 // ============================================================================
@@ -202,7 +192,7 @@ const PdfPage: React.FC<{ children: React.ReactNode; pageNum: number; totalPages
 // ============================================================================
 // MAIN PDF REPORT COMPONENT
 // ============================================================================
-const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, generatedVisuals = {} }) => {
+const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl }) => {
   // Extract Australian state from address for state-aware approval badges
   const propertyState = extractStateFromAddress(address);
   
@@ -221,69 +211,8 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
   const hasComparables = filteredComparables.length > 0;
   
   const hasWatchOuts = data.watchOuts && data.watchOuts.length > 0;
-  
-  // Helper to validate base64 image data
-  const isValidBase64Image = (str: string | undefined | null): boolean => {
-    if (!str || typeof str !== 'string') return false;
-    if (!str.startsWith('data:image/')) return false;
-    // Must have actual image data after the comma
-    const commaIndex = str.indexOf(',');
-    if (commaIndex === -1) return false;
-    const imageData = str.slice(commaIndex + 1);
-    // Must have substantial data (at least 100 chars to be a real image)
-    return imageData.length > 100;
-  };
 
-  // Collect all visualizations with their strategy references
-  const allVisualizations: Array<{
-    visual: VisualizationData;
-    strategyName: string;
-    strategyType: 'strategy' | 'development';
-  }> = [];
-  
-  // Safely iterate over generatedVisuals with null checks
-  if (generatedVisuals && typeof generatedVisuals === 'object') {
-    Object.entries(generatedVisuals).forEach(([key, visuals]) => {
-      if (!key || !visuals || !Array.isArray(visuals)) return;
-      
-      const parts = key.split('-');
-      if (parts.length < 2) return;
-      
-      const [type, indexStr] = parts;
-      const index = parseInt(indexStr, 10);
-      if (isNaN(index)) return;
-      
-      visuals.forEach(visual => {
-        // Validate afterImage is present AND contains valid base64 image data
-        if (!visual || !isValidBase64Image(visual.afterImage)) return;
-        
-        let strategyName = visual.title || 'Visualization';
-        
-        // Try to get the actual strategy name from the data
-        if (type === 'strategy' && data.valueAddStrategies?.[index]) {
-          strategyName = data.valueAddStrategies[index].title || visual.title || 'Value-Add Strategy';
-        } else if (type === 'development' && data.developmentScenarios?.[index]) {
-          strategyName = data.developmentScenarios[index].title || visual.title || 'Development Scenario';
-        }
-        
-        allVisualizations.push({
-          visual,
-          strategyName,
-          strategyType: type as 'strategy' | 'development'
-        });
-      });
-    });
-  }
-  
-  const hasVisualizations = allVisualizations.length > 0;
-  
-  // Calculate pages needed for visualizations
-  // 2 visualizations per page (220px height each)
-  const visualizationPages = hasVisualizations 
-    ? Math.ceil(allVisualizations.length / 2)
-    : 0;
-  
-  const totalPages = 4 + visualizationPages; // Base 4 pages + visualization pages
+  const totalPages = 4;
 
   // Calculate post-improvement range
   const baseline = data.valueSnapshot?.indicativeMidpoint || 0;
@@ -689,91 +618,6 @@ const PdfReport: React.FC<PdfReportProps> = ({ data, address, mapImageUrl, gener
         )}
       </PdfPage>
 
-      {/* ================================================================
-          PAGE 5+: AI VISUALISATIONS (Only if visuals exist)
-          ================================================================ */}
-      {hasVisualizations && (
-        <>
-          {allVisualizations.length === 1 ? (
-            // SINGLE IMAGE: Full page layout - AI generated only
-            <PdfPage pageNum={5} totalPages={totalPages}>
-              <div className="pdf-section" style={{ background: '#fff' }}>
-                <h2 className="pdf-section-title">
-                  <span className="pdf-icon">{Icons.home}</span>
-                  AI Visualisations
-                </h2>
-                <p className="pdf-section-subtitle">AI-generated concept imagery for property potential</p>
-                
-                <div style={{ marginTop: '16px', background: '#ffffff', border: '1px solid #E5E2DD', borderRadius: '12px', padding: '16px' }}>
-                  <p style={{ fontSize: '12px', fontWeight: 700, color: '#3A342D', marginBottom: '12px' }}>
-                    {allVisualizations[0].strategyType === 'development' ? '🏗️' : '🔨'} {allVisualizations[0].strategyName}
-                  </p>
-                  
-                  <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD', maxHeight: '450px' }}>
-                    <img 
-                      src={allVisualizations[0].visual.afterImage} 
-                      alt="AI visualisation"
-                      style={{ width: '100%', height: '450px', objectFit: 'cover', display: 'block' }}
-                    />
-                  </div>
-                  
-                  <p style={{ fontSize: '8px', color: '#888', fontStyle: 'italic', textAlign: 'center', marginTop: '12px' }}>
-                    AI-generated concept only. Actual results may vary. Consult qualified professionals.
-                  </p>
-                </div>
-              </div>
-            </PdfPage>
-          ) : (
-            // MULTIPLE IMAGES: 2 per page with 220px height each
-            <>
-              {Array.from({ length: visualizationPages }).map((_, pageIndex) => {
-                const startIdx = pageIndex * 2;
-                const pageVisuals = allVisualizations.slice(startIdx, startIdx + 2);
-                
-                return (
-                  <PdfPage key={`visual-page-${pageIndex}`} pageNum={5 + pageIndex} totalPages={totalPages}>
-                    <div className="pdf-section" style={{ background: '#fff' }}>
-                      {pageIndex === 0 && (
-                        <>
-                          <h2 className="pdf-section-title">
-                            <span className="pdf-icon">{Icons.home}</span>
-                            AI Visualisations
-                          </h2>
-                          <p className="pdf-section-subtitle">AI-generated concept imagery for property potential</p>
-                        </>
-                      )}
-                      
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '12px', background: '#ffffff' }}>
-                        {pageVisuals.map((item, idx) => (
-                          <div key={idx} style={{ background: '#ffffff', border: '1px solid #E5E2DD', borderRadius: '12px', padding: '16px' }}>
-                            <p style={{ fontSize: '12px', fontWeight: 700, color: '#3A342D', marginBottom: '12px' }}>
-                              {item.strategyType === 'development' ? '🏗️' : '🔨'} {item.strategyName}
-                            </p>
-                            
-                            <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #E5E2DD', maxHeight: '220px' }}>
-                              <img 
-                                src={item.visual.afterImage} 
-                                alt="AI visualisation"
-                                style={{ width: '100%', height: '220px', objectFit: 'cover', display: 'block' }}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      
-                      {pageIndex === visualizationPages - 1 && (
-                        <p style={{ fontSize: '8px', color: '#888', fontStyle: 'italic', textAlign: 'center', marginTop: '12px' }}>
-                          AI-generated concepts only. Actual results may vary. Consult qualified professionals.
-                        </p>
-                      )}
-                    </div>
-                  </PdfPage>
-                );
-              })}
-            </>
-          )}
-        </>
-      )}
     </div>
   );
 };
