@@ -1985,17 +1985,21 @@ const App: React.FC = () => {
                     
                     {/* Address Autocomplete Dropdown */}
                     {showSuggestions && suggestions.length > 0 && (
-                      <div 
-                        className="absolute left-0 right-0 mt-2 rounded-2xl shadow-xl border overflow-hidden z-50"
-                        style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
+                      <div
+                        className="absolute left-0 right-0 mt-2 rounded-2xl overflow-hidden z-50 ring-1 ring-black/5"
+                        style={{
+                          backgroundColor: 'var(--bg-card)',
+                          border: '1px solid #DCD7CE',
+                          boxShadow: '0 12px 32px -8px rgba(74, 65, 55, 0.18), 0 4px 12px -4px rgba(74, 65, 55, 0.08)',
+                        }}
                       >
                         {suggestions.map((suggestion, index) => (
                           <button
                             key={index}
                             type="button"
                             onClick={() => handleSelectSuggestion(suggestion)}
-                            className="w-full px-6 py-3 text-left hover:bg-[#C9A961]/10 transition-colors flex items-center gap-3 border-b last:border-b-0"
-                            style={{ borderColor: 'var(--border-color)' }}
+                            className="w-full px-6 py-3.5 text-left hover:bg-[#C9A961]/10 transition-colors flex items-center gap-3 border-b last:border-b-0"
+                            style={{ borderColor: '#E8E6E3' }}
                           >
                             <i className="fa-solid fa-location-dot text-[#C9A961] text-sm flex-shrink-0"></i>
                             <div className="min-w-0">
