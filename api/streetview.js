@@ -70,42 +70,45 @@ export default async function handler(req, res) {
   if (leadError || !lead) return res.status(404).json({ error: 'Lead not found' });
 
   try {
-    // Step 1: Geocode the address to get the property's actual coordinates.
-    const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(lead.property_address)}&region=au&components=country:AU&key=${googleApiKey}`;
-    const geoRes = await fetch(geoUrl);
-    const geoData = await geoRes.json();
-    if (geoData.status !== 'OK' || !geoData.results?.length) {
-      console.log('[StreetView] Geocode failed for:', lead.property_address.substring(0, 40), 'status:', geoData.status);
-      return res.status(404).json({ error: 'Could not locate this address' });
-    }
-    const propertyLoc = geoData.results[0].geometry.location; // { lat, lng }
-
-    // Step 2: Find the closest Street View panorama. Metadata is free and
-    // returns the panorama's lat/lng so we can aim the camera at the house.
-    const metaUrl = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${propertyLoc.lat},${propertyLoc.lng}&radius=80&source=outdoor&key=${googleApiKey}`;
+    // Step 1: Ask Street View directly if it has imagery for this address.
+    // Letting Google do its own geocoding here is more robust than geocoding
+    // ourselves first (our geocode can land on a building centroid that's
+    // 100m off the street; metadata's address resolution is tuned for this).
+    const metaUrl = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${encodeURIComponent(lead.property_address)}&radius=500&key=${googleApiKey}`;
     const metaRes = await fetch(metaUrl);
     const meta = await metaRes.json();
-    if (meta.status !== 'OK' || !meta.location) {
-      console.log('[StreetView] No imagery near:', lead.property_address.substring(0, 40), 'status:', meta.status);
+    if (meta.status !== 'OK' || !meta.location || !meta.pano_id) {
+      console.log('[StreetView] No imagery for:', lead.property_address.substring(0, 60), 'status:', meta.status);
       return res.status(404).json({ error: 'No street view available for this address' });
     }
-    const panoLoc = meta.location; // { lat, lng } of the actual panorama
+    const panoLoc = meta.location; // { lat, lng } of the chosen panorama
 
-    // Step 3: Compute the heading (bearing) from the panorama → property so
-    // the camera looks AT the house instead of along the street.
-    const heading = bearing(panoLoc, propertyLoc);
+    // Step 2: Best-effort geocode the address so we can aim the camera at
+    // the house. If geocoding fails for any reason we still serve the image,
+    // just at the panorama's default heading.
+    let heading;
+    try {
+      const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(lead.property_address)}&region=au&components=country:AU&key=${googleApiKey}`;
+      const geoRes = await fetch(geoUrl);
+      const geoData = await geoRes.json();
+      if (geoData.status === 'OK' && geoData.results?.[0]?.geometry?.location) {
+        heading = bearing(panoLoc, geoData.results[0].geometry.location);
+      }
+    } catch (geoErr) {
+      console.warn('[StreetView] Heading geocode failed (serving image without heading):', geoErr.message);
+    }
 
-    // Step 4: Fetch the image (billable call). Locking to the specific
-    // panorama by ID ensures the heading we computed is honoured.
+    // Step 3: Fetch the image (billable call). Locking to the specific
+    // panorama by ID ensures the heading is honoured.
     const params = new URLSearchParams({
       size: STREET_VIEW_SIZE,
       pano: meta.pano_id,
-      heading: String(heading.toFixed(1)),
       fov: '80',
       pitch: '0',
-      source: 'outdoor',
       key: googleApiKey,
     });
+    if (heading !== undefined) params.set('heading', heading.toFixed(1));
+
     const imageRes = await fetch(`https://maps.googleapis.com/maps/api/streetview?${params}`);
     if (!imageRes.ok) {
       console.error('[StreetView] Google API error:', imageRes.status);
