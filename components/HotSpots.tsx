@@ -419,11 +419,20 @@ export const HotSpots: React.FC<HotSpotsProps> = ({ onSelectSuburb, onBack, isAd
                       </td>
                       <td className="px-4 py-4 text-center">
                         <button
-                          onClick={() => onSelectSuburb?.(suburb.suburb_name, suburb.state)}
-                          className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-[#3A342D] text-white hover:bg-[#C9A961] transition-colors"
+                          onClick={() => {
+                            // Open a pre-populated realestate.com.au search for this suburb in a
+                            // new tab. Keep the user on Hot Spots so they can browse more rows
+                            // without losing their filter state.
+                            // Format: https://www.realestate.com.au/buy/in-{suburb}+{state}/list-1
+                            const slug = `${suburb.suburb_name.toLowerCase().trim().replace(/\s+/g, '-')}+${suburb.state.toLowerCase()}`;
+                            const url = `https://www.realestate.com.au/buy/in-${encodeURIComponent(slug)}/list-1`;
+                            window.open(url, '_blank', 'noopener,noreferrer');
+                          }}
+                          title={`Browse listings in ${suburb.suburb_name} on realestate.com.au`}
+                          className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-[#3A342D] text-white hover:bg-[#C9A961] transition-colors inline-flex items-center gap-1.5"
                         >
-                          <i className="fa-solid fa-magnifying-glass mr-1.5"></i>
-                          Explore
+                          Listings
+                          <i className="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
                         </button>
                       </td>
                     </tr>
