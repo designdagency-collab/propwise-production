@@ -306,10 +306,13 @@ const LeadsDashboard: React.FC<LeadsDashboardProps> = ({ onBack }) => {
                           </span>
                           <span className="text-xs text-[#4A4137]/50">{daysAgo(lead.created_at)}</span>
                         </div>
-                        <p className="text-sm text-[#4A4137]/40 select-none">
+                        <p className="text-sm text-[#4A4137]/40 select-none mb-3">
                           <i className="fa-solid fa-lock mr-2"></i>
                           ████ ████ ████ St
                         </p>
+                        <div className="mb-3">
+                          <StreetViewImage leadId={lead.id} />
+                        </div>
                         {lead.notes_preview && (
                           <p className="mt-2 text-xs text-[#4A4137]/60 italic">"{lead.notes_preview}"</p>
                         )}
