@@ -172,7 +172,7 @@ const Navbar: React.FC<NavbarProps> = ({
             className="flex items-center gap-2 hover:opacity-80 transition-opacity focus:outline-none group flex-shrink-0"
           >
             <img
-              src="/upblock.ai-logo.svg"
+              src="/upblock.ai-logo.png"
               alt="upblock.ai"
               className="w-[130px] h-[66px] sm:w-[145px] sm:h-[74px] md:w-[155px] md:h-[80px] object-contain transition-transform group-active:scale-95"
             />
