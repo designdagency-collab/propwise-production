@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 interface Suggestion {
   description: string;
@@ -35,6 +35,11 @@ const LandingPage: React.FC<LandingPageProps> = ({
   isMobile,
   onShowPricing
 }) => {
+  // Before/After showcase slider state
+  const [sliderPos, setSliderPos] = useState(50);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+
   // Demo typing effect
   const triggerDemoTyping = () => {
     // Scroll to top first
@@ -57,6 +62,35 @@ const LandingPage: React.FC<LandingPageProps> = ({
       }, 50); // 50ms per character
     }, 800); // Wait for scroll
   };
+
+  const handleSliderMove = useCallback((clientX: number) => {
+    if (!sliderRef.current) return;
+    const rect = sliderRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    setSliderPos(percentage);
+  }, []);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current) return;
+    handleSliderMove(e.clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging.current) return;
+    handleSliderMove(e.touches[0].clientX);
+  };
+
+  // Global listeners for smooth dragging even outside the slider area
+  useEffect(() => {
+    const handleUp = () => { isDragging.current = false; };
+    window.addEventListener('mouseup', handleUp);
+    window.addEventListener('touchend', handleUp);
+    return () => {
+      window.removeEventListener('mouseup', handleUp);
+      window.removeEventListener('touchend', handleUp);
+    };
+  }, []);
 
   return (
     <div className="space-y-0" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -165,6 +199,95 @@ const LandingPage: React.FC<LandingPageProps> = ({
         
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
           <i className="fa-solid fa-chevron-down text-[#C9A961]/40 text-2xl"></i>
+        </div>
+      </section>
+
+      {/* ============================================
+          BEFORE/AFTER SHOWCASE — for developers & renovators
+          ============================================ */}
+      <section className="py-16 sm:py-24 px-4 sm:px-6 relative overflow-hidden" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div className="absolute top-0 left-0 w-96 h-96 bg-[#C9A961]/5 rounded-full blur-3xl -ml-48 -mt-48"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#B8C5A0]/5 rounded-full blur-3xl -mr-48 -mb-48"></div>
+
+        <div className="relative z-10 max-w-6xl mx-auto">
+          <div className="text-center mb-10 sm:mb-12">
+            <span className="inline-block px-4 py-1.5 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
+              <i className="fa-solid fa-house-chimney mr-2"></i>
+              See the Potential
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4" style={{ color: 'var(--text-primary)' }}>
+              Picture the Transformation
+            </h2>
+            <p className="max-w-xl mx-auto text-sm sm:text-base" style={{ color: 'var(--text-muted)' }}>
+              Drag to compare. From cosmetic renovations to full development builds — visualise what your property could become.
+            </p>
+          </div>
+
+          <div className="relative max-w-5xl mx-auto">
+            <div
+              ref={sliderRef}
+              className="relative aspect-[16/10] sm:aspect-[16/9] rounded-2xl sm:rounded-3xl overflow-hidden cursor-col-resize select-none shadow-2xl"
+              onMouseDown={() => { isDragging.current = true; }}
+              onTouchStart={() => { isDragging.current = true; }}
+              onMouseMove={handleMouseMove}
+              onTouchMove={handleTouchMove}
+            >
+              <img
+                src="/Reno-2.png"
+                alt="Renovated property"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+
+              <div
+                className="absolute inset-0 overflow-hidden"
+                style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
+              >
+                <img
+                  src="/Reno-1.png"
+                  alt="Original property"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              </div>
+
+              <div
+                className="absolute top-0 bottom-0 w-1 shadow-2xl z-10"
+                style={{ backgroundColor: 'var(--bg-card)', left: `${sliderPos}%`, transform: 'translateX(-50%)' }}
+              >
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 sm:w-14 sm:h-14 rounded-full shadow-2xl flex items-center justify-center border-4 border-[#C9A961]" style={{ backgroundColor: 'var(--bg-card)' }}>
+                  <i className="fa-solid fa-arrows-left-right text-[#C9A961] text-base sm:text-lg"></i>
+                </div>
+              </div>
+
+              <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                Before
+              </div>
+              <div className="absolute bottom-4 right-4 bg-[#C9A961] text-white text-xs font-bold px-3 py-1.5 rounded-full">
+                After
+              </div>
+            </div>
+
+            <div className="text-center mt-4">
+              <span className="inline-flex items-center gap-2 text-sm px-5 py-2.5 rounded-full" style={{ color: 'var(--text-muted)' }}>
+                <i className="fa-solid fa-hand-pointer text-[#C9A961]"></i>
+                Drag slider to compare
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap justify-center gap-6 mt-6 text-sm" style={{ color: 'var(--text-muted)' }}>
+            <div className="flex items-center gap-2">
+              <i className="fa-solid fa-check text-[#C9A961]"></i>
+              <span>Spot value-add potential</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <i className="fa-solid fa-check text-[#C9A961]"></i>
+              <span>Estimate equity uplift</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <i className="fa-solid fa-check text-[#C9A961]"></i>
+              <span>Plan your next move</span>
+            </div>
+          </div>
         </div>
       </section>
 
