@@ -74,14 +74,32 @@ export default async function handler(req, res) {
     }
   }
 
-  // Look up the property address
+  // Look up the lead — including any cached Street View image
   const { data: lead, error: leadError } = await supabase
     .from('seller_interest')
-    .select('property_address')
+    .select('property_address, street_view_image, street_view_status')
     .eq('id', leadId)
     .single();
   if (leadError || !lead) return res.status(404).json({ error: 'Lead not found' });
 
+  // Fast path: serve the prefetched image straight from the DB cache.
+  if (lead.street_view_status === 'available' && lead.street_view_image) {
+    const dataUrl = lead.street_view_image;
+    const commaIdx = dataUrl.indexOf(',');
+    if (commaIdx > -1) {
+      const base64 = dataUrl.slice(commaIdx + 1);
+      const buffer = Buffer.from(base64, 'base64');
+      res.setHeader('Content-Type', 'image/jpeg');
+      res.setHeader('Cache-Control', 'private, max-age=86400');
+      return res.status(200).send(buffer);
+    }
+  }
+  if (lead.street_view_status === 'unavailable') {
+    return res.status(404).json({ error: 'No street view available for this address' });
+  }
+
+  // Slow path: legacy lead with status='pending' (pre-dates this column),
+  // or status null/missing. Live-fetch and backfill the column.
   try {
     // Step 1: Ask Street View directly if it has imagery for this address.
     // Letting Google do its own geocoding here is more robust than geocoding
@@ -92,6 +110,11 @@ export default async function handler(req, res) {
     const meta = await metaRes.json();
     if (meta.status !== 'OK' || !meta.location || !meta.pano_id) {
       console.log('[StreetView] No imagery for:', lead.property_address.substring(0, 60), 'status:', meta.status);
+      // Backfill so we don't keep retrying this address on every dashboard load
+      await supabase
+        .from('seller_interest')
+        .update({ street_view_status: 'unavailable' })
+        .eq('id', leadId);
       return res.status(404).json({ error: 'No street view available for this address' });
     }
     const panoLoc = meta.location; // { lat, lng } of the chosen panorama
@@ -129,6 +152,20 @@ export default async function handler(req, res) {
     }
 
     const buffer = Buffer.from(await imageRes.arrayBuffer());
+
+    // Backfill the cache so future requests for this lead skip Google.
+    try {
+      await supabase
+        .from('seller_interest')
+        .update({
+          street_view_image: `data:image/jpeg;base64,${buffer.toString('base64')}`,
+          street_view_status: 'available',
+        })
+        .eq('id', leadId);
+    } catch (cacheErr) {
+      console.warn('[StreetView] Backfill failed (continuing):', cacheErr.message);
+    }
+
     res.setHeader('Content-Type', 'image/jpeg');
     res.setHeader('Cache-Control', 'private, max-age=86400'); // 1 day per browser
     return res.status(200).send(buffer);
