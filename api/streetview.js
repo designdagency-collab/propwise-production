@@ -49,9 +49,7 @@ export default async function handler(req, res) {
   const { data: { user }, error: authError } = await supabase.auth.getUser(token);
   if (authError || !user) return res.status(401).json({ error: 'Invalid token' });
 
-  // Gate: subscriber or admin only. Street View is shown as a marketing hook
-  // on both revealed AND unrevealed leads — the $49 reveal unlocks contact
-  // details, not the property image.
+  // Gate: subscriber or admin
   const { data: profile } = await supabase
     .from('profiles')
     .select('role, is_admin')
@@ -59,6 +57,21 @@ export default async function handler(req, res) {
     .single();
   if (!profile || (profile.role !== 'subscriber' && profile.role !== 'admin' && !profile.is_admin)) {
     return res.status(403).json({ error: 'Subscriber access required' });
+  }
+
+  // Gate: this user must have already revealed this lead. The Street View
+  // image is part of what the $49 reveal unlocks, alongside the contact
+  // details — admins bypass this since they see everything.
+  if (!profile.is_admin && profile.role !== 'admin') {
+    const { data: reveal } = await supabase
+      .from('lead_reveals')
+      .select('id')
+      .eq('subscriber_id', user.id)
+      .eq('lead_id', leadId)
+      .maybeSingle();
+    if (!reveal) {
+      return res.status(403).json({ error: 'Lead not revealed' });
+    }
   }
 
   // Look up the property address
