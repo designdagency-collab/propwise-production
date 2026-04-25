@@ -63,40 +63,48 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Access denied. Admin only.' });
   }
 
-  // POST: Update actual balance
+  // POST: Update actual balance and/or lead reveal price
   if (req.method === 'POST') {
     try {
-      const { actualBalance } = req.body;
-      
-      if (actualBalance === undefined || actualBalance === null) {
-        return res.status(400).json({ error: 'actualBalance is required' });
+      const { actualBalance, leadRevealPriceCents } = req.body;
+
+      if (actualBalance === undefined && leadRevealPriceCents === undefined) {
+        return res.status(400).json({ error: 'actualBalance or leadRevealPriceCents is required' });
       }
 
-      const balance = parseFloat(actualBalance);
-      if (isNaN(balance) || balance < 0) {
-        return res.status(400).json({ error: 'Invalid balance amount' });
+      const updates = { id: 'main', updated_at: new Date().toISOString() };
+
+      if (actualBalance !== undefined && actualBalance !== null) {
+        const balance = parseFloat(actualBalance);
+        if (isNaN(balance) || balance < 0) {
+          return res.status(400).json({ error: 'Invalid balance amount' });
+        }
+        updates.actual_balance = balance;
       }
 
-      // Upsert the actual balance
+      if (leadRevealPriceCents !== undefined && leadRevealPriceCents !== null) {
+        const cents = parseInt(leadRevealPriceCents, 10);
+        if (isNaN(cents) || cents < 0) {
+          return res.status(400).json({ error: 'Invalid lead reveal price' });
+        }
+        updates.lead_reveal_price_cents = cents;
+      }
+
       const { error: updateError } = await supabase
         .from('billing_calibration')
-        .upsert({
-          id: 'main',
-          actual_balance: balance,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'id' });
+        .upsert(updates, { onConflict: 'id' });
 
       if (updateError) {
         console.error('[AdminBilling] Update error:', updateError);
-        return res.status(500).json({ error: 'Failed to update balance' });
+        return res.status(500).json({ error: 'Failed to update billing settings' });
       }
 
-      console.log('[AdminBilling] Actual balance updated to:', balance);
-      return res.status(200).json({ success: true, actualBalance: balance });
+      console.log('[AdminBilling] Updated:', updates);
+      return res.status(200).json({ success: true, ...updates });
 
     } catch (error) {
       console.error('[AdminBilling] POST error:', error);
-      return res.status(500).json({ error: 'Failed to update balance' });
+      return res.status(500).json({ error: 'Failed to update billing settings' });
     }
   }
 
@@ -153,12 +161,14 @@ export default async function handler(req, res) {
 
     const blendedCostPerCall = currentMonthSearchCount > 0 ? currentMonthEstimate / currentMonthSearchCount : COST_PER_TEXT_SEARCH;
 
-    // Get stored actual balance from database
+    // Get stored actual balance and lead reveal price from database
     const { data: balanceData } = await supabase
       .from('billing_calibration')
-      .select('actual_balance')
+      .select('actual_balance, lead_reveal_price_cents')
       .eq('id', 'main')
       .maybeSingle();
+
+    const leadRevealPriceCents = balanceData?.lead_reveal_price_cents ?? 4900;
 
     // Account payable: priority order:
     // 1. Database stored actual balance (editable from dashboard)
@@ -209,6 +219,7 @@ export default async function handler(req, res) {
       dailyAverage: Math.round(dailyAverage * 1000) / 1000,
       costPerSearch: COST_PER_TEXT_SEARCH,
       blendedCostPerCall: Math.round(blendedCostPerCall * 10000) / 10000,
+      leadRevealPriceCents,
       breakdown: {
         textCost: Math.round(currentMonthTextCost * 100) / 100
       },

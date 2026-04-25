@@ -154,6 +154,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     costPerSearch?: number;
     costPerImage?: number;
     blendedCostPerCall?: number;
+    leadRevealPriceCents?: number;
     breakdown?: { textCost: number; imageCost: number };
     note?: string;
     error?: string;
@@ -880,14 +881,33 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                             <p className="text-[10px] text-gray-400">${billing.costPerSearch}/search</p>
                           </div>
                         </div>
-                        <div className="p-3 bg-purple-50/50 rounded-xl flex items-center justify-between">
+                        <div className="p-3 bg-emerald-50/50 rounded-xl flex items-center justify-between group relative">
                           <div className="flex items-center gap-2">
-                            <i className="fa-solid fa-image text-purple-500"></i>
-                            <span className="text-xs text-gray-600">Image Gen</span>
+                            <i className="fa-solid fa-list-check text-emerald-600"></i>
+                            <span className="text-xs text-gray-600">Lead Reveal Price</span>
                           </div>
-                          <div className="text-right">
-                            <p className="font-bold text-purple-600">{formatCurrency(billing.breakdown.imageCost)}</p>
-                            <p className="text-[10px] text-gray-400">${billing.costPerImage}/image</p>
+                          <div className="text-right flex items-center gap-2">
+                            <p className="font-bold text-emerald-700">${((billing.leadRevealPriceCents ?? 4900) / 100).toFixed(0)}</p>
+                            <button
+                              onClick={() => {
+                                const current = ((billing.leadRevealPriceCents ?? 4900) / 100).toFixed(0);
+                                const next = prompt('New lead reveal price (AUD, whole dollars):', current);
+                                if (next === null) return;
+                                const dollars = parseFloat(next);
+                                if (isNaN(dollars) || dollars < 0) { alert('Invalid amount'); return; }
+                                supabaseService.authenticatedFetch('/api/admin/billing', {
+                                  method: 'POST',
+                                  body: JSON.stringify({ leadRevealPriceCents: Math.round(dollars * 100) })
+                                }).then(res => {
+                                  if (res.ok) fetchData(true);
+                                  else alert('Failed to update price');
+                                });
+                              }}
+                              className="w-5 h-5 bg-white border rounded-full text-[10px] text-gray-500 hover:text-emerald-700 hover:border-emerald-500 transition-colors"
+                              title="Update lead reveal price"
+                            >
+                              <i className="fa-solid fa-pen"></i>
+                            </button>
                           </div>
                         </div>
                       </div>

@@ -105,6 +105,7 @@ export default async function handler(req, res) {
       'referral_count',
       'referral_credits_earned',
       'is_admin',
+      'role',
       'created_at',
       'updated_at'
       // enterprise_waitlist and enterprise_waitlist_date - add after running migration

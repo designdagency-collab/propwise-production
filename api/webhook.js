@@ -56,7 +56,36 @@ export default async function handler(req, res) {
     const customerEmail = session.customer_email;
     const userId = session.metadata?.userId; // Primary lookup method
     const planType = session.metadata?.plan || 'STARTER_PACK';
-    
+
+    // Lead-reveal purchase: short-circuit before the credit/subscription flow
+    if (session.metadata?.type === 'lead_reveal') {
+      const { leadId, subscriberId, priceCents } = session.metadata;
+      console.log('[Webhook] LEAD REVEAL purchase — leadId:', leadId, 'subscriberId:', subscriberId);
+      if (supabase && leadId && subscriberId) {
+        try {
+          const { error } = await supabase
+            .from('lead_reveals')
+            .insert({
+              subscriber_id: subscriberId,
+              lead_id: leadId,
+              is_free: false,
+              amount_cents: parseInt(priceCents || '0', 10),
+              stripe_session_id: session.id,
+            });
+          if (error && error.code !== '23505') {
+            console.error('[Webhook] lead_reveals insert error:', error.message);
+          } else {
+            console.log('[Webhook] lead_reveals row inserted (or already existed)');
+          }
+        } catch (e) {
+          console.error('[Webhook] lead_reveals exception:', e.message || e);
+        }
+      } else {
+        console.error('[Webhook] Cannot record lead reveal — missing supabase/leadId/subscriberId');
+      }
+      return res.json({ received: true });
+    }
+
     console.log('[Webhook] ======= PAYMENT RECEIVED =======');
     console.log('[Webhook] Session ID:', session.id);
     console.log('[Webhook] Plan:', planType);

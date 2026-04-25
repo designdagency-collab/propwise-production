@@ -11,6 +11,7 @@ import AccountSettings from './components/AccountSettings';
 import InviteFriendsModal from './components/InviteFriendsModal';
 import { AdminPage } from './components/AdminPage';
 import { BoomFinder } from './components/BoomFinder';
+import LeadsDashboard from './components/LeadsDashboard';
 import LandingPage from './components/LandingPage';
 import { geminiService } from './services/geminiService';
 import { stripeService } from './services/stripeService';
@@ -167,6 +168,9 @@ const App: React.FC = () => {
   
   // Boom Finder page state
   const [showBoomFinder, setShowBoomFinder] = useState(false);
+
+  // Leads dashboard state (subscriber tier — Developers + Buyers Agents)
+  const [showLeadsDashboard, setShowLeadsDashboard] = useState(false);
   
   // Initialize from cache for instant header display (optimistic UX)
   const cachedData = getCachedProfile();
@@ -1844,8 +1848,10 @@ const App: React.FC = () => {
           console.log('[App] Setting showBoomFinder to true');
           setShowBoomFinder(true);
         }}
+        onLeadsDashboard={() => setShowLeadsDashboard(true)}
         isLoggedIn={isLoggedIn}
         isAdmin={isAdmin}
+        isSubscriber={userProfile?.role === 'subscriber'}
         userName={userProfile?.full_name}
         userEmail={userEmail}
         userPhone={userPhone}
@@ -2261,6 +2267,13 @@ const App: React.FC = () => {
       {showAdminDashboard && (
         <div className="fixed inset-0 z-[60] bg-[#FAF9F6] overflow-y-auto">
           <AdminPage onBack={() => setShowAdminDashboard(false)} />
+        </div>
+      )}
+
+      {/* Leads Dashboard - subscriber tier */}
+      {showLeadsDashboard && (
+        <div className="fixed inset-0 z-[58] overflow-y-auto" style={{ backgroundColor: 'var(--bg-primary)' }}>
+          <LeadsDashboard onBack={() => setShowLeadsDashboard(false)} />
         </div>
       )}
 

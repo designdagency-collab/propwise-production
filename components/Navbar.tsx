@@ -21,8 +21,10 @@ interface NavbarProps {
   onInviteFriends?: () => void;
   onAdminPanel?: () => void;
   onBoomFinder?: () => void;
+  onLeadsDashboard?: () => void;
   isLoggedIn?: boolean;
   isAdmin?: boolean;
+  isSubscriber?: boolean;
   userName?: string;
   userEmail?: string;
   userPhone?: string;
@@ -46,8 +48,10 @@ const Navbar: React.FC<NavbarProps> = ({
   onInviteFriends,
   onAdminPanel,
   onBoomFinder,
+  onLeadsDashboard,
   isLoggedIn = false,
   isAdmin = false,
+  isSubscriber = false,
   userName,
   userEmail,
   userPhone,
@@ -200,6 +204,18 @@ const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
             
+            {/* Leads Dashboard - subscribers and admins */}
+            {isLoggedIn && (isSubscriber || isAdmin) && (
+              <button
+                onClick={onLeadsDashboard}
+                title="Property Leads"
+                className="p-1.5 sm:p-2.5 transition-colors rounded-xl hover:bg-emerald-100"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                <i className="fa-solid fa-list-check text-sm sm:text-lg text-emerald-600"></i>
+              </button>
+            )}
+
             {/* Admin Panel - only for authorized admin emails */}
             {isLoggedIn && userEmail?.toLowerCase() === 'designd.agency@gmail.com' && (
               <button 
