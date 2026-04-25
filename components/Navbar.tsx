@@ -189,18 +189,18 @@ const Navbar: React.FC<NavbarProps> = ({
               <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'} text-sm sm:text-lg`}></i>
             </button>
             
-            {/* Boom Finder - visible to all logged in users */}
+            {/* Hot Spots - visible to all logged in users */}
             {isLoggedIn && (
-              <button 
+              <button
                 onClick={() => {
-                  console.log('[Navbar] Boom Finder clicked');
+                  console.log('[Navbar] Hot Spots clicked');
                   onBoomFinder?.();
                 }}
-                title="Boom Finder - Discover high-growth suburbs"
-                className="p-1.5 sm:p-2.5 transition-colors rounded-xl hover:bg-amber-100"
+                title="Hot Spots — high-growth suburbs"
+                className="p-1.5 sm:p-2.5 transition-colors rounded-xl hover:bg-[#C9A961]/10"
                 style={{ color: 'var(--text-muted)' }}
               >
-                <i className="fa-solid fa-chart-line text-sm sm:text-lg text-amber-500"></i>
+                <i className="fa-solid fa-fire text-sm sm:text-lg text-[#C9A961]"></i>
               </button>
             )}
             

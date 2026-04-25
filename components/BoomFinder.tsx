@@ -193,10 +193,11 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, onBack, 
           <i className="fa-solid fa-chart-line mr-2"></i>
           Suburb Intelligence
         </span>
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#3A342D] mb-2">Boom Finder</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#3A342D] mb-2">Hot Spots</h1>
         <p className="text-sm text-[#4A4137]/60 max-w-2xl mb-8">
-          Discover high-growth Australian suburbs using ABS Census and regional data. The Boom Score combines
-          population growth, supply constraints, rental yields, and trades influx into one ranked view.
+          High-growth Australian suburbs ranked using ABS Census and regional data. The Heat Score
+          combines population growth, supply constraints, rental yields, and trades influx into one
+          composite signal.
         </p>
 
         {/* Filter card */}
@@ -314,9 +315,9 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, onBack, 
                     <th
                       className="px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest text-[#4A4137]/60 cursor-pointer hover:text-[#C9A961] transition-colors"
                       onClick={() => handleSort('boom_score')}
-                      title="Overall growth potential score (0-100). Combines crowding pressure, supply constraints, and rental yields. Higher = stronger growth fundamentals."
+                      title="Heat Score (0-100). Overall growth potential — combines crowding pressure, supply constraints, rental yields, and trades influx. Higher = stronger growth fundamentals."
                     >
-                      Boom <SortIcon column="boom_score" />
+                      Heat <SortIcon column="boom_score" />
                     </th>
                     <th
                       className="px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest text-[#4A4137]/60 cursor-pointer hover:text-[#C9A961] transition-colors"
