@@ -29,6 +29,7 @@ interface BoomSuburb {
 
 interface BoomFinderProps {
   onSelectSuburb?: (suburb: string, state: string) => void;
+  onBack?: () => void;
   isAdmin?: boolean;
   userEmail?: string;
 }
@@ -45,34 +46,37 @@ const STATES = [
   { code: 'ACT', name: 'Australian Capital Territory' },
 ];
 
-const ScoreBadge: React.FC<{ score: number; label?: string }> = ({ score, label }) => {
-  let bgColor = 'bg-gray-100';
-  let textColor = 'text-gray-700';
-  
+const ScoreBadge: React.FC<{ score: number }> = ({ score }) => {
+  let bg: string;
+  let text: string;
+  let border: string;
+
   if (score >= 75) {
-    bgColor = 'bg-emerald-100';
-    textColor = 'text-emerald-700';
+    bg = 'bg-emerald-50';
+    text = 'text-emerald-700';
+    border = 'border-emerald-100';
   } else if (score >= 50) {
-    bgColor = 'bg-amber-100';
-    textColor = 'text-amber-700';
+    bg = 'bg-[#C9A961]/10';
+    text = 'text-[#B8985A]';
+    border = 'border-[#C9A961]/20';
   } else if (score >= 25) {
-    bgColor = 'bg-orange-100';
-    textColor = 'text-orange-700';
+    bg = 'bg-amber-50';
+    text = 'text-amber-700';
+    border = 'border-amber-100';
   } else {
-    bgColor = 'bg-red-100';
-    textColor = 'text-red-700';
+    bg = 'bg-rose-50';
+    text = 'text-rose-700';
+    border = 'border-rose-100';
   }
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${bgColor} ${textColor}`}>
-      {label && <span className="mr-1 text-xs opacity-70">{label}</span>}
+    <span className={`inline-flex items-center justify-center min-w-[40px] px-2.5 py-0.5 rounded-full text-xs font-bold border ${bg} ${text} ${border}`}>
       {score}
     </span>
   );
 };
 
-export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin, userEmail }) => {
-  // Allow refresh for admin flag OR specific admin email
+export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, onBack, isAdmin, userEmail }) => {
   const canRefresh = isAdmin || userEmail?.toLowerCase() === 'designd.agency@gmail.com';
   const [suburbs, setSuburbs] = useState<BoomSuburb[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,16 +103,12 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
       });
 
       const response = await fetch(`/api/boom-suburbs?${params}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch suburbs');
-      }
+      if (!response.ok) throw new Error('Failed to fetch suburbs');
 
       const data = await response.json();
       setSuburbs(data.suburbs || []);
       setTotalCount(data.total || 0);
       setLastRefresh(data.lastRefresh);
-
     } catch (err) {
       console.error('[BoomFinder] Error:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -123,21 +123,16 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
 
   const handleRefreshData = async () => {
     if (refreshing) return;
-
     setRefreshing(true);
     try {
       const response = await supabaseService.authenticatedFetch('/api/admin/refresh-boom-data', {
         method: 'POST'
       });
-
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to refresh');
       }
-
-      // Refetch data after refresh
       await fetchSuburbs();
-      
     } catch (err) {
       console.error('[BoomFinder] Refresh error:', err);
       alert('Failed to refresh data: ' + (err instanceof Error ? err.message : 'Unknown error'));
@@ -156,68 +151,66 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
   };
 
   const SortIcon: React.FC<{ column: string }> = ({ column }) => {
-    if (sortBy !== column) return <i className="fa-solid fa-sort text-gray-300 ml-1"></i>;
-    return sortOrder === 'asc' 
-      ? <i className="fa-solid fa-sort-up text-amber-500 ml-1"></i>
-      : <i className="fa-solid fa-sort-down text-amber-500 ml-1"></i>;
+    if (sortBy !== column) return <i className="fa-solid fa-sort text-[#4A4137]/20 ml-1"></i>;
+    return sortOrder === 'asc'
+      ? <i className="fa-solid fa-sort-up text-[#C9A961] ml-1"></i>
+      : <i className="fa-solid fa-sort-down text-[#C9A961] ml-1"></i>;
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
-      {/* Header */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <i className="fa-solid fa-chart-line text-amber-500"></i>
-              Boom Finder
-            </h1>
-            <p className="text-gray-500 mt-1">
-              Discover high-growth suburbs using ABS data
-            </p>
-          </div>
-          
+    <div className="min-h-screen pb-20" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-24 pb-8">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-4 mb-2">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="text-sm font-bold uppercase tracking-widest text-[#4A4137]/60 hover:text-[#C9A961] transition-colors"
+            >
+              <i className="fa-solid fa-arrow-left mr-2"></i>Back
+            </button>
+          )}
           {lastRefresh && (
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-500">
-                Data updated: {new Date(lastRefresh).toLocaleDateString('en-AU', { 
-                  day: 'numeric', 
-                  month: 'short', 
-                  year: 'numeric' 
-                })}
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#4A4137]/50">
+                Updated {new Date(lastRefresh).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })}
               </span>
               {canRefresh && (
                 <button
                   onClick={handleRefreshData}
                   disabled={refreshing}
-                  className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 flex items-center gap-2"
+                  className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#3A342D] text-white hover:bg-[#C9A961] transition-colors disabled:opacity-60 flex items-center gap-2"
                 >
-                  <i className={`fa-solid fa-sync ${refreshing ? 'animate-spin' : ''}`}></i>
-                  {refreshing ? 'Refreshing...' : 'Refresh Data'}
+                  <i className={`fa-solid fa-arrows-rotate ${refreshing ? 'animate-spin' : ''}`}></i>
+                  {refreshing ? 'Refreshing' : 'Refresh'}
                 </button>
               )}
             </div>
           )}
         </div>
 
-        {/* Info Banner */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <i className="fa-solid fa-info-circle text-blue-500 mt-0.5"></i>
-            <div className="text-sm text-blue-800">
-              <strong>About the Boom Score:</strong> This score combines population growth, housing supply constraints, 
-              and rental yields using ABS Census and regional data. Higher scores indicate suburbs with stronger 
-              growth fundamentals. Data is refreshed monthly.
-            </div>
-          </div>
-        </div>
+        <span className="inline-block px-3 py-1 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest mb-3">
+          <i className="fa-solid fa-chart-line mr-2"></i>
+          Suburb Intelligence
+        </span>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#3A342D] mb-2">Boom Finder</h1>
+        <p className="text-sm text-[#4A4137]/60 max-w-2xl mb-8">
+          Discover high-growth Australian suburbs using ABS Census and regional data. The Boom Score combines
+          population growth, supply constraints, rental yields, and trades influx into one ranked view.
+        </p>
 
-        {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border p-6 mb-6" style={{ borderColor: 'var(--border-color)' }}>
+        {/* Filter card */}
+        <div
+          className="rounded-2xl p-6 mb-6"
+          style={{
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid #DCD7CE',
+            boxShadow: '0 8px 24px -8px rgba(74, 65, 55, 0.06)',
+          }}
+        >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* State selector */}
             <div>
-              <label htmlFor="boom-state-select" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="boom-state-select" className="block text-[10px] font-black uppercase tracking-widest text-[#4A4137]/50 mb-2">
                 State / Territory
               </label>
               <select
@@ -225,20 +218,17 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
                 name="state"
                 value={selectedState}
                 onChange={(e) => setSelectedState(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                style={{ borderColor: 'var(--border-color)' }}
+                className="w-full px-4 py-3 rounded-xl text-sm font-medium text-[#3A342D] bg-white focus:outline-none focus:ring-2 focus:ring-[#C9A961] transition"
+                style={{ border: '1px solid #DCD7CE' }}
               >
                 {STATES.map(state => (
-                  <option key={state.code} value={state.code}>
-                    {state.name}
-                  </option>
+                  <option key={state.code} value={state.code}>{state.name}</option>
                 ))}
               </select>
             </div>
 
-            {/* Search */}
             <div>
-              <label htmlFor="boom-search-input" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="boom-search-input" className="block text-[10px] font-black uppercase tracking-widest text-[#4A4137]/50 mb-2">
                 Search Suburb
               </label>
               <div className="relative">
@@ -248,144 +238,155 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by suburb name..."
-                  className="w-full px-4 py-3 pl-10 rounded-lg border focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-                  style={{ borderColor: 'var(--border-color)' }}
+                  placeholder="Suburb name…"
+                  className="w-full px-4 py-3 pl-10 rounded-xl text-sm font-medium text-[#3A342D] bg-white focus:outline-none focus:ring-2 focus:ring-[#C9A961] transition"
+                  style={{ border: '1px solid #DCD7CE' }}
                 />
-                <i className="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4A4137]/40 text-sm"></i>
               </div>
             </div>
 
-            {/* Results count */}
-            <div className="flex items-end">
-              <div className="w-full px-4 py-3 bg-gray-50 rounded-lg text-center">
-                <span className="text-2xl font-bold text-amber-600">{totalCount}</span>
-                <span className="text-gray-500 ml-2">suburbs found</span>
+            <div className="flex flex-col justify-end">
+              <span className="block text-[10px] font-black uppercase tracking-widest text-[#4A4137]/50 mb-2">
+                Results
+              </span>
+              <div className="flex items-baseline gap-2 px-4 py-3 rounded-xl bg-[#C9A961]/5" style={{ border: '1px solid #DCD7CE' }}>
+                <span className="text-2xl font-black text-[#C9A961]">{totalCount}</span>
+                <span className="text-xs font-medium text-[#4A4137]/60">suburbs found</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Results Table */}
-        <div className="bg-white rounded-xl shadow-sm border overflow-hidden" style={{ borderColor: 'var(--border-color)' }}>
-          <div className="px-4 py-2 bg-gray-50 border-b text-xs text-gray-500 flex items-center gap-1">
+        {/* Results */}
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid #DCD7CE',
+            boxShadow: '0 8px 24px -8px rgba(74, 65, 55, 0.06)',
+          }}
+        >
+          <div className="px-5 py-2.5 bg-[#FAF8F3] border-b text-[10px] font-bold uppercase tracking-widest text-[#4A4137]/50 flex items-center gap-2" style={{ borderColor: '#E8E6E3' }}>
             <i className="fa-solid fa-circle-info"></i>
-            <span>Hover over column headers for metric explanations</span>
+            <span>Hover column headers for metric explanations</span>
           </div>
+
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <i className="fa-solid fa-spinner animate-spin text-3xl text-amber-500"></i>
-              <span className="ml-3 text-gray-500">Loading suburbs...</span>
+              <i className="fa-solid fa-spinner fa-spin text-2xl text-[#C9A961]"></i>
+              <span className="ml-3 text-sm text-[#4A4137]/50">Loading suburbs…</span>
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center py-20 text-red-500">
-              <i className="fa-solid fa-exclamation-triangle text-3xl mb-2"></i>
-              <p>{error}</p>
-              <button 
+            <div className="flex flex-col items-center justify-center py-20">
+              <i className="fa-solid fa-circle-exclamation text-3xl text-rose-400 mb-3"></i>
+              <p className="text-sm text-[#4A4137]/70 mb-4">{error}</p>
+              <button
                 onClick={fetchSuburbs}
-                className="mt-4 px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                className="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-[#3A342D] text-white hover:bg-[#C9A961] transition-colors"
               >
                 Try Again
               </button>
             </div>
           ) : suburbs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-              <i className="fa-solid fa-map-marker-alt text-4xl mb-3 opacity-30"></i>
-              <p>No suburbs found. {canRefresh && 'Click "Refresh Data" to load ABS data.'}</p>
+            <div className="flex flex-col items-center justify-center py-20 text-[#4A4137]/40">
+              <i className="fa-solid fa-location-dot text-3xl mb-3"></i>
+              <p className="text-sm">No suburbs found.{canRefresh && ' Click "Refresh" to load ABS data.'}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b" style={{ borderColor: 'var(--border-color)' }}>
+                <thead className="bg-[#FAF8F3]" style={{ borderBottom: '1px solid #E8E6E3' }}>
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700" title="Ranking position based on current sort order">
+                    <th className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[#4A4137]/60" title="Ranking position based on current sort order">
                       Rank
                     </th>
-                    <th 
-                      className="px-4 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                    <th
+                      className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[#4A4137]/60 cursor-pointer hover:text-[#C9A961] transition-colors"
                       onClick={() => handleSort('suburb_name')}
                       title="Suburb or town name. Click to sort alphabetically."
                     >
                       Suburb <SortIcon column="suburb_name" />
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700" title="Australian State or Territory">
+                    <th className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-[#4A4137]/60" title="Australian State or Territory">
                       State
                     </th>
-                    <th 
-                      className="px-4 py-3 text-center text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                    <th
+                      className="px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest text-[#4A4137]/60 cursor-pointer hover:text-[#C9A961] transition-colors"
                       onClick={() => handleSort('boom_score')}
                       title="Overall growth potential score (0-100). Combines crowding pressure, supply constraints, and rental yields. Higher = stronger growth fundamentals."
                     >
-                      Boom Score <SortIcon column="boom_score" />
+                      Boom <SortIcon column="boom_score" />
                     </th>
-                    <th 
-                      className="px-4 py-3 text-center text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                    <th
+                      className="px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest text-[#4A4137]/60 cursor-pointer hover:text-[#C9A961] transition-colors"
                       onClick={() => handleSort('crowding_score')}
-                      title="Crowding Pressure (0-100). Measures population density, growth rate, and persons per dwelling. Higher = more demand pressure on housing."
+                      title="Crowding Pressure (0-100). Measures population density, growth rate, and persons per dwelling."
                     >
                       Crowding <SortIcon column="crowding_score" />
                     </th>
-                    <th 
-                      className="px-4 py-3 text-center text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                    <th
+                      className="px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest text-[#4A4137]/60 cursor-pointer hover:text-[#C9A961] transition-colors"
                       onClick={() => handleSort('supply_constraint_score')}
-                      title="Development Activity (0-100). Measures building approvals and construction activity. Higher = more homes being built, active growth area with developer confidence."
+                      title="Development Activity (0-100). Higher = more homes being built, active growth area."
                     >
-                      Development <SortIcon column="supply_constraint_score" />
+                      Develop. <SortIcon column="supply_constraint_score" />
                     </th>
-                    <th 
-                      className="px-4 py-3 text-center text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                    <th
+                      className="px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest text-[#4A4137]/60 cursor-pointer hover:text-[#C9A961] transition-colors"
                       onClick={() => handleSort('rent_value_gap_score')}
-                      title="Rent/Value Gap (0-100). Compares rental income potential vs buy costs. Higher = strong rents relative to property prices, good for investors."
+                      title="Rent/Value Gap (0-100). Higher = strong rents relative to property prices."
                     >
-                      Rent/Value <SortIcon column="rent_value_gap_score" />
+                      Rent/Val <SortIcon column="rent_value_gap_score" />
                     </th>
-                    <th 
-                      className="px-4 py-3 text-center text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                    <th
+                      className="px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest text-[#4A4137]/60 cursor-pointer hover:text-[#C9A961] transition-colors"
                       onClick={() => handleSort('trades_influx_score')}
-                      title="Trades Influx (0-100). Measures construction worker activity in the area. Higher = more tradies moving in, signalling new development, infrastructure projects, and future growth. A leading indicator of price appreciation."
+                      title="Trades Influx (0-100). Higher = more tradies moving in. A leading indicator of price appreciation."
                     >
                       Trades <SortIcon column="trades_influx_score" />
                     </th>
-                    <th 
-                      className="px-4 py-3 text-right text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                    <th
+                      className="px-4 py-3 text-right text-[10px] font-black uppercase tracking-widest text-[#4A4137]/60 cursor-pointer hover:text-[#C9A961] transition-colors"
                       onClick={() => handleSort('median_house_price')}
-                      title="Median house price in the suburb. Based on recent sales data and CoreLogic estimates."
+                      title="Median house price in the suburb."
                     >
-                      Median Price <SortIcon column="median_house_price" />
+                      Median <SortIcon column="median_house_price" />
                     </th>
-                    <th 
-                      className="px-4 py-3 text-right text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                    <th
+                      className="px-4 py-3 text-right text-[10px] font-black uppercase tracking-widest text-[#4A4137]/60 cursor-pointer hover:text-[#C9A961] transition-colors"
                       onClick={() => handleSort('gross_rental_yield')}
-                      title="Gross Rental Yield = (Annual Rent ÷ House Price) × 100. Higher yields mean better cash flow for investors. 4-5%+ is generally considered good."
+                      title="Gross Rental Yield = (Annual Rent ÷ House Price) × 100. 4-5%+ is generally considered good."
                     >
                       Yield <SortIcon column="gross_rental_yield" />
                     </th>
-                    <th 
-                      className="px-4 py-3 text-right text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                    <th
+                      className="px-4 py-3 text-right text-[10px] font-black uppercase tracking-widest text-[#4A4137]/60 cursor-pointer hover:text-[#C9A961] transition-colors"
                       onClick={() => handleSort('population')}
-                      title="Estimated resident population. Larger populations typically have more stable markets and amenities."
+                      title="Estimated resident population."
                     >
-                      Population <SortIcon column="population" />
+                      Pop. <SortIcon column="population" />
                     </th>
-                    <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                    <th className="px-4 py-3 text-center text-[10px] font-black uppercase tracking-widest text-[#4A4137]/60">
                       Action
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y" style={{ borderColor: 'var(--border-color)' }}>
+                <tbody>
                   {suburbs.map((suburb, index) => (
-                    <tr 
-                      key={suburb.id} 
-                      className="hover:bg-amber-50 transition-colors"
+                    <tr
+                      key={suburb.id}
+                      className="hover:bg-[#FAF8F3] transition-colors"
+                      style={{ borderTop: index === 0 ? 'none' : '1px solid #E8E6E3' }}
                     >
-                      <td className="px-4 py-4 text-sm text-gray-500">
+                      <td className="px-4 py-4 text-xs font-bold text-[#4A4137]/40">
                         #{index + 1}
                       </td>
                       <td className="px-4 py-4">
-                        <div className="font-medium text-gray-900">{suburb.suburb_name}</div>
-                        <div className="text-sm text-gray-500">{suburb.postcode}</div>
+                        <div className="font-bold text-[#3A342D]">{suburb.suburb_name}</div>
+                        <div className="text-xs text-[#4A4137]/50">{suburb.postcode}</div>
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-600">
+                      <td className="px-4 py-4 text-xs font-bold text-[#4A4137]/70">
                         {suburb.state}
                       </td>
                       <td className="px-4 py-4 text-center">
@@ -403,21 +404,24 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
                       <td className="px-4 py-4 text-center">
                         <ScoreBadge score={suburb.trades_influx_score} />
                       </td>
-                      <td className="px-4 py-4 text-right text-sm">
+                      <td className="px-4 py-4 text-right text-sm text-[#3A342D] font-medium">
                         ${suburb.median_house_price?.toLocaleString() || '—'}
                       </td>
-                      <td className="px-4 py-4 text-right text-sm font-medium" style={{ color: (suburb.gross_rental_yield || 0) >= 5 ? '#16a34a' : (suburb.gross_rental_yield || 0) >= 4 ? '#ca8a04' : '#6b7280' }}>
+                      <td
+                        className="px-4 py-4 text-right text-sm font-bold"
+                        style={{ color: (suburb.gross_rental_yield || 0) >= 5 ? '#047857' : (suburb.gross_rental_yield || 0) >= 4 ? '#B8985A' : '#4A4137' }}
+                      >
                         {suburb.gross_rental_yield ? `${suburb.gross_rental_yield}%` : '—'}
                       </td>
-                      <td className="px-4 py-4 text-right text-sm text-gray-600">
+                      <td className="px-4 py-4 text-right text-sm text-[#4A4137]/70">
                         {suburb.population?.toLocaleString()}
                       </td>
                       <td className="px-4 py-4 text-center">
                         <button
                           onClick={() => onSelectSuburb?.(suburb.suburb_name, suburb.state)}
-                          className="px-3 py-1.5 text-sm bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors"
+                          className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-[#3A342D] text-white hover:bg-[#C9A961] transition-colors"
                         >
-                          <i className="fa-solid fa-search mr-1"></i>
+                          <i className="fa-solid fa-magnifying-glass mr-1.5"></i>
                           Explore
                         </button>
                       </td>
@@ -430,24 +434,30 @@ export const BoomFinder: React.FC<BoomFinderProps> = ({ onSelectSuburb, isAdmin,
         </div>
 
         {/* Legend */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Score Legend</h3>
-          <div className="flex flex-wrap gap-4 text-sm">
+        <div
+          className="mt-6 p-5 rounded-2xl"
+          style={{
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid #DCD7CE',
+          }}
+        >
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-[#4A4137]/50 mb-3">Score Legend</h3>
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-[#4A4137]/70">
             <div className="flex items-center gap-2">
-              <span className="w-4 h-4 rounded-full bg-emerald-500"></span>
-              <span>75-100: High growth potential</span>
+              <span className="inline-block w-3 h-3 rounded-full bg-emerald-500"></span>
+              <span><strong className="text-[#3A342D]">75–100</strong> · High growth potential</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-4 h-4 rounded-full bg-amber-500"></span>
-              <span>50-74: Moderate growth</span>
+              <span className="inline-block w-3 h-3 rounded-full bg-[#C9A961]"></span>
+              <span><strong className="text-[#3A342D]">50–74</strong> · Moderate growth</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-4 h-4 rounded-full bg-orange-500"></span>
-              <span>25-49: Below average</span>
+              <span className="inline-block w-3 h-3 rounded-full bg-amber-500"></span>
+              <span><strong className="text-[#3A342D]">25–49</strong> · Below average</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-4 h-4 rounded-full bg-red-500"></span>
-              <span>0-24: Low growth indicators</span>
+              <span className="inline-block w-3 h-3 rounded-full bg-rose-500"></span>
+              <span><strong className="text-[#3A342D]">0–24</strong> · Low growth indicators</span>
             </div>
           </div>
         </div>

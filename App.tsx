@@ -2302,19 +2302,9 @@ const App: React.FC = () => {
 
       {/* Boom Finder Page - Full Screen */}
       {showBoomFinder && (
-        <div className="fixed inset-0 z-[55] bg-[#FAF9F6] overflow-y-auto">
-          <div className="sticky top-0 z-10 bg-white border-b px-4 py-3 flex items-center justify-between">
-            <button
-              onClick={() => setShowBoomFinder(false)}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-            >
-              <i className="fa-solid fa-arrow-left"></i>
-              Back
-            </button>
-            <span className="font-semibold">Boom Finder</span>
-            <div className="w-16"></div>
-          </div>
-          <BoomFinder 
+        <div className="fixed inset-0 z-[55] overflow-y-auto" style={{ backgroundColor: 'var(--bg-primary)' }}>
+          <BoomFinder
+            onBack={() => setShowBoomFinder(false)}
             onSelectSuburb={(suburb, state) => {
               setShowBoomFinder(false);
               setAddress(`${suburb}, ${state}`);
