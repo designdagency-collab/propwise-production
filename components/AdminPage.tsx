@@ -471,7 +471,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
       <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#C9A961]/20 border-t-[#C9A961] rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading admin dashboard...</p>
+          <p className="text-[#4A4137]/70">Loading admin dashboard...</p>
         </div>
       </div>
     );
@@ -481,12 +481,12 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     return (
       <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center">
         <div className="bg-white rounded-2xl p-8 max-w-md text-center shadow-lg">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
-            <i className="fa-solid fa-exclamation-triangle text-2xl text-red-500"></i>
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-rose-100 flex items-center justify-center">
+            <i className="fa-solid fa-exclamation-triangle text-2xl text-rose-600"></i>
           </div>
-          <p className="text-red-500 font-bold text-lg">Access Denied</p>
-          <p className="text-sm text-gray-600 mt-2">{error}</p>
-          <button onClick={onBack} className="mt-6 px-6 py-2 bg-gray-200 rounded-lg font-medium hover:bg-gray-300 transition-colors">
+          <p className="text-rose-600 font-bold text-lg">Access Denied</p>
+          <p className="text-sm text-[#4A4137]/70 mt-2">{error}</p>
+          <button onClick={onBack} className="mt-6 px-6 py-2 bg-[#F0EDE5] rounded-lg font-medium hover:bg-[#E8E6E3] transition-colors">
             Go Back
           </button>
         </div>
@@ -502,14 +502,14 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
           <div className="flex items-center gap-4">
             <button 
               onClick={onBack}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-[#F0EDE5] rounded-lg transition-colors"
             >
-              <i className="fa-solid fa-arrow-left text-gray-600"></i>
+              <i className="fa-solid fa-arrow-left text-[#4A4137]/70"></i>
             </button>
             <div>
               <h1 className="text-xl font-bold text-[#3A342D]">Admin Dashboard</h1>
               <div className="flex items-center gap-2">
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[#4A4137]/60">
                   Last updated: {metrics?.generatedAt ? new Date(metrics.generatedAt).toLocaleString() : 'N/A'}
                 </p>
                 <span className="flex items-center gap-1 text-xs text-[#5D8A66]">
@@ -547,7 +547,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                 className={`px-6 py-3 text-sm font-bold border-b-2 transition-colors ${
                   activeTab === tab.id 
                     ? 'border-[#C9A961] text-[#C9A961]' 
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    : 'border-transparent text-[#4A4137]/60 hover:text-[#4A4137]'
                 }`}
               >
                 <i className={`fa-solid ${tab.icon} mr-2`}></i>
@@ -558,7 +558,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
           
           {/* Time Period Selector - show for Overview and Revenue */}
           {(activeTab === 'overview' || activeTab === 'revenue') && (
-            <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+            <div className="flex gap-1 bg-[#F0EDE5] p-1 rounded-lg">
               {[
                 { id: 'day', label: 'Today' },
                 { id: 'week', label: 'Week' },
@@ -571,7 +571,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                   className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${
                     timePeriod === period.id 
                       ? 'bg-white text-[#3A342D] shadow-sm' 
-                      : 'text-gray-500 hover:text-gray-700'
+                      : 'text-[#4A4137]/60 hover:text-[#4A4137]'
                   }`}
                 >
                   {period.label}
@@ -638,43 +638,43 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
             {/* Growth & Activity */}
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-white rounded-2xl p-6 shadow-sm border">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-[#4A4137]/60 mb-4">
                   <i className="fa-solid fa-user-plus mr-2 text-[#C9A961]"></i>
                   User Growth
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <div className="text-center p-4 bg-[#FAF8F3] rounded-xl">
                     <p className="text-2xl font-black text-[#3A342D]">{metrics.users.newToday}</p>
-                    <p className="text-xs text-gray-500 mt-1">Today</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Today</p>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <div className="text-center p-4 bg-[#FAF8F3] rounded-xl">
                     <p className="text-2xl font-black text-[#3A342D]">{metrics.users.newWeek}</p>
-                    <p className="text-xs text-gray-500 mt-1">This Week</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">This Week</p>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <div className="text-center p-4 bg-[#FAF8F3] rounded-xl">
                     <p className="text-2xl font-black text-[#3A342D]">{metrics.users.newMonth}</p>
-                    <p className="text-xs text-gray-500 mt-1">This Month</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">This Month</p>
                   </div>
                 </div>
               </div>
 
               <div className="bg-white rounded-2xl p-6 shadow-sm border">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-[#4A4137]/60 mb-4">
                   <i className="fa-solid fa-bolt mr-2 text-[#C9A961]"></i>
                   Activity
                 </h3>
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <div className="text-center p-4 bg-[#FAF8F3] rounded-xl">
                     <p className="text-2xl font-black text-[#3A342D]">{metrics.searches.today}</p>
-                    <p className="text-xs text-gray-500 mt-1">Searches Today</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Searches Today</p>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <div className="text-center p-4 bg-[#FAF8F3] rounded-xl">
                     <p className="text-2xl font-black text-[#3A342D]">{metrics.users.activeToday}</p>
-                    <p className="text-xs text-gray-500 mt-1">Active Today</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Active Today</p>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <div className="text-center p-4 bg-[#FAF8F3] rounded-xl">
                     <p className="text-2xl font-black text-[#3A342D]">{metrics.users.active7d}</p>
-                    <p className="text-xs text-gray-500 mt-1">Active (7d)</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Active (7d)</p>
                   </div>
                 </div>
               </div>
@@ -683,38 +683,38 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
             {/* Anonymous Visitors Section */}
             {visitors && (
               <div className="bg-white rounded-2xl p-6 shadow-sm border">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
-                  <i className="fa-solid fa-eye mr-2 text-purple-500"></i>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-[#4A4137]/60 mb-4">
+                  <i className="fa-solid fa-eye mr-2 text-[#C9A961]"></i>
                   Anonymous Visitors
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-4 bg-purple-50 rounded-xl">
-                    <p className="text-2xl font-black text-purple-600">{visitors.total}</p>
-                    <p className="text-xs text-gray-500 mt-1">Total Visitors</p>
+                  <div className="text-center p-4 bg-[#C9A961]/10 rounded-xl">
+                    <p className="text-2xl font-black text-[#C9A961]">{visitors.total}</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Total Visitors</p>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <div className="text-center p-4 bg-[#FAF8F3] rounded-xl">
                     <p className="text-2xl font-black text-[#3A342D]">{visitors.today}</p>
-                    <p className="text-xs text-gray-500 mt-1">New Today</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">New Today</p>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <div className="text-center p-4 bg-[#FAF8F3] rounded-xl">
                     <p className="text-2xl font-black text-[#3A342D]">{visitors.anonymousSearches}</p>
-                    <p className="text-xs text-gray-500 mt-1">Anon Searches</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Anon Searches</p>
                   </div>
                   <div className="text-center p-4 bg-[#5D8A66]/10 rounded-xl">
                     <p className="text-2xl font-black text-[#5D8A66]">{visitors.conversionRate}%</p>
-                    <p className="text-xs text-gray-500 mt-1">Conversion</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Conversion</p>
                   </div>
                 </div>
                 <div className="mt-4 pt-4 border-t flex justify-between text-sm">
-                  <span className="text-gray-500">
+                  <span className="text-[#4A4137]/60">
                     <i className="fa-solid fa-clock mr-1"></i>
                     Active today: {visitors.activeToday}
                   </span>
-                  <span className="text-gray-500">
+                  <span className="text-[#4A4137]/60">
                     <i className="fa-solid fa-calendar-week mr-1"></i>
                     This week: {visitors.thisWeek}
                   </span>
-                  <span className="text-gray-500">
+                  <span className="text-[#4A4137]/60">
                     <i className="fa-solid fa-calendar mr-1"></i>
                     This month: {visitors.thisMonth}
                   </span>
@@ -726,7 +726,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
             {metrics.leads && (
               <div className="bg-white rounded-2xl p-6 shadow-sm border">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500">
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-[#4A4137]/60">
                     <i className="fa-solid fa-list-check mr-2 text-emerald-600"></i>
                     Lead Marketplace
                   </h3>
@@ -735,25 +735,25 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                   </span>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <div className="text-center p-4 bg-[#FAF8F3] rounded-xl">
                     <p className="text-2xl font-black text-[#3A342D]">{metrics.leads.total}</p>
-                    <p className="text-xs text-gray-500 mt-1">Leads in Market</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Leads in Market</p>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <div className="text-center p-4 bg-[#FAF8F3] rounded-xl">
                     <p className="text-2xl font-black text-[#3A342D]">{metrics.leads.revealsTotal}</p>
-                    <p className="text-xs text-gray-500 mt-1">Total Reveals</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Total Reveals</p>
                   </div>
                   <div className="text-center p-4 bg-emerald-50 rounded-xl">
                     <p className="text-2xl font-black text-emerald-700">{metrics.leads.revealsFree}</p>
-                    <p className="text-xs text-gray-500 mt-1">Free Reveals</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Free Reveals</p>
                   </div>
                   <div className="text-center p-4 bg-[#C9A961]/10 rounded-xl">
                     <p className="text-2xl font-black text-[#C9A961]">{metrics.leads.revealsPaid}</p>
-                    <p className="text-xs text-gray-500 mt-1">Paid Reveals</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Paid Reveals</p>
                   </div>
                   <div className="text-center p-4 bg-emerald-50 rounded-xl">
                     <p className="text-2xl font-black text-emerald-700">{formatCurrency(metrics.leads.revealRevenueCents / 100)}</p>
-                    <p className="text-xs text-gray-500 mt-1">Reveal Revenue</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Reveal Revenue</p>
                   </div>
                 </div>
               </div>
@@ -762,80 +762,80 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
             {/* Plans & Invites */}
             <div className="grid md:grid-cols-3 gap-6">
               <div className="bg-white rounded-2xl p-6 shadow-sm border">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-[#4A4137]/60 mb-4">
                   <i className="fa-solid fa-layer-group mr-2 text-[#8B7355]"></i>
                   Users by Plan
                 </h3>
                 <div className="space-y-3">
-                  <PlanBar label="Free Trial" count={metrics.users.byPlan.FREE_TRIAL || 0} total={metrics.users.total} color="bg-gray-400" />
+                  <PlanBar label="Free Trial" count={metrics.users.byPlan.FREE_TRIAL || 0} total={metrics.users.total} color="bg-[#4A4137]/40" />
                   <PlanBar label="Starter Pack" count={metrics.users.byPlan.STARTER_PACK || 0} total={metrics.users.total} color="bg-[#C9A961]" />
                   <PlanBar label="PRO" count={metrics.users.byPlan.PRO || 0} total={metrics.users.total} color="bg-[#3A342D]" />
                 </div>
                 {metrics.users.byRole && (
                   <div className="mt-4 pt-4 border-t space-y-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">By Role</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#4A4137]/40 mb-2">By Role</p>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Homeowners</span>
+                      <span className="text-[#4A4137]/60">Homeowners</span>
                       <span className="font-bold text-[#3A342D]">{metrics.users.byRole.homeowner}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Subscribers</span>
+                      <span className="text-[#4A4137]/60">Subscribers</span>
                       <span className="font-bold text-[#C9A961]">{metrics.users.byRole.subscriber}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Admins</span>
+                      <span className="text-[#4A4137]/60">Admins</span>
                       <span className="font-bold text-[#3A342D]">{metrics.users.byRole.admin}</span>
                     </div>
                   </div>
                 )}
                 <div className="mt-4 pt-4 border-t flex justify-between text-sm">
-                  <span className="text-gray-500">Users at 0 credits:</span>
-                  <span className="font-bold text-red-500">{metrics.users.atZeroCredits}</span>
+                  <span className="text-[#4A4137]/60">Users at 0 credits:</span>
+                  <span className="font-bold text-rose-600">{metrics.users.atZeroCredits}</span>
                 </div>
               </div>
 
               <div className="bg-white rounded-2xl p-6 shadow-sm border">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-[#4A4137]/60 mb-4">
                   <i className="fa-solid fa-paper-plane mr-2 text-[#C9A961]"></i>
                   Invites
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <div className="text-center p-4 bg-[#FAF8F3] rounded-xl">
                     <p className="text-2xl font-black text-[#3A342D]">{metrics.invites?.sent || 0}</p>
-                    <p className="text-xs text-gray-500 mt-1">Total Sent</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Total Sent</p>
                   </div>
                   <div className="text-center p-4 bg-[#5D8A66]/10 rounded-xl">
                     <p className="text-2xl font-black text-[#5D8A66]">{metrics.invites?.converted || 0}</p>
-                    <p className="text-xs text-gray-500 mt-1">Converted</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Converted</p>
                   </div>
                 </div>
                 <div className="mt-4 pt-4 border-t flex justify-between text-sm">
-                  <span className="text-gray-500">Conversion Rate:</span>
+                  <span className="text-[#4A4137]/60">Conversion Rate:</span>
                   <span className="font-bold text-[#C9A961]">{metrics.invites?.conversionRate || 0}%</span>
                 </div>
               </div>
 
               <div className="bg-white rounded-2xl p-6 shadow-sm border">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-[#4A4137]/60 mb-4">
                   <i className="fa-solid fa-user-group mr-2 text-[#5D8A66]"></i>
                   Activity & Referrals
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center p-4 bg-[#5D8A66]/10 rounded-xl">
                     <p className="text-2xl font-black text-[#5D8A66]">{metrics.users.active30d}</p>
-                    <p className="text-xs text-gray-500 mt-1">Active Users (30d)</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Active Users (30d)</p>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <div className="text-center p-4 bg-[#FAF8F3] rounded-xl">
                     <p className="text-2xl font-black text-[#3A342D]">{metrics.referrals.total}</p>
-                    <p className="text-xs text-gray-500 mt-1">Total Referrals</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Total Referrals</p>
                   </div>
                   <div className="text-center p-4 bg-[#C9A961]/10 rounded-xl">
                     <p className="text-2xl font-black text-[#C9A961]">{metrics.referrals.credited}</p>
-                    <p className="text-xs text-gray-500 mt-1">Referrals Credited</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Referrals Credited</p>
                   </div>
-                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <div className="text-center p-4 bg-[#FAF8F3] rounded-xl">
                     <p className="text-2xl font-black text-[#3A342D]">{metrics.credits.totalInSystem}</p>
-                    <p className="text-xs text-gray-500 mt-1">Credits in System</p>
+                    <p className="text-xs text-[#4A4137]/60 mt-1">Credits in System</p>
                   </div>
                 </div>
               </div>
@@ -844,17 +844,17 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
             {/* API Costs Section */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500">
-                  <i className="fa-solid fa-server mr-2 text-red-500"></i>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-[#4A4137]/60">
+                  <i className="fa-solid fa-server mr-2 text-rose-600"></i>
                   API Costs (Gemini AI)
                 </h3>
                 <div className="flex items-center gap-3">
                   {billing?.accountPayable !== undefined && (
-                    <div className="text-right bg-red-50 px-4 py-2 rounded-xl relative group">
-                      <p className="text-[10px] uppercase tracking-widest text-gray-500">
+                    <div className="text-right bg-rose-50 px-4 py-2 rounded-xl relative group">
+                      <p className="text-[10px] uppercase tracking-widest text-[#4A4137]/60">
                         Account Payable {billing.isActualBalance ? '' : '(est)'}
                       </p>
-                      <p className="text-xl font-black text-red-600">{formatCurrency(billing.accountPayable)}</p>
+                      <p className="text-xl font-black text-rose-600">{formatCurrency(billing.accountPayable)}</p>
                       <button
                         onClick={() => {
                           const newBalance = prompt('Enter actual Google Cloud balance (from console.cloud.google.com/billing):', billing.accountPayable?.toString() || '0');
@@ -874,7 +874,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                             }
                           }
                         }}
-                        className="absolute -top-1 -right-1 w-5 h-5 bg-white border rounded-full text-[10px] text-gray-500 hover:text-[#C9A961] hover:border-[#C9A961] transition-colors"
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-white border rounded-full text-[10px] text-[#4A4137]/60 hover:text-[#C9A961] hover:border-[#C9A961] transition-colors"
                         title="Update actual balance"
                       >
                         <i className="fa-solid fa-pen"></i>
@@ -882,7 +882,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     </div>
                   )}
                   {billing?.googleCloud && (
-                    <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                    <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">
                       <i className="fa-solid fa-check-circle mr-1"></i>
                       {billing.googleCloud.accountName}
                     </span>
@@ -893,38 +893,38 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                 billing.configured ? (
                   <>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                      <div className="text-center p-4 bg-red-50 rounded-xl">
-                        <p className="text-2xl font-black text-red-600">
+                      <div className="text-center p-4 bg-rose-50 rounded-xl">
+                        <p className="text-2xl font-black text-rose-600">
                           {formatCurrency(billing.currentMonth?.actual || billing.currentMonth?.estimated || 0)}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-[#4A4137]/60 mt-1">
                           This Month {billing.currentMonth?.actual ? '' : '(est)'}
                         </p>
-                        <p className="text-[10px] text-gray-400">
+                        <p className="text-[10px] text-[#4A4137]/40">
                           {billing.currentMonth?.searches || 0} searches
                         </p>
                       </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-xl">
+                      <div className="text-center p-4 bg-[#FAF8F3] rounded-xl">
                         <p className="text-2xl font-black text-[#3A342D]">
                           {formatCurrency(billing.lastMonth?.estimated || 0)}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">Last Month</p>
-                        <p className="text-[10px] text-gray-400">
+                        <p className="text-xs text-[#4A4137]/60 mt-1">Last Month</p>
+                        <p className="text-[10px] text-[#4A4137]/40">
                           {billing.lastMonth?.searches || 0} searches
                         </p>
                       </div>
-                      <div className="text-center p-4 bg-amber-50 rounded-xl">
-                        <p className="text-2xl font-black text-amber-600">
+                      <div className="text-center p-4 bg-[#C9A961]/10 rounded-xl">
+                        <p className="text-2xl font-black text-[#C9A961]">
                           {formatCurrency(billing.projectedMonthly || 0)}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">Projected Monthly</p>
+                        <p className="text-xs text-[#4A4137]/60 mt-1">Projected Monthly</p>
                       </div>
-                      <div className="text-center p-4 bg-blue-50 rounded-xl">
-                        <p className="text-2xl font-black text-blue-600">
+                      <div className="text-center p-4 bg-[#5D8A66]/10 rounded-xl">
+                        <p className="text-2xl font-black text-[#5D8A66]">
                           {formatCurrency(billing.allTime?.estimated || 0)}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">All-Time Cost</p>
-                        <p className="text-[10px] text-gray-400">
+                        <p className="text-xs text-[#4A4137]/60 mt-1">All-Time Cost</p>
+                        <p className="text-[10px] text-[#4A4137]/40">
                           {billing.allTime?.searches || 0} searches
                         </p>
                       </div>
@@ -933,20 +933,20 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     {/* Cost Breakdown */}
                     {billing.breakdown && (
                       <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div className="p-3 bg-blue-50/50 rounded-xl flex items-center justify-between">
+                        <div className="p-3 bg-[#5D8A66]/10/50 rounded-xl flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <i className="fa-solid fa-message text-blue-500"></i>
-                            <span className="text-xs text-gray-600">Text API</span>
+                            <i className="fa-solid fa-message text-[#5D8A66]"></i>
+                            <span className="text-xs text-[#4A4137]/70">Text API</span>
                           </div>
                           <div className="text-right">
-                            <p className="font-bold text-blue-600">{formatCurrency(billing.breakdown.textCost)}</p>
-                            <p className="text-[10px] text-gray-400">${billing.costPerSearch}/search</p>
+                            <p className="font-bold text-[#5D8A66]">{formatCurrency(billing.breakdown.textCost)}</p>
+                            <p className="text-[10px] text-[#4A4137]/40">${billing.costPerSearch}/search</p>
                           </div>
                         </div>
                         <div className="p-3 bg-emerald-50/50 rounded-xl flex items-center justify-between group relative">
                           <div className="flex items-center gap-2">
                             <i className="fa-solid fa-list-check text-emerald-600"></i>
-                            <span className="text-xs text-gray-600">Lead Reveal Price</span>
+                            <span className="text-xs text-[#4A4137]/70">Lead Reveal Price</span>
                           </div>
                           <div className="text-right flex items-center gap-2">
                             <p className="font-bold text-emerald-700">${((billing.leadRevealPriceCents ?? 4900) / 100).toFixed(0)}</p>
@@ -965,7 +965,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                                   else alert('Failed to update price');
                                 });
                               }}
-                              className="w-5 h-5 bg-white border rounded-full text-[10px] text-gray-500 hover:text-emerald-700 hover:border-emerald-500 transition-colors"
+                              className="w-5 h-5 bg-white border rounded-full text-[10px] text-[#4A4137]/60 hover:text-emerald-700 hover:border-emerald-500 transition-colors"
                               title="Update lead reveal price"
                             >
                               <i className="fa-solid fa-pen"></i>
@@ -975,30 +975,30 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                       </div>
                     )}
                     
-                    <div className="flex items-center justify-between text-xs text-gray-500 pt-3 border-t">
+                    <div className="flex items-center justify-between text-xs text-[#4A4137]/60 pt-3 border-t">
                       <span>
                         <i className="fa-solid fa-calculator mr-1"></i>
                         Blended: ${billing.blendedCostPerCall?.toFixed(4) || '0.01'}/call
                       </span>
-                      <span className="text-gray-400 text-[10px] max-w-[50%] truncate" title={billing.note}>
+                      <span className="text-[#4A4137]/40 text-[10px] max-w-[50%] truncate" title={billing.note}>
                         {billing.note}
                       </span>
                     </div>
                   </>
                 ) : (
-                  <div className="text-center py-6 text-gray-500">
-                    <i className="fa-solid fa-cloud text-3xl text-gray-300 mb-2"></i>
+                  <div className="text-center py-6 text-[#4A4137]/60">
+                    <i className="fa-solid fa-cloud text-3xl text-[#4A4137]/30 mb-2"></i>
                     <p className="text-sm">{billing.message || 'Billing not configured'}</p>
-                    <p className="text-xs text-gray-400 mt-1">Set up Google Cloud billing export for cost tracking</p>
+                    <p className="text-xs text-[#4A4137]/40 mt-1">Set up Google Cloud billing export for cost tracking</p>
                   </div>
                 )
               ) : (
                 <div className="text-center py-6">
-                  <i className="fa-solid fa-spinner fa-spin text-gray-400"></i>
+                  <i className="fa-solid fa-spinner fa-spin text-[#4A4137]/40"></i>
                 </div>
               )}
               {billing?.error && (
-                <p className="text-xs text-red-500 mt-2 text-center">{billing.error}</p>
+                <p className="text-xs text-rose-600 mt-2 text-center">{billing.error}</p>
               )}
             </div>
           </div>
@@ -1063,67 +1063,67 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                 {/* More Revenue Stats */}
                 <div className="grid md:grid-cols-3 gap-6">
                   <div className="bg-white rounded-2xl p-6 shadow-sm border">
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-[#4A4137]/60 mb-4">
                       <i className="fa-solid fa-wallet mr-2 text-[#5D8A66]"></i>
                       Stripe Balance
                     </h3>
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Available</span>
+                        <span className="text-[#4A4137]/70">Available</span>
                         <span className="text-xl font-bold text-[#5D8A66]">{formatCurrency(revenue.availableBalance)}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Pending</span>
+                        <span className="text-[#4A4137]/70">Pending</span>
                         <span className="text-xl font-bold text-[#C9A961]">{formatCurrency(revenue.pendingBalance)}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="bg-white rounded-2xl p-6 shadow-sm border">
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-[#4A4137]/60 mb-4">
                       <i className="fa-solid fa-receipt mr-2 text-[#C9A961]"></i>
                       Transactions
                     </h3>
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">All Time</span>
+                        <span className="text-[#4A4137]/70">All Time</span>
                         <span className="text-xl font-bold">{revenue.transactionCount}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Today</span>
+                        <span className="text-[#4A4137]/70">Today</span>
                         <span className="text-xl font-bold text-[#C9A961]">{revenue.transactionsToday}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">This Week</span>
+                        <span className="text-[#4A4137]/70">This Week</span>
                         <span className="text-xl font-bold text-[#C9A961]">{revenue.transactionsThisWeek}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">This Month</span>
+                        <span className="text-[#4A4137]/70">This Month</span>
                         <span className="text-xl font-bold text-[#8B7355]">{revenue.transactionsThisMonth}</span>
                       </div>
                       <div className="flex justify-between items-center pt-2 border-t">
-                        <span className="text-gray-600">Avg Order</span>
+                        <span className="text-[#4A4137]/70">Avg Order</span>
                         <span className="text-xl font-bold">{formatCurrency(revenue.avgOrderValue)}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="bg-white rounded-2xl p-6 shadow-sm border">
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500 mb-4">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-[#4A4137]/60 mb-4">
                       <i className="fa-solid fa-box mr-2 text-[#8B7355]"></i>
                       Sales by Product
                     </h3>
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">Starter Pack</span>
+                        <span className="text-[#4A4137]/70">Starter Pack</span>
                         <span className="text-xl font-bold">{revenue.productCounts.starterPack}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">20 Pack</span>
+                        <span className="text-[#4A4137]/70">20 Pack</span>
                         <span className="text-xl font-bold">{revenue.productCounts.bulkPack}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600">PRO Subscriptions</span>
+                        <span className="text-[#4A4137]/70">PRO Subscriptions</span>
                         <span className="text-xl font-bold text-[#3A342D]">{revenue.activeSubscriptions}</span>
                       </div>
                     </div>
@@ -1133,30 +1133,30 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                 {/* Recent Transactions */}
                 <div className="bg-white rounded-2xl shadow-sm border">
                   <div className="px-6 py-4 border-b flex items-center justify-between">
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-[#4A4137]/60">
                       <i className="fa-solid fa-clock-rotate-left mr-2"></i>
                       Recent Transactions
                     </h3>
-                    <span className="text-xs text-gray-400">{revenue.recentTransactions.length} transactions</span>
+                    <span className="text-xs text-[#4A4137]/40">{revenue.recentTransactions.length} transactions</span>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50">
+                      <thead className="bg-[#FAF8F3]">
                         <tr>
-                          <th className="px-6 py-3 text-left font-bold text-gray-500">Date</th>
-                          <th className="px-6 py-3 text-left font-bold text-gray-500">Description</th>
-                          <th className="px-6 py-3 text-left font-bold text-gray-500">Customer</th>
-                          <th className="px-6 py-3 text-right font-bold text-gray-500">Amount</th>
+                          <th className="px-6 py-3 text-left font-bold text-[#4A4137]/60">Date</th>
+                          <th className="px-6 py-3 text-left font-bold text-[#4A4137]/60">Description</th>
+                          <th className="px-6 py-3 text-left font-bold text-[#4A4137]/60">Customer</th>
+                          <th className="px-6 py-3 text-right font-bold text-[#4A4137]/60">Amount</th>
                         </tr>
                       </thead>
                       <tbody>
                         {revenue.recentTransactions.slice(0, 10).map((tx) => (
-                          <tr key={tx.id} className="border-t hover:bg-gray-50">
-                            <td className="px-6 py-4 text-gray-600">
+                          <tr key={tx.id} className="border-t hover:bg-[#FAF8F3]">
+                            <td className="px-6 py-4 text-[#4A4137]/70">
                               {new Date(tx.created).toLocaleDateString()}
                             </td>
                             <td className="px-6 py-4">{tx.description}</td>
-                            <td className="px-6 py-4 text-gray-600">{tx.customerEmail}</td>
+                            <td className="px-6 py-4 text-[#4A4137]/70">{tx.customerEmail}</td>
                             <td className="px-6 py-4 text-right font-bold text-[#5D8A66]">
                               {formatCurrency(tx.amount)}
                             </td>
@@ -1164,7 +1164,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                         ))}
                         {revenue.recentTransactions.length === 0 && (
                           <tr>
-                            <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                            <td colSpan={4} className="px-6 py-8 text-center text-[#4A4137]/60">
                               No recent transactions
                             </td>
                           </tr>
@@ -1176,9 +1176,9 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
               </>
             ) : (
               <div className="bg-white rounded-2xl p-12 text-center shadow-sm border">
-                <i className="fa-solid fa-credit-card text-4xl text-gray-300 mb-4"></i>
-                <p className="text-gray-500">Revenue data not available</p>
-                <p className="text-sm text-gray-400 mt-2">Make sure Stripe is configured</p>
+                <i className="fa-solid fa-credit-card text-4xl text-[#4A4137]/30 mb-4"></i>
+                <p className="text-[#4A4137]/60">Revenue data not available</p>
+                <p className="text-sm text-[#4A4137]/40 mt-2">Make sure Stripe is configured</p>
               </div>
             )}
           </div>
@@ -1201,18 +1201,18 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                         placeholder="Search by email, name, phone, or plan..."
                         className="w-full px-4 py-2 pl-10 border rounded-lg text-sm focus:border-[#C9A961] outline-none"
                       />
-                      <i className={`fa-solid ${isSearching ? 'fa-spinner fa-spin' : 'fa-search'} absolute left-3 top-1/2 -translate-y-1/2 text-gray-400`}></i>
+                      <i className={`fa-solid ${isSearching ? 'fa-spinner fa-spin' : 'fa-search'} absolute left-3 top-1/2 -translate-y-1/2 text-[#4A4137]/40`}></i>
                     </div>
                     {searchQuery && (
                       <button 
                         onClick={() => { setSearchQuery(''); searchUsersFromServer(''); }}
-                        className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
+                        className="px-4 py-2 bg-[#F0EDE5] text-[#4A4137]/70 rounded-lg text-sm font-medium hover:bg-[#E8E6E3] transition-colors"
                       >
                         Clear
                       </button>
                     )}
                   </div>
-                  <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                  <div className="mt-2 flex items-center justify-between text-xs text-[#4A4137]/60">
                     <span>
                       {filteredUsers.length === users.length 
                         ? `${users.length} users` 
@@ -1227,16 +1227,16 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                 {/* User Table - Always visible */}
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-[#FAF8F3]">
                       <tr>
-                        <th className="px-4 py-3 text-left font-bold text-gray-500">User</th>
-                        <th className="px-4 py-3 text-left font-bold text-gray-500">Plan</th>
-                        <th className="px-4 py-3 text-left font-bold text-gray-500">Credits</th>
-                        <th className="px-4 py-3 text-left font-bold text-gray-500">Searches</th>
-                        <th className="px-4 py-3 text-left font-bold text-gray-500">Referrals</th>
-                        <th className="px-4 py-3 text-left font-bold text-gray-500">LTV</th>
-                        <th className="px-4 py-3 text-left font-bold text-gray-500">Status</th>
-                        <th className="px-4 py-3 text-left font-bold text-gray-500">Joined</th>
+                        <th className="px-4 py-3 text-left font-bold text-[#4A4137]/60">User</th>
+                        <th className="px-4 py-3 text-left font-bold text-[#4A4137]/60">Plan</th>
+                        <th className="px-4 py-3 text-left font-bold text-[#4A4137]/60">Credits</th>
+                        <th className="px-4 py-3 text-left font-bold text-[#4A4137]/60">Searches</th>
+                        <th className="px-4 py-3 text-left font-bold text-[#4A4137]/60">Referrals</th>
+                        <th className="px-4 py-3 text-left font-bold text-[#4A4137]/60">LTV</th>
+                        <th className="px-4 py-3 text-left font-bold text-[#4A4137]/60">Status</th>
+                        <th className="px-4 py-3 text-left font-bold text-[#4A4137]/60">Joined</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1247,18 +1247,18 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                           <tr 
                             key={user.id} 
                             onClick={() => setSelectedUser(user)}
-                            className={`border-t cursor-pointer hover:bg-gray-50 transition-colors ${selectedUser?.id === user.id ? 'bg-[#C9A961]/10' : ''}`}
+                            className={`border-t cursor-pointer hover:bg-[#FAF8F3] transition-colors ${selectedUser?.id === user.id ? 'bg-[#C9A961]/10' : ''}`}
                           >
                             <td className="px-4 py-3">
                               <div className="font-medium text-[#3A342D]">{user.full_name || 'No name'}</div>
-                              <div className="text-xs text-gray-500">{user.email}</div>
+                              <div className="text-xs text-[#4A4137]/60">{user.email}</div>
                             </td>
                             <td className="px-4 py-3">
                               <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                                 user.plan_type === 'PRO' ? 'bg-[#3A342D]/10 text-[#3A342D]' :
                                 user.plan_type === 'UNLIMITED_PRO' ? 'bg-[#3A342D]/10 text-[#3A342D]' :
                                 user.plan_type === 'STARTER_PACK' ? 'bg-[#C9A961]/20 text-[#8B7355]' :
-                                'bg-gray-100 text-gray-700'
+                                'bg-[#F0EDE5] text-[#4A4137]'
                               }`}>
                                 {user.plan_type === 'FREE_TRIAL' ? 'Trial' : 
                                  user.plan_type === 'STARTER_PACK' ? 'Starter' :
@@ -1272,14 +1272,14 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                               {user.referral_count > 0 ? (
                                 <span className="text-[#5D8A66] font-medium">{user.referral_count}</span>
                               ) : (
-                                <span className="text-gray-400">0</span>
+                                <span className="text-[#4A4137]/40">0</span>
                               )}
                             </td>
                             <td className="px-4 py-3">
                               {estimatedLTV > 0 ? (
                                 <span className="text-[#5D8A66] font-medium">{formatCurrency(estimatedLTV)}</span>
                               ) : (
-                                <span className="text-gray-400">$0</span>
+                                <span className="text-[#4A4137]/40">$0</span>
                               )}
                             </td>
                             <td className="px-4 py-3">
@@ -1287,14 +1287,14 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                                 {user.phone_verified ? (
                                   <span className="w-2 h-2 rounded-full bg-[#5D8A66]" title="Phone verified"></span>
                                 ) : (
-                                  <span className="w-2 h-2 rounded-full bg-gray-300" title="Not verified"></span>
+                                  <span className="w-2 h-2 rounded-full bg-[#DCD7CE]" title="Not verified"></span>
                                 )}
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-[#4A4137]/60">
                                   {user.phone_verified ? 'Verified' : 'Unverified'}
                                 </span>
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-gray-500 text-sm">
+                            <td className="px-4 py-3 text-[#4A4137]/60 text-sm">
                               {new Date(user.created_at).toLocaleDateString()}
                             </td>
                           </tr>
@@ -1302,7 +1302,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                       })}
                       {filteredUsers.length === 0 && (
                         <tr>
-                          <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                          <td colSpan={8} className="px-6 py-8 text-center text-[#4A4137]/60">
                             {searchQuery ? 'No users match your search' : 'No users found'}
                           </td>
                         </tr>
@@ -1320,15 +1320,15 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                   <h3 className="font-bold text-[#3A342D]">Edit User</h3>
                   <button 
                     onClick={() => setSelectedUser(null)}
-                    className="p-1 hover:bg-gray-100 rounded"
+                    className="p-1 hover:bg-[#F0EDE5] rounded"
                   >
-                    <i className="fa-solid fa-xmark text-gray-400"></i>
+                    <i className="fa-solid fa-xmark text-[#4A4137]/40"></i>
                   </button>
                 </div>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-bold uppercase text-gray-500 block mb-1">Email</label>
+                    <label className="text-xs font-bold uppercase text-[#4A4137]/60 block mb-1">Email</label>
                     <input
                       type="email"
                       value={editForm.email || ''}
@@ -1337,7 +1337,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold uppercase text-gray-500 block mb-1">Full Name</label>
+                    <label className="text-xs font-bold uppercase text-[#4A4137]/60 block mb-1">Full Name</label>
                     <input
                       type="text"
                       value={editForm.full_name || ''}
@@ -1346,7 +1346,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold uppercase text-gray-500 block mb-1">Phone</label>
+                    <label className="text-xs font-bold uppercase text-[#4A4137]/60 block mb-1">Phone</label>
                     <input
                       type="text"
                       value={editForm.phone || ''}
@@ -1355,7 +1355,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold uppercase text-gray-500 block mb-1">Plan Type</label>
+                    <label className="text-xs font-bold uppercase text-[#4A4137]/60 block mb-1">Plan Type</label>
                     <select
                       value={editForm.plan_type || ''}
                       onChange={(e) => setEditForm({...editForm, plan_type: e.target.value})}
@@ -1368,7 +1368,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs font-bold uppercase text-gray-500 block mb-1">Credits</label>
+                    <label className="text-xs font-bold uppercase text-[#4A4137]/60 block mb-1">Credits</label>
                     <input
                       type="number"
                       value={editForm.credit_topups ?? 0}
@@ -1384,7 +1384,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                       onChange={(e) => setEditForm({...editForm, phone_verified: e.target.checked})}
                       className="rounded"
                     />
-                    <label htmlFor="phone_verified" className="text-sm text-gray-600">Phone Verified</label>
+                    <label htmlFor="phone_verified" className="text-sm text-[#4A4137]/70">Phone Verified</label>
                   </div>
 
                   <button
@@ -1395,7 +1395,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     {saving ? 'Saving...' : 'Save Changes'}
                   </button>
 
-                  <div className="pt-4 border-t text-xs text-gray-500 space-y-1">
+                  <div className="pt-4 border-t text-xs text-[#4A4137]/60 space-y-1">
                     <p><span className="font-medium">ID:</span> {selectedUser.id.substring(0, 8)}...</p>
                     <p><span className="font-medium">Referrals:</span> {selectedUser.referral_count || 0}</p>
                     <p><span className="font-medium">Referral Code:</span> {selectedUser.referral_code || 'None'}</p>
@@ -1411,7 +1411,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                   </div>
                   <div>
                     <h3 className="font-bold text-[#3A342D]">Send Invite</h3>
-                    <p className="text-xs text-gray-500">Invite new users</p>
+                    <p className="text-xs text-[#4A4137]/60">Invite new users</p>
                   </div>
                 </div>
                 
@@ -1419,22 +1419,22 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                 <div className="grid grid-cols-3 gap-2 mb-6">
                   <div className="p-2.5 rounded-xl bg-[#C9A961]/10 text-center">
                     <p className="text-lg font-black text-[#3A342D]">{metrics?.invites?.sent || 0}</p>
-                    <p className="text-[8px] font-bold uppercase tracking-widest text-gray-500">Sent</p>
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-[#4A4137]/60">Sent</p>
                   </div>
                   <div className="p-2.5 rounded-xl bg-[#8B7355]/10 text-center">
                     <p className="text-lg font-black text-[#8B7355]">{metrics?.invites?.opened || 0}</p>
-                    <p className="text-[8px] font-bold uppercase tracking-widest text-gray-500">Opened</p>
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-[#4A4137]/60">Opened</p>
                   </div>
                   <div className="p-2.5 rounded-xl bg-[#5D8A66]/10 text-center">
                     <p className="text-lg font-black text-[#5D8A66]">{metrics?.invites?.converted || 0}</p>
-                    <p className="text-[8px] font-bold uppercase tracking-widest text-gray-500">Converted</p>
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-[#4A4137]/60">Converted</p>
                   </div>
                 </div>
 
                 {/* Email Invite Form */}
                 <form onSubmit={handleAdminInvite} className="space-y-3">
                   <div>
-                    <label className="text-xs font-bold uppercase text-gray-500 block mb-1">Email *</label>
+                    <label className="text-xs font-bold uppercase text-[#4A4137]/60 block mb-1">Email *</label>
                     <input
                       type="email"
                       value={inviteEmail}
@@ -1446,7 +1446,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold uppercase text-gray-500 block mb-1">Name</label>
+                    <label className="text-xs font-bold uppercase text-[#4A4137]/60 block mb-1">Name</label>
                     <input
                       type="text"
                       value={inviteName}
@@ -1462,7 +1462,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                     <div className={`p-2.5 rounded-lg text-xs font-semibold flex items-center gap-2 ${
                       inviteResult.success 
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-red-50 text-red-700 border border-red-200'
+                        : 'bg-rose-50 text-rose-700 border border-rose-200'
                     }`}>
                       <i className={`fa-solid ${inviteResult.success ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
                       {inviteResult.message}
@@ -1483,7 +1483,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                 </form>
 
                 <div className="mt-4 pt-4 border-t">
-                  <p className="text-[10px] text-gray-400 text-center">
+                  <p className="text-[10px] text-[#4A4137]/40 text-center">
                     <i className="fa-solid fa-info-circle mr-1"></i>
                     Click on a user to edit their details
                   </p>
@@ -1500,58 +1500,58 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
               <div className="p-6 border-b bg-gradient-to-r from-yellow-50 to-orange-50">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center">
-                    <i className="fa-solid fa-star text-yellow-600 text-xl"></i>
+                    <i className="fa-solid fa-star text-[#C9A961] text-xl"></i>
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-gray-900">High-Rated Suburbs (4.5★+)</h3>
-                    <p className="text-sm text-gray-600">Suburbs discovered by users with exceptional property ratings</p>
+                    <h3 className="text-xl font-black text-[#3A342D]">High-Rated Suburbs (4.5★+)</h3>
+                    <p className="text-sm text-[#4A4137]/70">Suburbs discovered by users with exceptional property ratings</p>
                   </div>
                 </div>
               </div>
 
               {highRatedSuburbs.length === 0 ? (
                 <div className="p-12 text-center">
-                  <i className="fa-solid fa-star text-gray-300 text-5xl mb-4"></i>
-                  <p className="text-gray-500">No high-rated suburbs discovered yet</p>
-                  <p className="text-sm text-gray-400 mt-2">Users will appear here when they scan suburbs with 4.5★+ average</p>
+                  <i className="fa-solid fa-star text-[#4A4137]/30 text-5xl mb-4"></i>
+                  <p className="text-[#4A4137]/60">No high-rated suburbs discovered yet</p>
+                  <p className="text-sm text-[#4A4137]/40 mt-2">Users will appear here when they scan suburbs with 4.5★+ average</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-[#FAF8F3]">
                       <tr>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Suburb</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Avg Rating</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Properties</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Discovered By</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4A4137]/70 uppercase tracking-wider">Suburb</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4A4137]/70 uppercase tracking-wider">Avg Rating</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4A4137]/70 uppercase tracking-wider">Properties</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4A4137]/70 uppercase tracking-wider">Discovered By</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4A4137]/70 uppercase tracking-wider">Date</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {highRatedSuburbs.map((suburb) => (
-                        <tr key={suburb.id} className="hover:bg-gray-50 transition-colors">
+                        <tr key={suburb.id} className="hover:bg-[#FAF8F3] transition-colors">
                           <td className="px-6 py-4">
-                            <div className="font-bold text-gray-900">
+                            <div className="font-bold text-[#3A342D]">
                               {suburb.suburb_name}
-                              {suburb.state && <span className="ml-2 text-xs text-gray-500">{suburb.state}</span>}
+                              {suburb.state && <span className="ml-2 text-xs text-[#4A4137]/60">{suburb.state}</span>}
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
-                              <span className="text-2xl font-black text-yellow-600">{suburb.average_stars.toFixed(1)}</span>
-                              <span className="text-yellow-500">★</span>
+                              <span className="text-2xl font-black text-[#C9A961]">{suburb.average_stars.toFixed(1)}</span>
+                              <span className="text-[#C9A961]">★</span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <span className="text-gray-700 font-medium">
+                            <span className="text-[#4A4137] font-medium">
                               {suburb.property_count || 'N/A'}
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <span className="text-sm text-gray-600">{suburb.profiles.email}</span>
+                            <span className="text-sm text-[#4A4137]/70">{suburb.profiles.email}</span>
                           </td>
                           <td className="px-6 py-4">
-                            <span className="text-sm text-gray-500">
+                            <span className="text-sm text-[#4A4137]/60">
                               {new Date(suburb.discovered_at).toLocaleDateString('en-AU', {
                                 day: 'numeric',
                                 month: 'short',
@@ -1575,59 +1575,59 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
             <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
               <div className="p-6 border-b bg-gradient-to-r from-green-50 to-emerald-50">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-                    <i className="fa-solid fa-home text-green-600 text-xl"></i>
+                  <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+                    <i className="fa-solid fa-home text-emerald-700 text-xl"></i>
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-gray-900">Seller Interest Leads</h3>
-                    <p className="text-sm text-gray-600">Users interested in selling at their property's improved value</p>
+                    <h3 className="text-xl font-black text-[#3A342D]">Seller Interest Leads</h3>
+                    <p className="text-sm text-[#4A4137]/70">Users interested in selling at their property's improved value</p>
                   </div>
                 </div>
               </div>
 
               {sellerLeads.length === 0 ? (
                 <div className="p-12 text-center">
-                  <i className="fa-solid fa-home text-gray-300 text-5xl mb-4"></i>
-                  <p className="text-gray-500">No seller leads yet</p>
-                  <p className="text-sm text-gray-400 mt-2">Leads will appear when users express interest in selling</p>
+                  <i className="fa-solid fa-home text-[#4A4137]/30 text-5xl mb-4"></i>
+                  <p className="text-[#4A4137]/60">No seller leads yet</p>
+                  <p className="text-sm text-[#4A4137]/40 mt-2">Leads will appear when users express interest in selling</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-[#FAF8F3]">
                       <tr>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Type</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Property Address</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Price</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Contact</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Notes</th>
-                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4A4137]/70 uppercase tracking-wider">Type</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4A4137]/70 uppercase tracking-wider">Property Address</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4A4137]/70 uppercase tracking-wider">Price</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4A4137]/70 uppercase tracking-wider">Contact</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4A4137]/70 uppercase tracking-wider">Notes</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-[#4A4137]/70 uppercase tracking-wider">Date</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {sellerLeads.map((lead) => {
                         const isBuyer = lead.notes?.startsWith('BUYER INTEREST');
                         return (
-                        <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
+                        <tr key={lead.id} className="hover:bg-[#FAF8F3] transition-colors">
                           <td className="px-6 py-4">
                             <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${isBuyer ? 'bg-[#B8864A]' : 'bg-[#8A9A6D]'}`}>
                               {isBuyer ? 'BUYER' : 'SELLER'}
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="font-bold text-gray-900">{lead.property_address}</div>
+                            <div className="font-bold text-[#3A342D]">{lead.property_address}</div>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="text-xl font-black text-green-600">
+                            <div className="text-xl font-black text-emerald-700">
                               ${lead.target_price.toLocaleString()}
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="space-y-1">
-                              <div className="font-bold text-gray-900">{lead.name}</div>
-                              <div className="text-sm text-gray-600">{lead.email}</div>
+                              <div className="font-bold text-[#3A342D]">{lead.name}</div>
+                              <div className="text-sm text-[#4A4137]/70">{lead.email}</div>
                               {lead.phone && (
-                                <div className="text-sm text-gray-600">
+                                <div className="text-sm text-[#4A4137]/70">
                                   <i className="fa-solid fa-phone mr-1"></i>
                                   {lead.phone}
                                 </div>
@@ -1635,12 +1635,12 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <div className="text-sm text-gray-600 max-w-xs">
-                              {lead.notes || <span className="text-gray-400 italic">No notes</span>}
+                            <div className="text-sm text-[#4A4137]/70 max-w-xs">
+                              {lead.notes || <span className="text-[#4A4137]/40 italic">No notes</span>}
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <span className="text-sm text-gray-500">
+                            <span className="text-sm text-[#4A4137]/60">
                               {new Date(lead.created_at).toLocaleDateString('en-AU', {
                                 day: 'numeric',
                                 month: 'short',
@@ -1681,7 +1681,7 @@ const MetricCard = ({
 }) => (
   <div className="bg-white rounded-2xl p-6 shadow-sm border">
     <div className="flex items-center justify-between mb-3">
-      <span className="text-xs font-bold uppercase tracking-widest text-gray-500">{title}</span>
+      <span className="text-xs font-bold uppercase tracking-widest text-[#4A4137]/60">{title}</span>
       <div className={`w-10 h-10 rounded-xl ${bgColor} flex items-center justify-center`}>
         <i className={`fa-solid ${icon} ${color}`}></i>
       </div>
@@ -1698,10 +1698,10 @@ const PlanBar = ({ label, count, total, color }: { label: string; count: number;
   return (
     <div>
       <div className="flex justify-between text-sm mb-1">
-        <span className="text-gray-600">{label}</span>
+        <span className="text-[#4A4137]/70">{label}</span>
         <span className="font-bold">{count}</span>
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-2 bg-[#F0EDE5] rounded-full overflow-hidden">
         <div className={`h-full ${color} rounded-full`} style={{ width: `${percentage}%` }}></div>
       </div>
     </div>
