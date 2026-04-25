@@ -47,65 +47,6 @@ function formatPrice(cents: number): string {
   return `$${(cents / 100).toFixed(0)}`;
 }
 
-// Authenticated <img> for the Street View endpoint.
-// Fetches the image bytes with Bearer auth (since browsers can't add auth
-// headers to plain <img src>) and renders the resulting blob URL.
-const StreetViewImage: React.FC<{ leadId: string }> = ({ leadId }) => {
-  const [src, setSrc] = useState<string | null>(null);
-  const [unavailable, setUnavailable] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    let blobUrl: string | null = null;
-
-    (async () => {
-      try {
-        const response = await supabaseService.authenticatedFetch(
-          `/api/streetview?leadId=${encodeURIComponent(leadId)}`,
-          { method: 'GET' }
-        );
-        if (cancelled) return;
-        if (response.status === 404) {
-          setUnavailable(true);
-          return;
-        }
-        if (!response.ok) return;
-        const blob = await response.blob();
-        if (cancelled) return;
-        blobUrl = URL.createObjectURL(blob);
-        setSrc(blobUrl);
-      } catch {
-        // silent — image just won't render
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      if (blobUrl) URL.revokeObjectURL(blobUrl);
-    };
-  }, [leadId]);
-
-  if (unavailable) {
-    return (
-      <div className="w-full h-40 sm:h-48 rounded-xl bg-slate-100 flex items-center justify-center text-[#4A4137]/40 text-xs font-medium border border-slate-200">
-        <i className="fa-solid fa-street-view mr-2"></i>
-        No street view available
-      </div>
-    );
-  }
-  if (!src) {
-    return <div className="w-full h-40 sm:h-48 rounded-xl bg-slate-100 animate-pulse" />;
-  }
-  return (
-    <img
-      src={src}
-      alt="Property street view"
-      className="w-full h-40 sm:h-48 rounded-xl object-cover border border-slate-200"
-      loading="lazy"
-    />
-  );
-};
-
 const LeadsDashboard: React.FC<LeadsDashboardProps> = ({ onBack }) => {
   const [items, setItems] = useState<LeadItem[]>([]);
   const [page, setPage] = useState(1);
@@ -268,9 +209,6 @@ const LeadsDashboard: React.FC<LeadsDashboardProps> = ({ onBack }) => {
                         <p className="text-sm text-[#4A4137]/70 mb-3">
                           Target: ${(lead.target_price || 0).toLocaleString()}
                         </p>
-                        <div className="mb-3">
-                          <StreetViewImage leadId={lead.id} />
-                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
                           <div className="p-2 bg-slate-50 rounded-lg">
                             <p className="text-[9px] font-black text-[#4A4137]/40 uppercase tracking-widest">Name</p>

@@ -6,60 +6,6 @@ import { Resend } from 'resend';
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const resendApiKey = process.env.RESEND_API_KEY;
-const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
-
-// Compass bearing from one lat/lng to another (0=N, 90=E).
-function bearing(from, to) {
-  const toRad = (deg) => (deg * Math.PI) / 180;
-  const toDeg = (rad) => (rad * 180) / Math.PI;
-  const dLng = toRad(to.lng - from.lng);
-  const fromLat = toRad(from.lat);
-  const toLat = toRad(to.lat);
-  const y = Math.sin(dLng) * Math.cos(toLat);
-  const x = Math.cos(fromLat) * Math.sin(toLat) - Math.sin(fromLat) * Math.cos(toLat) * Math.cos(dLng);
-  return (toDeg(Math.atan2(y, x)) + 360) % 360;
-}
-
-// Fetch a Street View image as base64. Returns { base64, status } where status
-// is 'available' or 'unavailable'. Never throws — used for fire-and-forget.
-async function fetchStreetViewBase64(address) {
-  if (!googleApiKey || !address) return { base64: null, status: 'unavailable' };
-  try {
-    const metaUrl = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${encodeURIComponent(address)}&radius=500&key=${googleApiKey}`;
-    const meta = await (await fetch(metaUrl)).json();
-    if (meta.status !== 'OK' || !meta.location || !meta.pano_id) {
-      console.log('[SellerInterest:StreetView] No imagery for', address.substring(0, 60), 'status:', meta.status);
-      return { base64: null, status: 'unavailable' };
-    }
-
-    let heading;
-    try {
-      const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&region=au&components=country:AU&key=${googleApiKey}`;
-      const geo = await (await fetch(geoUrl)).json();
-      if (geo.status === 'OK' && geo.results?.[0]?.geometry?.location) {
-        heading = bearing(meta.location, geo.results[0].geometry.location);
-      }
-    } catch {}
-
-    const params = new URLSearchParams({
-      size: '600x400',
-      pano: meta.pano_id,
-      fov: '80',
-      pitch: '0',
-      key: googleApiKey,
-    });
-    if (heading !== undefined) params.set('heading', heading.toFixed(1));
-
-    const imageRes = await fetch(`https://maps.googleapis.com/maps/api/streetview?${params}`);
-    if (!imageRes.ok) return { base64: null, status: 'unavailable' };
-
-    const buffer = Buffer.from(await imageRes.arrayBuffer());
-    return { base64: `data:image/jpeg;base64,${buffer.toString('base64')}`, status: 'available' };
-  } catch (e) {
-    console.error('[SellerInterest:StreetView] Fetch error:', e.message);
-    return { base64: null, status: 'unavailable' };
-  }
-}
 
 export default async function handler(req, res) {
   // CORS
@@ -116,7 +62,7 @@ export default async function handler(req, res) {
     try {
       // Insert seller interest (user_id can be null for anonymous submissions)
       console.log('[SellerInterest] Inserting into database...');
-      const { data: inserted, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('seller_interest')
         .insert({
           user_id: user?.id || null,
@@ -127,9 +73,7 @@ export default async function handler(req, res) {
           email: email.trim(),
           notes: notes?.trim() || null,
           created_at: new Date().toISOString()
-        })
-        .select('id')
-        .single();
+        });
 
       if (insertError) {
         console.error('[SellerInterest] Insert error:', insertError);
@@ -137,25 +81,6 @@ export default async function handler(req, res) {
       }
 
       console.log('[SellerInterest] ✅ Saved to database:', propertyAddress, '-', name, '-', email);
-
-      // Fire-and-forget: prefetch the Street View image so it's ready by the
-      // time a subscriber reveals this lead. Don't block the response on it —
-      // even if Google is slow or the address has no imagery, the lead is
-      // saved and the dashboard handles a missing image gracefully.
-      if (inserted?.id) {
-        (async () => {
-          try {
-            const { base64, status } = await fetchStreetViewBase64(propertyAddress);
-            await supabase
-              .from('seller_interest')
-              .update({ street_view_image: base64, street_view_status: status })
-              .eq('id', inserted.id);
-            console.log('[SellerInterest] Street View prefetch:', status, 'for', propertyAddress.substring(0, 50));
-          } catch (e) {
-            console.error('[SellerInterest] Street View prefetch failed:', e.message);
-          }
-        })();
-      }
 
       // Send email notification to support@upblock.ai
       if (resendApiKey) {
