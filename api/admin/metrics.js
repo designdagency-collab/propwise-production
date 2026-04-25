@@ -81,6 +81,7 @@ export default async function handler(req, res) {
       totalUsersResult,
       verifiedUsersResult,
       planBreakdownResult,
+      roleBreakdownResult,
       activeToday,
       active7d,
       active30d,
@@ -93,7 +94,9 @@ export default async function handler(req, res) {
       referralsResult,
       invitesSentResult,
       invitesOpenedResult,
-      invitesConvertedResult
+      invitesConvertedResult,
+      leadsResult,
+      revealsResult
     ] = await Promise.all([
       // Total users
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
@@ -103,7 +106,10 @@ export default async function handler(req, res) {
       
       // Plan breakdown
       supabase.from('profiles').select('plan_type'),
-      
+
+      // Role breakdown (homeowner / subscriber / admin)
+      supabase.from('profiles').select('role'),
+
       // Active today (using updated_at as proxy)
       supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('updated_at', `${today}T00:00:00Z`),
       
@@ -141,7 +147,13 @@ export default async function handler(req, res) {
       supabase.from('referral_invites').select('id', { count: 'exact', head: true }).not('opened_at', 'is', null),
       
       // Invites converted (clicked or signed up)
-      supabase.from('referral_invites').select('id', { count: 'exact', head: true }).not('clicked_at', 'is', null)
+      supabase.from('referral_invites').select('id', { count: 'exact', head: true }).not('clicked_at', 'is', null),
+
+      // Total seller_interest leads (the marketplace inventory)
+      supabase.from('seller_interest').select('id', { count: 'exact', head: true }),
+
+      // Lead reveals — for revenue + activity tracking
+      supabase.from('lead_reveals').select('is_free, amount_cents')
     ]);
 
     // Calculate plan breakdown
@@ -157,6 +169,21 @@ export default async function handler(req, res) {
         planCounts[plan] = (planCounts[plan] || 0) + 1;
       });
     }
+
+    // Role breakdown (homeowner / subscriber / admin)
+    const roleCounts = { homeowner: 0, subscriber: 0, admin: 0 };
+    if (roleBreakdownResult.data) {
+      roleBreakdownResult.data.forEach(p => {
+        const role = p.role || 'homeowner';
+        roleCounts[role] = (roleCounts[role] || 0) + 1;
+      });
+    }
+
+    // Lead reveal stats — the new revenue stream
+    const reveals = revealsResult.data || [];
+    const freeReveals = reveals.filter(r => r.is_free).length;
+    const paidReveals = reveals.filter(r => !r.is_free).length;
+    const revealRevenueCents = reveals.reduce((sum, r) => sum + (r.amount_cents || 0), 0);
 
     // Calculate total credits
     let totalCredits = 0;
@@ -199,6 +226,7 @@ export default async function handler(req, res) {
         verified: verifiedUsersResult.count || 0,
         unverified: (totalUsersResult.count || 0) - (verifiedUsersResult.count || 0),
         byPlan: planCounts,
+        byRole: roleCounts,
         activeToday: activeToday.count || 0,
         active7d: active7d.count || 0,
         active30d: active30d.count || 0,
@@ -213,6 +241,13 @@ export default async function handler(req, res) {
       },
       credits: {
         totalInSystem: totalCredits
+      },
+      leads: {
+        total: leadsResult.count || 0,
+        revealsTotal: reveals.length,
+        revealsFree: freeReveals,
+        revealsPaid: paidReveals,
+        revealRevenueCents,
       },
       referrals: referralStats,
       invites: {

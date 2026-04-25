@@ -169,14 +169,19 @@ View in Admin Dashboard → Seller Leads tab
     }
 
     try {
-      // Verify admin status
+      // Verify admin: same check pattern as the other admin/* endpoints
+      const ADMIN_EMAILS = ['designd.agency@gmail.com'];
       const { data: profile } = await supabase
         .from('profiles')
-        .select('is_admin')
+        .select('email, is_admin')
         .eq('id', user.id)
         .single();
 
-      if (!profile?.is_admin) {
+      const isAuthorizedAdmin =
+        profile?.is_admin === true ||
+        ADMIN_EMAILS.includes(profile?.email?.toLowerCase());
+
+      if (!isAuthorizedAdmin) {
         return res.status(403).json({ error: 'Admin access required' });
       }
 

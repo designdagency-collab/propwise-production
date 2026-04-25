@@ -7,6 +7,7 @@ interface Metrics {
     verified: number;
     unverified: number;
     byPlan: Record<string, number>;
+    byRole?: { homeowner: number; subscriber: number; admin: number };
     activeToday: number;
     active7d: number;
     active30d: number;
@@ -21,6 +22,13 @@ interface Metrics {
   };
   credits: {
     totalInSystem: number;
+  };
+  leads?: {
+    total: number;
+    revealsTotal: number;
+    revealsFree: number;
+    revealsPaid: number;
+    revealRevenueCents: number;
   };
   referrals: {
     total: number;
@@ -145,9 +153,9 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
     configured: boolean;
     accountPayable?: number;
     isActualBalance?: boolean;
-    currentMonth?: { estimated: number; actual?: number; searches: number; images?: number; period: string };
-    lastMonth?: { estimated: number; searches: number; images?: number };
-    allTime?: { estimated: number; searches: number; images?: number };
+    currentMonth?: { estimated: number; actual?: number; searches: number; period: string };
+    lastMonth?: { estimated: number; searches: number };
+    allTime?: { estimated: number; searches: number };
     googleCloud?: { accountName: string; status: string; currentMonth?: number; currentBalance?: number } | null;
     projectedMonthly?: number;
     dailyAverage?: number;
@@ -714,6 +722,43 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
               </div>
             )}
 
+            {/* Lead Marketplace — the new revenue stream */}
+            {metrics.leads && (
+              <div className="bg-white rounded-2xl p-6 shadow-sm border">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-gray-500">
+                    <i className="fa-solid fa-list-check mr-2 text-emerald-600"></i>
+                    Lead Marketplace
+                  </h3>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                    Live
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                    <p className="text-2xl font-black text-[#3A342D]">{metrics.leads.total}</p>
+                    <p className="text-xs text-gray-500 mt-1">Leads in Market</p>
+                  </div>
+                  <div className="text-center p-4 bg-gray-50 rounded-xl">
+                    <p className="text-2xl font-black text-[#3A342D]">{metrics.leads.revealsTotal}</p>
+                    <p className="text-xs text-gray-500 mt-1">Total Reveals</p>
+                  </div>
+                  <div className="text-center p-4 bg-emerald-50 rounded-xl">
+                    <p className="text-2xl font-black text-emerald-700">{metrics.leads.revealsFree}</p>
+                    <p className="text-xs text-gray-500 mt-1">Free Reveals</p>
+                  </div>
+                  <div className="text-center p-4 bg-[#C9A961]/10 rounded-xl">
+                    <p className="text-2xl font-black text-[#C9A961]">{metrics.leads.revealsPaid}</p>
+                    <p className="text-xs text-gray-500 mt-1">Paid Reveals</p>
+                  </div>
+                  <div className="text-center p-4 bg-emerald-50 rounded-xl">
+                    <p className="text-2xl font-black text-emerald-700">{formatCurrency(metrics.leads.revealRevenueCents / 100)}</p>
+                    <p className="text-xs text-gray-500 mt-1">Reveal Revenue</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Plans & Invites */}
             <div className="grid md:grid-cols-3 gap-6">
               <div className="bg-white rounded-2xl p-6 shadow-sm border">
@@ -726,6 +771,23 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                   <PlanBar label="Starter Pack" count={metrics.users.byPlan.STARTER_PACK || 0} total={metrics.users.total} color="bg-[#C9A961]" />
                   <PlanBar label="PRO" count={metrics.users.byPlan.PRO || 0} total={metrics.users.total} color="bg-[#3A342D]" />
                 </div>
+                {metrics.users.byRole && (
+                  <div className="mt-4 pt-4 border-t space-y-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">By Role</p>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Homeowners</span>
+                      <span className="font-bold text-[#3A342D]">{metrics.users.byRole.homeowner}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Subscribers</span>
+                      <span className="font-bold text-[#C9A961]">{metrics.users.byRole.subscriber}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Admins</span>
+                      <span className="font-bold text-[#3A342D]">{metrics.users.byRole.admin}</span>
+                    </div>
+                  </div>
+                )}
                 <div className="mt-4 pt-4 border-t flex justify-between text-sm">
                   <span className="text-gray-500">Users at 0 credits:</span>
                   <span className="font-bold text-red-500">{metrics.users.atZeroCredits}</span>
@@ -839,7 +901,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                           This Month {billing.currentMonth?.actual ? '' : '(est)'}
                         </p>
                         <p className="text-[10px] text-gray-400">
-                          {billing.currentMonth?.searches || 0} searches, {billing.currentMonth?.images || 0} images
+                          {billing.currentMonth?.searches || 0} searches
                         </p>
                       </div>
                       <div className="text-center p-4 bg-gray-50 rounded-xl">
@@ -848,7 +910,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                         </p>
                         <p className="text-xs text-gray-500 mt-1">Last Month</p>
                         <p className="text-[10px] text-gray-400">
-                          {billing.lastMonth?.searches || 0} searches, {billing.lastMonth?.images || 0} images
+                          {billing.lastMonth?.searches || 0} searches
                         </p>
                       </div>
                       <div className="text-center p-4 bg-amber-50 rounded-xl">
@@ -863,7 +925,7 @@ export const AdminPage = ({ onBack }: AdminPageProps) => {
                         </p>
                         <p className="text-xs text-gray-500 mt-1">All-Time Cost</p>
                         <p className="text-[10px] text-gray-400">
-                          {billing.allTime?.searches || 0} searches, {billing.allTime?.images || 0} images
+                          {billing.allTime?.searches || 0} searches
                         </p>
                       </div>
                     </div>
