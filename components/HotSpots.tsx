@@ -88,6 +88,18 @@ export const HotSpots: React.FC<HotSpotsProps> = ({ onSelectSuburb, onBack, isAd
   const [totalCount, setTotalCount] = useState(0);
   const [lastRefresh, setLastRefresh] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [listingsType, setListingsType] = useState<'residential' | 'commercial'>('residential');
+
+  const buildListingsUrl = (suburb: string, state: string): string => {
+    if (listingsType === 'commercial') {
+      // commercialrealestate.com.au — search-term endpoint is the most forgiving
+      // across suburbs that don't fit the strict slug pattern
+      return `https://www.commercialrealestate.com.au/for-sale/?searchTerm=${encodeURIComponent(`${suburb}, ${state}`)}`;
+    }
+    // realestate.com.au residential
+    const slug = `${suburb.toLowerCase().trim().replace(/\s+/g, '-')}+${state.toLowerCase()}`;
+    return `https://www.realestate.com.au/buy/in-${encodeURIComponent(slug)}/list-1`;
+  };
 
   const fetchSuburbs = useCallback(async () => {
     setLoading(true);
@@ -209,7 +221,7 @@ export const HotSpots: React.FC<HotSpotsProps> = ({ onSelectSuburb, onBack, isAd
             boxShadow: '0 8px 24px -8px rgba(74, 65, 55, 0.06)',
           }}
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label htmlFor="boom-state-select" className="block text-[10px] font-black uppercase tracking-widest text-[#4A4137]/50 mb-2">
                 State / Territory
@@ -244,6 +256,38 @@ export const HotSpots: React.FC<HotSpotsProps> = ({ onSelectSuburb, onBack, isAd
                   style={{ border: '1px solid #DCD7CE' }}
                 />
                 <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#4A4137]/40 text-sm"></i>
+              </div>
+            </div>
+
+            <div>
+              <span className="block text-[10px] font-black uppercase tracking-widest text-[#4A4137]/50 mb-2">
+                Listings Type
+              </span>
+              <div className="inline-flex w-full rounded-xl p-1" style={{ backgroundColor: '#F0EDE5', border: '1px solid #DCD7CE' }}>
+                <button
+                  type="button"
+                  onClick={() => setListingsType('residential')}
+                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                    listingsType === 'residential'
+                      ? 'bg-white text-[#3A342D] shadow-sm'
+                      : 'text-[#4A4137]/60 hover:text-[#3A342D]'
+                  }`}
+                >
+                  <i className="fa-solid fa-house mr-1.5"></i>
+                  Residential
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setListingsType('commercial')}
+                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                    listingsType === 'commercial'
+                      ? 'bg-white text-[#3A342D] shadow-sm'
+                      : 'text-[#4A4137]/60 hover:text-[#3A342D]'
+                  }`}
+                >
+                  <i className="fa-solid fa-building mr-1.5"></i>
+                  Commercial
+                </button>
               </div>
             </div>
 
@@ -420,17 +464,13 @@ export const HotSpots: React.FC<HotSpotsProps> = ({ onSelectSuburb, onBack, isAd
                       <td className="px-4 py-4 text-center">
                         <button
                           onClick={() => {
-                            // Open a pre-populated realestate.com.au search for this suburb in a
-                            // new tab. Keep the user on Hot Spots so they can browse more rows
-                            // without losing their filter state.
-                            // Format: https://www.realestate.com.au/buy/in-{suburb}+{state}/list-1
-                            const slug = `${suburb.suburb_name.toLowerCase().trim().replace(/\s+/g, '-')}+${suburb.state.toLowerCase()}`;
-                            const url = `https://www.realestate.com.au/buy/in-${encodeURIComponent(slug)}/list-1`;
+                            const url = buildListingsUrl(suburb.suburb_name, suburb.state);
                             window.open(url, '_blank', 'noopener,noreferrer');
                           }}
-                          title={`Browse listings in ${suburb.suburb_name} on realestate.com.au`}
+                          title={`Browse ${listingsType} listings in ${suburb.suburb_name} on ${listingsType === 'commercial' ? 'commercialrealestate.com.au' : 'realestate.com.au'}`}
                           className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-[#3A342D] text-white hover:bg-[#C9A961] transition-colors inline-flex items-center gap-1.5"
                         >
+                          <i className={`fa-solid ${listingsType === 'commercial' ? 'fa-building' : 'fa-house'} text-[10px]`}></i>
                           Listings
                           <i className="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
                         </button>
