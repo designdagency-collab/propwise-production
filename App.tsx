@@ -1413,14 +1413,44 @@ const App: React.FC = () => {
     const pendingUpgrade = urlParams.get('pending_upgrade');
     if (pendingUpgrade) {
       urlParams.delete('pending_upgrade');
-      const newUrl = urlParams.toString() 
-        ? `${window.location.pathname}?${urlParams}` 
+      const newUrl = urlParams.toString()
+        ? `${window.location.pathname}?${urlParams}`
         : window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
-      
+
       setTimeout(() => {
         handleUpgrade(pendingUpgrade as PlanType);
       }, 500);
+    }
+
+    // Check for signup intent (set by the Pricing page when an anonymous user
+    // clicks "Sign Up Free" on the subscriber card). After signup we flip them
+    // to role=subscriber and drop them into the leads dashboard.
+    let signupIntent: string | null = null;
+    try {
+      signupIntent = sessionStorage.getItem('upblock_signup_intent');
+      if (signupIntent) sessionStorage.removeItem('upblock_signup_intent');
+    } catch {}
+    if (signupIntent === 'subscriber') {
+      setTimeout(async () => {
+        try {
+          const response = await supabaseService.authenticatedFetch('/api/profile-role', {
+            method: 'POST',
+            body: JSON.stringify({ role: 'subscriber' }),
+          });
+          if (response.ok) {
+            const accessToken = await supabaseService.getAccessToken();
+            const userId = (await supabaseService.getCurrentUser())?.id;
+            if (userId && accessToken) {
+              const fresh = await supabaseService.getCurrentProfile(userId, accessToken);
+              if (fresh) setUserProfile(fresh);
+            }
+            setShowLeadsDashboard(true);
+          }
+        } catch (e) {
+          console.warn('[SignupIntent] Could not promote to subscriber:', e);
+        }
+      }, 800);
     }
   };
 
@@ -1898,14 +1928,29 @@ const App: React.FC = () => {
       ) : showTerms ? (
         <TermsAndConditions onBack={() => setShowTerms(false)} />
       ) : showPricing ? (
-        <Pricing 
+        <Pricing
           currentPlan={plan}
           onUpgrade={handleUpgrade}
           onBack={() => setShowPricing(false)}
           onShowTerms={() => { setShowPricing(false); setShowTerms(true); }}
           onSignUp={() => { setShowPricing(false); setEmailAuthMode('signup'); setShowEmailAuth(true); }}
+          onOpenLeadsDashboard={() => setShowLeadsDashboard(true)}
+          onProfileUpdated={async () => {
+            try {
+              const userId = userProfile?.id;
+              const accessToken = await supabaseService.getAccessToken();
+              if (userId && accessToken) {
+                const fresh = await supabaseService.getCurrentProfile(userId, accessToken);
+                if (fresh) setUserProfile(fresh);
+              }
+            } catch (e) {
+              console.warn('[Pricing] Could not refresh profile after role change:', e);
+            }
+          }}
           isLoggedIn={isLoggedIn}
           userId={userProfile?.id}
+          userRole={userProfile?.role}
+          isAdmin={isAdmin}
         />
       ) : (
         <main className={!isLoggedIn && appState === AppState.IDLE ? "" : "pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"}>
