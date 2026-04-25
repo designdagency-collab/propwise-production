@@ -502,8 +502,51 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Address is required' });
   }
 
-  // Normalize address for cache lookup
-  const addressKey = normalizeAddress(address);
+  // ============================================================
+  // Address existence gate: verify with Google Geocoding before
+  // calling Gemini, so we can't hallucinate figures for fake
+  // addresses. Returns 400 if the address can't be resolved to a
+  // specific street number in Australia.
+  // ============================================================
+  const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
+  let canonicalAddress = address;
+  if (googleApiKey) {
+    try {
+      const geoUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&region=au&components=country:AU&key=${googleApiKey}`;
+      const geoRes = await fetch(geoUrl);
+      const geoData = await geoRes.json();
+
+      if (geoData.status !== 'OK' || !geoData.results?.length) {
+        console.log('[PropertyInsights] Address rejected — geocode status:', geoData.status, 'for:', address.substring(0, 60));
+        return res.status(400).json({
+          error: 'We could not verify this address. Please pick a real Australian address from the dropdown suggestions.',
+          code: 'ADDRESS_NOT_FOUND',
+        });
+      }
+
+      const top = geoData.results[0];
+      const hasStreetNumber = (top.address_components || []).some((c) => c.types?.includes('street_number'));
+      if (!hasStreetNumber) {
+        console.log('[PropertyInsights] Address rejected — no street number for:', address.substring(0, 60), 'matched:', top.formatted_address);
+        return res.status(400).json({
+          error: 'Please enter a specific street address (e.g. "42 Smith St, Bondi NSW 2026") rather than a suburb or area.',
+          code: 'ADDRESS_TOO_VAGUE',
+        });
+      }
+
+      canonicalAddress = top.formatted_address;
+      console.log('[PropertyInsights] Address verified:', canonicalAddress);
+    } catch (geoErr) {
+      console.warn('[PropertyInsights] Geocode check failed (failing closed):', geoErr.message);
+      return res.status(503).json({ error: 'Address verification temporarily unavailable. Please try again.' });
+    }
+  } else {
+    console.warn('[PropertyInsights] GOOGLE_MAPS_API_KEY not set — skipping address verification');
+  }
+
+  // Normalize address for cache lookup (use canonical form so different
+  // spellings of the same property hit the same cache row)
+  const addressKey = normalizeAddress(canonicalAddress);
   
   // Check for quick-score cache data (from Chrome extension) to reuse
   let quickScoreHint = null;

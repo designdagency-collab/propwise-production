@@ -243,44 +243,23 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Check if input looks like an Australian address (for paste support)
-  const looksLikeAustralianAddress = useCallback((input: string): boolean => {
-    const trimmed = input.trim();
-    // Must have at least 3 words
-    const hasMinWords = trimmed.split(/\s+/).length >= 3;
-    // Has a 4-digit postcode
-    const hasPostcode = /\b\d{4}\b/.test(trimmed);
-    // Has a state abbreviation
-    const hasState = /\b(NSW|VIC|QLD|WA|SA|TAS|NT|ACT)\b/i.test(trimmed);
-    // Has street-like words
-    const hasStreetWord = /\b(street|st|road|rd|avenue|ave|drive|dr|lane|ln|court|ct|place|pl|crescent|cres|way|parade|pde|highway|hwy|boulevard|blvd|terrace|tce)\b/i.test(trimmed);
-    
-    return hasMinWords && (hasPostcode || hasState) && hasStreetWord;
-  }, []);
-
   // Debounced address input handler
+  // NOTE: Typing alone never marks an address as valid — the user must select
+  // from the Google Places autocomplete dropdown (or arrive via a verified
+  // path: history, GPS, or Chrome extension prefill). This prevents fake
+  // addresses from reaching Gemini and producing fabricated figures.
   const handleAddressChange = useCallback((value: string) => {
     setAddress(value);
-    
-    // Auto-validate if it looks like a pasted Australian address
-    if (looksLikeAustralianAddress(value)) {
-      setIsValidAddress(true);
-      setSuggestions([]);
-      setShowSuggestions(false);
-    } else {
-      setIsValidAddress(false);
-    }
-    
-    // Clear existing timer
+    setIsValidAddress(false);
+
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
-    
-    // Set new debounced fetch (still show suggestions for partial inputs)
+
     debounceTimerRef.current = setTimeout(() => {
       fetchSuggestions(value);
     }, 300);
-  }, [fetchSuggestions, looksLikeAustralianAddress]);
+  }, [fetchSuggestions]);
 
   // Handle suggestion selection
   const handleSelectSuggestion = useCallback((suggestion: { description: string }) => {
@@ -1415,17 +1394,12 @@ const App: React.FC = () => {
     console.log('[handleEmailAuthSuccess] Complete - ensuring IDLE state, address:', address, 'isValidAddress:', isValidAddress);
     setAppState(AppState.IDLE);
     
-    // Preserve address validation - if they had a valid address before signup, keep it valid
-    // Only try to re-validate if currently invalid but address exists
-    if (address && address.trim().length > 0 && !isValidAddress) {
-      console.log('[handleEmailAuthSuccess] Address exists but not valid, attempting re-validation');
-      if (looksLikeAustralianAddress(address)) {
-        setIsValidAddress(true);
-      }
-    } else if (address && address.trim().length > 0 && isValidAddress) {
-      // Address was already validated before signup - ensure it stays valid
+    // Preserve address validation across signup. We no longer auto-validate
+    // by regex (the backend rejects fake addresses now), so just keep whatever
+    // state the user had before signing up.
+    if (address && address.trim().length > 0 && isValidAddress) {
       console.log('[handleEmailAuthSuccess] Address already validated, preserving state');
-      setIsValidAddress(true); // Explicitly set to ensure React doesn't lose this state
+      setIsValidAddress(true);
     }
     
     // Clear the justSignedUp flag after a short delay (allow state to settle)
