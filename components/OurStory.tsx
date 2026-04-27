@@ -41,8 +41,8 @@ const OurStory: React.FC<OurStoryProps> = ({ onBack, onSearch }) => {
 
       <article className="max-w-2xl mx-auto px-4 sm:px-6">
         {/* The hook — instant recognition */}
-        <h1 className="text-6xl sm:text-7xl md:text-8xl font-bold tracking-tighter text-[#3A342D] leading-[0.9] mt-12 mb-8">
-          What's the<br />price?
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tighter text-[#3A342D] leading-[0.95] mt-12 mb-8">
+          What's the price?
         </h1>
 
         <p className="text-xl sm:text-2xl text-[#4A4137]/80 leading-snug font-medium mb-4">
