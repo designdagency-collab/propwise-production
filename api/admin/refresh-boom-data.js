@@ -8,7 +8,9 @@ import pg from 'pg';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const connectionString = process.env.DATABASE_URL;
+// Match the read endpoint (api/boom-suburbs.js): accept either env var name.
+// Vercel's Postgres add-on sets POSTGRES_URL; manual Supabase setups use DATABASE_URL.
+const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
 const ABS_API_BASE = 'https://data.api.abs.gov.au/rest';
 
@@ -564,7 +566,7 @@ export default async function handler(req, res) {
   console.log('[RefreshBoomData] Starting refresh by:', user.email);
 
   if (!connectionString) {
-    return res.status(500).json({ error: 'DATABASE_URL not configured' });
+    return res.status(500).json({ error: 'DATABASE_URL or POSTGRES_URL not configured' });
   }
 
   const client = new pg.Client({ connectionString, ssl: { rejectUnauthorized: false } });
