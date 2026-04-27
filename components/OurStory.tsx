@@ -42,11 +42,11 @@ const OurStory: React.FC<OurStoryProps> = ({ onBack, onSearch }) => {
       <article className="max-w-2xl mx-auto px-4 sm:px-6">
         {/* The hook — instant recognition */}
         <h1 className="text-6xl sm:text-7xl md:text-8xl font-bold tracking-tighter text-[#3A342D] leading-[0.9] mt-12 mb-8">
-          "Make<br />an offer."
+          What's the<br />price?
         </h1>
 
         <p className="text-xl sm:text-2xl text-[#4A4137]/80 leading-snug font-medium mb-4">
-          You've heard it. So have we.
+          Every buyer asks. No one answers.
         </p>
 
         <div className="space-y-4 text-lg sm:text-xl text-[#4A4137]/80 leading-relaxed">
@@ -57,7 +57,7 @@ const OurStory: React.FC<OurStoryProps> = ({ onBack, onSearch }) => {
         {/* The frustration — concrete + brief */}
         <div className="space-y-4 text-lg sm:text-xl text-[#4A4137]/80 leading-relaxed mt-12">
           <p>Two years of open homes. Listings underquoted by half a million. Saturdays we'll never get back.</p>
-          <p>So we made an offer. Then we watched it sell for six figures more than the guide.</p>
+          <p>We named our number. It still sold for six figures over the guide.</p>
           <p className="text-[#3A342D] font-bold">We were done guessing.</p>
         </div>
 
