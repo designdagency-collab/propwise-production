@@ -238,11 +238,12 @@ const LandingPage: React.FC<LandingPageProps> = ({
         <div className="relative z-10 max-w-6xl mx-auto">
           <div className="text-center mb-10 sm:mb-12">
             <span className="inline-block px-4 py-1.5 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
-              <i className="fa-solid fa-house-chimney mr-2"></i>
-              See the Potential
+              <i className="fa-solid fa-bolt mr-2"></i>
+              AI-Powered Property Intelligence
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4" style={{ color: 'var(--text-primary)' }}>
-              Picture the Transformation
+              Discover Hidden Equity<br />
+              <span className="text-[#C9A961]">In Any Property</span>
             </h2>
             <p className="max-w-xl mx-auto text-sm sm:text-base" style={{ color: 'var(--text-muted)' }}>
               Drag to compare. From cosmetic renovations to full development builds — visualise what your property could become.
