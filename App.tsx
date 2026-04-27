@@ -2323,9 +2323,10 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Our Story page */}
+      {/* Our Story — overlay sits below the Navbar (z-50) so the global header
+          stays visible. OurStory's own pt-24 already accounts for navbar height. */}
       {showOurStory && (
-        <div className="fixed inset-0 z-[57] overflow-y-auto" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div className="fixed inset-0 z-40 overflow-y-auto" style={{ backgroundColor: 'var(--bg-primary)' }}>
           <OurStory onBack={() => setShowOurStory(false)} />
         </div>
       )}
