@@ -121,17 +121,23 @@ const LandingPage: React.FC<LandingPageProps> = ({
           <div className="max-w-2xl mx-auto pt-2">
             <form onSubmit={onSearch} className="relative group">
               <div className="absolute -inset-1 bg-[#C9A961] rounded-[2rem] blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
-              <div className="relative flex items-center p-2 rounded-[2rem] shadow-xl border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                <div className="flex-grow flex items-center px-6">
+              <div
+                className="relative flex items-center p-2 rounded-[2rem] shadow-xl"
+                style={{ backgroundColor: 'var(--bg-card)', border: '1px solid #DCD7CE' }}
+              >
+                <div className="flex-grow flex items-center px-4 sm:px-6 min-w-0">
                   <input
                     type="text"
                     value={address}
                     onChange={(e) => onAddressChange(e.target.value)}
                     onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                     placeholder="Enter any Australian address..."
-                    className="w-full py-3 sm:py-4 bg-transparent text-base sm:text-lg font-medium focus:outline-none"
+                    className="w-full py-3.5 sm:py-4 bg-transparent text-base sm:text-lg font-medium focus:outline-none"
                     style={{ color: 'var(--text-primary)' }}
                     autoComplete="off"
+                    autoCapitalize="words"
+                    inputMode="text"
+                    enterKeyHint="search"
                   />
                   {/* Clear button - appears when address has text */}
                   {address && (
@@ -141,33 +147,44 @@ const LandingPage: React.FC<LandingPageProps> = ({
                         onAddressChange('');
                         setShowSuggestions(false);
                       }}
-                      className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-[#C9A961] transition-colors rounded-full hover:bg-gray-100/50"
+                      className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-[#4A4137]/40 hover:text-[#C9A961] transition-colors rounded-full"
                       aria-label="Clear address"
                     >
                       <i className="fa-solid fa-xmark text-lg"></i>
                     </button>
                   )}
                 </div>
-                <div className="flex items-center gap-2 pr-2">
+                <div className="flex items-center gap-2 pr-2 flex-shrink-0">
                   {isMobile && (
                     <button
                       type="button"
                       onClick={onDetectLocation}
                       disabled={isLocating}
-                      className="w-12 h-12 text-[#B8C5A0] hover:text-[#C9A961] transition-all disabled:opacity-50"
+                      className="w-11 h-11 text-[#5D8A66] hover:text-[#C9A961] transition-all disabled:opacity-50"
+                      aria-label="Use my current location"
                     >
-                      <i className={`fa-solid ${isLocating ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'}`}></i>
+                      <i className={`fa-solid ${isLocating ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'} text-lg`}></i>
                     </button>
                   )}
+                  {/* Inline submit — desktop only. Mobile gets a full-width CTA below. */}
                   <button
                     type="submit"
                     disabled={!isValidAddress}
-                    className="bg-[#C9A961] text-white px-6 sm:px-8 h-11 sm:h-12 rounded-xl font-bold hover:bg-[#3A342D] transition-all disabled:opacity-30 uppercase tracking-widest text-[11px] sm:text-[10px]"
+                    className="hidden sm:inline-flex bg-[#C9A961] text-white px-8 h-12 rounded-xl font-bold hover:bg-[#3A342D] transition-all disabled:opacity-30 uppercase tracking-widest text-[10px] items-center"
                   >
                     Audit Block
                   </button>
                 </div>
               </div>
+
+              {/* Full-width submit — mobile only. */}
+              <button
+                type="submit"
+                disabled={!isValidAddress}
+                className="sm:hidden w-full mt-3 bg-[#C9A961] text-white h-12 rounded-2xl font-bold hover:bg-[#3A342D] transition-all disabled:opacity-30 uppercase tracking-widest text-[11px]"
+              >
+                Audit Block
+              </button>
               
               {showSuggestions && suggestions.length > 0 && (
                 <div
