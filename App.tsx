@@ -12,6 +12,7 @@ import InviteFriendsModal from './components/InviteFriendsModal';
 import { AdminPage } from './components/AdminPage';
 import { HotSpots } from './components/HotSpots';
 import LeadsDashboard from './components/LeadsDashboard';
+import OurStory from './components/OurStory';
 import LandingPage from './components/LandingPage';
 import { geminiService } from './services/geminiService';
 import { stripeService } from './services/stripeService';
@@ -171,6 +172,9 @@ const App: React.FC = () => {
 
   // Leads dashboard state (subscriber tier — Developers + Buyers Agents)
   const [showLeadsDashboard, setShowLeadsDashboard] = useState(false);
+
+  // Our Story page state
+  const [showOurStory, setShowOurStory] = useState(false);
   
   // Initialize from cache for instant header display (optimistic UX)
   const cachedData = getCachedProfile();
@@ -2318,6 +2322,13 @@ const App: React.FC = () => {
         </div>
       )}
 
+      {/* Our Story page */}
+      {showOurStory && (
+        <div className="fixed inset-0 z-[57] overflow-y-auto" style={{ backgroundColor: 'var(--bg-primary)' }}>
+          <OurStory onBack={() => setShowOurStory(false)} />
+        </div>
+      )}
+
       {/* Boom Finder Page - Full Screen */}
       {showHotSpots && (
         <div className="fixed inset-0 z-[55] overflow-y-auto" style={{ backgroundColor: 'var(--bg-primary)' }}>
@@ -2334,12 +2345,19 @@ const App: React.FC = () => {
       )}
 
       {/* Footer - only show on main pages, not modals, not landing page */}
-      {!showTerms && !showPricing && !showAccountSettings && (isLoggedIn || appState !== AppState.IDLE) && (
+      {!showTerms && !showPricing && !showAccountSettings && !showOurStory && (isLoggedIn || appState !== AppState.IDLE) && (
         <footer className="fixed bottom-0 left-0 right-0 py-3 sm:py-4 text-center px-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
           <div className="flex items-center justify-center gap-4 text-[9px] sm:text-[10px]" style={{ color: 'var(--text-muted)' }}>
             <span>© {new Date().getFullYear()} upblock.ai</span>
             <span>•</span>
-            <button 
+            <button
+              onClick={() => setShowOurStory(true)}
+              className="hover:text-[#C9A961] transition-colors underline"
+            >
+              Our Story
+            </button>
+            <span>•</span>
+            <button
               onClick={() => setShowTerms(true)}
               className="hover:text-[#C9A961] transition-colors underline"
             >
