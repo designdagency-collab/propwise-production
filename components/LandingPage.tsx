@@ -116,7 +116,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
           </h1>
           
           <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium" style={{ color: 'var(--text-muted)' }}>
-            Uncover value-add potential, comparable sales, and planning insights for any <strong style={{ color: 'var(--text-primary)' }}>Australian</strong> address — powered by AI.
+            Every seller has one. Every buyer has one. We're just bringing it into the open — for any <strong style={{ color: 'var(--text-primary)' }}>Australian</strong> address.
           </p>
           
           {/* SEARCH BAR */}
@@ -238,15 +238,14 @@ const LandingPage: React.FC<LandingPageProps> = ({
         <div className="relative z-10 max-w-6xl mx-auto">
           <div className="text-center mb-10 sm:mb-12">
             <span className="inline-block px-4 py-1.5 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
-              <i className="fa-solid fa-bolt mr-2"></i>
-              AI-Powered Property Intelligence
+              Uplift potential
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4" style={{ color: 'var(--text-primary)' }}>
-              Discover Hidden Equity<br />
-              <span className="text-[#C9A961]">In Any Property</span>
+              Same property.<br />
+              <span className="text-[#C9A961]">Different outcome.</span>
             </h2>
             <p className="max-w-xl mx-auto text-sm sm:text-base" style={{ color: 'var(--text-muted)' }}>
-              Drag to compare. From cosmetic renovations to full development builds — visualise what your property could become.
+              Buy as-is, or buy with a plan. Your report tells you which strategies fit — and what each one's worth.
             </p>
           </div>
 
@@ -301,20 +300,9 @@ const LandingPage: React.FC<LandingPageProps> = ({
             </div>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-6 mt-6 text-sm" style={{ color: 'var(--text-muted)' }}>
-            <div className="flex items-center gap-2">
-              <i className="fa-solid fa-check text-[#C9A961]"></i>
-              <span>Spot value-add potential</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <i className="fa-solid fa-check text-[#C9A961]"></i>
-              <span>Estimate equity uplift</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <i className="fa-solid fa-check text-[#C9A961]"></i>
-              <span>Plan your next move</span>
-            </div>
-          </div>
+          <p className="text-center text-xs mt-6 italic" style={{ color: 'var(--text-muted)' }}>
+            Indicative only. Your numbers depend on suburb, scope, and timing.
+          </p>
         </div>
       </section>
 
@@ -361,10 +349,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
               Sample Report
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3" style={{ color: 'var(--text-primary)' }}>
-              Your Complete Property Intelligence
+              What you actually get.
             </h2>
             <p className="max-w-xl mx-auto" style={{ color: 'var(--text-muted)' }}>
-              Every report includes AI-powered insights, development potential, and actionable strategies
+              Estimated value, comparables, zoning, uplift strategies, dual-occupancy and dev scenarios — for any Australian address.
             </p>
           </div>
           
@@ -468,76 +456,99 @@ const LandingPage: React.FC<LandingPageProps> = ({
       </section>
 
       {/* ============================================
-          FEATURES GRID - Condensed
+          WHO IS THIS FOR — two-lane marketplace split
           ============================================ */}
-      <section className="py-20 px-6" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <section className="py-20 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: 'var(--bg-primary)' }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4" style={{ color: 'var(--text-primary)' }}>
-              Everything in One Report
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            {[
-              { icon: 'fa-dollar-sign', title: 'Value Estimates', color: '#B8C5A0' },
-              { icon: 'fa-chart-line', title: 'Comparable Sales', color: '#C9A961' },
-              { icon: 'fa-map', title: 'Zoning & Planning', color: '#3B82F6' },
-              { icon: 'fa-hammer', title: 'Uplift Strategies', color: '#8B5CF6' },
-              { icon: 'fa-city', title: 'Development Options', color: '#EC4899' },
-              { icon: 'fa-eye', title: 'Risk Alerts', color: '#EF4444' },
-            ].map((feature, i) => (
-              <div 
-                key={i} 
-                className="flex items-center gap-4 p-4 sm:p-5 rounded-2xl border hover:shadow-md transition-all"
-                style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
-              >
-                <div 
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: `${feature.color}20` }}
-                >
-                  <i className={`fa-solid ${feature.icon} text-sm sm:text-base`} style={{ color: feature.color }}></i>
-                </div>
-                <span className="font-bold text-sm sm:text-base" style={{ color: 'var(--text-primary)' }}>{feature.title}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================
-          HOW IT WORKS - Simple
-          ============================================ */}
-      <section className="py-20 px-6" style={{ backgroundColor: 'var(--bg-primary)' }}>
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
+            <span className="inline-block px-4 py-1 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
+              Two sides
+            </span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-              How It Works
+              Who's it for?
             </h2>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { num: '1', title: 'Enter Address', desc: 'Type any Australian address', icon: 'fa-location-dot' },
-              { num: '2', title: 'AI Analysis', desc: 'We process multiple data sources', icon: 'fa-microchip' },
-              { num: '3', title: 'Get Report', desc: 'Instant insights, exportable PDF', icon: 'fa-file-lines' },
-            ].map((step, i) => (
-              <div key={i} className="text-center space-y-4">
-                <div className="relative inline-block">
-                  <div 
-                    className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto shadow-lg border"
-                    style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
-                  >
-                    <i className={`fa-solid ${step.icon} text-2xl text-[#C9A961]`}></i>
-                  </div>
-                  <span className="absolute -top-2 -right-2 w-7 h-7 bg-[#C9A961] rounded-full text-white text-xs font-bold flex items-center justify-center shadow-md">
-                    {step.num}
-                  </span>
-                </div>
-                <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>{step.title}</h3>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{step.desc}</p>
-              </div>
-            ))}
+
+          <div className="grid md:grid-cols-2 gap-5">
+            {/* HOME OWNERS */}
+            <div
+              className="p-8 sm:p-10 rounded-3xl"
+              style={{
+                backgroundColor: 'var(--bg-card)',
+                border: '1px solid #DCD7CE',
+                boxShadow: '0 8px 24px -8px rgba(74, 65, 55, 0.06)',
+              }}
+            >
+              <span className="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
+                Free
+              </span>
+              <h3 className="text-2xl font-bold tracking-tight text-[#3A342D] mb-2">Home owners</h3>
+              <p className="text-sm text-[#4A4137]/60 mb-6">For people trying to figure out what their place is actually worth.</p>
+              <ul className="space-y-3 text-sm text-[#4A4137]/80 mb-8">
+                <li className="flex items-start gap-3">
+                  <i className="fa-solid fa-check text-[#C9A961] mt-1 flex-shrink-0"></i>
+                  <span>Unlimited free property reports</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <i className="fa-solid fa-check text-[#C9A961] mt-1 flex-shrink-0"></i>
+                  <span>Reno, dual-occ, and development scenarios</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <i className="fa-solid fa-check text-[#C9A961] mt-1 flex-shrink-0"></i>
+                  <span>List as open to offers when you're ready</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <i className="fa-solid fa-check text-[#C9A961] mt-1 flex-shrink-0"></i>
+                  <span>No sign-up to start. No credit card.</span>
+                </li>
+              </ul>
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="w-full bg-[#3A342D] text-white h-12 rounded-xl font-bold hover:bg-[#C9A961] transition-colors uppercase tracking-widest text-[10px]"
+              >
+                Search a property
+              </button>
+            </div>
+
+            {/* DEVELOPERS & BUYERS AGENTS */}
+            <div
+              className="p-8 sm:p-10 rounded-3xl relative"
+              style={{
+                backgroundColor: 'var(--bg-card)',
+                border: '1px solid #C9A961',
+                boxShadow: '0 8px 24px -8px rgba(201, 169, 97, 0.18)',
+              }}
+            >
+              <span className="inline-block px-3 py-1 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest mb-4">
+                $49 per lead
+              </span>
+              <h3 className="text-2xl font-bold tracking-tight text-[#3A342D] mb-2">Developers & buyers agents</h3>
+              <p className="text-sm text-[#4A4137]/60 mb-6">For people sourcing properties — not just hunting for one.</p>
+              <ul className="space-y-3 text-sm text-[#4A4137]/80 mb-8">
+                <li className="flex items-start gap-3">
+                  <i className="fa-solid fa-check text-[#C9A961] mt-1 flex-shrink-0"></i>
+                  <span>Browse owners already open to offers</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <i className="fa-solid fa-check text-[#C9A961] mt-1 flex-shrink-0"></i>
+                  <span>5 free lead reveals to start</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <i className="fa-solid fa-check text-[#C9A961] mt-1 flex-shrink-0"></i>
+                  <span>Full address + seller contact on reveal</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <i className="fa-solid fa-check text-[#C9A961] mt-1 flex-shrink-0"></i>
+                  <span>Per-lead pricing. No subscription lock-in.</span>
+                </li>
+              </ul>
+              <button
+                onClick={onShowPricing}
+                className="w-full bg-[#C9A961] text-white h-12 rounded-xl font-bold hover:bg-[#3A342D] transition-colors uppercase tracking-widest text-[10px]"
+              >
+                See how it works
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -554,14 +565,17 @@ const LandingPage: React.FC<LandingPageProps> = ({
         {/* CTA Section */}
         <div className="py-16 px-6 text-center">
           <div className="max-w-2xl mx-auto space-y-6">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-              Ready to Discover <span className="text-[#C9A961]">Hidden Potential?</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+              Stop guessing.
             </h2>
+            <p className="text-base sm:text-lg" style={{ color: 'var(--text-muted)' }}>
+              Type any Australian address. See what it's actually worth — and what it could be.
+            </p>
             <button
               onClick={triggerDemoTyping}
               className="group bg-[#C9A961] text-white px-8 py-4 rounded-xl font-bold hover:bg-[#3A342D] transition-all inline-flex items-center gap-3 shadow-lg text-sm uppercase tracking-wider"
             >
-              <span>Search an Address</span>
+              <span>Search an address</span>
               <i className="fa-solid fa-arrow-up group-hover:-translate-y-1 transition-transform"></i>
             </button>
           </div>
