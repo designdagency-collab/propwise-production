@@ -495,7 +495,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 </li>
                 <li className="flex items-start gap-3">
                   <i className="fa-solid fa-check text-[#C9A961] mt-1 flex-shrink-0"></i>
-                  <span>List as open to offers when you're ready</span>
+                  <span>Indicate you're open to conversations when ready</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <i className="fa-solid fa-check text-[#C9A961] mt-1 flex-shrink-0"></i>
@@ -527,7 +527,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
               <ul className="space-y-3 text-sm text-[#4A4137]/80 mb-8">
                 <li className="flex items-start gap-3">
                   <i className="fa-solid fa-check text-[#C9A961] mt-1 flex-shrink-0"></i>
-                  <span>Browse owners already open to offers</span>
+                  <span>Browse owners open to a conversation</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <i className="fa-solid fa-check text-[#C9A961] mt-1 flex-shrink-0"></i>
@@ -581,26 +581,13 @@ const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </div>
         
-        {/* Divider line below CTA */}
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="border-t" style={{ borderColor: 'var(--border-color)' }}></div>
-        </div>
-        
-        {/* Footer Links */}
-        <div className="pt-10 px-6">
-          <div className="max-w-6xl mx-auto flex flex-col items-center gap-6">
-            <img src="/upblock.ai-logo.png" alt="upblock.ai" className="h-16 sm:h-20" />
-            <div className="flex items-center gap-6 text-sm" style={{ color: 'var(--text-muted)' }}>
-              <a href="#" className="hover:opacity-70 transition-opacity">Privacy</a>
-              <a href="#" className="hover:opacity-70 transition-opacity">Terms</a>
-              <span>© {new Date().getFullYear()} upblock.ai</span>
-            </div>
-          </div>
-        </div>
-        {/* Disclaimer at absolute bottom */}
-        <div className="pb-4 pt-8 px-6">
-          <p className="text-[10px] text-center max-w-2xl mx-auto" style={{ color: 'var(--text-muted)' }}>
-            For research purposes only. Not financial, legal, or professional advice. All estimates are AI-generated and should be verified independently.
+        {/* Disclaimer block — below CTA, above the global footer */}
+        <div className="px-6 pb-12 pt-4">
+          <p className="text-[10px] text-center max-w-2xl mx-auto leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+            upblock.ai is an introduction platform. We are not a real estate agent and do not facilitate
+            contracts of sale. All reports are AI-generated estimates for research purposes only —
+            not financial, legal, or planning advice. Verify independently before any transaction.
+            Property owners and buyers must obtain their own legal and financial advice.
           </p>
         </div>
       </footer>

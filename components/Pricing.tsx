@@ -132,7 +132,7 @@ const Pricing: React.FC<PricingProps> = ({
               </li>
               <li className="flex items-start gap-3">
                 <i className="fa-solid fa-check text-[#C9A961] mt-1"></i>
-                <span>List your property as open to offers</span>
+                <span>Indicate you're open to a conversation</span>
               </li>
               <li className="flex items-start gap-3">
                 <i className="fa-solid fa-check text-[#C9A961] mt-1"></i>
@@ -178,13 +178,13 @@ const Pricing: React.FC<PricingProps> = ({
             </div>
 
             <p className="text-sm text-[#4A4137]/70 mb-6">
-              For developers and buyers agents sourcing properties open to offers.
+              For developers and buyers agents sourcing owners open to a conversation.
             </p>
 
             <ul className="space-y-3 text-sm flex-1 mb-8" style={{ color: 'var(--text-primary)' }}>
               <li className="flex items-start gap-3">
                 <i className="fa-solid fa-check text-[#C9A961] mt-1"></i>
-                <span>Browse properties open to offers</span>
+                <span>Browse owners open to a conversation</span>
               </li>
               <li className="flex items-start gap-3">
                 <i className="fa-solid fa-check text-[#C9A961] mt-1"></i>

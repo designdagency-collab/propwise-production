@@ -156,7 +156,7 @@ const LeadsDashboard: React.FC<LeadsDashboardProps> = ({ onBack }) => {
 
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#3A342D] mb-2">Property Leads</h1>
         <p className="text-sm text-[#4A4137]/60 max-w-2xl">
-          Property owners who have indicated they're open to offers. First {5} reveals are free.
+          Property owners who've indicated they're open to a conversation. First {5} reveals are free.
           After that, unlock a lead's full contact details and address for {formatPrice(priceCents)} per lead.
         </p>
       </div>
