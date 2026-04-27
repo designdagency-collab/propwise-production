@@ -46,7 +46,20 @@ const STATES = [
   { code: 'ACT', name: 'Australian Capital Territory' },
 ];
 
-const ScoreBadge: React.FC<{ score: number }> = ({ score }) => {
+const ScoreBadge: React.FC<{ score: number | null | undefined }> = ({ score }) => {
+  // null/undefined: render a neutral placeholder pill so the table doesn't
+  // look broken when source data hasn't been populated for a row.
+  if (score == null) {
+    return (
+      <span
+        className="inline-flex items-center justify-center min-w-[40px] px-2.5 py-0.5 rounded-full text-xs font-bold border bg-[#F0EDE5] text-[#4A4137]/40 border-[#DCD7CE]"
+        title="No data available"
+      >
+        —
+      </span>
+    );
+  }
+
   let bg: string;
   let text: string;
   let border: string;
@@ -450,16 +463,28 @@ export const HotSpots: React.FC<HotSpotsProps> = ({ onSelectSuburb, onBack, isAd
                         <ScoreBadge score={suburb.trades_influx_score} />
                       </td>
                       <td className="px-4 py-4 text-right text-sm text-[#3A342D] font-medium">
-                        ${suburb.median_house_price?.toLocaleString() || '—'}
+                        {suburb.median_house_price
+                          ? `$${suburb.median_house_price.toLocaleString()}`
+                          : <span className="text-[#4A4137]/30">—</span>}
                       </td>
                       <td
                         className="px-4 py-4 text-right text-sm font-bold"
-                        style={{ color: (suburb.gross_rental_yield || 0) >= 5 ? '#047857' : (suburb.gross_rental_yield || 0) >= 4 ? '#B8985A' : '#4A4137' }}
+                        style={{
+                          color: (suburb.gross_rental_yield || 0) >= 5
+                            ? '#047857'
+                            : (suburb.gross_rental_yield || 0) >= 4
+                              ? '#B8985A'
+                              : '#4A4137',
+                        }}
                       >
-                        {suburb.gross_rental_yield ? `${suburb.gross_rental_yield}%` : '—'}
+                        {suburb.gross_rental_yield
+                          ? `${suburb.gross_rental_yield}%`
+                          : <span className="text-[#4A4137]/30 font-medium">—</span>}
                       </td>
                       <td className="px-4 py-4 text-right text-sm text-[#4A4137]/70">
-                        {suburb.population?.toLocaleString()}
+                        {suburb.population
+                          ? suburb.population.toLocaleString()
+                          : <span className="text-[#4A4137]/30">—</span>}
                       </td>
                       <td className="px-4 py-4 text-center">
                         <button
