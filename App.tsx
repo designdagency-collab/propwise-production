@@ -1975,6 +1975,7 @@ const App: React.FC = () => {
                   onDetectLocation={detectLocation}
                   isMobile={isMobileDevice()}
                   onShowPricing={() => setShowPricing(true)}
+                  onOurStory={() => setShowOurStory(true)}
                 />
               )}
               
@@ -2344,10 +2345,10 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* Footer - only show on main pages, not modals, not landing page */}
-      {!showTerms && !showPricing && !showAccountSettings && !showOurStory && (isLoggedIn || appState !== AppState.IDLE) && (
-        <footer className="fixed bottom-0 left-0 right-0 py-3 sm:py-4 text-center px-4" style={{ backgroundColor: 'var(--bg-primary)' }}>
-          <div className="flex items-center justify-center gap-4 text-[9px] sm:text-[10px]" style={{ color: 'var(--text-muted)' }}>
+      {/* Footer - hidden only on full-screen overlay pages with their own back navigation */}
+      {!showTerms && !showPricing && !showAccountSettings && !showOurStory && !showLeadsDashboard && !showHotSpots && !showAdminDashboard && (
+        <footer className="py-6 sm:py-8 text-center px-4 mt-12" style={{ backgroundColor: 'var(--bg-primary)' }}>
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-[9px] sm:text-[10px]" style={{ color: 'var(--text-muted)' }}>
             <span>© {new Date().getFullYear()} upblock.ai</span>
             <span>•</span>
             <button

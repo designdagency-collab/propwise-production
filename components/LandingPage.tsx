@@ -19,6 +19,7 @@ interface LandingPageProps {
   onDetectLocation: () => void;
   isMobile: boolean;
   onShowPricing: () => void;
+  onOurStory?: () => void;
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ 
@@ -33,7 +34,8 @@ const LandingPage: React.FC<LandingPageProps> = ({
   isLocating,
   onDetectLocation,
   isMobile,
-  onShowPricing
+  onShowPricing,
+  onOurStory
 }) => {
   // Before/After showcase slider state
   const [sliderPos, setSliderPos] = useState(50);
@@ -312,6 +314,38 @@ const LandingPage: React.FC<LandingPageProps> = ({
               <span>Plan your next move</span>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ============================================
+          WHY WE BUILT THIS — story teaser
+          ============================================ */}
+      <section className="py-20 sm:py-24 px-4 sm:px-6" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div className="max-w-3xl mx-auto text-center">
+          <span className="inline-block px-3 py-1 bg-[#C9A961]/10 text-[#C9A961] rounded-full text-[10px] font-bold uppercase tracking-widest mb-5">
+            Why we built this
+          </span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#3A342D] mb-6 leading-[1.15]">
+            We were sick of guessing.
+          </h2>
+          <p className="text-base sm:text-lg text-[#4A4137]/80 leading-relaxed mb-4">
+            Two years of open homes. Listings underquoted by half a million. The same answer from every agent: <em>"Make an offer."</em>
+          </p>
+          <p className="text-base sm:text-lg text-[#4A4137]/80 leading-relaxed mb-4">
+            Every seller has a number. Every buyer has a number. The system just hides it.
+          </p>
+          <p className="text-base sm:text-lg text-[#3A342D] font-bold leading-relaxed mb-8">
+            So we built a way to bring it into the open.
+          </p>
+          {onOurStory && (
+            <button
+              onClick={onOurStory}
+              className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-[#C9A961] hover:text-[#3A342D] transition-colors"
+            >
+              Read the full story
+              <i className="fa-solid fa-arrow-right"></i>
+            </button>
+          )}
         </div>
       </section>
 
