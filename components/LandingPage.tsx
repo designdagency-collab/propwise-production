@@ -111,7 +111,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
           </div>
           
           <h1 className="text-[3rem] sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.05]" style={{ color: 'var(--text-primary)' }}>
-            Every house<br/>
+            Every property<br/>
             <span className="text-[#C9A961]">has a number.</span>
           </h1>
           
