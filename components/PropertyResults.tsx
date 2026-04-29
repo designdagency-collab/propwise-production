@@ -79,7 +79,11 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
     }
   }, [data]);
 
-  const isPaidUser = plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK';
+  // The full report (including PDF export) is now available to everyone — no
+  // plan gating. The old isPaidUser variable is kept and forced to true so
+  // legacy conditionals continue to render the unlocked branch without us
+  // needing to delete the wrappers around them.
+  const isPaidUser = true;
 
   const isStrata = (data.propertyType || '').toLowerCase().match(/apartment|unit|townhouse|villa|strata|flat|duplex/);
 
@@ -428,43 +432,31 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                 <span className="hidden sm:inline">Property</span> Strategy Guide
               </div>
               
-              {/* Export PDF Button - Hidden in PDF export */}
-              {isPaidUser ? (
-                <button 
-                  onClick={exportToPDF}
-                  disabled={isExporting || !pdfReady}
-                  data-no-pdf="true"
-                  className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-colors flex items-center gap-1 ${!pdfReady ? 'opacity-60 cursor-wait' : 'hover:text-[#D6A270]'} disabled:opacity-50`}
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  {isExporting ? (
-                    <>
-                      <i className="fa-solid fa-spinner fa-spin"></i>
-                      Exporting...
-                    </>
-                  ) : !pdfReady ? (
-                    <>
-                      <i className="fa-solid fa-hourglass-half"></i>
-                      PDF Ready in {pdfCountdown}...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fa-solid fa-file-pdf"></i>
-                      Export PDF
-                    </>
-                  )}
-                </button>
-              ) : (
-                <button 
-                  onClick={onUpgrade}
-                  data-no-pdf="true"
-                  className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest hover:text-[#D6A270] transition-colors flex items-center gap-1.5" 
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  <i className="fa-solid fa-lock text-[#C9A961] text-[8px]"></i>
-                  Export PDF <span className="text-[#C9A961]">(Pro)</span>
-                </button>
-              )}
+              {/* Export PDF Button - free for everyone now */}
+              <button
+                onClick={exportToPDF}
+                disabled={isExporting || !pdfReady}
+                data-no-pdf="true"
+                className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-colors flex items-center gap-1 ${!pdfReady ? 'opacity-60 cursor-wait' : 'hover:text-[#D6A270]'} disabled:opacity-50`}
+                style={{ color: 'var(--text-muted)' }}
+              >
+                {isExporting ? (
+                  <>
+                    <i className="fa-solid fa-spinner fa-spin"></i>
+                    Exporting...
+                  </>
+                ) : !pdfReady ? (
+                  <>
+                    <i className="fa-solid fa-hourglass-half"></i>
+                    PDF Ready in {pdfCountdown}...
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-file-pdf"></i>
+                    Export PDF
+                  </>
+                )}
+              </button>
             </div>
             <div className="flex gap-3 sm:gap-4" data-pdf-attributes>
                <div className="flex items-center gap-1.5 sm:gap-2 font-bold text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
