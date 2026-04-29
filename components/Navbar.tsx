@@ -238,8 +238,10 @@ const Navbar: React.FC<NavbarProps> = ({
               <i className="fa-solid fa-key"></i>
             </button>
             
-            {/* Credits indicator - only show when logged in */}
-            {isLoggedIn && (
+            {/* Legacy credits indicator — only shown to legacy paid users so they
+                still see their remaining audit credits during the model transition.
+                Hidden for the new free/subscriber model where it's not meaningful. */}
+            {isLoggedIn && (plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK') && (
               <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border" style={{ backgroundColor: 'var(--accent-gold-light)', borderColor: 'var(--border-input)' }}>
                 <i className="fa-solid fa-bolt text-[#C9A961] text-[10px] sm:text-xs"></i>
                 <span className="text-[10px] sm:text-[11px] font-bold" style={{ color: 'var(--text-primary)' }}>
@@ -368,14 +370,13 @@ const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
             
-            {/* Tier badge - hidden on mobile, only show when logged in */}
-            {isLoggedIn && (
+            {/* Role badge — only when there's something meaningful to show.
+                The free/homeowner default has no badge (silence is the design). */}
+            {isLoggedIn && (isAdmin || isSubscriber) && (
               <div className="hidden lg:flex items-center space-x-6 border-r pr-6" style={{ borderColor: 'var(--border-color)' }}>
-                 <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                   Tier: <span className={(plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK') ? 'text-[#C9A961]' : 'opacity-60'}>
-                     {plan === 'PRO' ? 'Pro' : plan === 'UNLIMITED_PRO' ? 'Unlimited' : plan === 'STARTER_PACK' ? 'Starter Pack' : 'Free Trial'}
-                   </span>
-                 </span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#C9A961]">
+                  {isAdmin ? 'Admin' : 'Subscriber'}
+                </span>
               </div>
             )}
             
@@ -424,35 +425,14 @@ const Navbar: React.FC<NavbarProps> = ({
               </button>
             )}
 
-            {/* Show badge/button based on plan - all clickable to pricing */}
-            {(plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK') && remainingCredits <= 1 ? (
-              // Low credits - show urgent Top Up button (pulsing)
-              <button 
-                onClick={onUpgrade}
-                className="px-3 sm:px-6 py-2 sm:py-2.5 bg-[#C9A961] text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-widest rounded-lg sm:rounded-xl hover:bg-[#3A342D] transition-all shadow-md active:scale-95 animate-pulse"
-              >
-                <i className="fa-solid fa-bolt mr-1 sm:mr-2"></i>
-                <span className="hidden sm:inline">Top Up</span>
-                <span className="sm:hidden">Top Up</span>
-              </button>
-            ) : (plan === 'PRO' || plan === 'UNLIMITED_PRO' || plan === 'STARTER_PACK') ? (
-              // PRO or Starter Pack user - show View Pricing button to buy more credits
-              <button 
-                onClick={onUpgrade}
-                className="px-3 sm:px-6 py-2 sm:py-2.5 bg-[#C9A961] text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-widest rounded-lg sm:rounded-xl hover:bg-[#3A342D] transition-all shadow-md active:scale-95"
-              >
-                <span className="hidden sm:inline">View Pricing</span>
-                <span className="sm:hidden">Pricing</span>
-              </button>
-            ) : (
-              <button 
-                onClick={onUpgrade}
-                className="px-3 sm:px-6 py-2 sm:py-2.5 bg-[#C9A961] text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-widest rounded-lg sm:rounded-xl hover:bg-[#3A342D] transition-all shadow-md active:scale-95"
-              >
-                <span className="hidden sm:inline">View Pricing</span>
-                <span className="sm:hidden">Pricing</span>
-              </button>
-            )}
+            {/* Single Pricing CTA — works for everyone in the new model.
+                Subscribers can still hit Pricing to manage / read terms. */}
+            <button
+              onClick={onUpgrade}
+              className="px-3 sm:px-6 py-2 sm:py-2.5 bg-[#C9A961] text-white text-[9px] sm:text-[11px] font-bold uppercase tracking-widest rounded-lg sm:rounded-xl hover:bg-[#3A342D] transition-all shadow-md active:scale-95"
+            >
+              Pricing
+            </button>
           </div>
         </div>
       </div>
