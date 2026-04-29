@@ -1115,15 +1115,37 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         </section>
       )}
 
-      {/* SEARCH ANOTHER PROPERTY BUTTON - Hidden in PDF */}
-      <div className="flex justify-center pt-8" data-no-pdf="true">
-         <button 
-           onClick={onHome}
-           className="px-12 py-5 bg-[#3A342D] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl hover:bg-[#C9A961] transition-all transform active:scale-95 flex items-center gap-3"
-         >
-           <i className="fa-solid fa-magnifying-glass"></i>
-           Search Another Property
-         </button>
+      {/* BOTTOM ACTIONS - Hidden in PDF */}
+      <div className="flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-3 pt-8" data-no-pdf="true">
+        <button
+          onClick={exportToPDF}
+          disabled={isExporting || !pdfReady}
+          className="px-10 py-5 bg-[#C9A961] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl hover:bg-[#3A342D] transition-all transform active:scale-95 flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-wait"
+        >
+          {isExporting ? (
+            <>
+              <i className="fa-solid fa-spinner fa-spin"></i>
+              Generating PDF…
+            </>
+          ) : !pdfReady ? (
+            <>
+              <i className="fa-solid fa-hourglass-half"></i>
+              PDF Ready in {pdfCountdown}…
+            </>
+          ) : (
+            <>
+              <i className="fa-solid fa-file-pdf"></i>
+              Download PDF Report
+            </>
+          )}
+        </button>
+        <button
+          onClick={onHome}
+          className="px-10 py-5 bg-[#3A342D] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl hover:bg-[#C9A961] transition-all transform active:scale-95 flex items-center justify-center gap-3"
+        >
+          <i className="fa-solid fa-magnifying-glass"></i>
+          Search Another Property
+        </button>
       </div>
 
       <footer className="pt-10 pb-6" data-no-pdf="true">
