@@ -1648,6 +1648,9 @@ const App: React.FC = () => {
   };
 
   const handleHome = useCallback(() => {
+    // Scroll to top so the user lands on the search bar — not wherever the
+    // results page (or any long landing-page section) was scrolled to.
+    window.scrollTo({ top: 0, behavior: 'auto' });
     setAppState(AppState.IDLE);
     setResults(null);
     setIsCached(false);
