@@ -1922,6 +1922,9 @@ const App: React.FC = () => {
           userPhone={userProfile?.phone}
           phoneVerified={userProfile?.phone_verified}
           isLoggedIn={isLoggedIn}
+          isAdmin={isAdmin}
+          isSubscriber={userProfile?.role === 'subscriber'}
+          onOpenLeadsDashboard={() => { setShowAccountSettings(false); setShowLeadsDashboard(true); }}
           searchHistory={searchHistory}
           onBack={() => setShowAccountSettings(false)}
           onCancelSubscription={handleCancelSubscription}

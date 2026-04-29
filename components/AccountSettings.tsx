@@ -1,8 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlanType, CreditState } from '../types';
+import { supabaseService } from '../services/supabaseService';
 
 interface SearchHistoryItem {
   address: string;
+  created_at: string;
+}
+
+interface RevealedLead {
+  id: string;
+  property_address: string;
+  target_price?: number;
+  name?: string;
+  email?: string;
+  phone?: string | null;
   created_at: string;
 }
 
@@ -14,11 +25,14 @@ interface AccountSettingsProps {
   userPhone?: string;
   phoneVerified?: boolean;
   isLoggedIn: boolean;
+  isAdmin?: boolean;
+  isSubscriber?: boolean;
   searchHistory: SearchHistoryItem[];
   onBack: () => void;
   onCancelSubscription: () => Promise<void>;
   onLogout: () => void | Promise<void>;
   onSearchAddress: (address: string) => void;
+  onOpenLeadsDashboard?: () => void;
   onSecureAccount?: () => void;
 }
 
@@ -30,16 +44,51 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
   userPhone,
   phoneVerified,
   isLoggedIn,
+  isAdmin = false,
+  isSubscriber = false,
   searchHistory,
   onBack,
   onCancelSubscription,
   onLogout,
   onSearchAddress,
+  onOpenLeadsDashboard,
   onSecureAccount
 }) => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelSuccess, setCancelSuccess] = useState(false);
+  const [revealedLeads, setRevealedLeads] = useState<RevealedLead[] | null>(null);
+  const [revealsLoading, setRevealsLoading] = useState(false);
+
+  // Fetch the user's revealed leads — subscribers/admins only.
+  // Hidden entirely for everyone else (free homeowner default).
+  useEffect(() => {
+    if (!isSubscriber && !isAdmin) return;
+    let cancelled = false;
+    (async () => {
+      setRevealsLoading(true);
+      try {
+        const response = await supabaseService.authenticatedFetch(
+          '/api/leads?revealedOnly=true&limit=100',
+          { method: 'GET' }
+        );
+        if (cancelled) return;
+        if (!response.ok) {
+          setRevealedLeads([]);
+          return;
+        }
+        const data = await response.json();
+        setRevealedLeads((data.items || []) as RevealedLead[]);
+      } catch {
+        if (!cancelled) setRevealedLeads([]);
+      } finally {
+        if (!cancelled) setRevealsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isSubscriber, isAdmin]);
 
   const handleCancelSubscription = async () => {
     setIsCancelling(true);
@@ -250,6 +299,88 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
                 </div>
               )}
             </div>
+
+            {/* Revealed Leads — subscribers/admins only */}
+            {(isSubscriber || isAdmin) && (
+              <div className="p-6 rounded-2xl border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                    Revealed Leads
+                  </h2>
+                  {revealedLeads && revealedLeads.length > 0 && (
+                    <span className="text-[9px] px-2 py-1 rounded-full bg-[#C9A961]/10 text-[#C9A961] font-bold">
+                      {revealedLeads.length} unlocked
+                    </span>
+                  )}
+                </div>
+
+                {revealsLoading ? (
+                  <div className="text-center py-6 text-[#4A4137]/40">
+                    <i className="fa-solid fa-spinner fa-spin text-lg"></i>
+                  </div>
+                ) : !revealedLeads || revealedLeads.length === 0 ? (
+                  <div className="text-center py-8">
+                    <i className="fa-solid fa-list-check text-2xl mb-3" style={{ color: 'var(--text-muted)' }}></i>
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      No leads revealed yet. Open the dashboard to browse and unlock.
+                    </p>
+                    {onOpenLeadsDashboard && (
+                      <button
+                        onClick={onOpenLeadsDashboard}
+                        className="mt-3 text-[10px] font-bold uppercase tracking-widest text-[#C9A961] hover:text-[#3A342D] transition-colors"
+                      >
+                        Open Leads Dashboard <i className="fa-solid fa-arrow-right ml-1"></i>
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
+                    {revealedLeads.map((lead) => {
+                      const date = new Date(lead.created_at);
+                      const formatted = date.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+                      return (
+                        <div
+                          key={lead.id}
+                          className="w-full flex items-start justify-between p-3 rounded-xl border"
+                          style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
+                        >
+                          <div className="flex items-start gap-3 text-left min-w-0 flex-1">
+                            <div className="w-8 h-8 rounded-lg bg-[#C9A961]/10 flex items-center justify-center flex-shrink-0">
+                              <i className="fa-solid fa-key text-[#C9A961] text-xs"></i>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                                {lead.property_address}
+                              </p>
+                              <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                                <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{formatted}</p>
+                                {lead.target_price ? (
+                                  <span className="text-[10px] font-bold text-[#C9A961]">
+                                    ${lead.target_price.toLocaleString()}
+                                  </span>
+                                ) : null}
+                              </div>
+                              <div className="flex items-center gap-3 mt-1.5 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                                {lead.email && (
+                                  <a href={`mailto:${lead.email}`} className="hover:text-[#C9A961] transition-colors truncate">
+                                    <i className="fa-solid fa-envelope mr-1"></i>{lead.email}
+                                  </a>
+                                )}
+                                {lead.phone && (
+                                  <a href={`tel:${lead.phone}`} className="hover:text-[#C9A961] transition-colors flex-shrink-0">
+                                    <i className="fa-solid fa-phone mr-1"></i>{lead.phone}
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Search History */}
             <div className="p-6 rounded-2xl border" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>

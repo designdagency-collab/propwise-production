@@ -93,9 +93,54 @@ export default async function handler(req, res) {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
+  // ?revealedOnly=true returns only leads this subscriber has revealed
+  // (used by the account settings page; lighter than fetching the full list).
+  const revealedOnly = req.query.revealedOnly === 'true';
+
   try {
-    // Concurrent: leads page, total count, this subscriber's reveals, current price config
-    const [leadsResult, countResult, revealsResult, priceResult] = await Promise.all([
+    // Resolve which lead IDs this subscriber has revealed (always needed)
+    const { data: revealsData, error: revealsErr } = await supabase
+      .from('lead_reveals')
+      .select('lead_id, is_free, created_at')
+      .eq('subscriber_id', user.id);
+    if (revealsErr) throw revealsErr;
+
+    const revealedIds = new Set((revealsData || []).map((r) => r.lead_id));
+
+    // If revealedOnly: only fetch the leads in that set
+    if (revealedOnly) {
+      if (revealedIds.size === 0) {
+        return res.status(200).json({
+          items: [],
+          total: 0,
+          page: 1,
+          limit: 0,
+          free_reveals_total: FREE_REVEALS,
+          free_reveals_remaining: FREE_REVEALS,
+          lead_reveal_price_cents: 4900,
+        });
+      }
+      const { data: ownedLeads, error: ownedErr } = await supabase
+        .from('seller_interest')
+        .select('id, property_address, target_price, name, phone, email, notes, created_at')
+        .in('id', Array.from(revealedIds))
+        .order('created_at', { ascending: false });
+      if (ownedErr) throw ownedErr;
+
+      const items = (ownedLeads || []).map(unblur);
+      return res.status(200).json({
+        items,
+        total: items.length,
+        page: 1,
+        limit: items.length,
+        free_reveals_total: FREE_REVEALS,
+        free_reveals_remaining: Math.max(0, FREE_REVEALS - (revealsData || []).filter((r) => r.is_free).length),
+        lead_reveal_price_cents: 4900,
+      });
+    }
+
+    // Concurrent: leads page, total count, current price config (reveals already loaded above)
+    const [leadsResult, countResult, priceResult] = await Promise.all([
       supabase
         .from('seller_interest')
         .select('id, property_address, target_price, name, phone, email, notes, created_at')
@@ -105,10 +150,6 @@ export default async function handler(req, res) {
         .from('seller_interest')
         .select('id', { count: 'exact', head: true }),
       supabase
-        .from('lead_reveals')
-        .select('lead_id, is_free')
-        .eq('subscriber_id', user.id),
-      supabase
         .from('billing_calibration')
         .select('lead_reveal_price_cents')
         .eq('id', 'main')
@@ -116,10 +157,8 @@ export default async function handler(req, res) {
     ]);
 
     if (leadsResult.error) throw leadsResult.error;
-    if (revealsResult.error) throw revealsResult.error;
 
-    const revealedIds = new Set((revealsResult.data || []).map((r) => r.lead_id));
-    const freeRevealsUsed = (revealsResult.data || []).filter((r) => r.is_free).length;
+    const freeRevealsUsed = (revealsData || []).filter((r) => r.is_free).length;
     const freeRevealsRemaining = Math.max(0, FREE_REVEALS - freeRevealsUsed);
     const priceCents = priceResult.data?.lead_reveal_price_cents ?? 4900;
 
