@@ -615,14 +615,44 @@ export default async function handler(req, res) {
   try {
     absData = await fetchABSData(address);
     if (absData) {
-      console.log('[PropertyInsights] ABS data fetched:', { 
-        region: absData.region, 
+      console.log('[PropertyInsights] ABS data fetched:', {
+        region: absData.region,
         priceGrowth: absData.priceGrowthPercent,
-        period: absData.period 
+        period: absData.period
       });
     }
   } catch (absErr) {
     console.warn('[PropertyInsights] ABS fetch failed (continuing without):', absErr.message);
+  }
+
+  // Suburb-level metrics cache: keep numbers consistent across all properties in the
+  // same suburb. First property in a suburb seeds the cache; every subsequent
+  // property is told to reuse the cached numbers verbatim so users don't see
+  // 4.8% growth on one report and 7.5% on another for the same suburb.
+  const suburbForCache = extractSuburb(canonicalAddress);
+  const suburbStateMatch = canonicalAddress.match(/\b(NSW|VIC|QLD|SA|WA|TAS|NT|ACT)\b/i);
+  const suburbStateCode = suburbStateMatch ? suburbStateMatch[1].toUpperCase() : '';
+  const suburbCacheKey = suburbForCache && suburbStateCode
+    ? `${suburbForCache.toLowerCase().replace(/\s+/g, '-')}-${suburbStateCode.toLowerCase()}`
+    : null;
+  let cachedSuburbMetrics = null;
+  if (suburbCacheKey && supabaseUrl && supabaseServiceKey) {
+    try {
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      const { data: row } = await supabase
+        .from('suburb_metrics_cache')
+        .select('*')
+        .eq('suburb_key', suburbCacheKey)
+        .maybeSingle();
+      if (row) {
+        cachedSuburbMetrics = row;
+        console.log('[PropertyInsights] Suburb metrics cache HIT for', suburbCacheKey, '— growth:', row.growth_text);
+      } else {
+        console.log('[PropertyInsights] Suburb metrics cache MISS for', suburbCacheKey, '— will seed after this generation.');
+      }
+    } catch (cErr) {
+      console.warn('[PropertyInsights] Suburb cache lookup failed (continuing):', cErr.message);
+    }
   }
 
   try {
@@ -638,6 +668,16 @@ export default async function handler(req, res) {
 - If your indicativeMidpoint differs significantly, explain why in your analysis.
 - This helps ensure consistency and saves API cost by reusing prior work.
 - Set valueSnapshot.indicativeMidpoint near this value unless you find strong evidence otherwise.
+
+` : '';
+
+    // Suburb cache context — locks in numbers across all properties in this suburb.
+    const suburbCacheContext = cachedSuburbMetrics ? `
+🔒 SUBURB-LEVEL DATA (USE THESE EXACT VALUES — already established for ${cachedSuburbMetrics.display_name || suburbForCache}):
+
+- valueSnapshot.growth MUST be: "${cachedSuburbMetrics.growth_text}"
+${cachedSuburbMetrics.median_house_price ? `- Suburb median house price: $${Number(cachedSuburbMetrics.median_house_price).toLocaleString()} (use as baseline for any house in this suburb)\n` : ''}${cachedSuburbMetrics.median_unit_price ? `- Suburb median unit price: $${Number(cachedSuburbMetrics.median_unit_price).toLocaleString()} (use as baseline for any unit/apartment in this suburb)\n` : ''}${cachedSuburbMetrics.median_rent_weekly ? `- Suburb median weekly rent: $${cachedSuburbMetrics.median_rent_weekly}\n` : ''}${cachedSuburbMetrics.yield_percent ? `- Suburb gross yield: ${Number(cachedSuburbMetrics.yield_percent).toFixed(1)}%\n` : ''}
+⚠️ DO NOT INVENT DIFFERENT NUMBERS. Two reports in the same suburb must show the same suburb-level numbers. Property-specific values (this property's estimated price, comparables, strategies) can vary based on the address; suburb-level values must NOT.
 
 ` : '';
 
@@ -691,7 +731,7 @@ The user has indicated the previous data may be INCORRECT. Pay EXTRA attention t
 
     const prompt = `You are a professional Australian property planning analyst and prop-tech engineer for upblock.ai.
 Your task is to generate a structured Property DNA report for: "${address}".
-${dataCorrectionInstructions}${quickScoreContext}${absContext}
+${dataCorrectionInstructions}${quickScoreContext}${suburbCacheContext}${absContext}
 🚨🚨🚨 MANDATORY STEP 1: BUSINESS/COMMERCIAL SEARCH (YOU MUST DO THIS FIRST) 🚨🚨🚨
 
 ⛔ STOP! Before doing ANYTHING else, you MUST search for businesses at this address.
@@ -1298,6 +1338,41 @@ For comparableSales, include commercial sales with $/sqm notes.`;
         }
         
         console.log('[PropertyInsights] Cached result for:', addressKey.substring(0, 40) + '...');
+
+        // Seed the suburb metrics cache on first generation, so all subsequent
+        // properties in the same suburb reuse these exact numbers.
+        if (suburbCacheKey && !cachedSuburbMetrics) {
+          try {
+            const growthText = data.valueSnapshot?.growth || null;
+            // Pull a numeric percent out of "4.8% p.a." or "4.8%" or "4.8 percent"
+            const growthMatch = growthText && String(growthText).match(/(-?\d+(?:\.\d+)?)\s*%/);
+            const growthPercent = growthMatch ? parseFloat(growthMatch[1]) : null;
+            const propertyType = (data.propertyType || data.attributes?.propertyType || '').toLowerCase();
+            const isUnit = /apartment|unit|townhouse|villa|strata|flat|duplex/.test(propertyType);
+            const indicative = data.valueSnapshot?.indicativeMidpoint || null;
+            const yieldPercent = data.rentalPosition?.grossYieldPercent || null;
+            const weeklyRent = data.rentalPosition?.estimatedWeeklyRent || null;
+
+            await supabase
+              .from('suburb_metrics_cache')
+              .upsert({
+                suburb_key: suburbCacheKey,
+                display_name: `${suburbForCache?.replace(/\b\w/g, (c) => c.toUpperCase())}, ${suburbStateCode}`,
+                growth_text: growthText,
+                growth_percent: growthPercent,
+                median_house_price: !isUnit ? indicative : null,
+                median_unit_price: isUnit ? indicative : null,
+                median_rent_weekly: weeklyRent,
+                yield_percent: yieldPercent,
+                source: absData ? 'gemini-seed-with-abs' : 'gemini-seed',
+                cached_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              }, { onConflict: 'suburb_key' });
+            console.log('[PropertyInsights] Seeded suburb_metrics_cache for', suburbCacheKey, '— growth:', growthText);
+          } catch (suburbCErr) {
+            console.warn('[PropertyInsights] Suburb cache seed failed:', suburbCErr.message);
+          }
+        }
       } catch (cacheErr) {
         console.warn('[PropertyInsights] Failed to cache result:', cacheErr.message);
       }
