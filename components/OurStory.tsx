@@ -61,12 +61,17 @@ const OurStory: React.FC<OurStoryProps> = ({ onBack, onSearch }) => {
           <p className="text-[#3A342D] font-bold">We were done guessing.</p>
         </div>
 
-        <div className="mt-16">
-          <ImagePlaceholder
-            label="Couple at the kitchen table, laptop open, listings on screen — late evening"
-            aspectRatio="16/10"
+        <figure className="mt-16">
+          <img
+            src="/katie%20and%20blake.jpg"
+            alt="Katie and Blake — upblock founders"
+            className="w-full rounded-2xl"
+            loading="lazy"
           />
-        </div>
+          <figcaption className="mt-3 text-xs text-center italic text-[#4A4137]/50">
+            Katie &amp; Blake — upblock founders.
+          </figcaption>
+        </figure>
 
         {/* The realisation — the central pull-quote */}
         <p className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-tight my-24 text-center">
