@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     // Submit seller/buyer interest (no auth required - property owners don't need accounts)
-    const { propertyAddress, targetPrice, name, phone, email, notes } = req.body;
+    const { propertyAddress, targetPrice, name, phone, email, notes, otpCode } = req.body;
 
     console.log('[SellerInterest] POST request received:', {
       propertyAddress: propertyAddress?.substring(0, 50),
@@ -57,6 +57,60 @@ export default async function handler(req, res) {
     if (isNaN(priceNum) || priceNum <= 0) {
       console.error('[SellerInterest] Invalid price:', targetPrice);
       return res.status(400).json({ error: 'Invalid target price' });
+    }
+
+    // OTP gate: verify the supplied code matches a recent send for this phone.
+    // Normalise the phone to the same E.164 format used by send-seller-otp.js.
+    const normalisePhone = (input) => {
+      if (!input) return null;
+      const digits = String(input).replace(/[^0-9+]/g, '');
+      if (/^\+614\d{8}$/.test(digits)) return digits;
+      if (/^04\d{8}$/.test(digits)) return '+61' + digits.slice(1);
+      if (/^4\d{8}$/.test(digits)) return '+61' + digits;
+      return null;
+    };
+
+    const normPhone = normalisePhone(phone);
+    if (!normPhone) {
+      return res.status(400).json({ error: 'Please enter a valid Australian mobile.' });
+    }
+    if (!otpCode || !/^\d{6}$/.test(String(otpCode))) {
+      return res.status(400).json({ error: 'Please enter the 6-digit verification code.' });
+    }
+
+    try {
+      const { data: verification, error: vErr } = await supabase
+        .from('phone_verifications')
+        .select('code, expires_at, attempts')
+        .eq('phone', normPhone)
+        .maybeSingle();
+
+      if (vErr || !verification) {
+        return res.status(400).json({ error: 'Code not found. Please request a new one.' });
+      }
+      if (new Date(verification.expires_at).getTime() < Date.now()) {
+        return res.status(400).json({ error: 'Code expired. Please request a new one.' });
+      }
+      if ((verification.attempts || 0) >= 5) {
+        return res.status(429).json({ error: 'Too many attempts. Please request a new code.' });
+      }
+      if (String(otpCode) !== verification.code) {
+        // Increment attempts so brute force gets locked out fast
+        await supabase
+          .from('phone_verifications')
+          .update({ attempts: (verification.attempts || 0) + 1 })
+          .eq('phone', normPhone);
+        return res.status(400).json({ error: 'Incorrect code. Please try again.' });
+      }
+
+      // Code matched — mark verified and consume it (one-time-use)
+      await supabase
+        .from('phone_verifications')
+        .update({ verified_at: new Date().toISOString(), code: '' })
+        .eq('phone', normPhone);
+    } catch (vCatch) {
+      console.error('[SellerInterest] OTP verification error:', vCatch);
+      return res.status(500).json({ error: 'Verification failed. Please try again.' });
     }
 
     try {
