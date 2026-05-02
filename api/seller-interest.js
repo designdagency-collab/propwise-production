@@ -198,6 +198,74 @@ View in Admin Dashboard → Seller Leads tab
           });
           
           console.log('[SellerInterest] Email notification sent to support@upblock.ai');
+
+          // Confirmation email to the lister themselves — gives them a record of
+          // what they submitted (with the price) and sets the right expectation
+          // that the matched counterparty (not upblock) may reach out.
+          if (email) {
+            try {
+              const friendlyName = (name || '').split(' ')[0] || 'there';
+              const formattedPrice = `$${Number(targetPrice).toLocaleString('en-AU')}`;
+              const subject = isBuyerInterest
+                ? `Your interest in ${propertyAddress}`
+                : `Your upblock listing — ${propertyAddress}`;
+              const introLine = isBuyerInterest
+                ? `Thanks for registering your interest in this property.`
+                : `Thanks for sharing your property with upblock.`;
+              const matchLine = isBuyerInterest
+                ? `If the owner wants to chat, they may reach out shortly using the contact details you provided.`
+                : `If your number matches a buyer, they may reach out shortly using the contact details you provided.`;
+              const labelLine = isBuyerInterest ? 'Interested at' : 'Indicative value';
+
+              const plainText = [
+                `Hi ${friendlyName},`,
+                ``,
+                introLine,
+                ``,
+                `Property: ${propertyAddress}`,
+                `${labelLine}: ${formattedPrice}`,
+                ``,
+                matchLine,
+                ``,
+                `Need to update or withdraw? Just reply to this email.`,
+                ``,
+                `— The upblock team`,
+                `https://upblock.ai`,
+              ].join('\n');
+
+              const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #3A342D; max-width: 560px; margin: 0 auto; padding: 24px;">
+  <p>Hi ${friendlyName},</p>
+  <p>${introLine}</p>
+  <table cellpadding="0" cellspacing="0" style="width: 100%; margin: 20px 0; border: 1px solid #DCD7CE; border-radius: 12px; padding: 16px; background: #FAF8F3;">
+    <tr><td style="padding: 4px 0;">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #4A4137; opacity: 0.5;">Property</div>
+      <div style="font-size: 16px; font-weight: 700; color: #3A342D;">${propertyAddress}</div>
+    </td></tr>
+    <tr><td style="padding: 12px 0 4px;">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #4A4137; opacity: 0.5;">${labelLine}</div>
+      <div style="font-size: 22px; font-weight: 800; color: #C9A961;">${formattedPrice}</div>
+    </td></tr>
+  </table>
+  <p>${matchLine}</p>
+  <p style="color: #4A4137; opacity: 0.7;">Need to update or withdraw? Just reply to this email.</p>
+  <p style="margin-top: 32px;">— The upblock team<br><a href="https://upblock.ai" style="color: #C9A961;">upblock.ai</a></p>
+</body></html>`;
+
+              await resend.emails.send({
+                from: 'Upblock <hello@mail.upblock.ai>',
+                to: email,
+                replyTo: 'support@upblock.ai',
+                subject,
+                html,
+                text: plainText,
+              });
+              console.log('[SellerInterest] Confirmation email sent to lister:', email);
+            } catch (confirmErr) {
+              console.error('[SellerInterest] Confirmation email failed (non-critical):', confirmErr);
+            }
+          }
         } catch (emailError) {
           console.error('[SellerInterest] Failed to send email (non-critical):', emailError);
           // Don't fail the request if email fails
