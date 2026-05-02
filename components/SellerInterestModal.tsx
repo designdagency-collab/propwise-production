@@ -139,7 +139,11 @@ const SellerInterestModal: React.FC<SellerInterestModalProps> = ({
             <i className="fa-solid fa-check text-emerald-600 text-xl"></i>
           </div>
           <h3 className="text-2xl font-bold tracking-tight text-[#3A342D] mb-2">Thanks — we've got it.</h3>
-          <p className="text-sm text-[#4A4137]/70 leading-relaxed">We'll be in touch shortly.</p>
+          <p className="text-sm text-[#4A4137]/70 leading-relaxed">
+            {isBuyer
+              ? 'If the owner wants to chat, they may reach out shortly.'
+              : 'If your number matches a buyer, they may reach out shortly.'}
+          </p>
         </div>
       </div>
     );
