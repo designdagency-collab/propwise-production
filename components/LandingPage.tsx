@@ -111,12 +111,12 @@ const LandingPage: React.FC<LandingPageProps> = ({
           </div>
           
           <h1 className="text-[3rem] sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.05]" style={{ color: 'var(--text-primary)' }}>
-            Every property<br/>
-            <span className="text-[#C9A961]">has a number.</span>
+            Every property has a<br/>
+            <span className="text-[#C9A961]">hidden number.</span>
           </h1>
-          
+
           <p className="text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-medium" style={{ color: 'var(--text-muted)' }}>
-            Every seller has one. Every buyer has one. We're just bringing it into the open — for any <strong style={{ color: 'var(--text-primary)' }}>Australian</strong> address.
+            Upblock helps bring it into the open.
           </p>
           
           {/* SEARCH BAR */}
