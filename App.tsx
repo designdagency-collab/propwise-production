@@ -19,6 +19,7 @@ import { stripeService } from './services/stripeService';
 import { supabaseService } from './services/supabaseService';
 import { billingService, calculateCreditState, getRemainingCredits, canAudit } from './services/billingService';
 import { recordDeviceSearch } from './services/fingerprintService';
+import { Analytics } from '@vercel/analytics/react';
 import { AppState, PropertyData, PlanType, CreditState } from './types';
 
 // Helper functions for optimistic profile caching (instant header on refresh)
@@ -2038,7 +2039,6 @@ const App: React.FC = () => {
                         {/* Inline submit — desktop only. Mobile gets a full-width CTA below. */}
                         <button
                           type="submit"
-                          disabled={!isValidAddress}
                           className="hidden sm:inline-flex bg-[#C9A961] text-white px-8 h-12 rounded-xl font-bold hover:bg-[#3A342D] transition-all items-center gap-2 shadow-sm disabled:opacity-30 uppercase tracking-widest text-[10px]"
                           title={!isValidAddress ? "Select an address from the dropdown" : ""}
                         >
@@ -2050,9 +2050,7 @@ const App: React.FC = () => {
                     {/* Full-width submit — mobile only. */}
                     <button
                       type="submit"
-                      disabled={!isValidAddress}
-                      className="sm:hidden w-full mt-3 bg-[#C9A961] text-white h-12 rounded-2xl font-bold hover:bg-[#3A342D] transition-all disabled:opacity-30 uppercase tracking-widest text-[11px]"
-                      title={!isValidAddress ? "Select an address from the dropdown" : ""}
+                      className="sm:hidden w-full mt-3 bg-[#C9A961] text-white h-12 rounded-2xl font-bold hover:bg-[#3A342D] transition-all uppercase tracking-widest text-[11px]"
                     >
                       Audit Block
                     </button>
@@ -2374,6 +2372,7 @@ const App: React.FC = () => {
           </div>
         </footer>
       )}
+      <Analytics />
     </div>
   );
 };

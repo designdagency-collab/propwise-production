@@ -171,7 +171,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
                   {/* Inline submit — desktop only. Mobile gets a full-width CTA below. */}
                   <button
                     type="submit"
-                    disabled={!isValidAddress}
                     className="hidden sm:inline-flex bg-[#C9A961] text-white px-8 h-12 rounded-xl font-bold hover:bg-[#3A342D] transition-all disabled:opacity-30 uppercase tracking-widest text-[10px] items-center"
                   >
                     Audit Block
@@ -182,8 +181,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
               {/* Full-width submit — mobile only. */}
               <button
                 type="submit"
-                disabled={!isValidAddress}
-                className="sm:hidden w-full mt-3 bg-[#C9A961] text-white h-12 rounded-2xl font-bold hover:bg-[#3A342D] transition-all disabled:opacity-30 uppercase tracking-widest text-[11px]"
+                className="sm:hidden w-full mt-3 bg-[#C9A961] text-white h-12 rounded-2xl font-bold hover:bg-[#3A342D] transition-all uppercase tracking-widest text-[11px]"
               >
                 Audit Block
               </button>
