@@ -2053,7 +2053,7 @@ const App: React.FC = () => {
                     {/* Address Autocomplete Dropdown — anchored to the pill via top-full */}
                     {showSuggestions && suggestions.length > 0 && (
                       <div
-                        className="absolute left-0 right-0 top-full mt-2 rounded-2xl overflow-hidden z-50 ring-1 ring-black/5"
+                        className="mt-2 rounded-2xl overflow-hidden z-50 ring-1 ring-black/5 sm:absolute sm:left-0 sm:right-0 sm:top-full"
                         style={{
                           backgroundColor: 'var(--bg-card)',
                           border: '1px solid #DCD7CE',
