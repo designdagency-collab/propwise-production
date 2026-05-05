@@ -513,7 +513,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                   <button
                     onClick={() => onSellerInterest(address, data.valueSnapshot.indicativeMidpoint, [])}
                     data-no-pdf="true"
-                    className="seller-interest-button mt-2 px-4 py-2.5 rounded-lg bg-[#5D8A66] hover:bg-[#4A7253] transition-all duration-300 group shadow-sm"
+                    className="seller-interest-button mt-4 px-4 py-2.5 rounded-lg bg-[#5D8A66] hover:bg-[#4A7253] transition-all duration-300 group shadow-sm"
                   >
                     <span className="text-[10px] font-bold uppercase tracking-widest text-white flex items-center gap-1.5 relative z-10">
                       <i className="fa-solid fa-hand-holding-dollar text-[11px]"></i>
@@ -531,7 +531,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                   <button
                     onClick={() => onSellerInterest(address, afterHigh, data.valueAddStrategies)}
                     data-no-pdf="true"
-                    className="seller-interest-button mt-2 px-4 py-2.5 rounded-lg bg-[#3A342D] hover:bg-[#1F1A14] transition-all duration-300 group shadow-sm"
+                    className="seller-interest-button mt-4 px-4 py-2.5 rounded-lg bg-[#3A342D] hover:bg-[#1F1A14] transition-all duration-300 group shadow-sm"
                   >
                     <span className="text-[10px] font-bold uppercase tracking-widest text-white flex items-center gap-1.5 relative z-10">
                       <i className="fa-solid fa-tag text-[11px]"></i>
