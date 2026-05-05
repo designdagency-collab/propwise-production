@@ -392,11 +392,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   const cleanAddress = (data.address || address || '').trim();
   const encodedAddress = encodeURIComponent(cleanAddress);
   
-  // High-res satellite hero via /api/static-map — server-side cached, scale=2.
-  // To revert to the interactive Google Maps iframe, restore the embed URL:
-  //   `https://maps.google.com/maps?q=${encodedAddress}&t=k&z=17&ie=UTF8&iwloc=&output=embed`
-  const mapUrl = cleanAddress
-    ? `/api/static-map?address=${encodedAddress}&width=1024&height=500&zoom=20`
+  // Google Maps embed URL - classic embed format that works without API key
+  const mapUrl = cleanAddress 
+    ? `https://maps.google.com/maps?q=${encodedAddress}&t=k&z=17&ie=UTF8&iwloc=&output=embed`
     : '';
   
   // Google Maps link for opening in new tab
@@ -620,13 +618,20 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
          {mapUrl ? (
            <>
              <div className="absolute inset-0 bg-slate-200/50 animate-pulse z-0"></div>
-             <img
-               key={encodedAddress}
+             <iframe
+               key={encodedAddress} // Force re-render when address changes
+               title="Property Location Map"
+               width="100%"
+               height="100%"
+               frameBorder="0"
+               scrolling="no"
+               marginHeight={0}
+               marginWidth={0}
                src={mapUrl}
-               alt={`Satellite view of ${cleanAddress}`}
-               className="relative z-10 w-full h-full object-cover"
+               className="relative z-10"
                loading="lazy"
-             />
+               referrerPolicy="no-referrer-when-downgrade"
+             ></iframe>
              {/* Fallback link overlay */}
              <a 
                href={googleMapsLink}
