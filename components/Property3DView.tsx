@@ -49,8 +49,10 @@ export function Property3DView({ address, onBack }: Props) {
         if (cancelled) return;
 
         const google = (window as any).google;
-        const { Geocoder } = await google.maps.importLibrary('geocoding');
-        const geocoder = new Geocoder();
+        if (!google?.maps?.Geocoder) {
+          throw new Error('google.maps.Geocoder unavailable — script loaded incorrectly');
+        }
+        const geocoder = new google.maps.Geocoder();
         const { results } = await geocoder.geocode({
           address: address.includes('Australia') ? address : `${address}, Australia`,
         });
@@ -63,7 +65,6 @@ export function Property3DView({ address, onBack }: Props) {
         const lat = loc.lat();
         const lng = loc.lng();
 
-        await google.maps.importLibrary('maps3d');
         if (cancelled || !containerRef.current) return;
 
         const map3d: any = document.createElement('gmp-map-3d');
