@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server';
 import { PropertyData, PlanType, DevEligibility, Amenity } from '../types';
 import PdfReport, { getPdfDocumentStyles } from './pdf/PdfReport';
+import { Property3DView } from './Property3DView';
 import { 
   extractStateFromAddress, 
   getStateAwarePathwayLabel, 
@@ -52,6 +53,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   onSellerInterest
 }) => {
   const [selectedStrategies, setSelectedStrategies] = useState<Set<number>>(new Set());
+  const [show3D, setShow3D] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [pdfCountdown, setPdfCountdown] = useState<number>(3);
   const [pdfReady, setPdfReady] = useState<boolean>(false);
@@ -618,6 +620,9 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
         style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)' }}
       >
          {mapUrl ? (
+           show3D ? (
+             <Property3DView address={cleanAddress} onBack={() => setShow3D(false)} />
+           ) : (
            <>
              <div className="absolute inset-0 bg-slate-200/50 animate-pulse z-0"></div>
              <img
@@ -627,8 +632,17 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                className="relative z-10 w-full h-full object-cover"
                loading="lazy"
              />
+             <button
+               type="button"
+               onClick={() => setShow3D(true)}
+               data-no-pdf="true"
+               className="absolute top-4 right-4 z-20 px-4 py-2 bg-[#3A342D] hover:bg-[#1F1A14] rounded-full text-xs font-bold text-white uppercase tracking-widest shadow-lg flex items-center gap-2 transition-colors"
+             >
+               <i className="fa-solid fa-cube text-[11px]"></i>
+               View in 3D
+             </button>
              {/* Fallback link overlay */}
-             <a 
+             <a
                href={googleMapsLink}
                target="_blank"
                rel="noopener noreferrer"
@@ -638,6 +652,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                Open in Google Maps
              </a>
            </>
+           )
          ) : (
            <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
              <div className="text-center text-gray-500">
