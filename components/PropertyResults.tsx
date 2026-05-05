@@ -396,7 +396,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
   // To revert to the interactive Google Maps iframe, restore the embed URL:
   //   `https://maps.google.com/maps?q=${encodedAddress}&t=k&z=17&ie=UTF8&iwloc=&output=embed`
   const mapUrl = cleanAddress
-    ? `/api/static-map?address=${encodedAddress}&width=640&height=400&zoom=19`
+    ? `/api/static-map?address=${encodedAddress}&width=1024&height=500&zoom=20`
     : '';
   
   // Google Maps link for opening in new tab
