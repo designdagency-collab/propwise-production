@@ -122,7 +122,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
           {/* SEARCH BAR */}
           <div className="max-w-2xl mx-auto pt-2">
             <form onSubmit={onSearch} className="relative group">
-              <div className="absolute -inset-1 bg-[#C9A961] rounded-[2rem] blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
+              <div className="pointer-events-none absolute -inset-1 bg-[#C9A961] rounded-[2rem] blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
               {/* Pill + dropdown wrapper — gives the autocomplete dropdown a tight
                   positioning anchor so it can never overlap the mobile submit
                   button below. */}

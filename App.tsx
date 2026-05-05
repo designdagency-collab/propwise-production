@@ -2002,7 +2002,7 @@ const App: React.FC = () => {
                   
                   <div className="max-w-2xl mx-auto" ref={autocompleteRef}>
                    <form onSubmit={handleSearch} className="relative group">
-                    <div className="absolute -inset-1 bg-[#C9A961] rounded-[2rem] blur opacity-5 group-hover:opacity-10 transition duration-1000"></div>
+                    <div className="pointer-events-none absolute -inset-1 bg-[#C9A961] rounded-[2rem] blur opacity-5 group-hover:opacity-10 transition duration-1000"></div>
                     {/* Pill + dropdown wrapper — anchors the autocomplete to the
                         pill so it never overlaps the mobile submit button. */}
                     <div className="relative">
