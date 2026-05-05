@@ -2003,6 +2003,9 @@ const App: React.FC = () => {
                   <div className="max-w-2xl mx-auto" ref={autocompleteRef}>
                    <form onSubmit={handleSearch} className="relative group">
                     <div className="absolute -inset-1 bg-[#C9A961] rounded-[2rem] blur opacity-5 group-hover:opacity-10 transition duration-1000"></div>
+                    {/* Pill + dropdown wrapper — anchors the autocomplete to the
+                        pill so it never overlaps the mobile submit button. */}
+                    <div className="relative">
                     <div
                       className="relative flex items-center p-2 rounded-[2rem] shadow-xl"
                       style={{ backgroundColor: 'var(--bg-card)', border: '1px solid #DCD7CE' }}
@@ -2047,18 +2050,10 @@ const App: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Full-width submit — mobile only. */}
-                    <button
-                      type="submit"
-                      className="sm:hidden w-full mt-3 bg-[#C9A961] text-white h-12 rounded-2xl font-bold hover:bg-[#3A342D] transition-all uppercase tracking-widest text-[11px]"
-                    >
-                      Audit Block
-                    </button>
-                    
-                    {/* Address Autocomplete Dropdown */}
+                    {/* Address Autocomplete Dropdown — anchored to the pill via top-full */}
                     {showSuggestions && suggestions.length > 0 && (
                       <div
-                        className="absolute left-0 right-0 mt-2 rounded-2xl overflow-hidden z-50 ring-1 ring-black/5"
+                        className="absolute left-0 right-0 top-full mt-2 rounded-2xl overflow-hidden z-50 ring-1 ring-black/5"
                         style={{
                           backgroundColor: 'var(--bg-card)',
                           border: '1px solid #DCD7CE',
@@ -2088,6 +2083,16 @@ const App: React.FC = () => {
                         ))}
                       </div>
                     )}
+                    </div>{/* /pill+dropdown wrapper */}
+
+                    {/* Full-width submit — mobile only. Sits OUTSIDE the wrapper
+                        so the dropdown can never cover or block taps on it. */}
+                    <button
+                      type="submit"
+                      className="sm:hidden w-full mt-3 bg-[#C9A961] text-white h-12 rounded-2xl font-bold hover:bg-[#3A342D] transition-all uppercase tracking-widest text-[11px]"
+                    >
+                      Audit Block
+                    </button>
                   </form>
                 </div>
                 </div>

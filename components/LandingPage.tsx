@@ -123,6 +123,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
           <div className="max-w-2xl mx-auto pt-2">
             <form onSubmit={onSearch} className="relative group">
               <div className="absolute -inset-1 bg-[#C9A961] rounded-[2rem] blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
+              {/* Pill + dropdown wrapper — gives the autocomplete dropdown a tight
+                  positioning anchor so it can never overlap the mobile submit
+                  button below. */}
+              <div className="relative">
               <div
                 className="relative flex items-center p-2 rounded-[2rem] shadow-xl"
                 style={{ backgroundColor: 'var(--bg-card)', border: '1px solid #DCD7CE' }}
@@ -178,17 +182,9 @@ const LandingPage: React.FC<LandingPageProps> = ({
                 </div>
               </div>
 
-              {/* Full-width submit — mobile only. */}
-              <button
-                type="submit"
-                className="sm:hidden w-full mt-3 bg-[#C9A961] text-white h-12 rounded-2xl font-bold hover:bg-[#3A342D] transition-all uppercase tracking-widest text-[11px]"
-              >
-                Audit Block
-              </button>
-              
               {showSuggestions && suggestions.length > 0 && (
                 <div
-                  className="absolute left-0 right-0 mt-2 rounded-2xl overflow-hidden z-50 ring-1 ring-black/5"
+                  className="absolute left-0 right-0 top-full mt-2 rounded-2xl overflow-hidden z-50 ring-1 ring-black/5"
                   style={{
                     backgroundColor: 'var(--bg-card)',
                     border: '1px solid #DCD7CE',
@@ -213,6 +209,16 @@ const LandingPage: React.FC<LandingPageProps> = ({
                   ))}
                 </div>
               )}
+              </div>{/* /pill+dropdown wrapper */}
+
+              {/* Full-width submit — mobile only. Sits OUTSIDE the wrapper so
+                  the dropdown never covers it. */}
+              <button
+                type="submit"
+                className="sm:hidden w-full mt-3 bg-[#C9A961] text-white h-12 rounded-2xl font-bold hover:bg-[#3A342D] transition-all uppercase tracking-widest text-[11px]"
+              >
+                Audit Block
+              </button>
             </form>
             
             <p className="text-xs mt-4 font-medium" style={{ color: 'var(--text-muted)' }}>
