@@ -505,7 +505,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
           </div>
 
           {/* 4 Metrics Row */}
-          <div className="flex flex-wrap items-start justify-between gap-y-4 pt-6 mt-4 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
+          <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4 pt-6 mt-4 border-t" style={{ borderColor: 'var(--border-color)' }} data-pdf-kpi-row>
              <div className="space-y-0.5" data-pdf-kpi>
                 <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Estimated Value</p>
                 <p className="text-xl sm:text-2xl font-black text-[#B8864A]">{formatValue(data?.valueSnapshot?.indicativeMidpoint)}</p>
@@ -517,7 +517,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                   >
                     <span className="text-[10px] font-bold uppercase tracking-widest text-white flex items-center gap-1.5 relative z-10">
                       <i className="fa-solid fa-hand-holding-dollar text-[11px]"></i>
-                      Interested in buying at this price?
+                      Interested in buying
                     </span>
                   </button>
                 )}
@@ -535,7 +535,7 @@ const PropertyResults: React.FC<PropertyResultsProps> = ({
                   >
                     <span className="text-[10px] font-bold uppercase tracking-widest text-white flex items-center gap-1.5 relative z-10">
                       <i className="fa-solid fa-tag text-[11px]"></i>
-                      Interested in selling at this price?
+                      Interested in selling
                     </span>
                   </button>
                 )}
