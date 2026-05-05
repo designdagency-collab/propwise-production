@@ -36,16 +36,15 @@ export function Property3DView({ address, onBack }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY;
-
-    if (!apiKey) {
-      setStatus('error');
-      setErrorMsg('VITE_GOOGLE_MAPS_API_KEY not configured in Vercel env');
-      return;
-    }
 
     (async () => {
       try {
+        const cfgRes = await fetch('/api/maps-config');
+        if (!cfgRes.ok) throw new Error(`Maps config endpoint returned ${cfgRes.status}`);
+        const { apiKey } = await cfgRes.json();
+        if (!apiKey) throw new Error('GOOGLE_MAPS_API_KEY not set on server');
+        if (cancelled) return;
+
         await loadMapsScript(apiKey);
         if (cancelled) return;
 
